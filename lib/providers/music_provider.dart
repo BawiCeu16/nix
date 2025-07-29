@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:home_widget/home_widget.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -35,6 +34,9 @@ class MusicProvider with ChangeNotifier {
   Duration _totalDuration = Duration.zero;
   static const MethodChannel _channel = MethodChannel('audio_output');
   ConcatenatingAudioSource? _playlist;
+  Map<String, List<int>> _playlists =
+      {}; // key: playlist name, value: list of song IDs
+  String? _currentPlaylist; // Active playlist name
 
   // ✅ Getters
   List<SongModel> get songs => _songs;
@@ -55,9 +57,14 @@ class MusicProvider with ChangeNotifier {
 
   AudioPlayer get audioPlayer => _audioPlayer;
 
+  // ✅ Getters
+  Map<String, List<int>> get playlists => _playlists;
+  String? get currentPlaylist => _currentPlaylist;
+
   // ✅ Constructor
   MusicProvider() {
     loadFavorites();
+    _loadPlaylists();
     _listenToPlayerStreams();
     checkAndLoadSongs(); // ✅ NEW: Auto-load if permission is already granted
   }
@@ -351,6 +358,121 @@ class MusicProvider with ChangeNotifier {
       .throttleTime(const Duration(milliseconds: 500));
 
   void seek(Duration position) => _audioPlayer.seek(position);
+
+  // ✅ Load playlists from SharedPreferences
+  Future<void> loadPlaylists() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = prefs.getString('playlists') ?? '{}';
+    final Map<String, dynamic> decoded = jsonDecode(jsonString);
+    _playlists = decoded.map(
+      (key, value) => MapEntry(key, List<int>.from(value)),
+    );
+    notifyListeners();
+  }
+
+  // ✅ Save playlists to SharedPreferences
+  Future<void> _savePlaylists() async {
+    final prefs = await SharedPreferences.getInstance();
+    final encodedPlaylists = _playlists.map(
+      (key, value) => MapEntry(key, value.map((id) => id.toString()).toList()),
+    );
+    await prefs.setString('playlists', jsonEncode(encodedPlaylists));
+  }
+
+  Future<void> _loadPlaylists() async {
+    final prefs = await SharedPreferences.getInstance();
+    final data = prefs.getString('playlists');
+    if (data != null) {
+      final decoded = jsonDecode(data) as Map<String, dynamic>;
+      _playlists = decoded.map(
+        (key, value) =>
+            MapEntry(key, (value as List).map((id) => int.parse(id)).toList()),
+      );
+      notifyListeners();
+    }
+  }
+
+  // ✅ Create a new playlist
+  Future<void> createPlaylist(String name) async {
+    if (!_playlists.containsKey(name)) {
+      _playlists[name] = [];
+      await _savePlaylists();
+      notifyListeners();
+    }
+  }
+
+  // ✅ Add song to playlist
+  Future<void> addSongToPlaylist(String playlistName, int songId) async {
+    if (!_playlists.containsKey(playlistName)) {
+      _playlists[playlistName] = [];
+    }
+    if (!_playlists[playlistName]!.contains(songId)) {
+      _playlists[playlistName]!.add(songId);
+      await _savePlaylists();
+      notifyListeners();
+    }
+  }
+
+  // ✅ Remove song from playlist
+  Future<void> removeSongFromPlaylist(String playlistName, int songId) async {
+    _playlists[playlistName]?.remove(songId);
+    await _savePlaylists();
+    notifyListeners();
+  }
+
+  // ✅ Play a playlist
+  Future<void> playPlaylist(String playlistName) async {
+    if (!_playlists.containsKey(playlistName)) return;
+
+    _currentPlaylist = playlistName;
+
+    final songIds = _playlists[playlistName]!;
+    final playlistSongs = _songs
+        .where((song) => songIds.contains(song.id))
+        .toList();
+
+    if (playlistSongs.isEmpty) return;
+
+    _playlist = ConcatenatingAudioSource(
+      children: playlistSongs.map((song) {
+        return AudioSource.uri(
+          Uri.parse(song.uri!),
+          tag: MediaItem(
+            id: song.id.toString(),
+            album: song.album ?? 'Unknown Album',
+            title: song.title,
+            artist: song.artist ?? 'Unknown Artist',
+            artUri: Uri.parse('asset:///${song.id}'),
+          ),
+        );
+      }).toList(),
+    );
+
+    await _audioPlayer.setAudioSource(_playlist!);
+    await _audioPlayer.play();
+
+    _currentSong = playlistSongs.first;
+
+    notifyListeners();
+  }
+
+  // ✅ Delete playlist
+  Future<void> deletePlaylist(String playlistName) async {
+    _playlists.remove(playlistName);
+    await _savePlaylists();
+    notifyListeners();
+  }
+
+  // ✅ Rename a playlist
+  Future<void> renamePlaylist(String oldName, String newName) async {
+    if (_playlists.containsKey(newName)) return; // Prevent duplicates
+    final songs = _playlists.remove(oldName);
+    if (songs != null) {
+      _playlists[newName] = songs;
+      await _savePlaylists();
+      notifyListeners();
+    }
+  }
 
   // ✅ Share current song
   Future<void> shareCurrentSong() async {

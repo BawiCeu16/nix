@@ -1,6 +1,7 @@
 import 'package:auto_animated/auto_animated.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
+import 'package:nix/%20utils/translator.dart';
 import 'package:nix/ui/widgets/permission_card.dart';
 import 'package:nix/ui/widgets/song_details_dialog.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -18,11 +19,14 @@ class FavoriteSongsScreen extends StatelessWidget {
         .toList();
 
     if (favoriteSongs.isEmpty) {
-      return const Center(child: Text("No favorite songs yet."));
+      return Center(child: Text(t(context, 'no_favorites_songs_yet')));
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Favorite Songs")),
+      appBar: AppBar(
+        centerTitle: true,
+        title: Text(t(context, 'favorite_songs')),
+      ),
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
         child: LiveList.options(
@@ -61,7 +65,7 @@ class FavoriteSongsScreen extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  subtitle: Text(song.artist ?? "Unknown"),
+                  subtitle: Text(song.artist ?? "${t(context, 'unknown')}"),
                   onTap: () => provider.playSong(song),
                   onLongPress: () => showDialog(
                     context: context,

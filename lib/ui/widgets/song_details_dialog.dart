@@ -63,7 +63,7 @@ class SongDetailsDialog extends StatelessWidget {
                       ),
 
                       Text(
-                        song.artist ?? 'Unknown',
+                        song.artist ?? t(context, 'unknown'),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
@@ -91,7 +91,7 @@ class SongDetailsDialog extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            "Album: ",
+                            t(context, 'album'),
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           Text(song.album ?? 'Unknown'),
@@ -100,7 +100,7 @@ class SongDetailsDialog extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            "Duration: ",
+                            t(context, 'duration'),
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           Text(formatDuration(song.duration ?? 0)),
@@ -110,7 +110,7 @@ class SongDetailsDialog extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            "Size: ",
+                            t(context, 'size'),
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           Text(formatSize(song.size)),
@@ -119,7 +119,7 @@ class SongDetailsDialog extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            "File Type: ",
+                            "${t(context, t(context, 'file_type'))}",
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           Text(song.fileExtension),
@@ -129,7 +129,7 @@ class SongDetailsDialog extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text(
-                            "Path: ",
+                            t(context, 'path'),
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           Expanded(child: Text(song.data)),
@@ -161,7 +161,7 @@ class SongDetailsDialog extends StatelessWidget {
                 // Close Button
                 FilledButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text(t(context, 'close')),
+                  child: Text(t(context, t(context, 'close'))),
                 ),
                 SizedBox(width: 5),
               ],

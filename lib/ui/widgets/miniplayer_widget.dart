@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
+import 'package:nix/%20utils/translator.dart';
 // import 'package:nix/pages/favorite_songs_screen.dart';
 import 'package:nix/ui/widgets/song_details_dialog.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -81,7 +82,7 @@ class MiniPlayerWidget extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    subtitle: Text(song.artist ?? "Unknown"),
+                    subtitle: Text(song.artist ?? "${t(context, 'unknown')}"),
                     trailing: IconButton(
                       icon: Icon(
                         provider.isPlaying ? Icons.pause : Icons.play_arrow,
@@ -234,7 +235,7 @@ class MiniPlayerWidget extends StatelessWidget {
                                               CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              "UpComing",
+                                              "${t(context, 'up_coming')}",
                                               // ,style: TextStyle(fontWeight: FontWeight.bold),
                                             ),
                                             SizedBox(height: 5.0),
@@ -283,7 +284,7 @@ class MiniPlayerWidget extends StatelessWidget {
                                                         ),
                                                         Text(
                                                           nextSong.artist ??
-                                                              "Unknown",
+                                                              "${t(context, 'unknown')}",
                                                         ),
                                                       ],
                                                     ),
@@ -327,7 +328,7 @@ class MiniPlayerWidget extends StatelessWidget {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 10),
                           child: Text(
-                            song.artist ?? "Unknown",
+                            song.artist ?? "${t(context, 'unknown')}",
 
                             style: TextStyle(
                               fontSize:
@@ -446,20 +447,22 @@ class MiniPlayerWidget extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: TextButton(
-                                  child: Text("More"),
+                                  child: Text("${t(context, 'more')}"),
                                   onPressed: () =>
                                       _showBottomSheet(context, song),
                                 ),
                               ),
                               Expanded(
                                 child: TextButton(
-                                  child: Text("Lyrics"),
-                                  onPressed: () => _showLyrics(context, song),
+                                  child: Text("${t(context, 'lyrics')}"),
+                                  onPressed: () {},
+
+                                  //  => _showLyrics(context, song),
                                 ),
                               ),
                               Expanded(
                                 child: TextButton(
-                                  child: Text("UpComing List"),
+                                  child: Text("${t(context, 'upcoming_list')}"),
                                   onPressed: () =>
                                       _showUpComingSongs(context, song),
                                 ),
@@ -533,7 +536,7 @@ class MiniPlayerWidget extends StatelessWidget {
                       onPressed: () {
                         Navigator.pop(context);
                       },
-                      child: Text("Close"),
+                      child: Text("${t(context, 'close')}"),
                     ),
                   ],
                 ),
@@ -592,7 +595,7 @@ class MiniPlayerWidget extends StatelessWidget {
                       ),
 
                       title: Text(song.title, overflow: TextOverflow.ellipsis),
-                      subtitle: Text(song.artist ?? "Unknown"),
+                      subtitle: Text(song.artist ?? "${t(context, 'unknown')}"),
                       onTap: () => musicProvider.playSong(song),
                     );
                   },
@@ -628,7 +631,7 @@ class MiniPlayerWidget extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   leading: const Icon(FlutterRemix.information_fill),
-                  title: const Text('Song Details'),
+                  title: Text('${t(context, 'song_details')}'),
                   onTap: () {
                     Navigator.pop(context);
                     showDetail(context, song);
@@ -640,7 +643,7 @@ class MiniPlayerWidget extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   leading: const Icon(FlutterRemix.share_fill),
-                  title: const Text('Share'),
+                  title: Text('${t(context, 'share')}'),
                   onTap: () {
                     provider.shareCurrentSong();
                   },
@@ -656,7 +659,7 @@ class MiniPlayerWidget extends StatelessWidget {
                         : FlutterRemix.heart_line,
                     color: provider.isFavorite(song.id) ? Colors.red : null,
                   ),
-                  title: const Text('Favorite'),
+                  title: Text('${t(context, 'favorite')}'),
                   onTap: () => provider.toggleFavorite(song.id),
                 ),
                 const SizedBox(height: 10.0),
@@ -667,7 +670,7 @@ class MiniPlayerWidget extends StatelessWidget {
                     child: FilledButton.icon(
                       onPressed: () => Navigator.pop(context),
                       icon: const Icon(Icons.close),
-                      label: const Text("Close"),
+                      label: Text("${t(context, 'close')}"),
                     ),
                   ),
                 ),

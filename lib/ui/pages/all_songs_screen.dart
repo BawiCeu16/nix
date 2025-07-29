@@ -14,6 +14,9 @@ class AllSongsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.read<MusicProvider>();
+    final isMiniPlayerOpen = context.select<MusicProvider, bool>(
+      (p) => p.currentSong != null,
+    );
 
     return RefreshIndicator(
       onRefresh: () async => await provider.refreshSongs(),
@@ -22,11 +25,17 @@ class AllSongsScreen extends StatelessWidget {
           const SearchBarWidget(),
           Expanded(
             child: Selector<MusicProvider, List<SongModel>>(
-              selector: (_, p) => p.filteredSongs,
+              selector: (_, provider) => provider.filteredSongs,
               builder: (context, songs, _) {
                 if (songs.isEmpty) {
                   return const Center(child: Text("No songs found."));
                 }
+
+                // ✅ Check if MiniPlayer is open (song is playing)
+                final isMiniPlayerOpen = context.select<MusicProvider, bool>(
+                  (p) => p.currentSong != null,
+                );
+
                 return LiveList.options(
                   key: const PageStorageKey('songs_list'),
                   physics: const BouncingScrollPhysics(),
@@ -49,6 +58,13 @@ class AllSongsScreen extends StatelessWidget {
                       ),
                     );
                   },
+                  // ✅ Add padding so last song isn't hidden by MiniPlayer
+                  padding: EdgeInsets.only(
+                    bottom: isMiniPlayerOpen
+                        ? 90
+                        : 16, // 90px = MiniPlayer height
+                    top: 8,
+                  ),
                 );
               },
             ),

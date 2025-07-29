@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
+import 'package:nix/%20utils/translator.dart';
 import 'package:nix/ui/pages/all_songs_screen.dart';
 import 'package:nix/ui/pages/favorite_songs_screen.dart';
-import 'package:nix/ui/pages/settings_page.dart';
+import 'package:nix/ui/pages/play_list_screen.dart';
 import 'package:nix/ui/widgets/miniplayer_widget.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/bottom_nav_provider.dart';
@@ -28,9 +29,10 @@ class HomeWithNavigation extends StatelessWidget {
   Widget build(BuildContext context) {
     final navProvider = Provider.of<BottomNavProvider>(context);
     final List<Widget> screens = const [
+      //Screens from Main
       AllSongsScreen(),
+      PlaylistScreen(),
       FavoriteSongsScreen(),
-      SettingsPage(),
     ];
 
     return Scaffold(
@@ -85,21 +87,24 @@ class HomeWithNavigation extends StatelessWidget {
         child: NavigationBar(
           selectedIndex: navProvider.currentIndex,
           onDestinationSelected: navProvider.changeIndex,
-          destinations: const [
+          destinations: [
+            //Songs
             NavigationDestination(
               icon: Icon(FlutterRemix.music_line),
               selectedIcon: Icon(FlutterRemix.music_fill),
-              label: "Songs",
+              label: t(context, 'songs_nav'),
             ),
+            //PlayLists
+            NavigationDestination(
+              icon: Icon(FlutterRemix.play_list_line),
+              selectedIcon: Icon(FlutterRemix.play_list_fill),
+              label: t(context, 'playlist_nav'),
+            ),
+            //Favorites
             NavigationDestination(
               icon: Icon(FlutterRemix.heart_line),
               selectedIcon: Icon(FlutterRemix.heart_fill),
-              label: "Favorites",
-            ),
-            NavigationDestination(
-              icon: Icon(FlutterRemix.settings_line),
-              selectedIcon: Icon(FlutterRemix.settings_fill),
-              label: "Settings",
+              label: t(context, 'favorites_nav'),
             ),
           ],
         ),

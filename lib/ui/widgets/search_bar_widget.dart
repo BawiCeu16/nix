@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
+import 'package:nix/%20utils/translator.dart';
 import 'package:nix/providers/user_provider.dart';
+import 'package:nix/ui/pages/settings_page.dart';
+import 'package:page_animation_transition/animations/right_to_left_transition.dart';
+import 'package:page_animation_transition/page_animation_transition.dart';
 import 'package:provider/provider.dart';
 import '../../providers/music_provider.dart';
 
@@ -21,7 +25,7 @@ class SearchBarWidget extends StatelessWidget {
           padding: const EdgeInsets.only(left: 10),
           child: Icon(FlutterRemix.search_line),
         ),
-        hintText: 'Search..',
+        hintText: '${t(context, 'search_hint')}',
         enabled: provider.songs.isEmpty ? false : true,
         trailing: [
           // if (provider.searchQuery.isNotEmpty)
@@ -32,7 +36,7 @@ class SearchBarWidget extends StatelessWidget {
           //     },
           //   ),
           Tooltip(
-            message: "Sort",
+            message: "${t(context, 'sort')}",
             child: IconButton(
               onPressed: () {
                 showModalBottomSheet(
@@ -54,7 +58,7 @@ class SearchBarWidget extends StatelessWidget {
                                 borderRadius: BorderRadiusGeometry.circular(10),
                               ),
                               leading: Icon(FlutterRemix.sort_asc),
-                              title: const Text("Title (A-Z)"),
+                              title: Text(t(context, 'title_az_sort')),
                               trailing:
                                   // Row(
                                   //   mainAxisSize: MainAxisSize.min,
@@ -74,7 +78,7 @@ class SearchBarWidget extends StatelessWidget {
                                 borderRadius: BorderRadiusGeometry.circular(10),
                               ),
                               leading: Icon(FlutterRemix.sort_desc),
-                              title: const Text("Title (Z-A)"),
+                              title: Text(t(context, 'title_za_sort')),
                               onTap: () {
                                 provider.setSortOption(SortOption.titleDesc);
                                 Navigator.pop(context);
@@ -86,7 +90,7 @@ class SearchBarWidget extends StatelessWidget {
                               ),
 
                               leading: Icon(FlutterRemix.user_2_fill),
-                              title: const Text("Artist (A-Z)"),
+                              title: Text(t(context, 'artist_sort')),
                               onTap: () {
                                 provider.setSortOption(SortOption.artistAsc);
                                 Navigator.pop(context);
@@ -97,7 +101,7 @@ class SearchBarWidget extends StatelessWidget {
                                 borderRadius: BorderRadiusGeometry.circular(10),
                               ),
                               leading: Icon(FlutterRemix.time_fill),
-                              title: const Text("Duration (Shortest First)"),
+                              title: Text(t(context, 'duration_sort')),
                               onTap: () {
                                 provider.setSortOption(SortOption.durationAsc);
                                 Navigator.pop(context);
@@ -131,7 +135,7 @@ class SearchBarWidget extends StatelessWidget {
                         right: 10.0,
 
                         // bottom: 10.0,
-                        bottom: 20.0,
+                        bottom: 10.0,
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -158,15 +162,26 @@ class SearchBarWidget extends StatelessWidget {
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
 
-                          // ListTile(
-                          //   shape: RoundedRectangleBorder(
-                          //     borderRadius: BorderRadiusGeometry.circular(10.0),
-                          //   ),
-                          //   leading: Icon(Icons.settings),
-                          //   title: Text("data"),
-                          //   subtitle: Text("data"),
-                          //   onTap: () {},
-                          // ),
+                          SizedBox(height: 10),
+                          ListTile(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadiusGeometry.circular(10.0),
+                            ),
+                            leading: Icon(Icons.settings),
+                            title: Text(t(context, 'settings')),
+                            // subtitle: Text(""),
+                            trailing: Icon(FlutterRemix.arrow_right_s_line),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.push(
+                                context,
+                                PageAnimationTransition(
+                                  page: SettingsPage(),
+                                  pageAnimationType: RightToLeftTransition(),
+                                ),
+                              );
+                            },
+                          ),
                           // ListTile(
                           //   shape: RoundedRectangleBorder(
                           //     borderRadius: BorderRadiusGeometry.circular(10.0),
@@ -193,7 +208,7 @@ class SearchBarWidget extends StatelessWidget {
               );
             },
             child: Tooltip(
-              message: 'UserS',
+              message: '${t(context, 'user')}',
               child: Hero(
                 tag: "profile12",
                 child: CircleAvatar(

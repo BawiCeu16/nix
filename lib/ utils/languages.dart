@@ -32,7 +32,7 @@ final Map<String, Map<String, String>> appTranslations = {
     'language': 'Language',
     'contact': 'Contact',
 
-    ///////////
+    // General actions
     'clear_data': 'Clear Data',
     'warning': 'Warning!',
     'delete_warning_msg':
@@ -42,6 +42,8 @@ final Map<String, Map<String, String>> appTranslations = {
     'more': 'More',
     'github': 'GitHub',
     'email': 'Email',
+
+    // Theme
     'theme_settings': 'Theme Settings',
     'theme_mode': 'Theme Mode',
     'light': 'Light',
@@ -53,42 +55,64 @@ final Map<String, Map<String, String>> appTranslations = {
     'choose_color': 'Choose color',
     'select': 'Select',
 
-    /////////////////////////////////////////////
-    'features': 'Features :',
-    'fea1': ' • Local Music Playback - ',
+    // About & Features
+    'package': 'Package',
+    'description':
+        'Nix is an open-source local music player built with Flutter. '
+        'It offers a sleek UI, fast performance, and offline playback with features like '
+        'favorites, shuffle, repeat, theme customization, and a responsive mini-player. '
+        'Fully free, private, and customizable. Available on GitHub, F-Droid, and coming soon to Play Store.',
+
+    'features': 'Features:',
+    'fea1': ' Local Music Playback - ',
     'featu1': 'Plays audio from your device.',
-
-    'fea2': ' • Favorites Management - ',
+    'fea2': ' Favorites Management - ',
     'featu2': 'Easily add/remove favorite tracks.',
-
-    'fea3': ' • Search & Sort - ',
+    'fea3': ' Search & Sort - ',
     'featu3': 'Find songs quickly by name or artist.',
-
-    'fea4': ' • Shuffle & Repeat - ',
+    'fea4': ' Shuffle & Repeat - ',
     'featu4': 'Flexible playback options.',
-
-    'fea5': ' • Custom Themes - ',
+    'fea5': ' Custom Themes - ',
     'featu5': 'Light/Dark/System + color picker.',
-
-    'fea6': ' • Responsive MiniPlayer - ',
+    'fea6': ' Responsive MiniPlayer - ',
     'featu6': 'Expandable with smooth animations.',
-
-    'fea7': ' • Open Source - ',
+    'fea7': ' Open Source - ',
     'featu7': 'Free, no ads, full transparency on GitHub.',
-
-    'fea8': ' • Future Releases - ',
-    'featu8': 'Officially coming to F-Droid and Google Play.',
-
-    'contributors': 'Contributors',
-    'develoer_name': 'BawiCeu',
-    'open_source_comu': 'Open Source Community',
-    'check_for_updates': 'Check for Updates',
+    'fea8': ' Future Releases - ',
+    'featu8': 'Coming soon to F-Droid and Google Play.',
+    'developer_name': 'BawiCeu',
     'open_source_licenses': 'Open Source Licenses',
     'privacy_policy': 'Privacy Policy',
     'source_code_on_gitHub': 'Source Code on GitHub',
+
+    // Player UI
+    'no_favorites_songs_yet': 'No favorites songs yet.',
+    'songs_nav': 'Songs',
+    'favorites_nav': 'Favorites',
+    'playlist_nav': 'Playlist',
+    'search_hint': 'Search..',
+    'user': 'User',
+    'default': 'Default',
+    'title_az_sort': 'Title (A-Z)',
+    'title_za_sort': 'Title (Z-A)',
+    'artist_sort': 'Artist',
+    'duration_sort': 'Duration (Shortest First)',
+    'album': 'Album: ',
+    'duration': 'Duration: ',
+    'size': 'Size: ',
+    'path': 'Path: ',
+    'close': 'Close',
+    'unknown_device': 'Unknown device',
+    'lyrics': 'Lyrics',
+    'upcoming_list': 'UpComing List',
+    'song_details': 'Song Details',
+    'share': 'Share',
+    'favorite': 'Favorite',
+
+    //Miniplayer
+    'up_coming': 'UpComing',
   },
 
-  //burmese
   'bur': {
     'app_name': 'နစ်စ်',
     'welcome': 'ကြိုဆိုပါတယ်',
@@ -122,7 +146,8 @@ final Map<String, Map<String, String>> appTranslations = {
     'language': 'ဘာသာစကား',
     'privacy_policy': 'ကိုယ်ရေးအချက်အလက် မူဝါဒ',
     'contact': 'ဆက်သွယ်ရန်',
-    ///////////
+
+    // General actions
     'clear_data': 'ဒေတာများ ဖျက်ရန်',
     'warning': 'သတိပေးချက်!',
     'delete_warning_msg':
@@ -132,9 +157,11 @@ final Map<String, Map<String, String>> appTranslations = {
     'more': 'နောက်ထပ်',
     'github': 'ဂစ်ဟပ်',
     'email': 'အီးမေးလ်',
+
+    // Theme
     'theme_settings': 'အရောင်အပြင်အဆင်',
     'theme_mode': 'အရောင် စနစ်',
-    'light': 'အလင်',
+    'light': 'အလင်း',
     'dark': 'အမှောင်',
     'system_default': 'စနစ်အလိုက်',
     'theme_colors': 'အရောင်များ',
@@ -143,30 +170,66 @@ final Map<String, Map<String, String>> appTranslations = {
         'မူလအရောင်သည် အပြာရောင်ဖြစ်ပြီး ပန်းရောင်အောက်တွင်ရှိသည်။',
     'choose_color': 'အရောင်ရွေးပါ',
     'select': 'ရွေးချယ်',
-    ///////////////////////////////
-    'features': 'အင်္ဂါရပ်များ :',
-    'fea1': ' • ဒေသဆိုင်ရာ သီချင်းဖွင့်ခြင်း - ',
+
+    // About & Features
+    'package': 'ပက်ကေ့ချ်',
+    'description':
+        'Nix သည် Flutter ဖြင့် ဖန်တီးထားသော open-source သီချင်းပလေယာ ဖြစ်သည်။ '
+        'လှပသော UI၊ မြန်ဆန်သော စွမ်းဆောင်ရည်နှင့် အင်တာနက်မလိုအပ်သော ဖွင့်နိုင်ပါတယ်။ '
+        'အနှစ်သက်ဆုံး၊ အလျားလိုက်၊ ထပ်ဖွင့်၊ အရောင်စနစ်ပြောင်းလဲနိုင်မှု၊ MiniPlayer တုန့်ပြန်မှုကဲ့သို့ '
+        'အင်္ဂါရပ်များကို ထည့်သွင်းထားတယ်။ အခမဲ့၊ လုံခြုံမှုကောင်း၊ ပြင်ဆင်နိုင်ပါတယ်။ GitHub၊ F-Droid တွင် ရရှိနိုင်ပြီး Play Store တွင် မကြာမီ ထုတ်ပြန်ပါမည်။',
+
+    'features': 'အင်္ဂါရပ်များ:',
+    'fea1': ' ဖုန်းထဲကများ သီချင်းဖွင့်ခြင်း - ',
     'featu1': 'သင့်ဖုန်းထဲမှ သီချင်းများဖွင့်နိုင်သည်။',
-    'fea2': ' • အနှစ်သက်ဆုံး စီမံမှု - ',
-    'featu2': 'အလွယ်တကူ အနှစ်သက်ဆုံးများထည့်/ဖယ်နိုင်သည်။',
-    'fea3': ' • ရှာဖွေရေး & စီမံခြင်း - ',
-    'featu3': 'အမည် သို့မဟုတ် အဆိုတော်ဖြင့် သီချင်းရှာနိုင်သည်။',
-    'fea4': ' • အလျားလိုက် & ထပ်ဖွင့် - ',
+    'fea2': ' အနှစ်သက်ဆုံး စီမံမှု - ',
+    'featu2': 'အလွယ်တကူ အနှစ်သက်ဆုံးများ ထည့်/ဖယ် နိုင်သည်။',
+    'fea3': ' ရှာဖွေရေး & စီမံခြင်း - ',
+    'featu3': 'သီချင်းအမည် သို့မဟုတ် အဆိုတော်အမည်ဖြင့် သီချင်းရှာနိုင်သည်။',
+    'fea4': ' အလျားလိုက် & ထပ်ဖွင့် - ',
     'featu4': 'အဆင်ပြေသော ဖွင့်ခြင်းရွေးချယ်စရာများ။',
-    'fea5': ' • အရောင်စနစ်ထည့်သွင်းနိုင်သည် - ',
+    'fea5': ' အရောင်စနစ်ထည့်သွင်းနိုင်သည် - ',
     'featu5': 'အလင်း/အမှောင်/စနစ် + အရောင်ရွေးချယ်မှု။',
-    'fea6': ' • MiniPlayer တုန့်ပြန်မှု - ',
-    'featu6': 'ပြည့်ဖွင့်နိုင်ပြီး animation များဖြင့်ပြသ။',
-    'fea7': ' • အခမဲ့ အရင်းအမြစ် - ',
+    'fea6': ' MiniPlayer တုန့်ပြန်မှု - ',
+    'featu6': 'ဖုန်းမှန်အပြည့် animation နဲ့ပြသ။',
+    'fea7': ' အခမဲ့ အရင်းအမြစ် - ',
     'featu7': 'အခမဲ့၊ ကြော်ငြာမပါ၊ GitHub တွင် ဖွင့်လှစ်ထားသည်။',
-    'fea8': ' • အနာဂတ်ထုတ်လုပ်မှု - ',
+    'fea8': ' အနာဂတ်ထုတ်လုပ်မှု - ',
     'featu8': 'F-Droid နှင့် PlayStore တွင် ထုတ်ပြန်မည်။',
-    'contributors': 'ပံ့ပိုးသူများ',
     'developer_name': 'BawiCeu',
-    'open_source_comu': 'အခမဲ့အရင်းအမြစ် အသိုင်းအဝိုင်း',
-    'check_for_updates': 'အပ်ဒိတ် စစ်ဆေးရန်',
     'open_source_licenses': 'အခမဲ့ အရင်းအမြစ် လိုင်စင်များ',
     'source_code_on_gitHub': 'GitHub တွင် အရင်းအမြစ်',
+
+    // Player UI
+    'no_favorites_songs_yet': 'နှစ်သက်တဲ့ သီချင်းမရှိသေးပါ။',
+    'favorite_songs': 'နှစ်သက်တဲ့ သီချင်းများ',
+    'songs_nav': 'သီချင်းများ',
+    'favorites_nav': 'အနှစ်သက်ဆုံး',
+    'playlist_nav': 'သီချင်းစာရင်း',
+    'search_hint': 'ရှာရန်..',
+    'user': 'အသုံးပြုသူ',
+    'default': 'မူလ',
+    'title_az_sort': 'သီချင်းအမည် (က-အ)',
+    'title_za_sort': 'သီချင်းအမည် (အ-က)',
+    'artist_sort': 'အဆိုတော် နာမည်',
+    'duration_sort': 'အချိန် (အတိုဆုံး)',
+    'album': 'အယ်လ်ဘမ်: ',
+    'duration': 'ကြာချိန်: ',
+    'size': 'အရွယ်စား: ',
+    'file_type': 'ဖိုင်အမျိုးစား: ',
+    'path': 'တည်နေရာ: ',
+    'close': 'ပိတ်မယ်',
+    'favroite_songs': 'နှစ်သက်သော သီချင်းများ',
+    'unknown': 'အမည်မသိ',
+    'unknown_device': 'အမည်မသိ စက်',
+    'lyrics': 'စာသား',
+    'upcoming_list': 'လာမည့်စာရင်း',
+    'song_details': 'သီချင်း အသေးစိတ်',
+    'share': 'မျှဝေ',
+    'favorite': 'အနှစ်သက်ဆုံး',
+
+    //Miniplayer
+    'up_coming': 'အကြာမီ လာမည်',
   },
   'hakha': {
     'app_name': 'Nix',
@@ -201,7 +264,6 @@ final Map<String, Map<String, String>> appTranslations = {
     'language': 'Hawlh',
     'privacy_policy': 'Privacy Policy',
     'contact': 'Contact',
-
     ///////////
     'clear_data': 'Data Hlawnh',
     'warning': 'Thei herih nak!',
@@ -226,34 +288,50 @@ final Map<String, Map<String, String>> appTranslations = {
     'features': 'HmanThatNak :',
     'fea1': ' • Local Music Playback - ',
     'featu1': 'Device chungi um mi hla pawl phawnh khawh a si.',
-
     'fea2': ' • Duhbik Hla - ',
     'featu2': 'Awl tein Duh mi pawl remh khawh a si',
-
     'fea3': ' • Kawl & Remh ngah - ',
     'featu3': 'Hla leh a saktu min in kawl khawh a si.',
-
     'fea4': ' • Amahtein & Phawnh_than - ',
     'featu4': 'Amahten athim , Phawnh than Khawh si.',
-
     'fea5': ' • Duahdanin Theme remh khawh - ',
     'featu5': 'Aceu/Amui/System_in + duhmi color thimkhawh si.',
-
     'fea6': ' •  Responsive MiniPlayer - ',
     'featu6': 'Expandable with smooth animations.',
-
     'fea7': ' • Source Code hi aman um lo - ',
     'featu7': 'A free i,ads a um loh , duh cun GitHub ah lak khawh a si.',
-
     'fea8': ' • Hmailei chuak nak - ',
     'featu8': 'F-Droid leh Google Play ah offical in a vun chuak te la.',
-
     'contributors': 'Thawh tu le hna',
     'develoer_name': 'BawiCeu',
     'open_source_comu': 'Kan Open Source Community',
     'check_for_updates': 'AThar Chuak Kha Chek Nak',
     'open_source_licenses': 'Open Source Licenses',
     'source_code_on_gitHub': 'GitHub I Source Code',
+    //////
+    'no_favorites_songs_yet': 'No favorites songs yet.',
+    'songs_nav': 'Songs',
+    'favorites_nav': 'Favorites',
+    'playlist_nav': 'Play List',
+    'search_hint': 'Search..',
+    'user': 'User',
+    'default': 'Default',
+    'title_az_sort': 'Title (A-Z)',
+    'title_za_sort': 'Title (Z-A)',
+    'artist_sort': 'Title (A-Z)',
+    'duration_sort': 'Duration (Shortest First)',
+    'album': 'Album: ',
+    'duration': 'Duration: ',
+    'size': 'Size: ',
+    'path': 'Path: ',
+    'close': 'Close',
+    'unknown_device': 'Unknown device',
+    'more': 'More',
+    'lyrics': 'Lyrics',
+    'upcoming_list': 'UpComing List',
+    'song_details': 'Song Details',
+    'share': 'Share',
+    'favorite': 'favorite',
   },
   'falam': {
     'app_name': 'Nix',
@@ -288,7 +366,6 @@ final Map<String, Map<String, String>> appTranslations = {
     'language': 'Tawng',
     'privacy_policy': 'Privacy Policy',
     'contact': 'Contact',
-
     ///////////
     'clear_data': 'Clear Data',
     'warning': 'Warning!',
@@ -309,33 +386,24 @@ final Map<String, Map<String, String>> appTranslations = {
     'default_color_note': 'Default color cu Blue a si, Pink hnuai ah a um.',
     'choose_color': 'Color hril aw',
     'select': 'Ka hril',
-
     //////////////////////////////////////////
     'features': 'HmangThaNak :',
     'fea1': ' • Local Music Playback - ',
     'featu1': 'Plays audio from your device.',
-
     'fea2': ' • Favorites Management - ',
     'featu2': 'Easily add/remove favorite tracks.',
-
     'fea3': ' • Search & Sort - ',
     'featu3': 'Find songs quickly by name or artist.',
-
     'fea4': ' • Shuffle & Repeat - ',
     'featu4': 'Flexible playback options.',
-
     'fea5': ' • Custom Themes - ',
     'featu5': 'Light/Dark/System + color picker.',
-
     'fea6': ' • Responsive MiniPlayer - ',
     'featu6': 'Expandable with smooth animations.',
-
     'fea7': ' • Open Source - ',
     'featu7': 'Free, no ads, full transparency on GitHub.',
-
     'fea8': ' • Future Releases - ',
     'featu8': 'Officially coming to F-Droid and Google Play.',
-
     'contributors': 'Contributors',
     'develoer_name': 'BawiCeu',
     'open_source_comu': 'Open Source Community',
@@ -343,5 +411,29 @@ final Map<String, Map<String, String>> appTranslations = {
     'open_source_licenses': 'Open Source Licenses',
     'privacy_policy': 'Privacy Policy',
     'source_code_on_gitHub': 'Source Code on GitHub',
+    //////
+    'no_favorites_songs_yet': 'No favorites songs yet.',
+    'songs_nav': 'Songs',
+    'favorites_nav': 'Favorites',
+    'playlist_nav': 'Play List',
+    'search_hint': 'Search..',
+    'user': 'User',
+    'default': 'Default',
+    'title_az_sort': 'Title (A-Z)',
+    'title_za_sort': 'Title (Z-A)',
+    'artist_sort': 'Title (A-Z)',
+    'duration_sort': 'Duration (Shortest First)',
+    'album': 'Album: ',
+    'duration': 'Duration: ',
+    'size': 'Size: ',
+    'path': 'Path: ',
+    'close': 'Close',
+    'unknown_device': 'Unknown device',
+    'more': 'More',
+    'lyrics': 'Lyrics',
+    'upcoming_list': 'UpComing List',
+    'song_details': 'Song Details',
+    'share': 'Share',
+    'favorite': 'favorite',
   },
 };

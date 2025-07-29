@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
+import 'package:nix/%20utils/translator.dart';
 import 'package:nix/providers/app_info_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -14,7 +15,7 @@ class InfoPage extends StatelessWidget {
       backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-        title: Text("About"),
+        title: Text(t(context, 'about')),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -47,15 +48,13 @@ class InfoPage extends StatelessWidget {
                           ),
                         ),
                         subtitle: Text(
-                          'Version: ${appInfo.version}\nPackage: ${appInfo.packageName}',
+                          '${t(context, 'version')}: ${appInfo.version}\n${t(context, 'package')}: ${appInfo.packageName}',
                         ),
                       ),
                     ),
                   ),
                   SizedBox(height: 10.0),
-                  Text(
-                    "       Nix is an open-source local music player built with Flutter. It offers a sleek UI, fast performance, and offline playback with features like favorites, shuffle, repeat, theme customization, and a responsive mini-player. Fully free, private, and customizable. Available on GitHub, F-Droid, and coming soon to Play Store.",
-                  ),
+                  Text(t(context, 'description')),
                   SizedBox(height: 15),
 
                   Card(
@@ -71,10 +70,10 @@ class InfoPage extends StatelessWidget {
                             color: Theme.of(context).colorScheme.onSurface,
                             height: 1.5,
                           ),
-                          children: const [
+                          children: [
                             //Features
                             TextSpan(
-                              text: 'Features:\n',
+                              text: '${t(context, 'features')} :\n',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
@@ -85,97 +84,80 @@ class InfoPage extends StatelessWidget {
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             TextSpan(
-                              text: 'Local Music Playback',
+                              text: '${t(context, 'fea1')} ',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            TextSpan(
-                              text: ' –  Plays audio from your device.\n',
-                            ),
+                            TextSpan(text: '${t(context, 'featu1')}\n'),
 
                             TextSpan(
                               text: '• ',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             TextSpan(
-                              text: 'Favorites Management',
+                              text: '${t(context, 'fea2')} ',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            TextSpan(
-                              text: ' – Easily add/remove favorite tracks.\n',
-                            ),
+                            TextSpan(text: '${t(context, 'featu2')}\n'),
 
                             TextSpan(
                               text: '• ',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             TextSpan(
-                              text: 'Search & Sort',
+                              text: '${t(context, 'fea3')} ',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            TextSpan(
-                              text:
-                                  ' – Find songs quickly by name or artist.\n',
-                            ),
+                            TextSpan(text: '${t(context, 'featu3')}\n'),
 
                             TextSpan(
                               text: '• ',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             TextSpan(
-                              text: 'Shuffle & Repeat',
+                              text: '${t(context, 'fea4')} ',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            TextSpan(text: ' – Flexible playback options.\n'),
+                            TextSpan(text: '${t(context, 'featu4')}\n'),
 
                             TextSpan(
                               text: '• ',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             TextSpan(
-                              text: 'Custom Themes',
+                              text: '${t(context, 'fea5')} ',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            TextSpan(
-                              text: ' – Light/Dark/System + color picker.\n',
-                            ),
+                            TextSpan(text: '${t(context, 'featu5')}\n'),
 
                             TextSpan(
                               text: '• ',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             TextSpan(
-                              text: 'Responsive MiniPlayer',
+                              text: '${t(context, 'fea6')} ',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            TextSpan(
-                              text: ' – Expandable with smooth animations.\n',
-                            ),
+                            TextSpan(text: '${t(context, 'featu6')}\n'),
 
                             TextSpan(
                               text: '• ',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             TextSpan(
-                              text: 'Open Source',
+                              text: '${t(context, 'fea7')} ',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            TextSpan(
-                              text:
-                                  ' – Free, no ads, full transparency on GitHub.\n',
-                            ),
+                            TextSpan(text: '${t(context, 'featu7')}\n'),
 
                             TextSpan(
                               text: '• ',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             TextSpan(
-                              text: 'Future Releases',
+                              text: '${t(context, 'fea8')} ',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            TextSpan(
-                              text:
-                                  ' – Officially coming to F-Droid and Google Play.\n',
-                            ),
+                            TextSpan(text: '${t(context, 'featu8')}\n'),
                           ],
                         ),
                       ),
@@ -204,14 +186,14 @@ class InfoPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Developer Section
-                        const Padding(
+                        Padding(
                           padding: EdgeInsets.only(
                             left: 10,
                             top: 10,
                             bottom: 5,
                           ),
                           child: Text(
-                            'Developer',
+                            t(context, 'developer'),
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -220,7 +202,7 @@ class InfoPage extends StatelessWidget {
                         ),
 
                         _buildContributorTile(
-                          'BawiCeu',
+                          '${t(context, 'developer_name')}',
                           'https://github.com/BawiCeu16',
                           Icon(FlutterRemix.user_2_fill),
                         ),
@@ -250,51 +232,31 @@ class InfoPage extends StatelessWidget {
                         Divider(),
 
                         const SizedBox(height: 5.0),
-                        // Check for Updates
+
+                        // GitHub Repo
                         ListTile(
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadiusGeometry.circular(10),
                           ),
-                          leading: const Icon(Icons.update),
-                          title: const Text('Check for Updates'),
+                          leading: const Icon(FlutterRemix.code_fill),
+                          title: Text(t(context, 'source_code_on_gitHub')),
                           onTap: () async {
-                            const githubUrl =
-                                'https://github.com/yourusername/nix/releases';
-                            if (await canLaunchUrl(Uri.parse(githubUrl))) {
+                            const url = 'https://github.com/BawiCeu16/nix';
+                            if (await canLaunchUrl(Uri.parse(url))) {
                               await launchUrl(
-                                Uri.parse(githubUrl),
+                                Uri.parse(url),
                                 mode: LaunchMode.externalApplication,
                               );
                             }
                           },
                         ),
-
-                        // Open Source Licenses
-                        ListTile(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadiusGeometry.circular(10),
-                          ),
-                          leading: const Icon(Icons.article),
-                          title: const Text('Open Source Licenses'),
-                          onTap: () => showLicensePage(
-                            context: context,
-                            applicationName: appInfo.appName,
-                            applicationVersion: appInfo.version,
-                            applicationLegalese: '© 2025 Nix Contributors',
-                          ),
-                        ),
-
-                        const SizedBox(height: 5.0),
-                        Divider(),
-                        const SizedBox(height: 5.0),
-
                         // Privacy Policy
                         ListTile(
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadiusGeometry.circular(10),
                           ),
                           leading: const Icon(FlutterRemix.shield_line),
-                          title: const Text('Privacy Policy'),
+                          title: Text(t(context, 'privacy_policy')),
                           onTap: () async {
                             const url =
                                 'https://BawiCeu16.github.io/nix/privacy_policy.html';
@@ -306,24 +268,21 @@ class InfoPage extends StatelessWidget {
                             }
                           },
                         ),
-
-                        // GitHub Repo
+                        // Open Source Licenses
                         ListTile(
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadiusGeometry.circular(10),
                           ),
-                          leading: const Icon(FlutterRemix.code_fill),
-                          title: const Text('Source Code on GitHub'),
-                          onTap: () async {
-                            const url = 'https://github.com/BawiCeu16/nix';
-                            if (await canLaunchUrl(Uri.parse(url))) {
-                              await launchUrl(
-                                Uri.parse(url),
-                                mode: LaunchMode.externalApplication,
-                              );
-                            }
-                          },
+                          leading: const Icon(Icons.article),
+                          title: Text(t(context, 'open_source_licenses')),
+                          onTap: () => showLicensePage(
+                            context: context,
+                            applicationName: appInfo.appName,
+                            applicationVersion: appInfo.version,
+                            applicationLegalese: '© 2025 Nix',
+                          ),
                         ),
+                        const SizedBox(height: 5.0),
                       ],
                     ),
                   ),
