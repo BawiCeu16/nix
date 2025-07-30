@@ -7,12 +7,6 @@ A minimal & powerful Flutter music player app built with <b>Provider</b>, <b>jus
 <a href="https://flutter.dev/"><img src="https://img.shields.io/badge/Flutter-Framework-blue?logo=flutter&logoColor=white"></a>
 <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-green"></a>
 <a href="#"><img src="https://img.shields.io/github/stars/your-username/nix?style=social"></a>
-<a href="#"><img src="https://img.shields.io/github/forks/your-username/nix?style=social"></a>
-<a href="#"><img src="https://img.shields.io/github/issues/your-username/nix"></a>
-<a href="#"><img src="https://img.shields.io/github/downloads/your-username/nix/total?color=purple"></a>
-</p>
-
----
 
 ## 📸 **Screenshots**
 | Home Screen | Mini Player | Playlist |
@@ -36,11 +30,6 @@ A minimal & powerful Flutter music player app built with <b>Provider</b>, <b>jus
 - **Provider** – State Management  
 - **just_audio** – Audio Playback  
 - **on_audio_query** – Music Library  
-
----
-
-## 📥 **Download APK**
-👉 [**Download Latest Release**](https://github.com/your-username/nix/releases/latest)  
 
 ---
 
