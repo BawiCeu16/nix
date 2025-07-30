@@ -6,7 +6,7 @@ A minimal & powerful Flutter music player app built with <b>Provider</b>, <b>jus
 <p align="center">
 <a href="https://flutter.dev/"><img src="https://img.shields.io/badge/Flutter-Framework-blue?logo=flutter&logoColor=white"></a>
 <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-green"></a>
-<a href="#"><img src="https://img.shields.io/github/stars/your-username/nix?style=social"></a>
+<a href="#"><img src="https://img.shields.io/github/stars/BawiCeu16/nix?style=social"></a>
 
 ## 📸 **Screenshots**
 | Home Screen | Mini Player | Playlist |
