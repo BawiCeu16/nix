@@ -61,7 +61,7 @@ final Map<String, Map<String, String>> appTranslations = {
         'Nix is an open-source local music player built with Flutter. '
         'It offers a sleek UI, fast performance, and offline playback with features like '
         'favorites, shuffle, repeat, theme customization, and a responsive mini-player. '
-        'Fully free, private, and customizable. Available on GitHub, F-Droid, and coming soon to Play Store.',
+        'Fully free, private, and customizable. Available on GitHub and coming soon to Play Store.',
 
     'features': 'Features:',
     'fea1': ' Local Music Playback - ',
