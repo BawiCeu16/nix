@@ -1,4 +1,4 @@
-name: Nix App v1.0.0
+name: Nix Release APK
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       version_tag:
-        description: 'v1.0.0'
+        description: 'Enter release tag (example: v1.0.0)'
         required: true
         default: 'v1.0.0'
 
@@ -16,37 +16,31 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ✅ Checkout source code
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # ✅ Set up Flutter
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
 
-      # ✅ Install dependencies
       - name: Install Dependencies
         run: flutter pub get
 
-      # ✅ Build Release APK
       - name: Build Release APK
         run: flutter build apk --release
 
-      # ✅ Upload as artifact (optional)
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
 
-      # ✅ Create GitHub Release with Auto Notes
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name || inputs.version_tag }}
-          release_name: "Nix APK Release (${{ github.ref_name || inputs.version_tag }})"
+          name: "Nix APK Release (${{ github.ref_name || inputs.version_tag }})"
           generate_release_notes: true
           files: build/app/outputs/flutter-apk/app-release.apk
         env:
