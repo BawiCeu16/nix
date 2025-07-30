@@ -1,16 +1,59 @@
-# nix
+<h1 align="center">🎵 Nix – Open-Source Music Player</h1>
+<p align="center">
+A minimal & powerful Flutter music player app built with <b>Provider</b>, <b>just_audio</b>, and <b>on_audio_query</b>.
+</p>
 
-A new Flutter project.
+<p align="center">
+<a href="https://flutter.dev/"><img src="https://img.shields.io/badge/Flutter-Framework-blue?logo=flutter&logoColor=white"></a>
+<a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-green"></a>
+<a href="#"><img src="https://img.shields.io/github/stars/your-username/nix?style=social"></a>
+<a href="#"><img src="https://img.shields.io/github/forks/your-username/nix?style=social"></a>
+<a href="#"><img src="https://img.shields.io/github/issues/your-username/nix"></a>
+<a href="#"><img src="https://img.shields.io/github/downloads/your-username/nix/total?color=purple"></a>
+</p>
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## 📸 **Screenshots**
+| Home Screen | Mini Player | Playlist |
+|------------|------------|------------|
+| ![Home](https://via.placeholder.com/200x400?text=Home) | ![MiniPlayer](https://via.placeholder.com/200x400?text=MiniPlayer) | ![Playlist](https://via.placeholder.com/200x400?text=Playlist) |
 
-A few resources to get you started if this is your first Flutter project:
+---
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## ✨ **Features**
+- ✅ Play local audio files  
+- ✅ Mini-player with playback controls  
+- ✅ Playlist management  
+- ✅ Responsive & minimal UI  
+- ✅ 100% Open-source and customizable  
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+---
+
+## 🛠 **Tech Stack**
+- **Flutter** – UI Framework  
+- **Dart** – Programming Language  
+- **Provider** – State Management  
+- **just_audio** – Audio Playback  
+- **on_audio_query** – Music Library  
+
+---
+
+## 📥 **Download APK**
+👉 [**Download Latest Release**](https://github.com/your-username/nix/releases/latest)  
+
+---
+
+## 📦 **Installation**
+```bash
+# Clone the repository
+git clone https://github.com/your-username/nix.git
+
+# Navigate into the project folder
+cd nix
+
+# Install dependencies
+flutter pub get
+
+# Run the app
+flutter run
