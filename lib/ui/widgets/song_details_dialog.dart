@@ -44,7 +44,13 @@ class SongDetailsDialog extends StatelessWidget {
                   artworkHeight: 80,
                   artworkWidth: 80,
                   artworkBorder: BorderRadius.circular(10),
-                  nullArtworkWidget: const Icon(Icons.music_note, size: 100),
+                  nullArtworkWidget: Card(
+                    elevation: 0,
+                    child: Padding(
+                      padding: EdgeInsetsGeometry.all(15),
+                      child: const Icon(Icons.music_note, size: 60),
+                    ),
+                  ),
                 ),
                 SizedBox(width: 16),
                 // Song title and artist

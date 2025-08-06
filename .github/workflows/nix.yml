@@ -1,5 +1,8 @@
 name: Nix Release APK
 
+permissions:
+  contents: write   # ✅ Required for creating GitHub Releases
+
 on:
   push:
     tags:

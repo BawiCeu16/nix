@@ -66,6 +66,7 @@ dependencies:
   fade_shimmer: ^2.4.0
   rxdart: ^0.28.0
   flutter_launcher_icons: ^0.14.4
+  audio_service: ^0.18.18
 
 #############################################################
 

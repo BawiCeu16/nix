@@ -27,6 +27,7 @@ class HomeWithNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double bottomNavBarHeight = kBottomNavigationBarHeight;
     final navProvider = Provider.of<BottomNavProvider>(context);
     final List<Widget> screens = const [
       //Screens from Main
@@ -36,23 +37,21 @@ class HomeWithNavigation extends StatelessWidget {
     ];
 
     return Scaffold(
-      body: SafeArea(
-        child: Stack(
-          children: [
-            // Expanded(child: screens[navProvider.currentIndex]),
-            // MiniPlayerWidget(heightNotifier: miniPlayerHeightNotifier),
-            // Pass the ValueNotifier to the MiniPlayerWidget
+      body: Stack(
+        children: [
+          // Expanded(child: screens[navProvider.currentIndex]),
+          // MiniPlayerWidget(heightNotifier: miniPlayerHeightNotifier),
+          // Pass the ValueNotifier to the MiniPlayerWidget
 
-            // Main screen
-            Positioned.fill(
-              child: screens[navProvider.currentIndex],
-            ), // Miniplayer
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: MiniPlayerWidget(heightNotifier: miniPlayerHeightNotifier),
-            ),
-          ],
-        ),
+          // Main screen
+          Positioned.fill(
+            child: SafeArea(child: screens[navProvider.currentIndex]),
+          ), // Miniplayer
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: MiniPlayerWidget(heightNotifier: miniPlayerHeightNotifier),
+          ),
+        ],
       ),
       bottomNavigationBar: ValueListenableBuilder<double>(
         valueListenable: miniPlayerHeightNotifier,
@@ -74,12 +73,16 @@ class HomeWithNavigation extends StatelessWidget {
           //     kBottomNavigationBarHeight * expansionPercentage;
 
           return SizedBox(
-            height: 65 - 65 * expansionPercentage,
+            height:
+                bottomNavBarHeight - bottomNavBarHeight * expansionPercentage,
             child: Transform.translate(
-              offset: Offset(0.0, 65 * expansionPercentage * 0.5),
+              offset: Offset(
+                0.0,
+                bottomNavBarHeight * expansionPercentage * 0.5,
+              ),
               child: Opacity(
                 opacity: opacity,
-                child: OverflowBox(maxHeight: 65, child: child),
+                child: OverflowBox(maxHeight: bottomNavBarHeight, child: child),
               ),
             ),
           );
@@ -87,6 +90,7 @@ class HomeWithNavigation extends StatelessWidget {
         child: NavigationBar(
           selectedIndex: navProvider.currentIndex,
           onDestinationSelected: navProvider.changeIndex,
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
           destinations: [
             //Songs
             NavigationDestination(

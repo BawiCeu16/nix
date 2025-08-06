@@ -46,68 +46,81 @@ class SearchBarWidget extends StatelessWidget {
                   context: context,
                   builder: (context) {
                     final provider = context.read<MusicProvider>();
-                    return SizedBox(
-                      width: MediaQuery.of(context).size.width / 1.3,
-                      child: Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            ListTile(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadiusGeometry.circular(10),
+                    return SafeArea(
+                      bottom: true,
+                      child: SizedBox(
+                        width: MediaQuery.of(context).size.width / 1.3,
+                        child: Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ListTile(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadiusGeometry.circular(
+                                    10,
+                                  ),
+                                ),
+                                leading: Icon(FlutterRemix.sort_asc),
+                                title: Text(t(context, 'title_az_sort')),
+                                trailing:
+                                    // Row(
+                                    //   mainAxisSize: MainAxisSize.min,
+                                    //   children: [
+                                    Text("Default"),
+                                // SizedBox(width: 5),
+                                //    provider. Icon(FlutterRemix.check_fill),
+                                //   ],
+                                // ),
+                                onTap: () {
+                                  provider.setSortOption(SortOption.titleAsc);
+                                  Navigator.pop(context);
+                                },
                               ),
-                              leading: Icon(FlutterRemix.sort_asc),
-                              title: Text(t(context, 'title_az_sort')),
-                              trailing:
-                                  // Row(
-                                  //   mainAxisSize: MainAxisSize.min,
-                                  //   children: [
-                                  Text("Default"),
-                              // SizedBox(width: 5),
-                              //    provider. Icon(FlutterRemix.check_fill),
-                              //   ],
-                              // ),
-                              onTap: () {
-                                provider.setSortOption(SortOption.titleAsc);
-                                Navigator.pop(context);
-                              },
-                            ),
-                            ListTile(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadiusGeometry.circular(10),
+                              ListTile(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadiusGeometry.circular(
+                                    10,
+                                  ),
+                                ),
+                                leading: Icon(FlutterRemix.sort_desc),
+                                title: Text(t(context, 'title_za_sort')),
+                                onTap: () {
+                                  provider.setSortOption(SortOption.titleDesc);
+                                  Navigator.pop(context);
+                                },
                               ),
-                              leading: Icon(FlutterRemix.sort_desc),
-                              title: Text(t(context, 'title_za_sort')),
-                              onTap: () {
-                                provider.setSortOption(SortOption.titleDesc);
-                                Navigator.pop(context);
-                              },
-                            ),
-                            ListTile(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadiusGeometry.circular(10),
-                              ),
+                              ListTile(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadiusGeometry.circular(
+                                    10,
+                                  ),
+                                ),
 
-                              leading: Icon(FlutterRemix.user_2_fill),
-                              title: Text(t(context, 'artist_sort')),
-                              onTap: () {
-                                provider.setSortOption(SortOption.artistAsc);
-                                Navigator.pop(context);
-                              },
-                            ),
-                            ListTile(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadiusGeometry.circular(10),
+                                leading: Icon(FlutterRemix.user_2_fill),
+                                title: Text(t(context, 'artist_sort')),
+                                onTap: () {
+                                  provider.setSortOption(SortOption.artistAsc);
+                                  Navigator.pop(context);
+                                },
                               ),
-                              leading: Icon(FlutterRemix.time_fill),
-                              title: Text(t(context, 'duration_sort')),
-                              onTap: () {
-                                provider.setSortOption(SortOption.durationAsc);
-                                Navigator.pop(context);
-                              },
-                            ),
-                          ],
+                              ListTile(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadiusGeometry.circular(
+                                    10,
+                                  ),
+                                ),
+                                leading: Icon(FlutterRemix.time_fill),
+                                title: Text(t(context, 'duration_sort')),
+                                onTap: () {
+                                  provider.setSortOption(
+                                    SortOption.durationAsc,
+                                  );
+                                  Navigator.pop(context);
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     );

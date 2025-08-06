@@ -22,9 +22,10 @@ class MiniPlayerWidget extends StatelessWidget {
 
     if (Musprovider.currentSong == null) return const SizedBox();
     final song = Musprovider.currentSong!;
-    final imageSize = MediaQuery.of(context).size.width * 0.88;
-    final upcomingSize = MediaQuery.of(context).size.width * 0.88;
+    final imageSize = MediaQuery.of(context).size.width * 0.89;
+    final upcomingSize = MediaQuery.of(context).size.width * 0.89;
     return Consumer<MusicProvider>(
+      //Miniplayer Widget
       builder: (context, provider, _) => Miniplayer(
         // elevation: 3.0,
         tapToCollapse: false,
@@ -103,6 +104,7 @@ class MiniPlayerWidget extends StatelessWidget {
                           : current.inMilliseconds / total.inMilliseconds;
 
                       return LinearProgressIndicator(
+                        borderRadius: BorderRadius.circular(100),
                         value: progress.clamp(0.0, 1.0),
                         // backgroundColor: Colors.grey.shade300,
                         valueColor: AlwaysStoppedAnimation<Color>(
@@ -557,50 +559,58 @@ class MiniPlayerWidget extends StatelessWidget {
       isDismissible: true,
       context: context,
       builder: (context) {
-        return SizedBox(
-          width: MediaQuery.of(context).size.width / 1.3,
+        return SafeArea(
+          bottom: true,
+          child: SizedBox(
+            width: MediaQuery.of(context).size.width / 1.3,
 
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: 10.0,
-              horizontal: 10.0,
-            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: 10.0,
+                horizontal: 10.0,
+              ),
 
-            child: Consumer<MusicProvider>(
-              builder: (context, musicProvider, _) {
-                final upcoming = musicProvider.upcomingSongs;
-                return ListView.builder(
-                  itemCount: upcoming.length,
-                  itemBuilder: (context, index) {
-                    final song = upcoming[index];
-                    return ListTile(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadiusGeometry.circular(10),
-                      ),
-                      leading: QueryArtworkWidget(
-                        keepOldArtwork: true,
-                        artworkBorder: BorderRadius.circular(5.0),
-                        id: song.id,
-                        artworkQuality: FilterQuality.high,
-                        nullArtworkWidget: SizedBox(
-                          height: 55,
-                          width: 55,
-                          child: Card(
-                            elevation: 0,
-
-                            child: Icon(FlutterRemix.music_fill),
-                          ),
+              child: Consumer<MusicProvider>(
+                builder: (context, musicProvider, _) {
+                  final upcoming = musicProvider.upcomingSongs;
+                  return ListView.builder(
+                    itemCount: upcoming.length,
+                    itemBuilder: (context, index) {
+                      final song = upcoming[index];
+                      return ListTile(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadiusGeometry.circular(10),
                         ),
-                        type: ArtworkType.AUDIO,
-                      ),
+                        leading: QueryArtworkWidget(
+                          keepOldArtwork: true,
+                          artworkBorder: BorderRadius.circular(5.0),
+                          id: song.id,
+                          artworkQuality: FilterQuality.high,
+                          nullArtworkWidget: SizedBox(
+                            height: 55,
+                            width: 55,
+                            child: Card(
+                              elevation: 0,
 
-                      title: Text(song.title, overflow: TextOverflow.ellipsis),
-                      subtitle: Text(song.artist ?? "${t(context, 'unknown')}"),
-                      onTap: () => musicProvider.playSong(song),
-                    );
-                  },
-                );
-              },
+                              child: Icon(FlutterRemix.music_fill),
+                            ),
+                          ),
+                          type: ArtworkType.AUDIO,
+                        ),
+
+                        title: Text(
+                          song.title,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: Text(
+                          song.artist ?? "${t(context, 'unknown')}",
+                        ),
+                        onTap: () => musicProvider.playSong(song),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ),
         );
