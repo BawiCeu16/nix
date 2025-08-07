@@ -27,7 +27,7 @@ class HomeWithNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double bottomNavBarHeight = kBottomNavigationBarHeight;
+    double bottomNavBarHeight = kBottomNavigationBarHeight + 8;
     final navProvider = Provider.of<BottomNavProvider>(context);
     final List<Widget> screens = const [
       //Screens from Main

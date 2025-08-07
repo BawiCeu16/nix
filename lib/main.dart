@@ -19,6 +19,7 @@ void main() async {
     androidNotificationChannelId: 'com.c.nix.channel.audio',
     androidNotificationChannelName: 'Audio playback',
     androidNotificationOngoing: true,
+    preloadArtwork: true,
   );
 
   SystemChrome.setSystemUIOverlayStyle(
