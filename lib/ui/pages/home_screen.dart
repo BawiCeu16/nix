@@ -37,6 +37,7 @@ class HomeWithNavigation extends StatelessWidget {
     ];
 
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
       body: Stack(
         children: [
           // Expanded(child: screens[navProvider.currentIndex]),

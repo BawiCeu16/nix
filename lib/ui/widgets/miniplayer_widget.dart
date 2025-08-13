@@ -24,6 +24,10 @@ class MiniPlayerWidget extends StatelessWidget {
     final song = Musprovider.currentSong!;
     final imageSize = MediaQuery.of(context).size.width * 0.89;
     final upcomingSize = MediaQuery.of(context).size.width * 0.89;
+
+    // Inside your widget's build method
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Consumer<MusicProvider>(
       //Miniplayer Widget
       builder: (context, provider, _) => Miniplayer(
@@ -122,357 +126,387 @@ class MiniPlayerWidget extends StatelessWidget {
               opacity: expandedOpacityPercentage,
               child: SingleChildScrollView(
                 physics: const NeverScrollableScrollPhysics(),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: MediaQuery.of(context).size.height,
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      top: topPadding + 20.0,
-                      left: 20.0,
-                      right: 20.0,
-                      bottom: bottomPadding + 20.0,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+
+                      end: Alignment.bottomRight,
+                      colors: [
+                        colorScheme.onPrimary, // Starts with the tertiary color
+                        colorScheme
+                            .surfaceContainerLowest, // Ends with the primary container color
+                      ],
                     ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        //NowPlaying Bar
-                        SizedBox(
-                          height: 35,
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(left: 15),
-                                child: const Icon(
-                                  FlutterRemix.arrow_down_s_fill,
-                                ),
-                              ),
-                              // Expanded(
-                              //   child: Consumer<MusicProvider>(
-                              //     builder: (_, provider, __) {
-                              //       return Text(
-                              //         "Output device: ${provider.connectedDeviceName}",
-                              //       );
-                              //     },
-                              //   ),
-                              // ),
-                              Expanded(
-                                child: Center(
-                                  child: Consumer<MusicProvider>(
-                                    builder: (_, provider, __) {
-                                      return Text(provider.connectedDeviceName);
-                                    },
+                  ),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: MediaQuery.of(context).size.height,
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        top: topPadding + 20.0,
+                        left: 20.0,
+                        right: 20.0,
+                        bottom: bottomPadding + 20.0,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          //NowPlaying Bar
+                          SizedBox(
+                            height: 35,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 15),
+                                  child: const Icon(
+                                    FlutterRemix.arrow_down_s_fill,
                                   ),
                                 ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(right: 30.0),
-                                child: const SizedBox(),
-                              ),
-                              // IconButton(
-                              //   onPressed: () => _showBottomSheet(context, song),
-                              //   icon: const Icon(FlutterRemix.more_2_fill),
-                              // ),
-                            ],
+                                // Expanded(
+                                //   child: Consumer<MusicProvider>(
+                                //     builder: (_, provider, __) {
+                                //       return Text(
+                                //         "Output device: ${provider.connectedDeviceName}",
+                                //       );
+                                //     },
+                                //   ),
+                                // ),
+                                Expanded(
+                                  child: Center(
+                                    child: Consumer<MusicProvider>(
+                                      builder: (_, provider, __) {
+                                        return Text(
+                                          provider.connectedDeviceName,
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 30.0),
+                                  child: const SizedBox(),
+                                ),
+                                // IconButton(
+                                //   onPressed: () => _showBottomSheet(context, song),
+                                //   icon: const Icon(FlutterRemix.more_2_fill),
+                                // ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 20),
+                          const SizedBox(height: 20),
 
-                        //Artwork for NowPlaying screen
-                        Stack(
-                          children: [
-                            //ArtWork
-                            Hero(
-                              tag: 'artwork-${song.id}',
-                              child: SizedBox(
-                                height: imageSize,
-                                width: imageSize,
-                                child: QueryArtworkWidget(
-                                  keepOldArtwork: true,
+                          //Artwork for NowPlaying screen
+                          Stack(
+                            children: [
+                              //ArtWork
+                              Hero(
+                                tag: 'artwork-${song.id}',
+                                child: SizedBox(
+                                  height: imageSize,
+                                  width: imageSize,
+                                  child: QueryArtworkWidget(
+                                    keepOldArtwork: true,
 
-                                  artworkQuality: FilterQuality.high,
-                                  artworkBorder: BorderRadius.circular(15),
-                                  id: song.id,
-                                  type: ArtworkType.AUDIO,
-                                  nullArtworkWidget: SizedBox(
-                                    height: 55,
-                                    width: 55,
-                                    child: Card(
-                                      elevation: 0,
-                                      child: Icon(
-                                        FlutterRemix.music_fill,
-                                        size: 100,
+                                    artworkQuality: FilterQuality.high,
+                                    artworkBorder: BorderRadius.circular(15),
+                                    id: song.id,
+                                    type: ArtworkType.AUDIO,
+                                    nullArtworkWidget: SizedBox(
+                                      height: 55,
+                                      width: 55,
+                                      child: Card(
+                                        elevation: 0,
+                                        child: Icon(
+                                          FlutterRemix.music_fill,
+                                          size: 100,
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                            //UpComing 1
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: Consumer<MusicProvider>(
-                                builder: (context, provider, _) {
-                                  final nextSong =
-                                      provider.nextSongIfEndingSoon;
-                                  if (nextSong == null) return const SizedBox();
+                              //UpComing 1
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: Consumer<MusicProvider>(
+                                  builder: (context, provider, _) {
+                                    final nextSong =
+                                        provider.nextSongIfEndingSoon;
+                                    if (nextSong == null)
+                                      return const SizedBox();
 
-                                  return SizedBox(
-                                    width: upcomingSize,
-                                    child: Card(
-                                      elevation: 0,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.surfaceContainerHighest,
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 5.0,
-                                          horizontal: 5.0,
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              "${t(context, 'up_coming')}",
-                                              // ,style: TextStyle(fontWeight: FontWeight.bold),
-                                            ),
-                                            SizedBox(height: 5.0),
-                                            Opacity(
-                                              opacity:
-                                                  0.7, // Make the entire Row dim
-                                              child: Row(
-                                                children: [
-                                                  QueryArtworkWidget(
-                                                    keepOldArtwork: true,
+                                    return SizedBox(
+                                      width: upcomingSize,
+                                      child: Card(
+                                        elevation: 0,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.surfaceContainerHighest,
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 5.0,
+                                            horizontal: 5.0,
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                "${t(context, 'up_coming')}",
+                                                // ,style: TextStyle(fontWeight: FontWeight.bold),
+                                              ),
+                                              SizedBox(height: 5.0),
+                                              Opacity(
+                                                opacity:
+                                                    0.7, // Make the entire Row dim
+                                                child: Row(
+                                                  children: [
+                                                    QueryArtworkWidget(
+                                                      keepOldArtwork: true,
 
-                                                    artworkQuality:
-                                                        FilterQuality.high,
-                                                    id: nextSong.id,
-                                                    type: ArtworkType.AUDIO,
-                                                    artworkBorder:
-                                                        BorderRadius.circular(
-                                                          7.0,
-                                                        ),
+                                                      artworkQuality:
+                                                          FilterQuality.high,
+                                                      id: nextSong.id,
+                                                      type: ArtworkType.AUDIO,
+                                                      artworkBorder:
+                                                          BorderRadius.circular(
+                                                            7.0,
+                                                          ),
 
-                                                    nullArtworkWidget: SizedBox(
-                                                      height: 55,
-                                                      width: 55,
-                                                      child: Card(
-                                                        elevation: 0,
-                                                        child: const Icon(
-                                                          Icons.music_note,
-                                                        ),
+                                                      nullArtworkWidget:
+                                                          SizedBox(
+                                                            height: 55,
+                                                            width: 55,
+                                                            child: Card(
+                                                              elevation: 0,
+                                                              child: const Icon(
+                                                                Icons
+                                                                    .music_note,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                    ),
+                                                    SizedBox(width: 10),
+                                                    Expanded(
+                                                      child: Column(
+                                                        mainAxisSize:
+                                                            MainAxisSize.max,
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          Text(
+                                                            nextSong.title,
+                                                            maxLines: 1,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                          ),
+                                                          Text(
+                                                            nextSong.artist ??
+                                                                "${t(context, 'unknown')}",
+                                                          ),
+                                                        ],
                                                       ),
                                                     ),
-                                                  ),
-                                                  SizedBox(width: 10),
-                                                  Expanded(
-                                                    child: Column(
-                                                      mainAxisSize:
-                                                          MainAxisSize.max,
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Text(
-                                                          nextSong.title,
-                                                          maxLines: 1,
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
-                                                        ),
-                                                        Text(
-                                                          nextSong.artist ??
-                                                              "${t(context, 'unknown')}",
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ],
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                          ],
+                                            ],
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  );
-                                },
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          // Hero(
+                          //   tag: 'artwork-${song.id}',
+                          //   child: provider.getArtworkWidget(
+                          //     context,
+                          //   ), // Your cached artwork widget
+                          // ),
+                          const SizedBox(height: 20),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Text(
+                              song.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize:
+                                    MediaQuery.of(context).size.width *
+                                    0.05, // ~20
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(height: 5.0),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Text(
+                              song.artist ?? "${t(context, 'unknown')}",
 
-                        // Hero(
-                        //   tag: 'artwork-${song.id}',
-                        //   child: provider.getArtworkWidget(
-                        //     context,
-                        //   ), // Your cached artwork widget
-                        // ),
-                        const SizedBox(height: 20),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: Text(
-                            song.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize:
-                                  MediaQuery.of(context).size.width *
-                                  0.05, // ~20
-                              fontWeight: FontWeight.bold,
+                              style: TextStyle(
+                                fontSize:
+                                    MediaQuery.of(context).size.width *
+                                    0.035, // ~14
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 5.0),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: Text(
-                            song.artist ?? "${t(context, 'unknown')}",
+                          const SizedBox(height: 50.0),
+                          StreamBuilder<Duration>(
+                            stream: provider.throttledPositionStream,
+                            builder: (context, snapshot) {
+                              final current = snapshot.data ?? Duration.zero;
+                              final total =
+                                  provider.audioPlayer.duration ??
+                                  Duration.zero;
 
-                            style: TextStyle(
-                              fontSize:
-                                  MediaQuery.of(context).size.width *
-                                  0.035, // ~14
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 50.0),
-                        StreamBuilder<Duration>(
-                          stream: provider.throttledPositionStream,
-                          builder: (context, snapshot) {
-                            final current = snapshot.data ?? Duration.zero;
-                            final total =
-                                provider.audioPlayer.duration ?? Duration.zero;
-
-                            return Column(
-                              children: [
-                                SliderTheme(
-                                  data: SliderTheme.of(context).copyWith(
+                              return Column(
+                                children: [
+                                  SliderTheme(
+                                    data: SliderTheme.of(context).copyWith(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16.0,
+                                      ),
+                                      trackHeight: 5.0,
+                                      thumbShape: const RoundSliderThumbShape(
+                                        enabledThumbRadius: 0,
+                                        elevation: 0,
+                                      ),
+                                      overlayShape:
+                                          SliderComponentShape.noOverlay,
+                                      thumbColor: Colors.transparent,
+                                    ),
+                                    child: TweenAnimationBuilder<double>(
+                                      duration: const Duration(
+                                        milliseconds: 250,
+                                      ),
+                                      tween: Tween<double>(
+                                        begin: 0,
+                                        end: current.inSeconds.toDouble(),
+                                      ),
+                                      builder: (context, animatedValue, child) {
+                                        return Slider(
+                                          value: animatedValue,
+                                          max: total.inSeconds.toDouble(),
+                                          onChanged: (v) => provider.seek(
+                                            Duration(seconds: v.toInt()),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(height: 5.0),
+                                  Padding(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 16.0,
                                     ),
-                                    trackHeight: 5.0,
-                                    thumbShape: const RoundSliderThumbShape(
-                                      enabledThumbRadius: 0,
-                                      elevation: 0,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(formatTime(current)),
+                                        Text(formatTime(total)),
+                                      ],
                                     ),
-                                    overlayShape:
-                                        SliderComponentShape.noOverlay,
-                                    thumbColor: Colors.transparent,
                                   ),
-                                  child: TweenAnimationBuilder<double>(
-                                    duration: const Duration(milliseconds: 250),
-                                    tween: Tween<double>(
-                                      begin: 0,
-                                      end: current.inSeconds.toDouble(),
-                                    ),
-                                    builder: (context, animatedValue, child) {
-                                      return Slider(
-                                        value: animatedValue,
-                                        max: total.inSeconds.toDouble(),
-                                        onChanged: (v) => provider.seek(
-                                          Duration(seconds: v.toInt()),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(height: 5.0),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16.0,
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(formatTime(current)),
-                                      Text(formatTime(total)),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                        SizedBox(height: 10),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            IconButton(
-                              onPressed: () => provider.toggleShuffle(),
-                              icon: Icon(
-                                provider.isShuffleOn
-                                    ? Icons.shuffle_on_rounded
-                                    : Icons.shuffle,
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () => provider.playPrevious(),
-                              icon: const Icon(FlutterRemix.skip_back_fill),
-                            ),
-                            IconButton.filled(
-                              iconSize: 30,
-                              icon: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Icon(
-                                  provider.isPlaying
-                                      ? FlutterRemix.pause_fill
-                                      : FlutterRemix.play_fill,
-                                ),
-                              ),
-                              onPressed: () {
-                                if (provider.isPlaying) {
-                                  provider.pause();
-                                } else {
-                                  provider.resume();
-                                }
-                              },
-                            ),
-                            IconButton(
-                              onPressed: () => provider.playNext(),
-                              icon: const Icon(FlutterRemix.skip_forward_fill),
-                            ),
-                            IconButton(
-                              onPressed: () => provider.cycleRepeatMode(),
-                              icon: Icon(_repeatIcon(provider.repeatMode)),
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(height: 130), // ✅ Add bottom space for padding
-                        Flexible(
-                          child: Row(
+                                ],
+                              );
+                            },
+                          ),
+                          SizedBox(height: 10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              Expanded(
-                                child: TextButton(
-                                  child: Text("${t(context, 'more')}"),
-                                  onPressed: () =>
-                                      _showBottomSheet(context, song),
+                              IconButton(
+                                onPressed: () => provider.toggleShuffle(),
+                                icon: Icon(
+                                  provider.isShuffleOn
+                                      ? Icons.shuffle_on_rounded
+                                      : Icons.shuffle,
                                 ),
                               ),
-                              Expanded(
-                                child: TextButton(
-                                  child: Text("${t(context, 'lyrics')}"),
-                                  onPressed: () {},
-
-                                  //  => _showLyrics(context, song),
+                              IconButton(
+                                onPressed: () => provider.playPrevious(),
+                                icon: const Icon(FlutterRemix.skip_back_fill),
+                              ),
+                              IconButton.filled(
+                                iconSize: 30,
+                                icon: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Icon(
+                                    provider.isPlaying
+                                        ? FlutterRemix.pause_fill
+                                        : FlutterRemix.play_fill,
+                                  ),
+                                ),
+                                onPressed: () {
+                                  if (provider.isPlaying) {
+                                    provider.pause();
+                                  } else {
+                                    provider.resume();
+                                  }
+                                },
+                              ),
+                              IconButton(
+                                onPressed: () => provider.playNext(),
+                                icon: const Icon(
+                                  FlutterRemix.skip_forward_fill,
                                 ),
                               ),
-                              Expanded(
-                                child: TextButton(
-                                  child: Text("${t(context, 'upcoming_list')}"),
-                                  onPressed: () =>
-                                      _showUpComingSongs(context, song),
-                                ),
+                              IconButton(
+                                onPressed: () => provider.cycleRepeatMode(),
+                                icon: Icon(_repeatIcon(provider.repeatMode)),
                               ),
                             ],
                           ),
-                        ),
-                      ],
+
+                          SizedBox(
+                            height: 130,
+                          ), // ✅ Add bottom space for padding
+                          Flexible(
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextButton(
+                                    child: Text("${t(context, 'more')}"),
+                                    onPressed: () =>
+                                        _showBottomSheet(context, song),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: TextButton(
+                                    child: Text("${t(context, 'lyrics')}"),
+                                    onPressed: () {},
+
+                                    //  => _showLyrics(context, song),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: TextButton(
+                                    child: Text(
+                                      "${t(context, 'upcoming_list')}",
+                                    ),
+                                    onPressed: () =>
+                                        _showUpComingSongs(context, song),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

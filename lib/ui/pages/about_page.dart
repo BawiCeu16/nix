@@ -73,7 +73,7 @@ class InfoPage extends StatelessWidget {
                           children: [
                             //Features
                             TextSpan(
-                              text: '${t(context, 'features')} :\n',
+                              text: '${t(context, 'features')}\n',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
@@ -203,7 +203,7 @@ class InfoPage extends StatelessWidget {
 
                         _buildContributorTile(
                           '${t(context, 'developer_name')}',
-                          'https://github.com/BawiCeu16',
+                          'https://bawiceu16.github.io/bawiceu.dev/',
                           Icon(FlutterRemix.user_2_fill),
                         ),
 
@@ -282,7 +282,6 @@ class InfoPage extends StatelessWidget {
                             applicationLegalese: '© 2025 Nix',
                           ),
                         ),
-                        const SizedBox(height: 5.0),
                       ],
                     ),
                   ),
@@ -303,9 +302,7 @@ class InfoPage extends StatelessWidget {
       leading: icon,
       title: Text(name),
       onTap: () async {
-        if (await canLaunchUrl(Uri.parse(url))) {
-          await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-        }
+        await launchUrl(Uri.parse(url));
       },
     );
   }
