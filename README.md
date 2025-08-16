@@ -1,11 +1,10 @@
-# nix
-<h3>Local Music Player</h3>
+# Nix — Local Music Player
 
-A new Flutter project.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Nix is a fast, Material 3 music player built with Flutter.  
 It focuses on smooth animations, a clean UI, high performance, and offline local playback.
 
-## Getting Started
 ---
 
 ## ✨ Features
@@ -16,7 +15,6 @@ It focuses on smooth animations, a clean UI, high performance, and offline local
 - 🖼️ Dynamic light/dark theming
 - 🌐 Works on Android (iOS, Windows, macOS, Linux support TBD)
 
-A few resources to get you started if this is your first Flutter project:
 ---
 
 ## 🌍 Supported Languages
@@ -24,6 +22,7 @@ A few resources to get you started if this is your first Flutter project:
 - 🇲🇲 Burmese  
 - 🇲🇲 Hakha  
 - 🇲🇲 Falam  
+
 ---
 
 ## 📸 Screenshots
