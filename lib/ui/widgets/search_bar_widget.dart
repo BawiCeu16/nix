@@ -130,6 +130,7 @@ class SearchBarWidget extends StatelessWidget {
               icon: Icon(Icons.sort),
             ),
           ),
+          //Profile Avartar
           InkWell(
             borderRadius: BorderRadius.circular(100.0),
             onTap: () {
@@ -176,6 +177,7 @@ class SearchBarWidget extends StatelessWidget {
                           ),
 
                           SizedBox(height: 10),
+                          //Setting Page
                           ListTile(
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadiusGeometry.circular(10.0),
@@ -188,9 +190,8 @@ class SearchBarWidget extends StatelessWidget {
                               Navigator.pop(context);
                               Navigator.push(
                                 context,
-                                PageAnimationTransition(
-                                  page: SettingsPage(),
-                                  pageAnimationType: RightToLeftTransition(),
+                                MaterialPageRoute(
+                                  builder: (context) => SettingsPage(),
                                 ),
                               );
                             },

@@ -2,7 +2,6 @@ import 'package:auto_animated/auto_animated.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:nix/%20utils/translator.dart';
-import 'package:nix/ui/widgets/permission_card.dart';
 import 'package:nix/ui/widgets/song_details_dialog.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:provider/provider.dart';

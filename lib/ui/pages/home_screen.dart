@@ -27,7 +27,7 @@ class HomeWithNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double bottomNavBarHeight = kBottomNavigationBarHeight + 8;
+    double bottomNavBarHeight = kBottomNavigationBarHeight + 16;
     final navProvider = Provider.of<BottomNavProvider>(context);
     final List<Widget> screens = const [
       //Screens from Main
@@ -37,7 +37,7 @@ class HomeWithNavigation extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+      // backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
       body: Stack(
         children: [
           // Expanded(child: screens[navProvider.currentIndex]),
@@ -46,7 +46,13 @@ class HomeWithNavigation extends StatelessWidget {
 
           // Main screen
           Positioned.fill(
-            child: SafeArea(child: screens[navProvider.currentIndex]),
+            child: SafeArea(
+              child: AnimatedSwitcher(
+                duration: Duration(milliseconds: 500),
+
+                child: screens[navProvider.currentIndex],
+              ),
+            ),
           ), // Miniplayer
           Align(
             alignment: Alignment.bottomCenter,
@@ -89,6 +95,7 @@ class HomeWithNavigation extends StatelessWidget {
           );
         },
         child: NavigationBar(
+          backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
           selectedIndex: navProvider.currentIndex,
           onDestinationSelected: navProvider.changeIndex,
           labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,

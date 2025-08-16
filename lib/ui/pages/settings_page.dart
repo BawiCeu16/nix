@@ -84,12 +84,19 @@ class SettingsPage extends StatelessWidget {
                                   onTap: () {
                                     Navigator.push(
                                       context,
-                                      PageAnimationTransition(
-                                        page: ThemeSettingsPage(),
-                                        pageAnimationType:
-                                            RightToLeftTransition(),
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            ThemeSettingsPage(),
                                       ),
                                     );
+                                    // Navigator.push(
+                                    //   context,
+                                    //   PageAnimationTransition(
+                                    //     page: ThemeSettingsPage(),
+                                    //     pageAnimationType:
+                                    //         RightToLeftTransition(),
+                                    //   ),
+                                    // );
                                   },
                                 ),
                                 //Language
@@ -104,12 +111,20 @@ class SettingsPage extends StatelessWidget {
                                   ),
                                   onTap: () => Navigator.push(
                                     context,
-                                    PageAnimationTransition(
-                                      page: LanguageSelectionScreen(),
-                                      pageAnimationType:
-                                          RightToLeftTransition(),
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          LanguageSelectionScreen(),
                                     ),
                                   ),
+
+                                  //  Navigator.push(
+                                  //   context,
+                                  //   PageAnimationTransition(
+                                  //     page: LanguageSelectionScreen(),
+                                  //     pageAnimationType:
+                                  //         RightToLeftTransition(),
+                                  //   ),
+                                  // ),
                                 ),
 
                                 //delete data's
@@ -261,12 +276,19 @@ class SettingsPage extends StatelessWidget {
                                   onTap: () {
                                     Navigator.push(
                                       context,
-                                      PageAnimationTransition(
-                                        page: InfoPage(),
-                                        pageAnimationType:
-                                            RightToLeftTransition(),
+                                      MaterialPageRoute(
+                                        builder: (context) => InfoPage(),
                                       ),
                                     );
+
+                                    // Navigator.push(
+                                    //   context,
+                                    //   PageAnimationTransition(
+                                    //     page: InfoPage(),
+                                    //     pageAnimationType:
+                                    //         RightToLeftTransition(),
+                                    //   ),
+                                    // );
                                   },
                                 ),
                               ],
