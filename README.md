@@ -29,7 +29,7 @@ It focuses on smooth animations, a clean UI, high performance, and offline local
 
 | Library | Now Playing | Queue | Playlists |
 |---------|-------------|-------|-----------|
-| ![Library](docs/images/library.png) | ![Now Playing](docs/images/now_playing.png) | ![Queue](docs/images/queue.png) | ![Playlists](docs/images/playlists.png) |
+| ![Songs List Page](assets/screenshots/song_page.png) | ![Now Playing Page](assets/screenshots/now_playing_page.png) | ![Appearance Page](assets/screenshots/appearance_page.png) | ![About Page](assets/screenshots/about_page.png) |
 
 ---
 
