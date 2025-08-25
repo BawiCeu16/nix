@@ -20,6 +20,12 @@
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
+
+    <!-- for Android < 13 -->
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+<!-- Android 13+ -->
+<uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+
     <application
         android:label="nix"
         android:name="${applicationName}"
@@ -63,6 +69,7 @@
 
         <meta-data
             android:name="flutterEmbedding"
-            android:value="2" />
+            android:value="2"
+            android:resource="@mipmap/ic_launcher" />
     </application>
 </manifest>

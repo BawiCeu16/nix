@@ -23,6 +23,7 @@ class FavoriteSongsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.onPrimary,
         centerTitle: true,
         title: Text(t(context, 'favorite_songs')),
       ),

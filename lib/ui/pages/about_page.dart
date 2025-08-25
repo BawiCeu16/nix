@@ -241,13 +241,9 @@ class InfoPage extends StatelessWidget {
                           leading: const Icon(FlutterRemix.code_fill),
                           title: Text(t(context, 'source_code_on_gitHub')),
                           onTap: () async {
-                            const url = 'https://github.com/BawiCeu16/nix';
-                            if (await canLaunchUrl(Uri.parse(url))) {
-                              await launchUrl(
-                                Uri.parse(url),
-                                mode: LaunchMode.externalApplication,
-                              );
-                            }
+                            launchUrl(
+                              Uri.parse('https://github.com/BawiCeu16/nix'),
+                            );
                           },
                         ),
                         // Privacy Policy
@@ -258,14 +254,11 @@ class InfoPage extends StatelessWidget {
                           leading: const Icon(FlutterRemix.shield_line),
                           title: Text(t(context, 'privacy_policy')),
                           onTap: () async {
-                            const url =
-                                'https://BawiCeu16.github.io/nix/privacy_policy.html';
-                            if (await canLaunchUrl(Uri.parse(url))) {
-                              await launchUrl(
-                                Uri.parse(url),
-                                mode: LaunchMode.externalApplication,
-                              );
-                            }
+                            launchUrl(
+                              Uri.parse(
+                                'https://bawiceu16.github.io/nix-pravicy-and-policy/',
+                              ),
+                            );
                           },
                         ),
                         // Open Source Licenses

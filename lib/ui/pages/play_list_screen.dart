@@ -14,8 +14,12 @@ class PlaylistScreen extends StatelessWidget {
     final playlists = musicProvider.playlists;
 
     return Scaffold(
-      appBar: AppBar(centerTitle: true, title: const Text('Playlists')),
-      // backgroundColor: Theme.of(context).colorScheme.,
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.onPrimary,
+        centerTitle: true,
+        title: const Text('Playlists'),
+      ),
+
       body: playlists.isEmpty
           ? const Center(child: Text('No playlists created yet.'))
           : Padding(

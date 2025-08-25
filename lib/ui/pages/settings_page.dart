@@ -34,7 +34,10 @@ class SettingsPage extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      appBar: AppBar(title: Text(t(context, 'settings'))),
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.onPrimary,
+        title: Text(t(context, 'settings')),
+      ),
 
       body: Center(
         child: ConstrainedBox(
@@ -67,7 +70,7 @@ class SettingsPage extends StatelessWidget {
                               children: [
                                 //Theme
                                 ListTile(
-                                  title: Text(t(context, 'theme')),
+                                  title: Text(t(context, 'appearance')),
                                   leading: Padding(
                                     padding: const EdgeInsets.only(left: 5),
                                     child: Icon(FlutterRemix.palette_fill),

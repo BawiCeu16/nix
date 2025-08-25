@@ -12,6 +12,7 @@ class LanguageSelectionScreen extends StatelessWidget {
     final provider = Provider.of<LanguageProvider>(context);
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.onPrimary,
         title: Text(t(context, 'choose_language')),
         actions: [
           IconButton(

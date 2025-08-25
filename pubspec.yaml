@@ -39,6 +39,7 @@ dependencies:
 
   #systems
   change_app_package_name: ^1.5.0
+  flutter_launcher_icons: ^0.14.4
 
   #helper
   provider: ^6.1.5
@@ -65,14 +66,16 @@ dependencies:
   auto_animated: ^3.2.0
   fade_shimmer: ^2.4.0
   rxdart: ^0.28.0
-  flutter_launcher_icons: ^0.14.4
   audio_service: ^0.18.18
+  image_picker: ^1.2.0
+  dominant_color_detector: ^0.0.2
 
 #############################################################
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+    
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -80,6 +83,16 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+
+  # App icon generator (only needed during development)
+  flutter_launcher_icons: ^0.14.4
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/app_icon/nix icon 1024.png"     # Your 1024x1024 PNG
+  adaptive_icon_background: "#ffffff"        # or an image path
+  adaptive_icon_foreground: "assets/app_icon/nix icon 1024.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

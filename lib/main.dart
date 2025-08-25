@@ -10,6 +10,7 @@ import 'package:nix/ui/pages/home_screen.dart';
 import 'package:nix/ui/pages/name_input_screen.dart';
 import 'package:nix/ui/pages/permission_screen.dart';
 import 'package:provider/provider.dart';
+
 import 'providers/music_provider.dart';
 import 'providers/permission_provider.dart';
 
@@ -66,28 +67,12 @@ class NixApp extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Nix',
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: themeProvider.seedColor,
-            ),
-            splashFactory: NoSplash.splashFactory,
-            brightness: Brightness.light,
-            floatingActionButtonTheme: const FloatingActionButtonThemeData(
-              elevation: 0,
-            ),
-          ),
-          darkTheme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: themeProvider.seedColor,
-              brightness: Brightness.dark,
-            ),
-            splashFactory: NoSplash.splashFactory,
-            brightness: Brightness.dark,
-            floatingActionButtonTheme: const FloatingActionButtonThemeData(
-              elevation: 0,
-            ),
-          ),
+
+          // Use provider themes (monochrome handled inside provider)
+          theme: themeProvider.lightTheme,
+          darkTheme: themeProvider.darkTheme,
           themeMode: themeProvider.themeMode,
+
           home: FutureBuilder<bool>(
             future: PermissionProvider.isPermissionsCompleted(),
             builder: (context, snapshot) {
@@ -118,7 +103,6 @@ class NixApp extends StatelessWidget {
               );
             },
           ),
-
           routes: {
             '/name': (_) => const NameInputScreen(),
             '/home': (_) => const HomeScreen(),

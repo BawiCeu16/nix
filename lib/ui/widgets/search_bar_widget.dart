@@ -163,10 +163,7 @@ class SearchBarWidget extends StatelessWidget {
                                 backgroundColor: Theme.of(
                                   context,
                                 ).colorScheme.onInverseSurface,
-                                child: const Icon(
-                                  FlutterRemix.user_fill,
-                                  size: 45,
-                                ),
+                                child: Icon(FlutterRemix.user_fill, size: 45),
                               ),
                             ),
                           ),
