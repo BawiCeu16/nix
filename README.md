@@ -27,7 +27,7 @@ It focuses on smooth animations, a clean UI, high performance, and offline local
 
 ## 📸 Screenshots
 
-| Library | Now Playing | Queue | Playlists |
+| Songs List Page | Now Playing Page | Appearance Page | About Page |
 |---------|-------------|-------|-----------|
 | ![Songs List Page](assets/screenshots/song_page.png) | ![Now Playing Page](assets/screenshots/now_playing_page.png) | ![Appearance Page](assets/screenshots/appearance_page.png) | ![About Page](assets/screenshots/about_page.png) |
 
