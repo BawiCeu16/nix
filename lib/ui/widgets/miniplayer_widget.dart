@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:nix/%20utils/translator.dart';
+import 'package:nix/providers/theme_provider.dart';
+import 'package:nix/ui/pages/lyrics_page.dart';
 // import 'package:nix/pages/favorite_songs_screen.dart';
 import 'package:nix/ui/widgets/song_details_dialog.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -16,6 +18,14 @@ class MiniPlayerWidget extends StatelessWidget {
   static const double minHeight = 75.0;
   static const double maxHeightFraction = 1.0;
 
+  // ✅ Helper to fetch artwork as ImageProvider
+  Future<ImageProvider?> getArtworkImage(int songId) async {
+    final audioQuery = OnAudioQuery();
+    final bytes = await audioQuery.queryArtwork(songId, ArtworkType.AUDIO);
+    if (bytes == null) return null;
+    return MemoryImage(bytes);
+  }
+
   @override
   Widget build(BuildContext context) {
     final Musprovider = Provider.of<MusicProvider>(context);
@@ -24,6 +34,16 @@ class MiniPlayerWidget extends StatelessWidget {
     final song = Musprovider.currentSong!;
     final imageSize = MediaQuery.of(context).size.width * 0.89;
     final upcomingSize = MediaQuery.of(context).size.width * 0.89;
+
+    // ✅ Apply dynamic theme color if enabled
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    if (themeProvider.dynamicColorEnabled) {
+      getArtworkImage(song.id).then((image) {
+        if (image != null) {
+          themeProvider.updateColorFromAlbum(image);
+        }
+      });
+    }
 
     return Consumer<MusicProvider>(
       //Miniplayer Widget
@@ -55,65 +75,73 @@ class MiniPlayerWidget extends StatelessWidget {
 
             return Opacity(
               opacity: collapsedOpacity,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    leading: Hero(
-                      tag: 'artwork-${song.id}',
-                      child: QueryArtworkWidget(
-                        keepOldArtwork: true,
-                        artworkBorder: BorderRadius.circular(8),
-                        id: song.id,
-                        type: ArtworkType.AUDIO,
-                        nullArtworkWidget: SizedBox(
-                          height: 55,
-                          width: 55,
-                          child: Card(
-                            elevation: 0,
-                            child: Icon(FlutterRemix.music_fill),
+              child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadiusGeometry.circular(0),
+                ),
+                margin: EdgeInsets.all(0),
+                color: Theme.of(context).colorScheme.surfaceContainerLow,
+                elevation: 0,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ListTile(
+                      leading: Hero(
+                        tag: 'artwork-${song.id}',
+                        child: QueryArtworkWidget(
+                          keepOldArtwork: true,
+                          artworkBorder: BorderRadius.circular(8),
+                          id: song.id,
+                          type: ArtworkType.AUDIO,
+                          nullArtworkWidget: SizedBox(
+                            height: 55,
+                            width: 55,
+                            child: Card(
+                              elevation: 0,
+                              child: Icon(FlutterRemix.music_fill),
+                            ),
                           ),
                         ),
                       ),
-                    ),
 
-                    title: Text(
-                      song.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    subtitle: Text(song.artist ?? "${t(context, 'unknown')}"),
-                    trailing: IconButton(
-                      icon: Icon(
-                        provider.isPlaying ? Icons.pause : Icons.play_arrow,
+                      title: Text(
+                        song.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      onPressed: () => provider.isPlaying
-                          ? provider.pause()
-                          : provider.resume(),
-                    ),
-                  ),
-                  StreamBuilder<Duration>(
-                    stream: provider.audioPlayer.positionStream,
-                    builder: (context, snapshot) {
-                      final current = snapshot.data ?? Duration.zero;
-                      final total =
-                          provider.audioPlayer.duration ?? Duration.zero;
-                      final progress = total.inMilliseconds == 0
-                          ? 0.0
-                          : current.inMilliseconds / total.inMilliseconds;
-
-                      return LinearProgressIndicator(
-                        borderRadius: BorderRadius.circular(100),
-                        value: progress.clamp(0.0, 1.0),
-                        // backgroundColor: Colors.grey.shade300,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Theme.of(context).colorScheme.primary,
+                      subtitle: Text(song.artist ?? "${t(context, 'unknown')}"),
+                      trailing: IconButton(
+                        icon: Icon(
+                          provider.isPlaying ? Icons.pause : Icons.play_arrow,
                         ),
-                        minHeight: 3,
-                      );
-                    },
-                  ),
-                ],
+                        onPressed: () => provider.isPlaying
+                            ? provider.pause()
+                            : provider.resume(),
+                      ),
+                    ),
+                    StreamBuilder<Duration>(
+                      stream: provider.audioPlayer.positionStream,
+                      builder: (context, snapshot) {
+                        final current = snapshot.data ?? Duration.zero;
+                        final total =
+                            provider.audioPlayer.duration ?? Duration.zero;
+                        final progress = total.inMilliseconds == 0
+                            ? 0.0
+                            : current.inMilliseconds / total.inMilliseconds;
+
+                        return LinearProgressIndicator(
+                          borderRadius: BorderRadius.circular(100),
+                          value: progress.clamp(0.0, 1.0),
+                          // backgroundColor: Colors.grey.shade300,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Theme.of(context).colorScheme.primary,
+                          ),
+                          minHeight: 3,
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             );
           } else {
@@ -179,12 +207,8 @@ class MiniPlayerWidget extends StatelessWidget {
                                   // ),
                                   Expanded(
                                     child: Center(
-                                      child: Consumer<MusicProvider>(
-                                        builder: (_, provider, __) {
-                                          return Text(
-                                            provider.connectedDeviceName,
-                                          );
-                                        },
+                                      child: Text(
+                                        "${t(context, 'now_playing')}",
                                       ),
                                     ),
                                   ),
@@ -494,9 +518,16 @@ class MiniPlayerWidget extends StatelessWidget {
                                   Expanded(
                                     child: TextButton(
                                       child: Text("${t(context, 'lyrics')}"),
-                                      onPressed: () {},
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => const LyricsPage(),
+                                          ),
+                                        );
+                                      },
 
-                                      //  => _showLyrics(context, song),
+                                      // => _showLyrics(context),
                                     ),
                                   ),
                                   Expanded(
@@ -543,53 +574,53 @@ class MiniPlayerWidget extends StatelessWidget {
     return '${twoDigits(minutes)}:${twoDigits(seconds)}';
   }
 
-  void _showLyrics(BuildContext context, SongModel song) {
-    showModalBottomSheet(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadiusGeometry.circular(15.0),
-      ),
-      isDismissible: false,
-      context: context,
-      builder: (context) {
-        return SizedBox(
-          width: MediaQuery.of(context).size.width / 1.3,
+  // void _showLyrics(BuildContext context, SongModel song) {
+  //   showModalBottomSheet(
+  //     shape: RoundedRectangleBorder(
+  //       borderRadius: BorderRadiusGeometry.circular(15.0),
+  //     ),
+  //     isDismissible: false,
+  //     context: context,
+  //     builder: (context) {
+  //       return SizedBox(
+  //         width: MediaQuery.of(context).size.width / 1.3,
 
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: 10.0,
-              horizontal: 15.0,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  song.title,
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                Text(
-                  "Strawberries, cherries and an angel's kiss in spring My summer wine is really made from all these thingsStrawberries, cherries and an angel's kiss in spring My summer wine is really made from all these thingsStrawberries, cherries and an angel's kiss in spring My summer wine is really made from all these things",
+  //         child: Padding(
+  //           padding: const EdgeInsets.symmetric(
+  //             vertical: 10.0,
+  //             horizontal: 15.0,
+  //           ),
+  //           child: Column(
+  //             mainAxisSize: MainAxisSize.min,
+  //             children: [
+  //               Text(
+  //                 song.title,
+  //                 style: Theme.of(context).textTheme.headlineSmall,
+  //               ),
+  //               Text(
+  //                 "Strawberries, cherries and an angel's kiss in spring My summer wine is really made from all these thingsStrawberries, cherries and an angel's kiss in spring My summer wine is really made from all these thingsStrawberries, cherries and an angel's kiss in spring My summer wine is really made from all these things",
 
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                SizedBox(height: 5.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    FilledButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: Text("${t(context, 'close')}"),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+  //                 style: Theme.of(context).textTheme.bodyMedium,
+  //               ),
+  //               SizedBox(height: 5.0),
+  //               Row(
+  //                 mainAxisAlignment: MainAxisAlignment.end,
+  //                 children: [
+  //                   FilledButton(
+  //                     onPressed: () {
+  //                       Navigator.pop(context);
+  //                     },
+  //                     child: Text("${t(context, 'close')}"),
+  //                   ),
+  //                 ],
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 
   void _showUpComingSongs(BuildContext context, SongModel song) {
     showModalBottomSheet(

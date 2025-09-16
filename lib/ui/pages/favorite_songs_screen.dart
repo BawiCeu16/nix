@@ -23,10 +23,12 @@ class FavoriteSongsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.onPrimary,
+        // backgroundColor: Theme.of(context).colorScheme.onPrimary,
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
         centerTitle: true,
         title: Text(t(context, 'favorite_songs')),
       ),
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
         child: LiveList.options(

@@ -1,8 +1,11 @@
+// providers/music_provider.dart
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -38,6 +41,20 @@ class MusicProvider with ChangeNotifier {
       {}; // key: playlist name, value: list of song IDs
   String? _currentPlaylist; // Active playlist name
 
+  static const _notifChannel = MethodChannel("nix/notifications");
+
+  List<Map<String, dynamic>> _lyrics = [];
+  int _currentLyricIndex = 0;
+
+  // ---------- Recently / Most listened state ----------
+  /// play counts persisted as Map<int(songId) -> int(count)>
+  final Map<int, int> _playCounts = {};
+
+  /// recent plays: list of {"id": songId, "ts": epochMillis}
+  final List<Map<String, dynamic>> _recentPlays = [];
+
+  static const int _recentPlaysCap = 200; // keep latest 200 plays
+
   // ✅ Getters
   List<SongModel> get songs => _songs;
   List<int> get favoriteSongIds => _favoriteSongIds;
@@ -54,21 +71,25 @@ class MusicProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   Duration get currentPosition => _currentPosition;
   Duration get totalDuration => _totalDuration;
-
   AudioPlayer get audioPlayer => _audioPlayer;
 
-  // ✅ Getters
+  // ✅ Playlists etc.
   Map<String, List<int>> get playlists => _playlists;
   String? get currentPlaylist => _currentPlaylist;
 
-  // ✅ Constructor
+  List<Map<String, dynamic>> get lyrics => _lyrics;
+  int get currentLyricIndex => _currentLyricIndex;
+
+  // ---------- Constructor ----------
   MusicProvider() {
     loadFavorites();
     _loadPlaylists();
+    _loadPlayStats();
     _listenToPlayerStreams();
-    checkAndLoadSongs(); // ✅ NEW: Auto-load if permission is already granted
+    checkAndLoadSongs();
   }
 
+  // ---------- Songs loading ----------
   Future<void> checkAndLoadSongs() async {
     final hasPermission = await _audioQuery.permissionsStatus();
     if (hasPermission) {
@@ -88,47 +109,55 @@ class MusicProvider with ChangeNotifier {
     notifyListeners();
     _songs = await _audioQuery.querySongs();
     _applySort();
-    await _buildPlaylist(); // ✅ Build playlist right after loading songs
+    await _buildPlaylist();
     _isLoading = false;
     notifyListeners();
   }
 
-  // ✅ Refresh songs manually
   Future<void> refreshSongs() async {
     _songs = await _audioQuery.querySongs();
     _applySort();
     notifyListeners();
   }
 
-  // ✅ Listen for player updates
+  // ---------- Player streams (no auto-counting) ----------
   void _listenToPlayerStreams() {
-    // Position updates
     _audioPlayer.positionStream.listen((pos) {
       _currentPosition = pos;
+      _syncLyrics(pos);
       notifyListeners();
     });
 
-    // Duration updates
     _audioPlayer.durationStream.listen((dur) {
       _totalDuration = dur ?? Duration.zero;
       notifyListeners();
     });
 
-    _audioPlayer.playerStateStream.listen((state) {
-      notifyListeners();
-    });
-
-    // ✅ Track change updates (system next/previous buttons)
     _audioPlayer.currentIndexStream.listen((index) {
       if (index != null && index >= 0 && index < _songs.length) {
         _currentSong = _songs[index];
-        _cachedArtworkData = null; // Clear old artwork
-        notifyListeners();
+        _cachedArtworkData = null;
+
+        // fetch lyrics
+        if (_currentSong != null) {
+          fetchLyricsFromLrcLib(
+            _currentSong!.title,
+            _currentSong!.artist ?? "Unknown",
+          );
+        }
+      } else {
+        _currentSong = null;
       }
+      notifyListeners();
+    });
+
+    _audioPlayer.playerStateStream.listen((state) {
+      // no automatic counting here — clicks only
+      notifyListeners();
     });
   }
 
-  // ✅ Sorting
+  // ---------- Sorting ----------
   void setSortOption(SortOption option) {
     _sortOption = option;
     _applySort();
@@ -152,7 +181,7 @@ class MusicProvider with ChangeNotifier {
     }
   }
 
-  // ✅ Favorites
+  // ---------- Favorites ----------
   Future<void> loadFavorites() async {
     final prefs = await SharedPreferences.getInstance();
     _favoriteSongIds =
@@ -178,7 +207,7 @@ class MusicProvider with ChangeNotifier {
 
   bool isFavorite(int songId) => _favoriteSongIds.contains(songId);
 
-  // ✅ Search
+  // ---------- Search ----------
   List<SongModel> get filteredSongs {
     if (_searchQuery.isEmpty) return _songs;
     return _songs
@@ -202,7 +231,7 @@ class MusicProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // ✅ Upcoming Songs
+  // ---------- Upcoming / mini player ----------
   List<SongModel> get upcomingSongs {
     if (_currentSong == null) return [];
     final index = _songs.indexOf(_currentSong!);
@@ -210,7 +239,6 @@ class MusicProvider with ChangeNotifier {
     return _songs.sublist(index + 1);
   }
 
-  // ✅ Show next song if current song ending soon (<20s left)
   SongModel? get nextSongIfEndingSoon {
     if (_currentSong == null || _totalDuration == Duration.zero) return null;
     final remaining = _totalDuration - _currentPosition;
@@ -223,7 +251,6 @@ class MusicProvider with ChangeNotifier {
     return null;
   }
 
-  // ✅ Mini Player toggle
   void toggleMiniPlayer() {
     _isMiniPlayerExpanded = !_isMiniPlayerExpanded;
     notifyListeners();
@@ -236,7 +263,7 @@ class MusicProvider with ChangeNotifier {
     }
   }
 
-  // ✅ Artwork
+  // ---------- Artwork ----------
   Future<Uint8List?> fetchArtwork(int songId) async {
     _cachedArtworkData = await _audioQuery.queryArtwork(
       songId,
@@ -247,63 +274,73 @@ class MusicProvider with ChangeNotifier {
     return _cachedArtworkData;
   }
 
-  // ✅ Playback controls
+  // ---------- Playback controls ----------
   Future<void> playSong(SongModel song) async {
     final index = _songs.indexOf(song);
     if (index == -1) return;
 
     try {
       if (_playlist == null) {
-        await _buildPlaylist(); // ✅ Always rebuild after reset
+        await _buildPlaylist();
       }
 
-      await _audioPlayer.setAudioSource(
-        _playlist!,
-        initialIndex: index,
-      ); // ✅ Fresh source
+      await _audioPlayer.setAudioSource(_playlist!, initialIndex: index);
       await _audioPlayer.play();
 
       _currentSong = song;
       _cachedArtworkData = null;
       notifyListeners();
-      getConnectedBluetoothDevice();
+      _updateNotification(song.title, song.artist ?? "Unknown Artist", true);
     } catch (e) {
       debugPrint("Error playing song: $e");
     }
   }
 
+  // Convenience: record click then play
+  Future<void> recordClickAndPlay(SongModel song) async {
+    recordSongClick(song.id);
+    await playSong(song);
+  }
+
+  // Public API: record a click (counts + recents)
+  void recordSongClick(int songId) {
+    _recordPlay(songId);
+  }
+
   Future<void> playNext() async {
     if (_audioPlayer.hasNext) {
       await _audioPlayer.seekToNext();
-      await _audioPlayer.play();
+    } else {
+      await _audioPlayer.seek(Duration.zero, index: 0);
     }
+    await _audioPlayer.play();
   }
 
   Future<void> playPrevious() async {
     if (_audioPlayer.hasPrevious) {
       await _audioPlayer.seekToPrevious();
-      await _audioPlayer.play();
+    } else {
+      final lastIndex = _audioPlayer.sequence?.length ?? 0;
+      if (lastIndex > 0) {
+        await _audioPlayer.seek(Duration.zero, index: lastIndex - 1);
+      }
     }
+    await _audioPlayer.play();
   }
 
-  void pause() {
-    _audioPlayer.pause();
-  }
-
-  void resume() {
-    _audioPlayer.play();
-  }
-
-  void stop() {
-    _audioPlayer.stop();
-  }
-
-  // Future<void> playNext() async => await _audioPlayer.seekToNext();
-  // Future<void> playPrevious() async => await _audioPlayer.seekToPrevious();
+  void pause() => _audioPlayer.pause();
+  void resume() => _audioPlayer.play();
+  void stop() => _audioPlayer.stop();
 
   Future<void> _buildPlaylist() async {
     _playlist = ConcatenatingAudioSource(
       children: _songs.map((song) {
+        final artworkUri = song.albumId != null
+            ? Uri.parse(
+                "content://media/external/audio/albumart/${song.albumId}",
+              )
+            : Uri.parse("https://via.placeholder.com/150");
+
         return AudioSource.uri(
           Uri.parse(song.uri!),
           tag: MediaItem(
@@ -311,14 +348,14 @@ class MusicProvider with ChangeNotifier {
             album: song.album ?? 'Unknown Album',
             title: song.title,
             artist: song.artist ?? 'Unknown Artist',
-            artUri: Uri.parse('asset:///${song.id}'),
+            artUri: artworkUri,
           ),
         );
       }).toList(),
     );
   }
 
-  // ✅ Shuffle & Repeat integrated with just_audio
+  // ---------- Shuffle & Repeat ----------
   void toggleShuffle() {
     _isShuffleOn = !_isShuffleOn;
     _audioPlayer.setShuffleModeEnabled(_isShuffleOn);
@@ -339,12 +376,12 @@ class MusicProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // ✅ Clear current song
+  // ---------- Clear / stop ----------
   Future<void> clearCurrentSong() async {
     try {
       await _audioPlayer.stop();
       await _audioPlayer.setAudioSource(ConcatenatingAudioSource(children: []));
-      _playlist = null; // Force rebuild on next play
+      _playlist = null;
       _currentSong = null;
       _cachedArtworkData = null;
       notifyListeners();
@@ -353,13 +390,14 @@ class MusicProvider with ChangeNotifier {
     }
   }
 
-  // ✅ Stream for position updates (throttled)
+  // ---------- Position stream ----------
   Stream<Duration> get throttledPositionStream => _audioPlayer.positionStream
       .throttleTime(const Duration(milliseconds: 500));
 
+  get currentLine => null;
   void seek(Duration position) => _audioPlayer.seek(position);
 
-  // ✅ Load playlists from SharedPreferences
+  // ---------- Playlists ----------
   Future<void> loadPlaylists() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonString = prefs.getString('playlists') ?? '{}';
@@ -370,7 +408,6 @@ class MusicProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // ✅ Save playlists to SharedPreferences
   Future<void> _savePlaylists() async {
     final prefs = await SharedPreferences.getInstance();
     final encodedPlaylists = _playlists.map(
@@ -392,7 +429,6 @@ class MusicProvider with ChangeNotifier {
     }
   }
 
-  // ✅ Create a new playlist
   Future<void> createPlaylist(String name) async {
     if (!_playlists.containsKey(name)) {
       _playlists[name] = [];
@@ -401,7 +437,6 @@ class MusicProvider with ChangeNotifier {
     }
   }
 
-  // ✅ Add song to playlist
   Future<void> addSongToPlaylist(String playlistName, int songId) async {
     if (!_playlists.containsKey(playlistName)) {
       _playlists[playlistName] = [];
@@ -413,14 +448,12 @@ class MusicProvider with ChangeNotifier {
     }
   }
 
-  // ✅ Remove song from playlist
   Future<void> removeSongFromPlaylist(String playlistName, int songId) async {
     _playlists[playlistName]?.remove(songId);
     await _savePlaylists();
     notifyListeners();
   }
 
-  // ✅ Play a playlist
   Future<void> playPlaylist(String playlistName) async {
     if (!_playlists.containsKey(playlistName)) return;
 
@@ -433,39 +466,43 @@ class MusicProvider with ChangeNotifier {
 
     if (playlistSongs.isEmpty) return;
 
-    _playlist = ConcatenatingAudioSource(
-      children: playlistSongs.map((song) {
-        return AudioSource.uri(
+    final children = <AudioSource>[];
+    for (var song in playlistSongs) {
+      final artworkUri = song.albumId != null
+          ? Uri.parse("content://media/external/audio/albumart/${song.albumId}")
+          : Uri.parse("https://via.placeholder.com/150");
+
+      children.add(
+        AudioSource.uri(
           Uri.parse(song.uri!),
           tag: MediaItem(
             id: song.id.toString(),
             album: song.album ?? 'Unknown Album',
             title: song.title,
             artist: song.artist ?? 'Unknown Artist',
-            artUri: Uri.parse('asset:///${song.id}'),
+            artUri: artworkUri,
           ),
-        );
-      }).toList(),
-    );
+        ),
+      );
+    }
+
+    _playlist = ConcatenatingAudioSource(children: children);
 
     await _audioPlayer.setAudioSource(_playlist!);
     await _audioPlayer.play();
 
     _currentSong = playlistSongs.first;
-
     notifyListeners();
   }
 
-  // ✅ Delete playlist
   Future<void> deletePlaylist(String playlistName) async {
     _playlists.remove(playlistName);
     await _savePlaylists();
     notifyListeners();
   }
 
-  // ✅ Rename a playlist
   Future<void> renamePlaylist(String oldName, String newName) async {
-    if (_playlists.containsKey(newName)) return; // Prevent duplicates
+    if (_playlists.containsKey(newName)) return;
     final songs = _playlists.remove(oldName);
     if (songs != null) {
       _playlists[newName] = songs;
@@ -474,7 +511,7 @@ class MusicProvider with ChangeNotifier {
     }
   }
 
-  // ✅ Share current song
+  // ---------- Sharing ----------
   Future<void> shareCurrentSong() async {
     if (_currentSong?.data != null) {
       try {
@@ -487,17 +524,218 @@ class MusicProvider with ChangeNotifier {
     }
   }
 
-  // ✅ Get connected Bluetooth device
-  Future<void> getConnectedBluetoothDevice() async {
+  Future<void> _ensureBluetoothPermission() async {
+    if (!Platform.isAndroid) return;
+    final status = await Permission.bluetoothConnect.status;
+    if (!status.isGranted) {
+      await Permission.bluetoothConnect.request();
+    }
+  }
+
+  Future<void> _updateNotification(
+    String title,
+    String artist,
+    bool isPlaying,
+  ) async {
     try {
-      final String result = await _channel.invokeMethod(
-        'getBluetoothDeviceName',
-      );
-      _connectedDeviceName = result;
+      await _notifChannel.invokeMethod("updateNotification", {
+        "title": title,
+        "artist": artist,
+        "isPlaying": isPlaying,
+      });
     } catch (e) {
-      _connectedDeviceName = "Unknown device";
-      debugPrint("Error fetching device name: $e");
+      debugPrint("Error updating notification: $e");
+    }
+  }
+
+  Future<void> _hideNotification() async {
+    try {
+      await _notifChannel.invokeMethod("hideNotification");
+    } catch (e) {
+      debugPrint("Error hiding notification: $e");
+    }
+  }
+
+  // ---------- Lyrics ----------
+  Future<void> fetchLyricsFromLrcLib(String title, String artist) async {
+    try {
+      final url =
+          "https://lrclib.net/api/get?track_name=${Uri.encodeComponent(title)}&artist_name=${Uri.encodeComponent(artist)}";
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data['syncedLyrics'] != null) {
+          _lyrics = _parseLRC(data['syncedLyrics']);
+        } else if (data['plainLyrics'] != null) {
+          _lyrics = _plainToLyrics(data['plainLyrics']);
+        } else {
+          _lyrics = [
+            {"time": 0, "line": "No lyrics found"},
+          ];
+        }
+
+        _currentLyricIndex = 0;
+        notifyListeners();
+
+        _audioPlayer.positionStream.listen(_syncLyrics);
+      } else {
+        _lyrics = [
+          {"time": 0, "line": "Lyrics not available"},
+        ];
+        notifyListeners();
+      }
+    } catch (e) {
+      _lyrics = [
+        {"time": 0, "line": "Error loading lyrics"},
+      ];
+      notifyListeners();
+    }
+  }
+
+  List<Map<String, dynamic>> _parseLRC(String lrc) {
+    final regex = RegExp(r"\[(\d+):(\d+)\.(\d+)\](.*)");
+    return lrc.split("\n").map((line) {
+      final match = regex.firstMatch(line);
+      if (match != null) {
+        final minutes = int.parse(match.group(1)!);
+        final seconds = int.parse(match.group(2)!);
+        final millis = int.parse(match.group(3)!);
+        final time = (minutes * 60000) + (seconds * 1000) + millis * 10;
+        return {"time": time, "line": match.group(4)!.trim()};
+      }
+      return {"time": 0, "line": line.trim()};
+    }).toList();
+  }
+
+  List<Map<String, dynamic>> _plainToLyrics(String text) {
+    return text.split("\n").map((line) => {"time": 0, "line": line}).toList();
+  }
+
+  void _syncLyrics(Duration position) {
+    for (int i = 0; i < _lyrics.length; i++) {
+      if (position.inMilliseconds >= _lyrics[i]['time']) {
+        _currentLyricIndex = i;
+      }
     }
     notifyListeners();
   }
+
+  // ---------- Recently & Most listened (persistence + helpers) ----------
+  Future<void> _loadPlayStats() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      final playCountsString = prefs.getString('playCounts');
+      if (playCountsString != null) {
+        final Map<String, dynamic> decoded = jsonDecode(playCountsString);
+        _playCounts
+          ..clear()
+          ..addAll(decoded.map((k, v) => MapEntry(int.parse(k), v as int)));
+      }
+
+      final recentString = prefs.getString('recentPlays');
+      if (recentString != null) {
+        final List<dynamic> decodedList = jsonDecode(recentString);
+        _recentPlays
+          ..clear()
+          ..addAll(
+            decodedList.map<Map<String, dynamic>>((e) {
+              return {"id": e["id"] as int, "ts": e["ts"] as int};
+            }),
+          );
+      }
+
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Error loading play stats: $e");
+    }
+  }
+
+  Future<void> _savePlayStats() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final encodedCounts = _playCounts.map(
+        (k, v) => MapEntry(k.toString(), v),
+      );
+      await prefs.setString('playCounts', jsonEncode(encodedCounts));
+      await prefs.setString('recentPlays', jsonEncode(_recentPlays));
+    } catch (e) {
+      debugPrint("Error saving play stats: $e");
+    }
+  }
+
+  void _recordPlay(int songId) {
+    try {
+      final now = DateTime.now().millisecondsSinceEpoch;
+
+      _recentPlays.insert(0, {"id": songId, "ts": now});
+
+      if (_recentPlays.length > _recentPlaysCap) {
+        _recentPlays.removeRange(_recentPlaysCap, _recentPlays.length);
+      }
+
+      _playCounts[songId] = (_playCounts[songId] ?? 0) + 1;
+
+      _savePlayStats();
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Error recording play: $e");
+    }
+  }
+
+  List<SongModel> getRecentlyPlayed({int limit = 20}) {
+    final ids = _recentPlays.map((e) => e['id'] as int).toList();
+    final List<SongModel> list = [];
+    final seen = <int>{};
+    for (var id in ids) {
+      if (seen.contains(id)) continue;
+      final song = _songs.firstWhere(
+        (s) => s.id == id,
+        orElse: () => null as SongModel,
+      );
+      if (song != null) {
+        list.add(song);
+        seen.add(id);
+      }
+      if (list.length >= limit) break;
+    }
+    return list;
+  }
+
+  List<SongModel> getMostListened({int limit = 20}) {
+    final List<MapEntry<int, int>> counts = _playCounts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    final List<SongModel> result = [];
+    for (var entry in counts) {
+      final song = _songs.firstWhere(
+        (s) => s.id == entry.key,
+        orElse: () => null as SongModel,
+      );
+      if (song != null) {
+        result.add(song);
+      }
+      if (result.length >= limit) break;
+    }
+    return result;
+  }
+
+  int getPlayCount(int songId) => _playCounts[songId] ?? 0;
+
+  Future<void> clearRecentPlays() async {
+    _recentPlays.clear();
+    await _savePlayStats();
+    notifyListeners();
+  }
+
+  Future<void> resetPlayCounts() async {
+    _playCounts.clear();
+    await _savePlayStats();
+    notifyListeners();
+  }
+
+  List<Map<String, dynamic>> get rawRecentPlays =>
+      List.unmodifiable(_recentPlays);
 }

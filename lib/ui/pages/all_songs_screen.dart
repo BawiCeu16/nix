@@ -1,7 +1,9 @@
+// lib/ui/pages/all_songs_screen.dart
 import 'package:auto_animated/auto_animated.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:mini_music_visualizer/mini_music_visualizer.dart';
+import 'package:nix/ui/widgets/recent_and_most.dart';
 import 'package:nix/ui/widgets/search_bar_widget.dart';
 import 'package:nix/ui/widgets/song_details_dialog.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -20,55 +22,66 @@ class AllSongsScreen extends StatelessWidget {
 
     return RefreshIndicator(
       onRefresh: () async => await provider.refreshSongs(),
-      child: Column(
-        children: [
-          const SearchBarWidget(),
-          Expanded(
-            child: Selector<MusicProvider, List<SongModel>>(
-              selector: (_, provider) => provider.filteredSongs,
-              builder: (context, songs, _) {
-                if (songs.isEmpty) {
-                  return const Center(child: Text("No songs found."));
-                }
+      child: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+          const SliverToBoxAdapter(child: SearchBarWidget()),
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+          // Recently played strip stays in AllSongs
+          const SliverToBoxAdapter(child: RecentlyPlayedStrip()),
+          const SliverToBoxAdapter(child: SizedBox(height: 10)),
 
-                // ✅ Check if MiniPlayer is open (song is playing)
-                final isMiniPlayerOpen = context.select<MusicProvider, bool>(
-                  (p) => p.currentSong != null,
+          // Songs list (animated)
+          Selector<MusicProvider, List<SongModel>>(
+            selector: (_, provider) => provider.filteredSongs,
+            builder: (context, songs, _) {
+              if (songs.isEmpty) {
+                return const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(child: Text("No songs found.")),
                 );
+              }
 
-                return LiveList.options(
-                  key: const PageStorageKey('songs_list'),
-                  physics: const BouncingScrollPhysics(),
-                  options: const LiveOptions(
-                    delay: Duration(milliseconds: 50),
-                    showItemInterval: Duration(milliseconds: 80),
-                    showItemDuration: Duration(milliseconds: 350),
+              return SliverPadding(
+                padding: EdgeInsets.only(
+                  bottom: isMiniPlayerOpen
+                      ? 90
+                      : 16, // reserve space for mini player
+                  top: 0,
+                ),
+                sliver: SliverToBoxAdapter(
+                  child: LiveList.options(
+                    key: const PageStorageKey('songs_list'),
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    options: const LiveOptions(
+                      delay: Duration(milliseconds: 50),
+                      showItemInterval: Duration(milliseconds: 80),
+                      showItemDuration: Duration(milliseconds: 350),
+                    ),
+                    itemCount: songs.length,
+                    itemBuilder: (context, index, animation) {
+                      final song = songs[index];
+                      return FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0, 0.1),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: _SongTile(song: song),
+                        ),
+                      );
+                    },
                   ),
-                  itemCount: songs.length,
-                  itemBuilder: (context, index, animation) {
-                    final song = songs[index];
-                    return FadeTransition(
-                      opacity: animation,
-                      child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0, 0.1),
-                          end: Offset.zero,
-                        ).animate(animation),
-                        child: _SongTile(song: song),
-                      ),
-                    );
-                  },
-                  // ✅ Add padding so last song isn't hidden by MiniPlayer
-                  padding: EdgeInsets.only(
-                    bottom: isMiniPlayerOpen
-                        ? 90
-                        : 16, // 90px = MiniPlayer height
-                    top: 8,
-                  ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
+
+          // bottom spacer
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
         ],
       ),
     );
@@ -77,7 +90,6 @@ class AllSongsScreen extends StatelessWidget {
 
 class _SongTile extends StatelessWidget {
   final SongModel song;
-
   const _SongTile({required this.song});
 
   @override
@@ -109,7 +121,10 @@ class _SongTile extends StatelessWidget {
           ),
           title: Text(song.title, maxLines: 1, overflow: TextOverflow.ellipsis),
           subtitle: Text(song.artist ?? "Unknown"),
-          onTap: () => provider.playSong(song),
+          onTap: () {
+            // record click (updates recent & counts) then play
+            provider.recordClickAndPlay(song);
+          },
           onLongPress: () => showDialog(
             context: context,
             builder: (_) => SongDetailsDialog(song: song),

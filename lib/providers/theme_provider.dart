@@ -1,15 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:palette_generator/palette_generator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider with ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.system;
   Color _seedColor = Colors.blue;
   bool _isMonochrome = false;
+  bool _dynamicColorEnabled = false; // existing dynamic theme (keep)
+
+  // ---- NEW for Now Playing ----
+  bool _dynamicNowPlayingEnabled = false; // toggle ON/OFF by user
+  Color _nowPlayingBgColor = const Color(0xFF1F1F2A); // default not black
 
   ThemeMode get themeMode => _themeMode;
   Color get seedColor => _seedColor;
   bool get isMonochrome => _isMonochrome;
+  bool get dynamicColorEnabled => _dynamicColorEnabled;
+
+  // ---- NEW getters ----
+  bool get dynamicNowPlayingEnabled => _dynamicNowPlayingEnabled;
+  Color get nowPlayingBgColor => _nowPlayingBgColor;
 
   Future<void> loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
@@ -18,6 +29,12 @@ class ThemeProvider with ChangeNotifier {
     final colorValue = prefs.getInt('seedColor');
     if (colorValue != null) _seedColor = Color(colorValue);
     _isMonochrome = prefs.getBool('isMonochrome') ?? false;
+    _dynamicColorEnabled = prefs.getBool('dynamicColor') ?? false; // load
+
+    // ---- NEW load flag ----
+    _dynamicNowPlayingEnabled =
+        prefs.getBool('dynamicNowPlayingEnabled') ?? false;
+
     notifyListeners();
   }
 
@@ -42,8 +59,81 @@ class ThemeProvider with ChangeNotifier {
     await prefs.setBool('isMonochrome', enabled);
   }
 
-  // ---------- MONOCHROME PALETTES (explicit greys) ----------
-  // Light monochrome palette (no color)
+  Future<void> setDynamicColorEnabled(bool enabled) async {
+    _dynamicColorEnabled = enabled;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('dynamicColor', enabled);
+  }
+
+  /// Extracts color from album image & updates theme
+  Future<void> updateColorFromAlbum(ImageProvider image) async {
+    if (!_dynamicColorEnabled) return;
+    try {
+      final palette = await PaletteGenerator.fromImageProvider(image);
+      final dominant = palette.dominantColor?.color;
+      if (dominant != null) {
+        await setSeedColor(dominant);
+      }
+    } catch (e) {
+      debugPrint("Palette error: $e");
+    }
+  }
+
+  // ---------- NEW METHODS for Now Playing background ----------
+  Future<void> setDynamicNowPlayingEnabled(bool enabled) async {
+    _dynamicNowPlayingEnabled = enabled;
+    if (!enabled) {
+      _nowPlayingBgColor = const Color(0xFF1F1F2A); // reset default
+    }
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('dynamicNowPlayingEnabled', enabled);
+  }
+
+  Future<void> updateNowPlayingColorFromImage(ImageProvider? image) async {
+    if (!_dynamicNowPlayingEnabled || image == null) return;
+    try {
+      final palette = await PaletteGenerator.fromImageProvider(
+        image,
+        size: const Size(120, 120),
+        maximumColorCount: 6,
+      );
+      final Color? chosen =
+          palette.vibrantColor?.color ??
+          palette.dominantColor?.color ??
+          palette.mutedColor?.color;
+
+      if (chosen != null) {
+        _nowPlayingBgColor = _ensureReadableBackground(chosen);
+        notifyListeners();
+        return;
+      }
+    } catch (e) {
+      debugPrint("NowPlaying Palette error: $e");
+    }
+    _nowPlayingBgColor = const Color(0xFF1F1F2A); // fallback
+    notifyListeners();
+  }
+
+  void resetNowPlayingBgColor() {
+    _nowPlayingBgColor = const Color(0xFF1F1F2A);
+    notifyListeners();
+  }
+
+  Color _ensureReadableBackground(Color color) {
+    final lum = color.computeLuminance();
+    if (lum > 0.85) {
+      return HSLColor.fromColor(color).withLightness(0.20).toColor();
+    }
+    if (lum < 0.05) {
+      return HSLColor.fromColor(color).withLightness(0.10).toColor();
+    }
+    return color;
+  }
+  // ---------- END NEW ----------
+
+  // ---------- MONOCHROME PALETTES ----------
   ColorScheme _monochromeLightScheme() {
     return const ColorScheme(
       brightness: Brightness.light,
@@ -56,6 +146,7 @@ class ThemeProvider with ChangeNotifier {
       background: Color(0xFFFFFFFF), // pure white background
       onBackground: Color(0xFF000000),
       surface: Color(0xFFF2F2F2), // very light surface
+      surfaceContainerLow: Color(0xFFE8E8E8), // light surface
       onSurface: Color(0xFF000000),
       primaryContainer: Color(0xFF222222),
       onPrimaryContainer: Color(0xFFFFFFFF),
@@ -70,7 +161,6 @@ class ThemeProvider with ChangeNotifier {
     );
   }
 
-  // Dark monochrome palette (no color)
   ColorScheme _monochromeDarkScheme() {
     return const ColorScheme(
       brightness: Brightness.dark,
@@ -82,8 +172,9 @@ class ThemeProvider with ChangeNotifier {
       onError: Color(0xFF000000),
       background: Color(0xFF000000), // pure black background
       onBackground: Color(0xFFFFFFFF),
-      surface: Color(0xFF121212), // dark surface
-      onSurface: Color(0xFFFFFFFF),
+      surface: Color(0xFF000000), // dark surface
+      surfaceContainerLow: Color(0xFF0A0A0A), // dark surface
+      onSurface: Color(0xFFBFBFBF),
       primaryContainer: Color(0xFFEEEEEE),
       onPrimaryContainer: Color(0xFF000000),
       secondaryContainer: Color(0xFFBFBFBF),
@@ -93,11 +184,11 @@ class ThemeProvider with ChangeNotifier {
       shadow: Color(0xFF000000),
       inverseSurface: Color(0xFFFFFFFF),
       onInverseSurface: Color(0xFF000000),
-      inversePrimary: Color(0xFF111111),
+      inversePrimary: Color(0xFF000000),
     );
   }
 
-  // ---------- ThemeData getters used by MaterialApp ----------
+  // ---------- ThemeData ----------
   ThemeData get lightTheme {
     if (_isMonochrome) {
       final cs = _monochromeLightScheme();

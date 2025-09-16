@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nix/%20utils/translator.dart';
 import 'package:nix/ui/pages/Language_selection_screen.dart';
 import 'package:nix/ui/pages/about_page.dart';
+import 'package:nix/ui/pages/lyric_settings_page.dart';
 import 'package:nix/ui/pages/theme_setting_page.dart';
 import 'package:page_animation_transition/animations/right_to_left_transition.dart';
 import 'package:page_animation_transition/page_animation_transition.dart';
@@ -117,6 +118,33 @@ class SettingsPage extends StatelessWidget {
                                     MaterialPageRoute(
                                       builder: (context) =>
                                           LanguageSelectionScreen(),
+                                    ),
+                                  ),
+
+                                  //  Navigator.push(
+                                  //   context,
+                                  //   PageAnimationTransition(
+                                  //     page: LanguageSelectionScreen(),
+                                  //     pageAnimationType:
+                                  //         RightToLeftTransition(),
+                                  //   ),
+                                  // ),
+                                ),
+
+                                //lyrics settings
+                                ListTile(
+                                  title: Text(t(context, 'lyrics_settings')),
+                                  leading: Padding(
+                                    padding: const EdgeInsets.only(left: 5),
+                                    child: Icon(FlutterRemix.global_line),
+                                  ),
+                                  trailing: Icon(
+                                    FlutterRemix.arrow_right_s_line,
+                                  ),
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => LyricSettingsPage(),
                                     ),
                                   ),
 

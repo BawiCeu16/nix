@@ -181,6 +181,30 @@ class ThemeSettingsPage extends StatelessWidget {
             ),
 
             const SizedBox(height: 5),
+            Card(
+              elevation: 0,
+
+              child: Consumer<ThemeProvider>(
+                builder: (context, themeProvider, _) {
+                  return SwitchListTile(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+
+                    title: Text("Dynamic Album Color"),
+                    value: themeProvider.dynamicColorEnabled,
+                    onChanged: themeProvider.isMonochrome
+                        ? null // disable toggle when monochrome is ON
+                        : (v) => themeProvider.setDynamicColorEnabled(v),
+                    subtitle: themeProvider.isMonochrome
+                        ? Text("Disabled in Monochrome mode")
+                        : Text("Dynamic app theme adapts to album colors."),
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(height: 5),
 
             // Small live preview card
             Card(

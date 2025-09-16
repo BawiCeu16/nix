@@ -16,32 +16,48 @@ class PermissionScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('App Permissions')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            _buildPermissionCard(
-              context,
-              icon: FlutterRemix.music_2_line,
-              title: 'Audio Access',
-              subtitle: 'Required to scan and play music files on your device.',
-              isGranted: permissionProvider.storageGranted,
-              onTap: () async {
-                await context.read<MusicProvider>().requestAndLoadSongs();
-                await context.read<PermissionProvider>().requestStorage();
-              },
+            Flexible(
+              child: Center(
+                child: Text(
+                  'App Permissions',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+              ),
             ),
-            const SizedBox(height: 12),
-            _buildPermissionCard(
-              context,
-              icon: FlutterRemix.bluetooth_line,
-              title: 'Bluetooth Access',
-              subtitle: 'Required to connect with Bluetooth audio devices.',
-              isGranted: permissionProvider.bluetoothGranted,
-              onTap: () async {
-                await permissionProvider.requestBluetooth();
-              },
+            Flexible(
+              flex: 2,
+              child: Column(
+                children: [
+                  _buildPermissionCard(
+                    context,
+                    icon: FlutterRemix.music_2_line,
+                    title: 'Audio Access',
+                    subtitle:
+                        'Required to scan and play music files on your device.',
+                    isGranted: permissionProvider.storageGranted,
+                    onTap: () async {
+                      await context.read<MusicProvider>().requestAndLoadSongs();
+                      await context.read<PermissionProvider>().requestStorage();
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _buildPermissionCard(
+                    context,
+                    icon: FlutterRemix.bluetooth_line,
+                    title: 'Bluetooth Access',
+                    subtitle:
+                        'Required to connect with Bluetooth audio devices.',
+                    isGranted: permissionProvider.bluetoothGranted,
+                    onTap: () async {
+                      await permissionProvider.requestBluetooth();
+                    },
+                  ),
+                ],
+              ),
             ),
             const Spacer(),
             FilledButton(

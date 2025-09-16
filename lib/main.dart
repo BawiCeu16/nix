@@ -4,6 +4,7 @@ import 'package:just_audio_background/just_audio_background.dart';
 import 'package:nix/providers/app_info_provider.dart';
 import 'package:nix/providers/bottom_nav_provider.dart';
 import 'package:nix/providers/language_provider.dart';
+import 'package:nix/providers/lyrics_provider.dart';
 import 'package:nix/providers/theme_provider.dart';
 import 'package:nix/providers/user_provider.dart';
 import 'package:nix/ui/pages/home_screen.dart';
@@ -49,6 +50,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => appInfoProvider),
         ChangeNotifierProvider(create: (_) => languageProvider),
         ChangeNotifierProvider(create: (_) => PermissionProvider()),
+        ChangeNotifierProvider(create: (_) => LyricSettingsProvider()),
       ],
       child: const NixApp(),
     ),
