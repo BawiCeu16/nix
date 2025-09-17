@@ -21,6 +21,9 @@ class SearchBarWidget extends StatelessWidget {
       child: SearchBar(
         elevation: WidgetStateProperty.all(0),
         onChanged: provider.setSearchQuery,
+        keyboardType: TextInputType.text,
+        autoFocus: false,
+
         leading: Padding(
           padding: const EdgeInsets.only(left: 10),
           child: Icon(FlutterRemix.search_line),

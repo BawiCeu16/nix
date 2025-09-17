@@ -1,11 +1,24 @@
-import 'dart:ui';
+import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:provider/provider.dart';
 
-class LyricsPage extends StatelessWidget {
+class LyricsPage extends StatefulWidget {
   const LyricsPage({super.key});
+
+  @override
+  State<LyricsPage> createState() => _LyricsPageState();
+}
+
+class _LyricsPageState extends State<LyricsPage> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +54,7 @@ class LyricsPage extends StatelessWidget {
               children: [
                 // Lyrics List
                 Expanded(
-                  child: _LyricsList(scrollController: ScrollController()),
+                  child: _LyricsList(scrollController: _scrollController),
                 ),
 
                 // Media Player Controls with Blur
@@ -61,29 +74,39 @@ class _LyricsList extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<MusicProvider>();
     final lyrics = provider.lyrics;
-    final currentLine = provider.currentLine;
+    final int? currentLine = provider.currentLine; // may be null
 
-    // Auto-scroll to current line
+    // Auto-scroll to current line (safe null check)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (scrollController.hasClients && currentLine >= 0) {
-        scrollController.animateTo(
-          currentLine * 60.0,
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeInOut,
-        );
+      if (scrollController.hasClients &&
+          currentLine != null &&
+          currentLine >= 0) {
+        final targetOffset = currentLine * 60.0;
+        // Avoid jitter by checking distance threshold
+        if ((scrollController.offset - targetOffset).abs() > 8.0) {
+          scrollController.animateTo(
+            targetOffset,
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeInOut,
+          );
+        }
       }
     });
 
+    final inactiveColor =
+        Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7) ??
+        Theme.of(context).colorScheme.onSurface.withOpacity(0.7);
+
     return ListView.builder(
-      physics: BouncingScrollPhysics(),
+      physics: const BouncingScrollPhysics(),
       controller: scrollController,
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       itemCount: lyrics.length,
       itemBuilder: (context, index) {
         final entry = lyrics[index];
-        final lineText = entry['line'] as String;
+        final lineText = entry['line'] as String? ?? '';
         final timeMs = entry['time'] as int? ?? 0;
-        final isActive = index == currentLine;
+        final isActive = (currentLine != null) && (index == currentLine);
 
         return GestureDetector(
           onTap: timeMs > 0
@@ -96,9 +119,7 @@ class _LyricsList extends StatelessWidget {
               fontWeight: isActive ? FontWeight.bold : FontWeight.w400,
               color: isActive
                   ? Theme.of(context).colorScheme.primary
-                  : Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                  : inactiveColor,
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
@@ -117,6 +138,8 @@ class _LyricsList extends StatelessWidget {
 }
 
 class _PlayerControls extends StatelessWidget {
+  const _PlayerControls({super.key});
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<MusicProvider>();
@@ -136,7 +159,7 @@ class _PlayerControls extends StatelessWidget {
               const SizedBox(height: 10),
               // Slider
               Padding(
-                padding: EdgeInsetsGeometry.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: StreamBuilder<Duration>(
                   stream: provider.throttledPositionStream,
                   builder: (context, snapshot) {
@@ -144,13 +167,26 @@ class _PlayerControls extends StatelessWidget {
                     final total =
                         provider.audioPlayer.duration ?? Duration.zero;
 
+                    // Guard against zero-duration (so slider max != 0)
+                    final maxSeconds = total.inSeconds > 0
+                        ? total.inSeconds.toDouble()
+                        : 1.0;
+                    final sliderValue = current.inSeconds.toDouble().clamp(
+                      0.0,
+                      maxSeconds,
+                    );
+
                     return Column(
                       children: [
                         SliderTheme(
                           data: SliderTheme.of(context).copyWith(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                            ),
                             trackHeight: 5.0,
                             thumbShape: const RoundSliderThumbShape(
                               enabledThumbRadius: 0,
+                              elevation: 0,
                             ),
                             overlayShape: SliderComponentShape.noOverlay,
                             thumbColor: Colors.transparent,
@@ -158,13 +194,18 @@ class _PlayerControls extends StatelessWidget {
                           child: TweenAnimationBuilder<double>(
                             duration: const Duration(milliseconds: 250),
                             tween: Tween<double>(
-                              begin: 0,
-                              end: current.inSeconds.toDouble(),
+                              begin: sliderValue,
+                              end: sliderValue,
                             ),
                             builder: (context, animatedValue, child) {
+                              // ensure safe bounds
+                              final safeValue = (animatedValue ?? 0.0).clamp(
+                                0.0,
+                                maxSeconds,
+                              );
                               return Slider(
-                                value: animatedValue,
-                                max: total.inSeconds.toDouble(),
+                                value: safeValue,
+                                max: maxSeconds,
                                 onChanged: (v) =>
                                     provider.seek(Duration(seconds: v.toInt())),
                               );
@@ -192,21 +233,13 @@ class _PlayerControls extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  SizedBox(width: 20),
+                  const SizedBox(width: 20),
                   IconButton(
                     onPressed: provider.playPrevious,
                     icon: const Icon(FlutterRemix.skip_back_fill),
                   ),
-                  IconButton.filled(
-                    iconSize: 30,
-                    icon: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Icon(
-                        provider.isPlaying
-                            ? FlutterRemix.pause_fill
-                            : FlutterRemix.play_fill,
-                      ),
-                    ),
+                  // Play/Pause as a circular filled button
+                  FilledButton(
                     onPressed: () {
                       if (provider.isPlaying) {
                         provider.pause();
@@ -214,12 +247,23 @@ class _PlayerControls extends StatelessWidget {
                         provider.resume();
                       }
                     },
+                    style: FilledButton.styleFrom(
+                      shape: const CircleBorder(),
+                      padding: const EdgeInsets.all(8),
+                      minimumSize: const Size(56, 56),
+                    ),
+                    child: Icon(
+                      provider.isPlaying
+                          ? FlutterRemix.pause_fill
+                          : FlutterRemix.play_fill,
+                      size: 30,
+                    ),
                   ),
                   IconButton(
                     onPressed: provider.playNext,
                     icon: const Icon(FlutterRemix.skip_forward_fill),
                   ),
-                  SizedBox(width: 20),
+                  const SizedBox(width: 20),
                 ],
               ),
               const SizedBox(height: 20),

@@ -32,11 +32,11 @@ class MostListenedScreen extends StatelessWidget {
                     'This will clear all play counts. Are you sure?',
                   ),
                   actions: [
-                    TextButton(
+                    FilledButton.tonal(
                       onPressed: () => Navigator.of(context).pop(false),
                       child: const Text('Cancel'),
                     ),
-                    TextButton(
+                    FilledButton(
                       onPressed: () => Navigator.of(context).pop(true),
                       child: const Text('Reset'),
                     ),
@@ -63,6 +63,7 @@ class MostListenedScreen extends StatelessWidget {
           : ListView.builder(
               itemCount: top.length,
               // separatorBuilder: (_, __) => const Divider(height: 0),
+              physics: BouncingScrollPhysics(),
               itemBuilder: (context, i) {
                 final s = top[i];
                 return ListTile(
@@ -70,6 +71,7 @@ class MostListenedScreen extends StatelessWidget {
                     width: 48,
                     height: 48,
                     child: QueryArtworkWidget(
+                      keepOldArtwork: true,
                       id: s.id,
                       type: ArtworkType.AUDIO,
                       nullArtworkWidget: Container(

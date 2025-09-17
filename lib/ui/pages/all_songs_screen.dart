@@ -24,9 +24,11 @@ class AllSongsScreen extends StatelessWidget {
       onRefresh: () async => await provider.refreshSongs(),
       child: CustomScrollView(
         physics: const BouncingScrollPhysics(),
+
         slivers: [
           const SliverToBoxAdapter(child: SizedBox(height: 8)),
-          const SliverToBoxAdapter(child: SearchBarWidget()),
+          // const SliverToBoxAdapter(child: SearchBarWidget()),
+          SliverFloatingHeader(child: SearchBarWidget()),
           const SliverToBoxAdapter(child: SizedBox(height: 8)),
           // Recently played strip stays in AllSongs
           const SliverToBoxAdapter(child: RecentlyPlayedStrip()),

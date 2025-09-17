@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:palette_generator/palette_generator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:math' as math;
 
 class ThemeProvider with ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.system;
@@ -67,13 +68,24 @@ class ThemeProvider with ChangeNotifier {
   }
 
   /// Extracts color from album image & updates theme
+  /// -> now applies a brightness/saturation boost so seed is more vivid.
   Future<void> updateColorFromAlbum(ImageProvider image) async {
     if (!_dynamicColorEnabled) return;
     try {
-      final palette = await PaletteGenerator.fromImageProvider(image);
-      final dominant = palette.dominantColor?.color;
-      if (dominant != null) {
-        await setSeedColor(dominant);
+      final palette = await PaletteGenerator.fromImageProvider(
+        image,
+        maximumColorCount: 6,
+      );
+
+      // prefer vibrant -> dominant -> muted (but boost whichever we pick)
+      final Color? picked =
+          palette.vibrantColor?.color ??
+          palette.dominantColor?.color ??
+          palette.mutedColor?.color;
+
+      if (picked != null) {
+        final boosted = _boostColorForSeed(picked);
+        await setSeedColor(boosted);
       }
     } catch (e) {
       debugPrint("Palette error: $e");
@@ -91,28 +103,36 @@ class ThemeProvider with ChangeNotifier {
     await prefs.setBool('dynamicNowPlayingEnabled', enabled);
   }
 
+  /// Extract a color for Now Playing background and make it brighter/vibrant.
   Future<void> updateNowPlayingColorFromImage(ImageProvider? image) async {
     if (!_dynamicNowPlayingEnabled || image == null) return;
     try {
       final palette = await PaletteGenerator.fromImageProvider(
         image,
-        size: const Size(120, 120),
-        maximumColorCount: 6,
+        size: const Size(160, 160),
+        maximumColorCount: 8,
       );
-      final Color? chosen =
+
+      // prefer most 'punchy' candidate
+      final Color? candidate =
           palette.vibrantColor?.color ??
+          palette.lightVibrantColor?.color ??
           palette.dominantColor?.color ??
           palette.mutedColor?.color;
 
-      if (chosen != null) {
-        _nowPlayingBgColor = _ensureReadableBackground(chosen);
+      if (candidate != null) {
+        // boost more aggressively for now-playing so UI pops
+        final boosted = _boostColorForNowPlaying(candidate);
+        _nowPlayingBgColor = _ensureReadableBackground(boosted);
         notifyListeners();
         return;
       }
     } catch (e) {
       debugPrint("NowPlaying Palette error: $e");
     }
-    _nowPlayingBgColor = const Color(0xFF1F1F2A); // fallback
+
+    // fallback
+    _nowPlayingBgColor = const Color(0xFF1F1F2A);
     notifyListeners();
   }
 
@@ -121,17 +141,63 @@ class ThemeProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Make the seed color slightly more vivid & brighter but keep it safe.
+  Color _boostColorForSeed(Color color) {
+    return _boostColor(color, saturationBoost: 0.16, lightnessBoost: 0.08);
+  }
+
+  /// Make now-playing color punchier (more boost)
+  Color _boostColorForNowPlaying(Color color) {
+    return _boostColor(color, saturationBoost: 0.22, lightnessBoost: 0.12);
+  }
+
+  /// Generic booster using HSL adjustments, with caps to avoid extremes.
+  Color _boostColor(
+    Color color, {
+    double saturationBoost = 0.12,
+    double lightnessBoost = 0.08,
+  }) {
+    final hsl = HSLColor.fromColor(color);
+    double newS = (hsl.saturation + saturationBoost).clamp(0.0, 1.0);
+    double newL = (hsl.lightness + lightnessBoost).clamp(0.03, 0.92);
+
+    // if original was very dark, bump lightness a bit more so it's visible on dark backgrounds
+    if (hsl.lightness < 0.12) {
+      newL = math.min(0.28, newL + 0.06);
+    }
+
+    // if original is extremely low saturation (near grey), give it more saturation boost
+    if (hsl.saturation < 0.12) {
+      newS = math.min(1.0, newS + 0.08);
+    }
+
+    return HSLColor.fromAHSL(hsl.alpha, hsl.hue, newS, newL).toColor();
+  }
+
+  /// Ensure background color is readable but keep it on the brighter side.
+  /// Avoid making it pitch-black or pure-white; nudge extremes toward comfortable contrast.
   Color _ensureReadableBackground(Color color) {
     final lum = color.computeLuminance();
-    if (lum > 0.85) {
-      return HSLColor.fromColor(color).withLightness(0.20).toColor();
+
+    // too dark -> lift to readable but still moody
+    if (lum < 0.08) {
+      final h = HSLColor.fromColor(color);
+      final lifted = h.withLightness(math.min(0.18, h.lightness + 0.18));
+      return lifted.toColor();
     }
-    if (lum < 0.05) {
-      return HSLColor.fromColor(color).withLightness(0.10).toColor();
+
+    // too bright -> slightly tone down to avoid white-blow
+    if (lum > 0.94) {
+      final h = HSLColor.fromColor(color);
+      final toned = h.withLightness(math.max(0.88, h.lightness - 0.06));
+      return toned.toColor();
     }
-    return color;
+
+    // otherwise make a tiny friendly tweak so it's not flat
+    final h = HSLColor.fromColor(color);
+    final adjusted = h.withSaturation(math.min(1.0, h.saturation + 0.02));
+    return adjusted.toColor();
   }
-  // ---------- END NEW ----------
 
   // ---------- MONOCHROME PALETTES ----------
   ColorScheme _monochromeLightScheme() {
@@ -213,6 +279,7 @@ class ThemeProvider with ChangeNotifier {
     }
 
     // Normal colored theme using seed color
+    // We'll use the (possibly boosted) _seedColor directly so it's more vivid.
     final cs = ColorScheme.fromSeed(
       seedColor: _seedColor,
       brightness: Brightness.light,

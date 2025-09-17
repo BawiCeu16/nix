@@ -43,6 +43,7 @@ class RecentPlaysScreen extends StatelessWidget {
                 final s = recent[i];
                 return ListTile(
                   leading: QueryArtworkWidget(
+                    keepOldArtwork: true,
                     id: s.id,
                     type: ArtworkType.AUDIO,
                     nullArtworkWidget: Container(

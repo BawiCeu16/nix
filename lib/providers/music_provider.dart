@@ -53,6 +53,7 @@ class MusicProvider with ChangeNotifier {
   /// recent plays: list of {"id": songId, "ts": epochMillis}
   final List<Map<String, dynamic>> _recentPlays = [];
 
+  /// cap
   static const int _recentPlaysCap = 200; // keep latest 200 plays
 
   // ✅ Getters
@@ -109,7 +110,7 @@ class MusicProvider with ChangeNotifier {
     notifyListeners();
     _songs = await _audioQuery.querySongs();
     _applySort();
-    await _buildPlaylist();
+    await _buildPlaylist(); // build playlist from loaded songs
     _isLoading = false;
     notifyListeners();
   }
@@ -117,6 +118,7 @@ class MusicProvider with ChangeNotifier {
   Future<void> refreshSongs() async {
     _songs = await _audioQuery.querySongs();
     _applySort();
+    await _rebuildPlaylistPreservePlayback();
     notifyListeners();
   }
 
@@ -133,6 +135,7 @@ class MusicProvider with ChangeNotifier {
       notifyListeners();
     });
 
+    // update _currentSong when index changes
     _audioPlayer.currentIndexStream.listen((index) {
       if (index != null && index >= 0 && index < _songs.length) {
         _currentSong = _songs[index];
@@ -158,9 +161,14 @@ class MusicProvider with ChangeNotifier {
   }
 
   // ---------- Sorting ----------
-  void setSortOption(SortOption option) {
+  /// Public setter that rebuilds the internal audio playlist and preserves playback.
+  Future<void> setSortOption(SortOption option) async {
     _sortOption = option;
     _applySort();
+
+    // Rebuild the concatenating audio source so order in audio player matches UI.
+    await _rebuildPlaylistPreservePlayback();
+
     notifyListeners();
   }
 
@@ -178,6 +186,57 @@ class MusicProvider with ChangeNotifier {
       case SortOption.durationAsc:
         _songs.sort((a, b) => (a.duration ?? 0).compareTo(b.duration ?? 0));
         break;
+    }
+  }
+
+  /// Rebuild the ConcatenatingAudioSource when the list order changes,
+  /// trying to preserve current index, position and playback state.
+  Future<void> _rebuildPlaylistPreservePlayback() async {
+    try {
+      // store playback state
+      final wasPlaying = _audioPlayer.playing;
+      final currentPosition = _audioPlayer.position;
+      final currentSongId = _currentSong?.id;
+
+      // rebuild playlist from current _songs order
+      _playlist = ConcatenatingAudioSource(
+        children: _songs.map((song) {
+          final artworkUri = song.albumId != null
+              ? Uri.parse(
+                  "content://media/external/audio/albumart/${song.albumId}",
+                )
+              : Uri.parse("https://via.placeholder.com/150");
+
+          return AudioSource.uri(
+            Uri.parse(song.uri!),
+            tag: MediaItem(
+              id: song.id.toString(),
+              album: song.album ?? 'Unknown Album',
+              title: song.title,
+              artist: song.artist ?? 'Unknown Artist',
+              artUri: artworkUri,
+            ),
+          );
+        }).toList(),
+      );
+
+      // determine initial index (prefer currentSong if still present)
+      int initialIndex = 0;
+      if (currentSongId != null) {
+        final newIndex = _songs.indexWhere((s) => s.id == currentSongId);
+        if (newIndex != -1) initialIndex = newIndex;
+      }
+
+      // set audio source with initialIndex; then restore position & playing state
+      await _audioPlayer.setAudioSource(_playlist!, initialIndex: initialIndex);
+      // seek to stored position on the selected index
+      await _audioPlayer.seek(currentPosition, index: initialIndex);
+
+      if (wasPlaying) {
+        await _audioPlayer.play();
+      }
+    } catch (e) {
+      debugPrint("Error rebuilding playlist: $e");
     }
   }
 
@@ -307,25 +366,51 @@ class MusicProvider with ChangeNotifier {
     _recordPlay(songId);
   }
 
+  /// Play next track and increment listen count for the newly selected song.
   Future<void> playNext() async {
-    if (_audioPlayer.hasNext) {
-      await _audioPlayer.seekToNext();
-    } else {
-      await _audioPlayer.seek(Duration.zero, index: 0);
+    try {
+      if (_audioPlayer.hasNext) {
+        await _audioPlayer.seekToNext();
+      } else {
+        // Optional: loop to first track
+        await _audioPlayer.seek(Duration.zero, index: 0);
+      }
+
+      await _audioPlayer.play();
+
+      // After seeking, get the current index and record the play for that song
+      final idx = _audioPlayer.currentIndex;
+      if (idx != null && idx >= 0 && idx < _songs.length) {
+        final s = _songs[idx];
+        _recordPlay(s.id);
+      }
+    } catch (e) {
+      debugPrint("Error in playNext: $e");
     }
-    await _audioPlayer.play();
   }
 
+  /// Play previous track and increment listen count for the newly selected song.
   Future<void> playPrevious() async {
-    if (_audioPlayer.hasPrevious) {
-      await _audioPlayer.seekToPrevious();
-    } else {
-      final lastIndex = _audioPlayer.sequence?.length ?? 0;
-      if (lastIndex > 0) {
-        await _audioPlayer.seek(Duration.zero, index: lastIndex - 1);
+    try {
+      if (_audioPlayer.hasPrevious) {
+        await _audioPlayer.seekToPrevious();
+      } else {
+        final lastIndex = _audioPlayer.sequence?.length ?? 0;
+        if (lastIndex > 0) {
+          await _audioPlayer.seek(Duration.zero, index: lastIndex - 1);
+        }
       }
+
+      await _audioPlayer.play();
+
+      final idx = _audioPlayer.currentIndex;
+      if (idx != null && idx >= 0 && idx < _songs.length) {
+        final s = _songs[idx];
+        _recordPlay(s.id);
+      }
+    } catch (e) {
+      debugPrint("Error in playPrevious: $e");
     }
-    await _audioPlayer.play();
   }
 
   void pause() => _audioPlayer.pause();
@@ -524,13 +609,13 @@ class MusicProvider with ChangeNotifier {
     }
   }
 
-  Future<void> _ensureBluetoothPermission() async {
-    if (!Platform.isAndroid) return;
-    final status = await Permission.bluetoothConnect.status;
-    if (!status.isGranted) {
-      await Permission.bluetoothConnect.request();
-    }
-  }
+  // Future<void> _ensureBluetoothPermission() async {
+  //   if (!Platform.isAndroid) return;
+  //   final status = await Permission.bluetoothConnect.status;
+  //   if (!status.isGranted) {
+  //     await Permission.bluetoothConnect.request();
+  //   }
+  // }
 
   Future<void> _updateNotification(
     String title,
@@ -561,6 +646,7 @@ class MusicProvider with ChangeNotifier {
     try {
       final url =
           "https://lrclib.net/api/get?track_name=${Uri.encodeComponent(title)}&artist_name=${Uri.encodeComponent(artist)}";
+
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
@@ -579,6 +665,7 @@ class MusicProvider with ChangeNotifier {
         _currentLyricIndex = 0;
         notifyListeners();
 
+        // Sync with song position
         _audioPlayer.positionStream.listen(_syncLyrics);
       } else {
         _lyrics = [

@@ -86,20 +86,17 @@ class MiniPlayerWidget extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     ListTile(
-                      leading: Hero(
-                        tag: 'artwork-${song.id}',
-                        child: QueryArtworkWidget(
-                          keepOldArtwork: true,
-                          artworkBorder: BorderRadius.circular(8),
-                          id: song.id,
-                          type: ArtworkType.AUDIO,
-                          nullArtworkWidget: SizedBox(
-                            height: 55,
-                            width: 55,
-                            child: Card(
-                              elevation: 0,
-                              child: Icon(FlutterRemix.music_fill),
-                            ),
+                      leading: QueryArtworkWidget(
+                        keepOldArtwork: true,
+                        artworkBorder: BorderRadius.circular(8),
+                        id: song.id,
+                        type: ArtworkType.AUDIO,
+                        nullArtworkWidget: SizedBox(
+                          height: 55,
+                          width: 55,
+                          child: Card(
+                            elevation: 0,
+                            child: Icon(FlutterRemix.music_fill),
                           ),
                         ),
                       ),
@@ -109,7 +106,11 @@ class MiniPlayerWidget extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      subtitle: Text(song.artist ?? "${t(context, 'unknown')}"),
+                      subtitle: Text(
+                        song.artist ?? "${t(context, 'unknown')}",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       trailing: IconButton(
                         icon: Icon(
                           provider.isPlaying ? Icons.pause : Icons.play_arrow,
@@ -229,29 +230,26 @@ class MiniPlayerWidget extends StatelessWidget {
                             Stack(
                               children: [
                                 //ArtWork
-                                Hero(
-                                  tag: 'artwork-${song.id}',
-                                  child: SizedBox(
-                                    height: imageSize,
-                                    width: imageSize,
-                                    child: QueryArtworkWidget(
-                                      keepOldArtwork: true,
-                                      artworkFit: BoxFit.cover,
-                                      quality: 100,
+                                SizedBox(
+                                  height: imageSize,
+                                  width: imageSize,
+                                  child: QueryArtworkWidget(
+                                    keepOldArtwork: true,
+                                    artworkFit: BoxFit.cover,
+                                    quality: 100,
 
-                                      artworkQuality: FilterQuality.high,
-                                      artworkBorder: BorderRadius.circular(15),
-                                      id: song.id,
-                                      type: ArtworkType.AUDIO,
-                                      nullArtworkWidget: SizedBox(
-                                        height: 55,
-                                        width: 55,
-                                        child: Card(
-                                          elevation: 0,
-                                          child: Icon(
-                                            FlutterRemix.music_fill,
-                                            size: 100,
-                                          ),
+                                    artworkQuality: FilterQuality.high,
+                                    artworkBorder: BorderRadius.circular(15),
+                                    id: song.id,
+                                    type: ArtworkType.AUDIO,
+                                    nullArtworkWidget: SizedBox(
+                                      height: 55,
+                                      width: 55,
+                                      child: Card(
+                                        elevation: 0,
+                                        child: Icon(
+                                          FlutterRemix.music_fill,
+                                          size: 100,
                                         ),
                                       ),
                                     ),
@@ -383,6 +381,8 @@ class MiniPlayerWidget extends StatelessWidget {
                                 horizontal: 10,
                               ),
                               child: Text(
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 song.artist ?? "${t(context, 'unknown')}",
 
                                 style: TextStyle(
