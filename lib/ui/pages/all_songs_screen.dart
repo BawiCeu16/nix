@@ -24,7 +24,6 @@ class AllSongsScreen extends StatelessWidget {
       onRefresh: () async => await provider.refreshSongs(),
       child: CustomScrollView(
         physics: const BouncingScrollPhysics(),
-
         slivers: [
           const SliverToBoxAdapter(child: SizedBox(height: 8)),
           // const SliverToBoxAdapter(child: SearchBarWidget()),
@@ -90,6 +89,24 @@ class AllSongsScreen extends StatelessWidget {
   }
 }
 
+/// Helper to format duration (assumes [ms] is milliseconds).
+/// If your SongModel.duration is in seconds, change the conversion accordingly.
+String formatDuration(int? ms) {
+  if (ms == null || ms <= 0) return "--:--";
+  final totalSeconds = (ms / 1000).round();
+  final hours = totalSeconds ~/ 3600;
+  final minutes = (totalSeconds % 3600) ~/ 60;
+  final seconds = totalSeconds % 60;
+
+  final twoDigits = (int n) => n.toString().padLeft(2, '0');
+
+  if (hours > 0) {
+    return '$hours:${twoDigits(minutes)}:${twoDigits(seconds)}';
+  } else {
+    return '${minutes}:${twoDigits(seconds)}';
+  }
+}
+
 class _SongTile extends StatelessWidget {
   final SongModel song;
   const _SongTile({required this.song});
@@ -122,7 +139,11 @@ class _SongTile extends StatelessWidget {
             ),
           ),
           title: Text(song.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: Text(song.artist ?? "Unknown"),
+          subtitle: Text(
+            "${song.artist ?? "Unknown"} • ${formatDuration(song.duration)}",
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           onTap: () {
             // record click (updates recent & counts) then play
             provider.recordClickAndPlay(song);
@@ -142,11 +163,14 @@ class _SongTile extends StatelessWidget {
                 onPressed: () => provider.toggleFavorite(song.id),
               ),
               if (state.isCurrentSong)
-                MiniMusicVisualizer(
-                  width: 4,
-                  height: 15,
-                  animate: state.isPlaying,
-                  color: Theme.of(context).colorScheme.primary,
+                Padding(
+                  padding: const EdgeInsets.only(left: 6.0),
+                  child: MiniMusicVisualizer(
+                    width: 4,
+                    height: 15,
+                    animate: state.isPlaying,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
             ],
           ),

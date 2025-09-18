@@ -39,6 +39,7 @@ class SongDetailsDialog extends StatelessWidget {
             Row(
               children: [
                 QueryArtworkWidget(
+                  keepOldArtwork: true,
                   id: song.id,
                   type: ArtworkType.AUDIO,
                   artworkHeight: 80,

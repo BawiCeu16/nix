@@ -16,6 +16,7 @@ class MostListenedScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
       appBar: AppBar(
+        scrolledUnderElevation: 0.0,
         backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
         title: const Text('Most listened'),
         centerTitle: true,

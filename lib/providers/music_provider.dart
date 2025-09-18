@@ -1,4 +1,4 @@
-// providers/music_provider.dart
+// lib/providers/music_provider.dart
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -47,14 +47,18 @@ class MusicProvider with ChangeNotifier {
   int _currentLyricIndex = 0;
 
   // ---------- Recently / Most listened state ----------
-  /// play counts persisted as Map<int(songId) -> int(count)>
   final Map<int, int> _playCounts = {};
-
-  /// recent plays: list of {"id": songId, "ts": epochMillis}
   final List<Map<String, dynamic>> _recentPlays = [];
+  static const int _recentPlaysCap = 200;
 
-  /// cap
-  static const int _recentPlaysCap = 200; // keep latest 200 plays
+  // New: current audio queue that mirrors the player's sequence
+  List<SongModel> _currentAudioQueue = [];
+
+  // NEW: system favorites playlist id (Android). null if not created / not available.
+  int? _favoriteSystemPlaylistId;
+
+  // NEW: user setting: whether to auto-sync favorites to system playlist
+  bool _favSystemSyncEnabled = false;
 
   // ✅ Getters
   List<SongModel> get songs => _songs;
@@ -74,12 +78,17 @@ class MusicProvider with ChangeNotifier {
   Duration get totalDuration => _totalDuration;
   AudioPlayer get audioPlayer => _audioPlayer;
 
-  // ✅ Playlists etc.
   Map<String, List<int>> get playlists => _playlists;
   String? get currentPlaylist => _currentPlaylist;
 
   List<Map<String, dynamic>> get lyrics => _lyrics;
   int get currentLyricIndex => _currentLyricIndex;
+
+  List<SongModel> get currentAudioQueue =>
+      List.unmodifiable(_currentAudioQueue);
+
+  int? get favoriteSystemPlaylistId => _favoriteSystemPlaylistId;
+  bool get favSystemSyncEnabled => _favSystemSyncEnabled;
 
   // ---------- Constructor ----------
   MusicProvider() {
@@ -88,6 +97,7 @@ class MusicProvider with ChangeNotifier {
     _loadPlayStats();
     _listenToPlayerStreams();
     checkAndLoadSongs();
+    _initFavoriteSystemPlaylist();
   }
 
   // ---------- Songs loading ----------
@@ -137,38 +147,69 @@ class MusicProvider with ChangeNotifier {
 
     // update _currentSong when index changes
     _audioPlayer.currentIndexStream.listen((index) {
-      if (index != null && index >= 0 && index < _songs.length) {
-        _currentSong = _songs[index];
-        _cachedArtworkData = null;
-
-        // fetch lyrics
-        if (_currentSong != null) {
-          fetchLyricsFromLrcLib(
-            _currentSong!.title,
-            _currentSong!.artist ?? "Unknown",
-          );
+      try {
+        final seq = _audioPlayer.sequence;
+        if (seq != null && seq.isNotEmpty) {
+          final idx = index ?? _audioPlayer.currentIndex ?? 0;
+          if (idx >= 0 && idx < seq.length) {
+            final tag = seq[idx].tag;
+            if (tag is MediaItem) {
+              final id = int.tryParse(tag.id);
+              if (id != null) {
+                final songIndex = _songs.indexWhere((s) => s.id == id);
+                if (songIndex != -1) {
+                  _currentSong = _songs[songIndex];
+                } else {
+                  final qIndex = _currentAudioQueue.indexWhere(
+                    (s) => s.id == id,
+                  );
+                  _currentSong = qIndex != -1
+                      ? _currentAudioQueue[qIndex]
+                      : null;
+                }
+                _cachedArtworkData = null;
+                if (_currentSong != null) {
+                  fetchLyricsFromLrcLib(
+                    _currentSong!.title,
+                    _currentSong!.artist ?? "Unknown",
+                  );
+                }
+              } else {
+                _currentSong = null;
+              }
+            } else {
+              _currentSong = null;
+            }
+          } else {
+            _currentSong = null;
+          }
+        } else {
+          final idx = index ?? -1;
+          if (idx >= 0 && idx < _currentAudioQueue.length) {
+            _currentSong = _currentAudioQueue[idx];
+          } else if (idx >= 0 && idx < _songs.length) {
+            _currentSong = _songs[idx];
+          } else {
+            _currentSong = null;
+          }
         }
-      } else {
+      } catch (e) {
+        debugPrint("Error resolving current song from sequence: $e");
         _currentSong = null;
       }
       notifyListeners();
     });
 
     _audioPlayer.playerStateStream.listen((state) {
-      // no automatic counting here — clicks only
       notifyListeners();
     });
   }
 
   // ---------- Sorting ----------
-  /// Public setter that rebuilds the internal audio playlist and preserves playback.
   Future<void> setSortOption(SortOption option) async {
     _sortOption = option;
     _applySort();
-
-    // Rebuild the concatenating audio source so order in audio player matches UI.
     await _rebuildPlaylistPreservePlayback();
-
     notifyListeners();
   }
 
@@ -189,18 +230,16 @@ class MusicProvider with ChangeNotifier {
     }
   }
 
-  /// Rebuild the ConcatenatingAudioSource when the list order changes,
-  /// trying to preserve current index, position and playback state.
   Future<void> _rebuildPlaylistPreservePlayback() async {
     try {
-      // store playback state
       final wasPlaying = _audioPlayer.playing;
       final currentPosition = _audioPlayer.position;
       final currentSongId = _currentSong?.id;
 
-      // rebuild playlist from current _songs order
+      _currentAudioQueue = List.from(_songs);
+
       _playlist = ConcatenatingAudioSource(
-        children: _songs.map((song) {
+        children: _currentAudioQueue.map((song) {
           final artworkUri = song.albumId != null
               ? Uri.parse(
                   "content://media/external/audio/albumart/${song.albumId}",
@@ -220,16 +259,15 @@ class MusicProvider with ChangeNotifier {
         }).toList(),
       );
 
-      // determine initial index (prefer currentSong if still present)
       int initialIndex = 0;
       if (currentSongId != null) {
-        final newIndex = _songs.indexWhere((s) => s.id == currentSongId);
+        final newIndex = _currentAudioQueue.indexWhere(
+          (s) => s.id == currentSongId,
+        );
         if (newIndex != -1) initialIndex = newIndex;
       }
 
-      // set audio source with initialIndex; then restore position & playing state
       await _audioPlayer.setAudioSource(_playlist!, initialIndex: initialIndex);
-      // seek to stored position on the selected index
       await _audioPlayer.seek(currentPosition, index: initialIndex);
 
       if (wasPlaying) {
@@ -240,18 +278,40 @@ class MusicProvider with ChangeNotifier {
     }
   }
 
-  // ---------- Favorites ----------
+  // ---------- Favorites (in-app + optional Android system playlist) ----------
   Future<void> loadFavorites() async {
     final prefs = await SharedPreferences.getInstance();
     _favoriteSongIds =
         prefs.getStringList('favorites')?.map(int.parse).toList() ?? [];
+
+    // restore sync flag
+    _favSystemSyncEnabled = prefs.getBool('fav_sync_enabled') ?? false;
+
+    // try to read saved system playlist id
+    final favSysId = prefs.getInt('fav_system_playlist_id');
+    if (favSysId != null) {
+      _favoriteSystemPlaylistId = favSysId;
+      if (Platform.isAndroid) {
+        try {
+          final systemSongs = await _loadSongIdsFromSystemPlaylist(
+            _favoriteSystemPlaylistId!,
+          );
+          final merged = <int>{..._favoriteSongIds, ...systemSongs};
+          _favoriteSongIds = merged.toList();
+        } catch (e) {
+          debugPrint("Error syncing favorites from system playlist: $e");
+        }
+      }
+    }
+
     notifyListeners();
   }
 
   Future<void> toggleFavorite(int songId) async {
     final prefs = await SharedPreferences.getInstance();
+    final already = _favoriteSongIds.contains(songId);
 
-    if (_favoriteSongIds.contains(songId)) {
+    if (already) {
       _favoriteSongIds.remove(songId);
     } else {
       _favoriteSongIds.add(songId);
@@ -261,10 +321,156 @@ class MusicProvider with ChangeNotifier {
       'favorites',
       _favoriteSongIds.map((id) => id.toString()).toList(),
     );
+
+    if (Platform.isAndroid) {
+      try {
+        if (_favSystemSyncEnabled) {
+          await _ensureFavoriteSystemPlaylistExists();
+          if (_favoriteSystemPlaylistId != null) {
+            if (already) {
+              await removeSongFromSystemPlaylist(
+                _favoriteSystemPlaylistId!,
+                songId,
+              );
+            } else {
+              await addSongToSystemPlaylist(_favoriteSystemPlaylistId!, songId);
+            }
+          }
+        } else {
+          // If sync is disabled but we still have a recorded system playlist id, do nothing.
+        }
+      } catch (e) {
+        debugPrint("Error syncing favorite to system playlist: $e");
+      }
+    }
+
     notifyListeners();
   }
 
   bool isFavorite(int songId) => _favoriteSongIds.contains(songId);
+
+  Future<List<int>> _loadSongIdsFromSystemPlaylist(int playlistId) async {
+    try {
+      final songs = await _audioQuery.queryAudiosFrom(
+        AudiosFromType.PLAYLIST,
+        playlistId,
+      );
+      return songs.map((s) => s.id).toList();
+    } catch (e) {
+      debugPrint("Error loading songs from system playlist: $e");
+      return [];
+    }
+  }
+
+  Future<void> _ensureFavoriteSystemPlaylistExists() async {
+    if (!Platform.isAndroid) return;
+    if (_favoriteSystemPlaylistId != null) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    const favName = "Favorites";
+
+    try {
+      final systemPlaylists = await _audioQuery.queryPlaylists();
+      final idx = systemPlaylists.indexWhere((p) => p.playlist == favName);
+      if (idx != -1) {
+        _favoriteSystemPlaylistId = systemPlaylists[idx].id;
+        await prefs.setInt(
+          'fav_system_playlist_id',
+          _favoriteSystemPlaylistId!,
+        );
+        return;
+      }
+    } catch (e) {
+      debugPrint("Error querying system playlists: $e");
+    }
+
+    try {
+      final hasPerm = await _audioQuery.permissionsStatus();
+      if (!hasPerm) {
+        final granted = await _audioQuery.permissionsRequest();
+        if (!granted) return;
+      }
+
+      final created = await _audioQuery.createPlaylist(favName);
+      if (created) {
+        final systemPlaylists = await _audioQuery.queryPlaylists();
+        final idx = systemPlaylists.indexWhere((p) => p.playlist == favName);
+        if (idx != -1) {
+          _favoriteSystemPlaylistId = systemPlaylists[idx].id;
+          await prefs.setInt(
+            'fav_system_playlist_id',
+            _favoriteSystemPlaylistId!,
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint("Error creating system favorites playlist: $e");
+    }
+  }
+
+  Future<void> _initFavoriteSystemPlaylist() async {
+    if (!Platform.isAndroid) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final favSysId = prefs.getInt('fav_system_playlist_id');
+      if (favSysId != null) {
+        _favoriteSystemPlaylistId = favSysId;
+        try {
+          final sysIds = await _loadSongIdsFromSystemPlaylist(favSysId);
+          final merged = <int>{..._favoriteSongIds, ...sysIds};
+          _favoriteSongIds = merged.toList();
+          notifyListeners();
+        } catch (_) {}
+      }
+    } catch (e) {
+      debugPrint("Error init favorite system playlist: $e");
+    }
+  }
+
+  Future<void> setFavoriteSystemSyncEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    _favSystemSyncEnabled = enabled;
+    await prefs.setBool('fav_sync_enabled', enabled);
+
+    if (enabled && Platform.isAndroid) {
+      try {
+        await _ensureFavoriteSystemPlaylistExists();
+        if (_favoriteSystemPlaylistId != null) {
+          await exportFavoritesToSystem();
+        }
+      } catch (e) {
+        debugPrint("Error enabling favorite-system sync: $e");
+      }
+    }
+
+    notifyListeners();
+  }
+
+  Future<void> exportFavoritesToSystem() async {
+    if (!Platform.isAndroid) return;
+
+    try {
+      await _ensureFavoriteSystemPlaylistExists();
+      if (_favoriteSystemPlaylistId == null) return;
+
+      final existing = await _loadSongIdsFromSystemPlaylist(
+        _favoriteSystemPlaylistId!,
+      );
+      final toAdd = _favoriteSongIds
+          .where((id) => !existing.contains(id))
+          .toList();
+
+      for (final id in toAdd) {
+        try {
+          await addSongToSystemPlaylist(_favoriteSystemPlaylistId!, id);
+        } catch (e) {
+          debugPrint("Failed adding $id to system favorites: $e");
+        }
+      }
+    } catch (e) {
+      debugPrint("exportFavoritesToSystem error: $e");
+    }
+  }
 
   // ---------- Search ----------
   List<SongModel> get filteredSongs {
@@ -292,19 +498,25 @@ class MusicProvider with ChangeNotifier {
 
   // ---------- Upcoming / mini player ----------
   List<SongModel> get upcomingSongs {
-    if (_currentSong == null) return [];
-    final index = _songs.indexOf(_currentSong!);
-    if (index == -1 || index >= _songs.length - 1) return [];
-    return _songs.sublist(index + 1);
+    if (_currentAudioQueue.isEmpty) return [];
+    final idx =
+        _audioPlayer.currentIndex ??
+        (_currentSong != null ? _currentAudioQueue.indexOf(_currentSong!) : -1);
+    if (idx == -1 || idx >= _currentAudioQueue.length - 1) return [];
+    return _currentAudioQueue.sublist(idx + 1);
   }
 
   SongModel? get nextSongIfEndingSoon {
     if (_currentSong == null || _totalDuration == Duration.zero) return null;
     final remaining = _totalDuration - _currentPosition;
     if (remaining.inSeconds <= 20) {
-      final index = _songs.indexOf(_currentSong!);
-      if (index != -1 && index < _songs.length - 1) {
-        return _songs[index + 1];
+      final index =
+          _audioPlayer.currentIndex ??
+          (_currentSong != null
+              ? _currentAudioQueue.indexOf(_currentSong!)
+              : -1);
+      if (index != -1 && index < _currentAudioQueue.length - 1) {
+        return _currentAudioQueue[index + 1];
       }
     }
     return null;
@@ -355,33 +567,34 @@ class MusicProvider with ChangeNotifier {
     }
   }
 
-  // Convenience: record click then play
   Future<void> recordClickAndPlay(SongModel song) async {
     recordSongClick(song.id);
     await playSong(song);
   }
 
-  // Public API: record a click (counts + recents)
   void recordSongClick(int songId) {
     _recordPlay(songId);
   }
 
-  /// Play next track and increment listen count for the newly selected song.
   Future<void> playNext() async {
     try {
       if (_audioPlayer.hasNext) {
         await _audioPlayer.seekToNext();
       } else {
-        // Optional: loop to first track
         await _audioPlayer.seek(Duration.zero, index: 0);
       }
 
       await _audioPlayer.play();
 
-      // After seeking, get the current index and record the play for that song
       final idx = _audioPlayer.currentIndex;
-      if (idx != null && idx >= 0 && idx < _songs.length) {
-        final s = _songs[idx];
+      SongModel? s;
+      if (idx != null && idx >= 0) {
+        if (idx < _currentAudioQueue.length)
+          s = _currentAudioQueue[idx];
+        else if (idx < _songs.length)
+          s = _songs[idx];
+      }
+      if (s != null) {
         _recordPlay(s.id);
       }
     } catch (e) {
@@ -389,7 +602,6 @@ class MusicProvider with ChangeNotifier {
     }
   }
 
-  /// Play previous track and increment listen count for the newly selected song.
   Future<void> playPrevious() async {
     try {
       if (_audioPlayer.hasPrevious) {
@@ -404,8 +616,14 @@ class MusicProvider with ChangeNotifier {
       await _audioPlayer.play();
 
       final idx = _audioPlayer.currentIndex;
-      if (idx != null && idx >= 0 && idx < _songs.length) {
-        final s = _songs[idx];
+      SongModel? s;
+      if (idx != null && idx >= 0) {
+        if (idx < _currentAudioQueue.length)
+          s = _currentAudioQueue[idx];
+        else if (idx < _songs.length)
+          s = _songs[idx];
+      }
+      if (s != null) {
         _recordPlay(s.id);
       }
     } catch (e) {
@@ -418,8 +636,9 @@ class MusicProvider with ChangeNotifier {
   void stop() => _audioPlayer.stop();
 
   Future<void> _buildPlaylist() async {
+    _currentAudioQueue = List.from(_songs);
     _playlist = ConcatenatingAudioSource(
-      children: _songs.map((song) {
+      children: _currentAudioQueue.map((song) {
         final artworkUri = song.albumId != null
             ? Uri.parse(
                 "content://media/external/audio/albumart/${song.albumId}",
@@ -440,7 +659,6 @@ class MusicProvider with ChangeNotifier {
     );
   }
 
-  // ---------- Shuffle & Repeat ----------
   void toggleShuffle() {
     _isShuffleOn = !_isShuffleOn;
     _audioPlayer.setShuffleModeEnabled(_isShuffleOn);
@@ -461,7 +679,6 @@ class MusicProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // ---------- Clear / stop ----------
   Future<void> clearCurrentSong() async {
     try {
       await _audioPlayer.stop();
@@ -469,20 +686,20 @@ class MusicProvider with ChangeNotifier {
       _playlist = null;
       _currentSong = null;
       _cachedArtworkData = null;
+      _currentAudioQueue = [];
       notifyListeners();
     } catch (e) {
       debugPrint("Error clearing current song: $e");
     }
   }
 
-  // ---------- Position stream ----------
   Stream<Duration> get throttledPositionStream => _audioPlayer.positionStream
       .throttleTime(const Duration(milliseconds: 500));
 
   get currentLine => null;
   void seek(Duration position) => _audioPlayer.seek(position);
 
-  // ---------- Playlists ----------
+  // ---------- Playlists (app-level persisted in SharedPreferences) ----------
   Future<void> loadPlaylists() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonString = prefs.getString('playlists') ?? '{}';
@@ -551,8 +768,10 @@ class MusicProvider with ChangeNotifier {
 
     if (playlistSongs.isEmpty) return;
 
+    _currentAudioQueue = List.from(playlistSongs);
+
     final children = <AudioSource>[];
-    for (var song in playlistSongs) {
+    for (var song in _currentAudioQueue) {
       final artworkUri = song.albumId != null
           ? Uri.parse("content://media/external/audio/albumart/${song.albumId}")
           : Uri.parse("https://via.placeholder.com/150");
@@ -576,7 +795,7 @@ class MusicProvider with ChangeNotifier {
     await _audioPlayer.setAudioSource(_playlist!);
     await _audioPlayer.play();
 
-    _currentSong = playlistSongs.first;
+    _currentSong = _currentAudioQueue.first;
     notifyListeners();
   }
 
@@ -596,6 +815,164 @@ class MusicProvider with ChangeNotifier {
     }
   }
 
+  // ---------- System (device) playlists integration for Android ----------
+  List<PlaylistModel> _systemPlaylists = [];
+  List<PlaylistModel> get systemPlaylists =>
+      List.unmodifiable(_systemPlaylists);
+
+  Future<bool> createSystemPlaylist(
+    String name, {
+    String? author,
+    String? description,
+  }) async {
+    final hasPermission = await _audioQuery.permissionsStatus();
+    if (!hasPermission) {
+      final granted = await _audioQuery.permissionsRequest();
+      if (!granted) return false;
+    }
+
+    try {
+      final created = await _audioQuery.createPlaylist(name);
+      if (created) {
+        await loadSystemPlaylists();
+      }
+      return created;
+    } catch (e) {
+      debugPrint('createSystemPlaylist error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> addSongToSystemPlaylist(int playlistId, int songId) async {
+    final hasPermission = await _audioQuery.permissionsStatus();
+    if (!hasPermission) {
+      final granted = await _audioQuery.permissionsRequest();
+      if (!granted) return false;
+    }
+
+    try {
+      final added = await _audioQuery.addToPlaylist(playlistId, songId);
+      if (added) {
+        await loadSystemPlaylists();
+      }
+      return added;
+    } catch (e) {
+      debugPrint('addSongToSystemPlaylist error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> removeSongFromSystemPlaylist(int playlistId, int songId) async {
+    final hasPermission = await _audioQuery.permissionsStatus();
+    if (!hasPermission) {
+      final granted = await _audioQuery.permissionsRequest();
+      if (!granted) return false;
+    }
+
+    try {
+      final removed = await _audioQuery.removeFromPlaylist(playlistId, songId);
+      if (removed) {
+        await loadSystemPlaylists();
+      }
+      return removed;
+    } catch (e) {
+      debugPrint('removeSongFromSystemPlaylist error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> deleteSystemPlaylist(int playlistId) async {
+    final hasPermission = await _audioQuery.permissionsStatus();
+    if (!hasPermission) {
+      final granted = await _audioQuery.permissionsRequest();
+      if (!granted) return false;
+    }
+
+    try {
+      final deleted = await _audioQuery.removePlaylist(playlistId);
+      if (deleted) await loadSystemPlaylists();
+      return deleted;
+    } catch (e) {
+      debugPrint('deleteSystemPlaylist error: $e');
+      return false;
+    }
+  }
+
+  Future<void> loadSystemPlaylists() async {
+    final hasPermission = await _audioQuery.permissionsStatus();
+    if (!hasPermission) {
+      final granted = await _audioQuery.permissionsRequest();
+      if (!granted) return;
+    }
+    try {
+      final list = await _audioQuery.queryPlaylists();
+      _systemPlaylists = list;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('loadSystemPlaylists error: $e');
+    }
+  }
+
+  Future<List<SongModel>> loadSongsFromSystemPlaylist(int playlistId) async {
+    final hasPermission = await _audioQuery.permissionsStatus();
+    if (!hasPermission) {
+      final granted = await _audioQuery.permissionsRequest();
+      if (!granted) return [];
+    }
+    try {
+      final songsInPlaylist = await _audioQuery.queryAudiosFrom(
+        AudiosFromType.PLAYLIST,
+        playlistId,
+      );
+      return songsInPlaylist;
+    } catch (e) {
+      debugPrint('loadSongsFromSystemPlaylist error: $e');
+      return [];
+    }
+  }
+
+  Future<void> playSystemPlaylist(int playlistId) async {
+    final songs = await loadSongsFromSystemPlaylist(playlistId);
+    if (songs.isEmpty) return;
+
+    _currentAudioQueue = List.from(songs);
+
+    final children = songs.map((song) {
+      final artworkUri = song.albumId != null
+          ? Uri.parse("content://media/external/audio/albumart/${song.albumId}")
+          : Uri.parse("https://via.placeholder.com/150");
+
+      return AudioSource.uri(
+        Uri.parse(song.uri!),
+        tag: MediaItem(
+          id: song.id.toString(),
+          album: song.album ?? 'Unknown Album',
+          title: song.title,
+          artist: song.artist ?? 'Unknown Artist',
+          artUri: artworkUri,
+        ),
+      );
+    }).toList();
+
+    _playlist = ConcatenatingAudioSource(children: children);
+    try {
+      await _audioPlayer.setAudioSource(_playlist!, initialIndex: 0);
+      await _audioPlayer.play();
+
+      final idx = _systemPlaylists.indexWhere((p) => p.id == playlistId);
+      if (idx != -1) {
+        _currentPlaylist = _systemPlaylists[idx].playlist;
+      } else {
+        _currentPlaylist = null;
+      }
+
+      _currentSong = songs.first;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('playSystemPlaylist error: $e');
+    }
+  }
+
   // ---------- Sharing ----------
   Future<void> shareCurrentSong() async {
     if (_currentSong?.data != null) {
@@ -608,14 +985,6 @@ class MusicProvider with ChangeNotifier {
       }
     }
   }
-
-  // Future<void> _ensureBluetoothPermission() async {
-  //   if (!Platform.isAndroid) return;
-  //   final status = await Permission.bluetoothConnect.status;
-  //   if (!status.isGranted) {
-  //     await Permission.bluetoothConnect.request();
-  //   }
-  // }
 
   Future<void> _updateNotification(
     String title,
@@ -646,12 +1015,9 @@ class MusicProvider with ChangeNotifier {
     try {
       final url =
           "https://lrclib.net/api/get?track_name=${Uri.encodeComponent(title)}&artist_name=${Uri.encodeComponent(artist)}";
-
       final response = await http.get(Uri.parse(url));
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-
         if (data['syncedLyrics'] != null) {
           _lyrics = _parseLRC(data['syncedLyrics']);
         } else if (data['plainLyrics'] != null) {
@@ -661,11 +1027,8 @@ class MusicProvider with ChangeNotifier {
             {"time": 0, "line": "No lyrics found"},
           ];
         }
-
         _currentLyricIndex = 0;
         notifyListeners();
-
-        // Sync with song position
         _audioPlayer.positionStream.listen(_syncLyrics);
       } else {
         _lyrics = [
@@ -713,7 +1076,6 @@ class MusicProvider with ChangeNotifier {
   Future<void> _loadPlayStats() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-
       final playCountsString = prefs.getString('playCounts');
       if (playCountsString != null) {
         final Map<String, dynamic> decoded = jsonDecode(playCountsString);
@@ -721,7 +1083,6 @@ class MusicProvider with ChangeNotifier {
           ..clear()
           ..addAll(decoded.map((k, v) => MapEntry(int.parse(k), v as int)));
       }
-
       final recentString = prefs.getString('recentPlays');
       if (recentString != null) {
         final List<dynamic> decodedList = jsonDecode(recentString);
@@ -733,7 +1094,6 @@ class MusicProvider with ChangeNotifier {
             }),
           );
       }
-
       notifyListeners();
     } catch (e) {
       debugPrint("Error loading play stats: $e");
@@ -756,15 +1116,11 @@ class MusicProvider with ChangeNotifier {
   void _recordPlay(int songId) {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
-
       _recentPlays.insert(0, {"id": songId, "ts": now});
-
       if (_recentPlays.length > _recentPlaysCap) {
         _recentPlays.removeRange(_recentPlaysCap, _recentPlays.length);
       }
-
       _playCounts[songId] = (_playCounts[songId] ?? 0) + 1;
-
       _savePlayStats();
       notifyListeners();
     } catch (e) {
@@ -794,7 +1150,6 @@ class MusicProvider with ChangeNotifier {
   List<SongModel> getMostListened({int limit = 20}) {
     final List<MapEntry<int, int>> counts = _playCounts.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
-
     final List<SongModel> result = [];
     for (var entry in counts) {
       final song = _songs.firstWhere(

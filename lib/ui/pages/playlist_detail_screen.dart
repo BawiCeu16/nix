@@ -1,3 +1,4 @@
+// File: lib/ui/pages/playlist_detail_screen.dart
 import 'package:auto_animated/auto_animated.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
@@ -7,64 +8,217 @@ import 'package:nix/ui/widgets/song_details_dialog.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:provider/provider.dart';
 
-class PlaylistDetailScreen extends StatelessWidget {
+class PlaylistDetailScreen extends StatefulWidget {
   final String playlistName;
 
   const PlaylistDetailScreen({super.key, required this.playlistName});
 
   @override
+  State<PlaylistDetailScreen> createState() => _PlaylistDetailScreenState();
+}
+
+class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
+  final ScrollController _scrollController = ScrollController();
+  double _lastOffset = 0.0;
+  bool _showFab = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    final offset = _scrollController.offset;
+    if (offset > _lastOffset + 20 && _showFab) {
+      setState(() => _showFab = false);
+    } else if (offset < _lastOffset - 20 && !_showFab) {
+      setState(() => _showFab = true);
+    }
+    _lastOffset = offset;
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final musicProvider = context.watch<MusicProvider>();
-    final songIds = musicProvider.playlists[playlistName] ?? [];
+    final songIds = musicProvider.playlists[widget.playlistName] ?? [];
     final songs = musicProvider.songs
         .where((song) => songIds.contains(song.id))
         .toList();
 
+    // find first song for header artwork
+    SongModel? headerSong;
+    if (songs.isNotEmpty) {
+      headerSong = songs.first;
+    }
+
     return Scaffold(
-      appBar: AppBar(title: Text(playlistName)),
-      body: songs.isEmpty
-          ? const Center(child: Text('No songs in this playlist.'))
-          : LiveList.options(
-              options: const LiveOptions(
-                delay: Duration(milliseconds: 50),
-                showItemInterval: Duration(milliseconds: 80),
-                showItemDuration: Duration(milliseconds: 350),
+      body: CustomScrollView(
+        controller: _scrollController,
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverAppBar(
+            pinned: true,
+            expandedHeight: 280,
+            backgroundColor: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerLowest,
+            foregroundColor: Theme.of(context).colorScheme.onSurface,
+            actions: [
+              // Play whole playlist
+              IconButton(
+                tooltip: 'Play playlist',
+                icon: const Icon(Icons.play_arrow),
+                onPressed: () async {
+                  try {
+                    await context.read<MusicProvider>().playPlaylist(
+                      widget.playlistName,
+                    );
+                  } catch (e) {
+                    // ignore
+                  }
+                },
               ),
-              itemCount: songs.length,
-              physics: const BouncingScrollPhysics(),
-              itemBuilder: (context, index, animation) {
-                final song = songs[index];
-                return FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 0.1), // Slide from bottom
-                      end: Offset.zero,
-                    ).animate(animation),
-                    child: ListTile(
-                      leading: QueryArtworkWidget(
-                        artworkBorder: BorderRadius.circular(10),
-                        id: song.id,
-                        keepOldArtwork: true,
-                        type: ArtworkType.AUDIO,
-                        nullArtworkWidget: const Icon(Icons.music_note),
+            ],
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(widget.playlistName),
+              background: headerSong != null
+                  ? Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        QueryArtworkWidget(
+                          id: headerSong.id,
+                          type: ArtworkType.AUDIO,
+                          artworkBorder: BorderRadius.zero,
+                          nullArtworkWidget: Container(
+                            color: Theme.of(context).colorScheme.surface,
+                            child: const Icon(Icons.music_note, size: 64),
+                          ),
+                          keepOldArtwork: true,
+                        ),
+                        // dark gradient overlay for readability
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.black.withOpacity(0.35),
+                                Colors.black.withOpacity(0.25),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Container(
+                      color: Theme.of(context).colorScheme.surface,
+                      child: const Center(
+                        child: Icon(Icons.music_note, size: 64),
                       ),
-                      title: Text(song.title, overflow: TextOverflow.ellipsis),
-                      subtitle: Text(song.artist ?? 'Unknown Artist'),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.more_vert),
-                        onPressed: () =>
-                            _showSongOptions(context, playlistName, song),
-                      ),
-                      onTap: () => musicProvider.playSong(song),
                     ),
-                  ),
-                );
-              },
             ),
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
-        onPressed: () => _showAddSongDialog(context),
+          ),
+
+          // If no songs, show empty placeholder
+          if (songs.isEmpty)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: const Center(child: Text('No songs in this playlist.')),
+            )
+          else
+            SliverToBoxAdapter(
+              child: LiveList.options(
+                options: const LiveOptions(
+                  delay: Duration(milliseconds: 50),
+                  showItemInterval: Duration(milliseconds: 80),
+                  showItemDuration: Duration(milliseconds: 350),
+                ),
+                itemCount: songs.length,
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                itemBuilder: (context, index, animation) {
+                  final song = songs[index];
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0, 0.1),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: ListTile(
+                        leading: QueryArtworkWidget(
+                          artworkBorder: BorderRadius.circular(10),
+                          id: song.id,
+                          keepOldArtwork: true,
+                          type: ArtworkType.AUDIO,
+                          nullArtworkWidget: const Icon(Icons.music_note),
+                        ),
+                        title: Text(
+                          song.title,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: Text(song.artist ?? 'Unknown Artist'),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.more_vert),
+                          onPressed: () => _showSongOptions(
+                            context,
+                            widget.playlistName,
+                            song,
+                          ),
+                        ),
+                        onTap: () async {
+                          // Play the playlist and seek to the tapped song so upcoming order matches playlist
+                          try {
+                            await context.read<MusicProvider>().playPlaylist(
+                              widget.playlistName,
+                            );
+                            final idx = context
+                                .read<MusicProvider>()
+                                .currentAudioQueue
+                                .indexWhere((s) => s.id == song.id);
+                            if (idx != -1) {
+                              await context
+                                  .read<MusicProvider>()
+                                  .audioPlayer
+                                  .seek(Duration.zero, index: idx);
+                              await context
+                                  .read<MusicProvider>()
+                                  .audioPlayer
+                                  .play();
+                            }
+                          } catch (e) {
+                            // ignore
+                          }
+                        },
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+        ],
+      ),
+      floatingActionButton: AnimatedSlide(
+        offset: _showFab ? Offset.zero : const Offset(0, 2),
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+        child: AnimatedOpacity(
+          opacity: _showFab ? 1 : 0,
+          duration: const Duration(milliseconds: 200),
+          child: FloatingActionButton(
+            child: const Icon(Icons.add),
+            onPressed: () => _showAddSongDialog(context),
+          ),
+        ),
       ),
     );
   }
@@ -102,7 +256,7 @@ class PlaylistDetailScreen extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 onTap: () {
-                  musicProvider.addSongToPlaylist(playlistName, song.id);
+                  musicProvider.addSongToPlaylist(widget.playlistName, song.id);
                   Navigator.pop(ctx);
                 },
               );
@@ -135,9 +289,9 @@ class PlaylistDetailScreen extends StatelessWidget {
               children: [
                 ListTile(
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadiusGeometry.circular(10),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  leading: Icon(FlutterRemix.play_fill),
+                  leading: const Icon(Icons.play_arrow),
                   title: Text(t(context, 'play')),
                   onTap: () {
                     Navigator.pop(ctx);
@@ -146,10 +300,9 @@ class PlaylistDetailScreen extends StatelessWidget {
                 ),
                 ListTile(
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadiusGeometry.circular(10),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-
-                  leading: Icon(FlutterRemix.information_line),
+                  leading: const Icon(Icons.info_outline),
                   title: Text(t(context, 'song_details')),
                   onTap: () {
                     Navigator.pop(ctx);
@@ -161,7 +314,7 @@ class PlaylistDetailScreen extends StatelessWidget {
                 ),
                 ListTile(
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadiusGeometry.circular(10),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   leading: Icon(
                     FlutterRemix.close_fill,

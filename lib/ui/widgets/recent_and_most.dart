@@ -24,86 +24,97 @@ class MiniSongTile extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
-      child: Container(
+      child: SizedBox(
         width: 120,
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: Theme.of(context).colorScheme.surfaceVariant,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // artwork (uses on_audio_query widget if available)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: SizedBox(
-                height: 64,
-                width: 104,
-                child: QueryArtworkWidget(
-                  keepOldArtwork: true,
-                  id: song.id,
-                  type: ArtworkType.AUDIO,
-                  nullArtworkWidget: Container(
-                    color: Theme.of(context).colorScheme.surface,
-                    child: Center(
-                      child: Icon(
-                        Icons.music_note,
-                        size: 28,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+        child: Card(
+          elevation: 0.0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadiusGeometry.circular(10),
+          ),
+          color: Theme.of(context).colorScheme.surfaceContainer,
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // artwork (uses on_audio_query widget if available)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+
+                  child: SizedBox(
+                    height: 64,
+                    width: 104,
+                    child: QueryArtworkWidget(
+                      keepOldArtwork: true,
+                      id: song.id,
+                      type: ArtworkType.AUDIO,
+                      nullArtworkWidget: Card(
+                        elevation: 0,
+                        color: Theme.of(context).colorScheme.surface,
+                        child: Center(
+                          child: Icon(
+                            Icons.music_note,
+                            size: 28,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
                       ),
+                      artworkFit: BoxFit.cover,
                     ),
                   ),
-                  artworkFit: BoxFit.cover,
                 ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Flexible(
-              child: Text(
-                song.title,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
+                const SizedBox(height: 8),
+                Flexible(
                   child: Text(
-                    (song.artist ?? 'Unknown'),
+                    song.title,
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
-                    style: Theme.of(context).textTheme.labelSmall,
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ),
-                if (playCount != null)
-                  Container(
-                    margin: const EdgeInsets.only(left: 6),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
+                const SizedBox(height: 2),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        (song.artist ?? 'Unknown'),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
                     ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.secondaryContainer,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.whatshot, size: 12),
-                        const SizedBox(width: 4),
-                        Text(
-                          playCount.toString(),
-                          style: Theme.of(context).textTheme.labelSmall,
+                    if (playCount != null)
+                      Container(
+                        margin: const EdgeInsets.only(left: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
                         ),
-                      ],
-                    ),
-                  ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.secondaryContainer,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.whatshot, size: 12),
+                            const SizedBox(width: 4),
+                            Text(
+                              playCount.toString(),
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
