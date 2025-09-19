@@ -10,6 +10,25 @@ import 'package:nix/providers/theme_provider.dart';
 class ThemeSettingsPage extends StatelessWidget {
   const ThemeSettingsPage({super.key});
 
+  // Helper widget for category titles
+  Widget _buildCategoryTitle(BuildContext context, String title) {
+    return Padding(
+      padding: const EdgeInsets.only(
+        top: 16.0,
+        bottom: 8.0,
+        left: 16,
+        right: 16,
+      ),
+      child: Text(
+        title.toUpperCase(),
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -35,11 +54,15 @@ class ThemeSettingsPage extends StatelessWidget {
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
           physics: BouncingScrollPhysics(),
           children: [
+            // --- CATEGORY: THEME ---
+            _buildCategoryTitle(context, 'Theme'),
+
             // Card: Mode
             Card(
+              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -60,8 +83,6 @@ class ThemeSettingsPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 10.0),
-
-                    // Mode options: Light / Dark / System
                     Row(
                       children: [
                         _modeChoice(
@@ -91,10 +112,9 @@ class ThemeSettingsPage extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 5),
-
             // Card: Appearance / Monochrome switch
             Card(
+              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -105,11 +125,11 @@ class ThemeSettingsPage extends StatelessWidget {
                   vertical: 5,
                 ),
                 title: const Text(
-                  'Monochrome (color blind mode)',
+                  'Monochrome',
                   style: TextStyle(fontWeight: FontWeight.w700),
                 ),
                 subtitle: const Text(
-                  'Use only greys — remove all colors from UI',
+                  'Use only black and white and shades of gray in the UI',
                 ),
                 value: themeProvider.isMonochrome,
                 onChanged: (v) => themeProvider.setMonochromeEnabled(v),
@@ -120,15 +140,23 @@ class ThemeSettingsPage extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 5),
+            // --- CATEGORY: COLOR ---
+            _buildCategoryTitle(context, 'Color'),
 
             // Card: Color accent (disabled when monochrome on)
             Card(
+              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
               elevation: 0,
               child: ListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                onTap: themeProvider.isMonochrome
+                    ? null
+                    : () => _showColorPicker(context, themeProvider),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 5.0,
                   vertical: 0,
@@ -150,127 +178,77 @@ class ThemeSettingsPage extends StatelessWidget {
                 subtitle: themeProvider.isMonochrome
                     ? const Text('Disabled while Monochrome is active')
                     : const Text('Tap to choose a color accent'),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(FlutterRemix.information_line),
-                      tooltip: 'Accent color info',
-                      onPressed: themeProvider.isMonochrome
-                          ? null
-                          : () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Accent color affects app accents and controls.',
-                                  ),
-                                ),
-                              );
-                            },
-                    ),
-                    IconButton(
-                      icon: const Icon(FlutterRemix.paint_line),
-                      tooltip: 'Choose accent',
-                      onPressed: themeProvider.isMonochrome
-                          ? null
-                          : () => _showColorPicker(context, themeProvider),
-                    ),
-                  ],
+                trailing: IconButton(
+                  icon: const Icon(FlutterRemix.information_line),
+                  tooltip: 'Accent color info',
+                  onPressed: themeProvider.isMonochrome
+                      ? null
+                      : () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Accent color affects app accents and controls.',
+                              ),
+                            ),
+                          );
+                        },
                 ),
               ),
             ),
 
-            const SizedBox(height: 5),
+            // Card: Dynamic Album Color
             Card(
+              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 15.0,
+                  vertical: 5,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                title: Text("Dynamic Album Color"),
+                value: themeProvider.dynamicColorEnabled,
+                onChanged: themeProvider.isMonochrome
+                    ? null // disable toggle when monochrome is ON
+                    : (v) => themeProvider.setDynamicColorEnabled(v),
+                subtitle: themeProvider.isMonochrome
+                    ? Text("Disabled in Monochrome mode")
+                    : Text("App theme adapts to album colors."),
+              ),
+            ),
 
-              child: Consumer<ThemeProvider>(
-                builder: (context, themeProvider, _) {
-                  return SwitchListTile(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-
-                    title: Text("Dynamic Album Color"),
-                    value: themeProvider.dynamicColorEnabled,
-                    onChanged: themeProvider.isMonochrome
-                        ? null // disable toggle when monochrome is ON
-                        : (v) => themeProvider.setDynamicColorEnabled(v),
-                    subtitle: themeProvider.isMonochrome
-                        ? Text("Disabled in Monochrome mode")
-                        : Text("Dynamic app theme adapts to album colors."),
-                  );
+            // Card: Gradient NowPlaying
+            Card(
+              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              elevation: 0,
+              child: SwitchListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal:Gradient 15.0,
+                  vertical: 5,
+                ),
+                title: const Text(' NowPlaying'),
+                subtitle: const Text(
+                  'Enable gradient background on player screen',
+                ),
+                value: themeProvider.dynamicNowPlayingEnabled,
+                onChanged: (enabled) {
+                  themeProvider.setDynamicNowPlayingEnabled(enabled);
                 },
               ),
             ),
 
-            const SizedBox(height: 5),
-
-            // Small live preview card
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 0,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10.0,
-                  vertical: 10.0,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Preview',
-                      style: TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 10.0),
-                    Row(
-                      children: [
-                        _previewTile(
-                          'Primary',
-                          Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 5.0),
-                        _previewTile(
-                          'Surface',
-                          Theme.of(context).colorScheme.surface,
-                        ),
-                        const SizedBox(width: 5.0),
-                        _previewTile(
-                          'Background',
-                          Theme.of(context).colorScheme.background,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10.0),
-
-                    // simple sample controls to preview
-                    Row(
-                      children: [
-                        FilledButton.icon(
-                          onPressed: () {},
-                          icon: const Icon(Icons.check),
-                          label: const Text('Button'),
-                        ),
-                        const SizedBox(width: 5.0),
-                        OutlinedButton(
-                          onPressed: () {},
-                          child: const Text('Outline'),
-                        ),
-                        const SizedBox(width: 5.0),
-                        IconButton(
-                          onPressed: () {},
-                          icon: Icon(Icons.star, size: 20),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 10.0),
+            const SizedBox(height: 20.0),
 
             // Footer: small help text
             Center(
@@ -279,7 +257,7 @@ class ThemeSettingsPage extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
-            const SizedBox(height: 10.0),
+            const SizedBox(height: 20.0),
           ],
         ),
       ),
@@ -324,26 +302,6 @@ class ThemeSettingsPage extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  // Preview tile
-  Widget _previewTile(String label, Color color) {
-    return Expanded(
-      child: Column(
-        children: [
-          Container(
-            height: 48.0,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(10.0),
-              border: Border.all(width: 0.6, color: Colors.black12),
-            ),
-          ),
-          const SizedBox(height: 5.0),
-          Text(label, style: const TextStyle(fontSize: 12)),
-        ],
       ),
     );
   }

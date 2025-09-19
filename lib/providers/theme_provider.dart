@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:palette_generator/palette_generator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math' as math;
 
+/// ThemeProvider using Material's ColorScheme.fromImageProvider for dynamic color
+/// (replaces palette_generator usage). No external package needed for extraction.
 class ThemeProvider with ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.system;
   Color _seedColor = Colors.blue;
@@ -68,27 +69,23 @@ class ThemeProvider with ChangeNotifier {
   }
 
   /// Extracts color from album image & updates theme
-  /// -> now applies a brightness/saturation boost so seed is more vivid.
+  /// -> now uses ColorScheme.fromImageProvider (Material Color Utilities)
   Future<void> updateColorFromAlbum(ImageProvider image) async {
     if (!_dynamicColorEnabled) return;
     try {
-      final palette = await PaletteGenerator.fromImageProvider(
-        image,
-        maximumColorCount: 6,
+      // Generate an accessible ColorScheme derived from the image.
+      // (Material will extract dominant color and produce harmonious scheme.)
+      final cs = await ColorScheme.fromImageProvider(
+        provider: image,
+        brightness: Brightness.light,
       );
 
-      // prefer vibrant -> dominant -> muted (but boost whichever we pick)
-      final Color? picked =
-          palette.vibrantColor?.color ??
-          palette.dominantColor?.color ??
-          palette.mutedColor?.color;
-
-      if (picked != null) {
-        final boosted = _boostColorForSeed(picked);
-        await setSeedColor(boosted);
-      }
+      // pick primary as the seed, then boost for vividness (same boosting logic).
+      final Color picked = cs.primary;
+      final boosted = _boostColorForSeed(picked);
+      await setSeedColor(boosted);
     } catch (e) {
-      debugPrint("Palette error: $e");
+      debugPrint("ColorScheme error: $e");
     }
   }
 
@@ -107,28 +104,19 @@ class ThemeProvider with ChangeNotifier {
   Future<void> updateNowPlayingColorFromImage(ImageProvider? image) async {
     if (!_dynamicNowPlayingEnabled || image == null) return;
     try {
-      final palette = await PaletteGenerator.fromImageProvider(
-        image,
-        size: const Size(160, 160),
-        maximumColorCount: 8,
+      final cs = await ColorScheme.fromImageProvider(
+        provider: image,
+        brightness: Brightness.light,
       );
 
-      // prefer most 'punchy' candidate
-      final Color? candidate =
-          palette.vibrantColor?.color ??
-          palette.lightVibrantColor?.color ??
-          palette.dominantColor?.color ??
-          palette.mutedColor?.color;
-
-      if (candidate != null) {
-        // boost more aggressively for now-playing so UI pops
-        final boosted = _boostColorForNowPlaying(candidate);
-        _nowPlayingBgColor = _ensureReadableBackground(boosted);
-        notifyListeners();
-        return;
-      }
+      // choose a punchy role (primaryContainer is often a good background)
+      final Color candidate = cs.primaryContainer;
+      final boosted = _boostColorForNowPlaying(candidate);
+      _nowPlayingBgColor = _ensureReadableBackground(boosted);
+      notifyListeners();
+      return;
     } catch (e) {
-      debugPrint("NowPlaying Palette error: $e");
+      debugPrint("NowPlaying ColorScheme error: $e");
     }
 
     // fallback
@@ -279,7 +267,6 @@ class ThemeProvider with ChangeNotifier {
     }
 
     // Normal colored theme using seed color
-    // We'll use the (possibly boosted) _seedColor directly so it's more vivid.
     final cs = ColorScheme.fromSeed(
       seedColor: _seedColor,
       brightness: Brightness.light,
