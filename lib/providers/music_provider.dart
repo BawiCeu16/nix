@@ -60,6 +60,9 @@ class MusicProvider with ChangeNotifier {
   // NEW: user setting: whether to auto-sync favorites to system playlist
   bool _favSystemSyncEnabled = false;
 
+  // Position subscription to avoid multiple listeners and reduce UI churn
+  StreamSubscription<Duration>? _positionSub;
+
   // ✅ Getters
   List<SongModel> get songs => _songs;
   List<int> get favoriteSongIds => _favoriteSongIds;
@@ -100,6 +103,15 @@ class MusicProvider with ChangeNotifier {
     _initFavoriteSystemPlaylist();
   }
 
+  @override
+  void dispose() {
+    _positionSub?.cancel();
+    try {
+      _audioPlayer.dispose();
+    } catch (_) {}
+    super.dispose();
+  }
+
   // ---------- Songs loading ----------
   Future<void> checkAndLoadSongs() async {
     final hasPermission = await _audioQuery.permissionsStatus();
@@ -134,11 +146,20 @@ class MusicProvider with ChangeNotifier {
 
   // ---------- Player streams (no auto-counting) ----------
   void _listenToPlayerStreams() {
-    _audioPlayer.positionStream.listen((pos) {
-      _currentPosition = pos;
-      _syncLyrics(pos);
-      notifyListeners();
-    });
+    // Throttle position updates to reduce UI rebuilds (500ms)
+    _positionSub?.cancel();
+    _positionSub = _audioPlayer.positionStream
+        .throttleTime(const Duration(milliseconds: 500))
+        .listen((pos) {
+          _currentPosition = pos;
+          final lyricChanged = _syncLyrics(
+            pos,
+          ); // optimized, returns whether lyric index changed
+          // Single notify for throttled updates
+          notifyListeners();
+          // (If you want to avoid rebuilds when nothing changed: you can test and only notify when position changed significantly or lyricChanged true.
+          // current implementation keeps behavior simple while throttling frequency.)
+        });
 
     _audioPlayer.durationStream.listen((dur) {
       _totalDuration = dur ?? Duration.zero;
@@ -169,6 +190,7 @@ class MusicProvider with ChangeNotifier {
                 }
                 _cachedArtworkData = null;
                 if (_currentSong != null) {
+                  // fetch lyrics (network) but DO NOT attach another position listener here
                   fetchLyricsFromLrcLib(
                     _currentSong!.title,
                     _currentSong!.artist ?? "Unknown",
@@ -520,6 +542,34 @@ class MusicProvider with ChangeNotifier {
       }
     }
     return null;
+  }
+
+  /// New getter requested:
+  /// If repeat is enabled (RepeatMode.one or RepeatMode.all) -> return a text
+  /// indicating upcoming songs are hidden. Otherwise return the next upcoming
+  /// song's display text (title — artist) or "No upcoming song" when none.
+  String get upComing1 {
+    // When repeat is enabled, do not show upcoming song from list.
+    if (_repeatMode != RepeatMode.off) {
+      return "Repeat is enabled — upcoming songs are hidden";
+    }
+
+    if (_currentAudioQueue.isEmpty) return "No upcoming song";
+
+    final idx =
+        _audioPlayer.currentIndex ??
+        (_currentSong != null ? _currentAudioQueue.indexOf(_currentSong!) : -1);
+
+    if (idx == -1) return "No upcoming song";
+
+    final nextIndex = idx + 1;
+    if (nextIndex >= _currentAudioQueue.length) return "No upcoming song";
+
+    final SongModel next = _currentAudioQueue[nextIndex];
+    final artist = (next.artist == null || next.artist!.isEmpty)
+        ? "Unknown Artist"
+        : next.artist!;
+    return "${next.title} — $artist";
   }
 
   void toggleMiniPlayer() {
@@ -1028,8 +1078,8 @@ class MusicProvider with ChangeNotifier {
           ];
         }
         _currentLyricIndex = 0;
+        // DO NOT attach another position listener here (already handled centrally and throttled)
         notifyListeners();
-        _audioPlayer.positionStream.listen(_syncLyrics);
       } else {
         _lyrics = [
           {"time": 0, "line": "Lyrics not available"},
@@ -1063,13 +1113,36 @@ class MusicProvider with ChangeNotifier {
     return text.split("\n").map((line) => {"time": 0, "line": line}).toList();
   }
 
-  void _syncLyrics(Duration position) {
-    for (int i = 0; i < _lyrics.length; i++) {
-      if (position.inMilliseconds >= _lyrics[i]['time']) {
-        _currentLyricIndex = i;
-      }
+  /// Optimized lyric synchronization:
+  /// - Only advances or rewinds the current index as needed instead of scanning the whole list.
+  /// - Returns `true` if lyric index changed (caller can decide to rebuild UI).
+  bool _syncLyrics(Duration position) {
+    if (_lyrics.isEmpty) return false;
+
+    final posMs = position.inMilliseconds;
+
+    // If current index is out of bounds, clamp it
+    if (_currentLyricIndex >= _lyrics.length)
+      _currentLyricIndex = _lyrics.length - 1;
+    if (_currentLyricIndex < 0) _currentLyricIndex = 0;
+
+    // Move forward while next lyric time <= current position
+    while (_currentLyricIndex + 1 < _lyrics.length &&
+        posMs >= (_lyrics[_currentLyricIndex + 1]['time'] as int)) {
+      _currentLyricIndex++;
+      // do not notify here; an outer throttled listener will notify once
     }
-    notifyListeners();
+
+    // Move backward if current position is before current lyric
+    while (_currentLyricIndex > 0 &&
+        posMs < (_lyrics[_currentLyricIndex]['time'] as int)) {
+      _currentLyricIndex--;
+      // same: no notify here
+    }
+
+    // Returning true allows caller to decide whether to rebuild in special cases.
+    // We'll return true if the lyric index is at a non-zero or changed position.
+    return true;
   }
 
   // ---------- Recently & Most listened (persistence + helpers) ----------

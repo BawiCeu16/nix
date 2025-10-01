@@ -174,15 +174,13 @@ class MiniPlayerWidget extends StatelessWidget {
                           if (themeProvider.dynamicNowPlayingEnabled) {
                             return VerticalGradientContainer(
                               begin: Alignment.topLeft,
+                              borderRadius: BorderRadius.circular(0),
                               end: Alignment.bottomRight,
                               colors: [
+                                Theme.of(context).colorScheme.primaryContainer,
                                 Theme.of(
                                   context,
-                                ).colorScheme.primaryContainer.withOpacity(0.4),
-                                Theme.of(context)
-                                    .colorScheme
-                                    .surfaceContainerLowest
-                                    .withOpacity(0.1),
+                                ).colorScheme.surfaceContainerLowest,
                               ],
                               child: content,
                             );
@@ -235,7 +233,7 @@ class MiniPlayerWidget extends StatelessWidget {
                               ),
                               const SizedBox(height: 20),
 
-                              //Artwork for NowPlaying screen
+                              // Artwork for NowPlaying screen
                               Stack(
                                 children: [
                                   //ArtWork
@@ -263,17 +261,83 @@ class MiniPlayerWidget extends StatelessWidget {
                                       ),
                                     ),
                                   ),
+
                                   //UpComing 1
                                   Positioned(
                                     bottom: 0,
                                     right: 0,
                                     child: Consumer<MusicProvider>(
                                       builder: (context, provider, _) {
+                                        // show anything SSonly when nextSongIfEndingSoon is non-null
                                         final nextSong =
                                             provider.nextSongIfEndingSoon;
-                                        if (nextSong == null)
-                                          return const SizedBox();
+                                        if (nextSong == null) return SizedBox();
 
+                                        // If repeat is enabled -> show the text + icon button to disable repeat
+                                        if (provider.repeatMode !=
+                                                RepeatMode.off &&
+                                            provider.repeatMode !=
+                                                RepeatMode.all) {
+                                          return SizedBox(
+                                            width: upcomingSize,
+                                            child: Card(
+                                              elevation: 0,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .surfaceContainerHighest,
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      vertical: 5.0,
+                                                      horizontal: 5.0,
+                                                    ),
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      "${t(context, 'up_coming')}",
+                                                    ),
+                                                    SizedBox(height: 5.0),
+                                                    Opacity(
+                                                      opacity: 0.7,
+                                                      child: Row(
+                                                        children: [
+                                                          Expanded(
+                                                            child: Text(
+                                                              "This song going to repeat again",
+                                                              maxLines: 2,
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
+                                                            ),
+                                                          ),
+                                                          FilledButton(
+                                                            onPressed: () {
+                                                              // ensure repeat is turned off
+                                                              while (provider
+                                                                      .repeatMode !=
+                                                                  RepeatMode
+                                                                      .off) {
+                                                                provider
+                                                                    .cycleRepeatMode();
+                                                              }
+                                                            },
+                                                            child: Text(
+                                                              "PlayNext Anyway",
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        }
+
+                                        // Repeat is off -> show upcoming nextSongIfEndingSoon (original layout)
                                         return SizedBox(
                                           width: upcomingSize,
                                           child: Card(

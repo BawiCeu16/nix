@@ -11,9 +11,13 @@ class LyricSettingsPage extends StatelessWidget {
     final settings = context.watch<LyricSettingsProvider>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Lyrics Settings')),
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+      appBar: AppBar(
+        title: const Text('Lyrics Settings'),
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+      ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: settings.loaded
             ? Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -21,6 +25,7 @@ class LyricSettingsPage extends StatelessWidget {
                   const Text('Custom LRCLIB URL (optional)'),
                   const SizedBox(height: 8),
                   Card(
+                    elevation: 0,
                     child: ListTile(
                       title: Text(
                         settings.isCustomLrcLibSet
@@ -33,6 +38,7 @@ class LyricSettingsPage extends StatelessWidget {
                           ? const Text('Custom LRCLIB configured')
                           : const Text('No custom instance configured'),
                       trailing: PopupMenuButton<String>(
+                        elevation: 0,
                         onSelected: (value) async {
                           if (value == 'edit') {
                             _showEditDialog(context, settings);
@@ -120,22 +126,6 @@ class LyricSettingsPage extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              if (formKey.currentState?.validate() ?? false) {
-                await settings.setLrcLibBaseUrl(input);
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('LRCLIB URL saved')),
-                );
-              }
-            },
-            child: const Text('Save'),
-          ),
-          TextButton(
             onPressed: () async {
               if (input.trim().isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -155,6 +145,23 @@ class LyricSettingsPage extends StatelessWidget {
               );
             },
             child: const Text('Quick Test'),
+          ),
+          FilledButton.tonal(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+
+          FilledButton(
+            onPressed: () async {
+              if (formKey.currentState?.validate() ?? false) {
+                await settings.setLrcLibBaseUrl(input);
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('LRCLIB URL saved')),
+                );
+              }
+            },
+            child: const Text('Save'),
           ),
         ],
       ),

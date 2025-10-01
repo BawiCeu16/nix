@@ -5,11 +5,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nix/%20utils/translator.dart';
 import 'package:nix/ui/pages/Language_selection_screen.dart';
 import 'package:nix/ui/pages/about_page.dart';
-import 'package:nix/ui/pages/fav_setting.dart';
 import 'package:nix/ui/pages/lyric_settings_page.dart';
 import 'package:nix/ui/pages/theme_setting_page.dart';
-import 'package:page_animation_transition/animations/right_to_left_transition.dart';
-import 'package:page_animation_transition/page_animation_transition.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -37,10 +34,12 @@ class SettingsPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.onPrimary,
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
         title: Text(t(context, 'settings')),
+        centerTitle: true,
       ),
 
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
       body: Center(
         child: ConstrainedBox(
           constraints: BoxConstraints(
@@ -66,12 +65,21 @@ class SettingsPage extends StatelessWidget {
 
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 20),
-                          child: Card(
-                            elevation: 0,
-                            child: Column(
-                              children: [
-                                //Theme
-                                ListTile(
+                          child: Column(
+                            children: [
+                              //Appearance
+                              Card(
+                                margin: EdgeInsets.all(0),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadiusGeometry.only(
+                                    topLeft: Radius.circular(10),
+                                    topRight: Radius.circular(10),
+                                    bottomLeft: Radius.circular(5),
+                                    bottomRight: Radius.circular(5),
+                                  ),
+                                ),
+                                child: ListTile(
                                   title: Text(t(context, 'appearance')),
                                   leading: Padding(
                                     padding: const EdgeInsets.only(left: 5),
@@ -84,6 +92,8 @@ class SettingsPage extends StatelessWidget {
                                     borderRadius: BorderRadius.only(
                                       topLeft: Radius.circular(10),
                                       topRight: Radius.circular(10),
+                                      bottomLeft: Radius.circular(5),
+                                      bottomRight: Radius.circular(5),
                                     ),
                                   ),
                                   onTap: () {
@@ -104,9 +114,30 @@ class SettingsPage extends StatelessWidget {
                                     // );
                                   },
                                 ),
-                                //Language
-                                ListTile(
+                              ),
+                              SizedBox(height: 3),
+                              //Language
+                              Card(
+                                margin: EdgeInsets.all(0),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadiusGeometry.only(
+                                    topLeft: Radius.circular(5),
+                                    topRight: Radius.circular(5),
+                                    bottomLeft: Radius.circular(5),
+                                    bottomRight: Radius.circular(5),
+                                  ),
+                                ),
+                                child: ListTile(
                                   title: Text(t(context, 'language')),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadiusGeometry.only(
+                                      topLeft: Radius.circular(5),
+                                      topRight: Radius.circular(5),
+                                      bottomLeft: Radius.circular(5),
+                                      bottomRight: Radius.circular(5),
+                                    ),
+                                  ),
                                   leading: Padding(
                                     padding: const EdgeInsets.only(left: 5),
                                     child: Icon(FlutterRemix.global_line),
@@ -131,13 +162,35 @@ class SettingsPage extends StatelessWidget {
                                   //   ),
                                   // ),
                                 ),
+                              ),
 
-                                //lyrics settings
-                                ListTile(
+                              SizedBox(height: 3),
+                              //lyrics settings
+                              Card(
+                                margin: EdgeInsets.all(0),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadiusGeometry.only(
+                                    topLeft: Radius.circular(5),
+                                    topRight: Radius.circular(5),
+                                    bottomLeft: Radius.circular(5),
+                                    bottomRight: Radius.circular(5),
+                                  ),
+                                ),
+                                child: ListTile(
                                   title: Text(t(context, 'lyrics_settings')),
+
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadiusGeometry.only(
+                                      topLeft: Radius.circular(5),
+                                      topRight: Radius.circular(5),
+                                      bottomLeft: Radius.circular(5),
+                                      bottomRight: Radius.circular(5),
+                                    ),
+                                  ),
                                   leading: Padding(
                                     padding: const EdgeInsets.only(left: 5),
-                                    child: Icon(FlutterRemix.global_line),
+                                    child: Icon(Icons.lyrics),
                                   ),
                                   trailing: Icon(
                                     FlutterRemix.arrow_right_s_line,
@@ -157,37 +210,28 @@ class SettingsPage extends StatelessWidget {
                                   //         RightToLeftTransition(),
                                   //   ),
                                   // ),
-                                ), //lyrics settings
-                                ListTile(
-                                  title: Text(t(context, 'fav_settings')),
-                                  leading: Padding(
-                                    padding: const EdgeInsets.only(left: 5),
-                                    child: Icon(FlutterRemix.global_line),
-                                  ),
-                                  trailing: Icon(
-                                    FlutterRemix.arrow_right_s_line,
-                                  ),
-                                  onTap: () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => FavSettings(),
-                                    ),
-                                  ),
-
-                                  //  Navigator.push(
-                                  //   context,
-                                  //   PageAnimationTransition(
-                                  //     page: LanguageSelectionScreen(),
-                                  //     pageAnimationType:
-                                  //         RightToLeftTransition(),
-                                  //   ),
-                                  // ),
                                 ),
+                              ),
 
-                                //delete data's
-                                ListTile(
+                              SizedBox(height: 3),
+
+                              //delete data's
+                              Card(
+                                margin: EdgeInsets.all(0),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadiusGeometry.only(
+                                    topLeft: Radius.circular(5),
+                                    topRight: Radius.circular(5),
+                                    bottomLeft: Radius.circular(10),
+                                    bottomRight: Radius.circular(10),
+                                  ),
+                                ),
+                                child: ListTile(
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.only(
+                                    borderRadius: BorderRadiusGeometry.only(
+                                      topLeft: Radius.circular(5),
+                                      topRight: Radius.circular(5),
                                       bottomLeft: Radius.circular(10),
                                       bottomRight: Radius.circular(10),
                                     ),
@@ -258,8 +302,8 @@ class SettingsPage extends StatelessWidget {
                                     );
                                   },
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
 
@@ -277,21 +321,32 @@ class SettingsPage extends StatelessWidget {
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 20),
 
-                          child: Card(
-                            elevation: 0,
-                            child: Column(
-                              children: [
-                                //Github
-                                ListTile(
-                                  title: Text(t(context, 'github')),
+                          child: Column(
+                            children: [
+                              //Github
+                              Card(
+                                margin: EdgeInsets.all(0),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadiusGeometry.only(
+                                    topLeft: Radius.circular(10),
+                                    topRight: Radius.circular(10),
+                                    bottomLeft: Radius.circular(5),
+                                    bottomRight: Radius.circular(5),
+                                  ),
+                                ),
+                                child: ListTile(
+                                  title: Text(t(context, 'dev_github')),
                                   leading: Padding(
                                     padding: const EdgeInsets.only(left: 5),
                                     child: Icon(FontAwesomeIcons.github),
                                   ),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.only(
+                                    borderRadius: BorderRadiusGeometry.only(
                                       topLeft: Radius.circular(10),
                                       topRight: Radius.circular(10),
+                                      bottomLeft: Radius.circular(5),
+                                      bottomRight: Radius.circular(5),
                                     ),
                                   ),
                                   onTap: () {
@@ -300,9 +355,30 @@ class SettingsPage extends StatelessWidget {
                                     );
                                   },
                                 ),
-                                //Email
-                                ListTile(
+                              ),
+                              SizedBox(height: 3),
+                              //Email
+                              Card(
+                                margin: EdgeInsets.all(0),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadiusGeometry.only(
+                                    topLeft: Radius.circular(5),
+                                    topRight: Radius.circular(5),
+                                    bottomLeft: Radius.circular(5),
+                                    bottomRight: Radius.circular(5),
+                                  ),
+                                ),
+                                child: ListTile(
                                   title: Text(t(context, 'email')),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadiusGeometry.only(
+                                      topLeft: Radius.circular(5),
+                                      topRight: Radius.circular(5),
+                                      bottomLeft: Radius.circular(5),
+                                      bottomRight: Radius.circular(5),
+                                    ),
+                                  ),
                                   leading: Padding(
                                     padding: const EdgeInsets.only(left: 5),
                                     child: Icon(Icons.email),
@@ -313,8 +389,21 @@ class SettingsPage extends StatelessWidget {
                                     );
                                   },
                                 ),
-                                //About
-                                ListTile(
+                              ),
+                              SizedBox(height: 3),
+                              //About
+                              Card(
+                                margin: EdgeInsets.all(0),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadiusGeometry.only(
+                                    topLeft: Radius.circular(5),
+                                    topRight: Radius.circular(5),
+                                    bottomLeft: Radius.circular(10),
+                                    bottomRight: Radius.circular(10),
+                                  ),
+                                ),
+                                child: ListTile(
                                   title: Text(t(context, 'about')),
                                   leading: Padding(
                                     padding: const EdgeInsets.only(left: 5),
@@ -325,7 +414,9 @@ class SettingsPage extends StatelessWidget {
                                   ),
 
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.only(
+                                    borderRadius: BorderRadiusGeometry.only(
+                                      topLeft: Radius.circular(5),
+                                      topRight: Radius.circular(5),
                                       bottomLeft: Radius.circular(10),
                                       bottomRight: Radius.circular(10),
                                     ),
@@ -348,8 +439,8 @@ class SettingsPage extends StatelessWidget {
                                     // );
                                   },
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                         SizedBox(height: 20),

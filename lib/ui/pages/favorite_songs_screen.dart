@@ -30,29 +30,6 @@ class FavoriteSongsScreen extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
         centerTitle: true,
         title: Text(t(context, 'favorite_songs')),
-        actions: [
-          // Export favorites to Android system playlist (MediaStore)
-          IconButton(
-            tooltip: Platform.isAndroid
-                ? 'Export favorites to system playlist'
-                : 'Export (Android only)',
-            icon: const Icon(Icons.upload_outlined),
-            onPressed: Platform.isAndroid
-                ? () async {
-                    try {
-                      await provider.exportFavoritesToSystem();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Export complete')),
-                      );
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Export failed: $e')),
-                      );
-                    }
-                  }
-                : null,
-          ),
-        ],
       ),
       backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
       body: AnimatedSwitcher(

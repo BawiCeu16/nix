@@ -54,116 +54,12 @@ class InfoPage extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 10.0),
-                  Text(t(context, 'description')),
+                  Text(
+                    t(context, 'description'),
+                    style: TextStyle(fontSize: 15),
+                  ),
                   SizedBox(height: 15),
 
-                  Card(
-                    elevation: 0,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
-                      child: RichText(
-                        text: TextSpan(
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            height: 1.5,
-                          ),
-                          children: [
-                            //Features
-                            TextSpan(
-                              text: '${t(context, 'features')}\n',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                              ),
-                            ),
-                            TextSpan(
-                              text: '• ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            TextSpan(
-                              text: '${t(context, 'fea1')} ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            TextSpan(text: '${t(context, 'featu1')}\n'),
-
-                            TextSpan(
-                              text: '• ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            TextSpan(
-                              text: '${t(context, 'fea2')} ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            TextSpan(text: '${t(context, 'featu2')}\n'),
-
-                            TextSpan(
-                              text: '• ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            TextSpan(
-                              text: '${t(context, 'fea3')} ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            TextSpan(text: '${t(context, 'featu3')}\n'),
-
-                            TextSpan(
-                              text: '• ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            TextSpan(
-                              text: '${t(context, 'fea4')} ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            TextSpan(text: '${t(context, 'featu4')}\n'),
-
-                            TextSpan(
-                              text: '• ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            TextSpan(
-                              text: '${t(context, 'fea5')} ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            TextSpan(text: '${t(context, 'featu5')}\n'),
-
-                            TextSpan(
-                              text: '• ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            TextSpan(
-                              text: '${t(context, 'fea6')} ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            TextSpan(text: '${t(context, 'featu6')}\n'),
-
-                            TextSpan(
-                              text: '• ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            TextSpan(
-                              text: '${t(context, 'fea7')} ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            TextSpan(text: '${t(context, 'featu7')}\n'),
-
-                            TextSpan(
-                              text: '• ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            TextSpan(
-                              text: '${t(context, 'fea8')} ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            TextSpan(text: '${t(context, 'featu8')}\n'),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  /////////////////////////////////////////////////////////////////////////////////////////////
                   const SizedBox(height: 20.0),
                 ],
               ),
@@ -173,13 +69,13 @@ class InfoPage extends StatelessWidget {
                 elevation: 0,
                 color: Theme.of(context).colorScheme.surfaceContainerLow,
                 child: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      width: 2,
-                      color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  // decoration: BoxDecoration(
+                  //   border: Border.all(
+                  //     width: 2,
+                  //     color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                  //   ),
+                  //   borderRadius: BorderRadius.circular(10),
+                  // ),
                   child: Padding(
                     padding: const EdgeInsets.all(10.0),
                     child: Column(
@@ -236,7 +132,7 @@ class InfoPage extends StatelessWidget {
                         // GitHub Repo
                         ListTile(
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadiusGeometry.circular(10),
+                            borderRadius: BorderRadiusGeometry.circular(100),
                           ),
                           leading: const Icon(FlutterRemix.code_fill),
                           title: Text(t(context, 'source_code_on_gitHub')),
@@ -249,7 +145,7 @@ class InfoPage extends StatelessWidget {
                         // Privacy Policy
                         ListTile(
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadiusGeometry.circular(10),
+                            borderRadius: BorderRadiusGeometry.circular(100),
                           ),
                           leading: const Icon(FlutterRemix.shield_line),
                           title: Text(t(context, 'privacy_policy')),
@@ -264,7 +160,7 @@ class InfoPage extends StatelessWidget {
                         // Open Source Licenses
                         ListTile(
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadiusGeometry.circular(10),
+                            borderRadius: BorderRadiusGeometry.circular(100),
                           ),
                           leading: const Icon(Icons.article),
                           title: Text(t(context, 'open_source_licenses')),

@@ -40,7 +40,7 @@ final Map<String, Map<String, String>> appTranslations = {
     'cancel': 'Cancel',
     'delete': 'Delete',
     'more': 'More',
-    'github': 'GitHub',
+    'dev_github': 'Developer GitHub',
     'email': 'Email',
 
     // Theme
@@ -111,6 +111,8 @@ final Map<String, Map<String, String>> appTranslations = {
 
     //Miniplayer
     'up_coming': 'UpComing',
+
+    'lyrics_settings': 'Lyrics',
   },
 
   'bur': {
@@ -155,7 +157,7 @@ final Map<String, Map<String, String>> appTranslations = {
     'cancel': 'မလုပ်တော့',
     'delete': 'ဖျက်မယ်',
     'more': 'နောက်ထပ်',
-    'github': 'ဂစ်ဟပ်',
+    'dev_github': 'ဖန်တီသူ ဂစ်ဟပ်',
     'email': 'အီးမေးလ်',
 
     // Theme
@@ -230,6 +232,8 @@ final Map<String, Map<String, String>> appTranslations = {
 
     //Miniplayer
     'up_coming': 'အကြာမီ လာမည်',
+
+    'lyrics_settings': 'စာသား',
   },
   'hakha': {
     'app_name': 'Nix',
@@ -272,7 +276,7 @@ final Map<String, Map<String, String>> appTranslations = {
     'cancel': 'Tuahthan loh',
     'delete': 'Hlawnh',
     'more': 'Adang',
-    'github': 'GitHub',
+    'dev_github': 'Sertu GitHub',
     'email': 'Email',
     'theme_settings': 'Theme Remhnak',
     'theme_mode': 'Theme Mode',
@@ -333,6 +337,8 @@ final Map<String, Map<String, String>> appTranslations = {
     'song_details': 'Hla Kawnglam',
     'share': 'Cheuh',
     'favorite': 'Duhbik',
+
+    'lyrics_settings': 'Hlaca',
   },
   'falam': {
     'app_name': 'Nix',
@@ -375,7 +381,7 @@ final Map<String, Map<String, String>> appTranslations = {
     'cancel': 'Ti sallo',
     'delete': 'Delete',
     'more': 'Adang',
-    'github': 'GitHub',
+    'dev_github': 'Tuahtu GitHub',
     'email': 'Email',
     'theme_settings': 'Theme Setting',
     'theme_mode': 'Theme Mode',
@@ -436,5 +442,7 @@ final Map<String, Map<String, String>> appTranslations = {
     'song_details': 'Song Details',
     'share': 'Share',
     'favorite': 'favorite',
+
+    'lyrics_settings': 'Hlaca',
   },
 };
