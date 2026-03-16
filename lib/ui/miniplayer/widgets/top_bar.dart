@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_remix/flutter_remix.dart';
 import 'package:nix/providers/current_music_provider.dart';
+import 'package:nix/core/format.dart';
+import 'package:nix/ui/widgets/dialogs/song_info_dialog.dart';
 
 class TopBar extends StatelessWidget {
   final double topRowOpacity;
@@ -19,7 +22,7 @@ class TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentMusic = context.watch<CurrentMusicProvider>();
-    final playlistName = currentMusic.currentPlaylist?.name ?? '';
+    final playlistName = currentMusic.currentSong?.album ?? '';
 
     return Material(
       type: MaterialType.transparency,
@@ -35,7 +38,10 @@ class TopBar extends StatelessWidget {
                 children: [
                   IconButton(
                     onPressed: onSnapToMini,
-                    icon: Icon(Icons.keyboard_arrow_down, color: onSecondary),
+                    icon: Icon(
+                      FlutterRemix.arrow_down_s_line,
+                      color: onSecondary,
+                    ),
                     iconSize: 26.0,
                   ),
                   Expanded(
@@ -63,16 +69,25 @@ class TopBar extends StatelessWidget {
                       ],
                     ),
                   ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: Container(
-                      padding: const EdgeInsets.all(4.0),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.secondary.withValues(alpha: .2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.more_horiz, color: onSecondary),
-                    ),
+                  IconButton.filledTonal(
+                    onPressed: () {
+                      final song = currentMusic.currentSong;
+                      if (song == null) return;
+
+                      SongInfoDialog.show(
+                        context,
+                        title: song.title,
+                        artist: song.artist,
+                        album: song.album,
+                        duration: Duration(
+                          milliseconds: song.duration,
+                        ).shortFormat(),
+                        size: song.size.formatBytes(),
+                        filePath: song.uri,
+                        songUri: song.uri,
+                      );
+                    },
+                    icon: Icon(FlutterRemix.more_fill, color: onSecondary),
                     iconSize: 26.0,
                   ),
                 ],

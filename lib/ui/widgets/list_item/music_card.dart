@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_remix/flutter_remix.dart';
 
 class MusicCard extends StatelessWidget {
   const MusicCard({
@@ -38,7 +39,7 @@ class MusicCard extends StatelessWidget {
                 width: double.infinity,
                 child: Container(
                   color: colorScheme.secondaryContainer,
-                  child: const Center(child: Icon(Icons.music_note, size: 36)),
+                  child: const Center(child: Icon(FlutterRemix.music_2_line, size: 36)),
                 ),
               ),
             ),

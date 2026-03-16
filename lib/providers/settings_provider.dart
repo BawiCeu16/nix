@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
-enum AccentColorMode {
-  dynamic,
-  device,
-  custom,
-}
+enum AccentColorMode { dynamic, device, custom }
 
 class SettingsProvider with ChangeNotifier {
   Box get _box => Hive.box('settings');
@@ -47,7 +43,10 @@ class SettingsProvider with ChangeNotifier {
 
   // Custom Accent Color
   Color get customAccentColor {
-    final int colorValue = _box.get('customAccentColor', defaultValue: Colors.blue.value);
+    final int colorValue = _box.get(
+      'customAccentColor',
+      defaultValue: Colors.blue.value,
+    );
     return Color(colorValue);
   }
 

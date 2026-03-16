@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_remix/flutter_remix.dart';
 import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
@@ -112,7 +113,7 @@ class TrackImage extends StatelessWidget {
                                 color: Theme.of(context).colorScheme.primaryContainer,
                                 child: Center(
                                   child: Icon(
-                                    Icons.music_note,
+                                    FlutterRemix.music_2_fill,
                                     size: 40,
                                     color: Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: .5),
                                   ),

@@ -3,11 +3,11 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:math' as math;
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:hive/hive.dart';
-import 'package:palette_generator/palette_generator.dart';
+
 import '../models/music/song.dart';
 import '../models/music/playlist.dart';
 import '../providers/settings_provider.dart';
@@ -59,6 +59,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       if (state.processingState == ProcessingState.completed) {
         playNext();
       }
+      notifyListeners();
 
       // Broadcast state to audio_service
       playbackState.add(
@@ -158,14 +159,11 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
 
   Future<void> _updateDynamicSeedColor(Uint8List artworkBytes) async {
     try {
-      final paletteGenerator = await PaletteGenerator.fromImageProvider(
-        MemoryImage(artworkBytes),
-        maximumColorCount: 10,
+      final scheme = await ColorScheme.fromImageProvider(
+        provider: MemoryImage(artworkBytes),
       );
       
-      // Prefer vibrant or dominant color
-      _dynamicSeedColor = paletteGenerator.vibrantColor?.color ?? 
-                          paletteGenerator.dominantColor?.color;
+      _dynamicSeedColor = scheme.primary;
       notifyListeners();
     } catch (e) {
       debugPrint('Error extracting palette: $e');

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/music_provider.dart';
+import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:nix/ui/screens/music_pages/views/playlist_view_page.dart';
 
 class PlaylistsPage extends StatefulWidget {
@@ -14,31 +15,55 @@ class PlaylistsPage extends StatefulWidget {
 class _PlaylistsPageState extends State<PlaylistsPage> {
   void _showCreateDialog(BuildContext context) {
     final controller = TextEditingController();
-    showDialog(
+    NixDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("New Playlist"),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(hintText: "Playlist Name", filled: true),
+      title: "New Playlist",
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Column(
+            children: [
+              TextField(
+                controller: controller,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: "Playlist Name",
+                  filled: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 54,
+                child: ElevatedButton(
+                  onPressed: () {
+                    final name = controller.text.trim();
+                    if (name.isNotEmpty) {
+                      context.read<MusicProvider>().createPlaylist(name, []);
+                    }
+                    Navigator.of(context, rootNavigator: true).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Text("Create"),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+                child: const Text("Cancel"),
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final name = controller.text.trim();
-              if (name.isNotEmpty) {
-                context.read<MusicProvider>().createPlaylist(name, []);
-              }
-              Navigator.pop(ctx);
-            },
-            child: const Text("Create"),
-          ),
-        ],
-      ),
+      ],
     );
   }
 

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:nix/core/format.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_remix/flutter_remix.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:nix/providers/current_music_provider.dart';
+import 'package:wave_slider_flutter/wave_slider_flutter.dart';
 import '../../../core/math_utils.dart';
 
 class PlayerControls extends StatelessWidget {
@@ -45,12 +49,6 @@ class PlayerControls extends StatelessWidget {
     required this.bounceClampedProgressValue,
   });
 
-  String _formatDuration(Duration d) {
-    final min = d.inMinutes;
-    final sec = (d.inSeconds % 60).toString().padLeft(2, '0');
-    return '$min:$sec';
-  }
-
   @override
   Widget build(BuildContext context) {
     final currentMusic = context.watch<CurrentMusicProvider>();
@@ -58,14 +56,14 @@ class PlayerControls extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // CONTROLS & MORPHING PLAY BUTTON
+        // CONTROLS & PLAY BUTTON
         Material(
           type: MaterialType.transparency,
           child: Transform.translate(
             offset: Offset(
               0,
               bottomOffset +
-                  (-maxOffset / 7.0 * bounceProgressValue) +
+                  (-maxOffset / 7.5 * bounceProgressValue) +
                   ((-maxOffset + topInset + 80.0) *
                       (!bounceUp
                           ? !bounceDown
@@ -85,7 +83,13 @@ class PlayerControls extends StatelessWidget {
                         opacity: fastOpacity,
                         child: Padding(
                           padding: EdgeInsets.symmetric(
-                            horizontal: 24.0 * (16 * (!bounceDown ? inverseClampedProgressValue : 0.0) + 1),
+                            horizontal:
+                                24.0 *
+                                (16 *
+                                        (!bounceDown
+                                            ? inverseClampedProgressValue
+                                            : 0.0) +
+                                    1),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -93,7 +97,7 @@ class PlayerControls extends StatelessWidget {
                               IconButton(
                                 iconSize: 28.0,
                                 icon: Icon(
-                                  Icons.shuffle,
+                                  FlutterRemix.shuffle_line,
                                   color: currentMusic.isShuffleEnabled
                                       ? Theme.of(context).colorScheme.primary
                                       : onSecondary,
@@ -103,7 +107,9 @@ class PlayerControls extends StatelessWidget {
                               IconButton(
                                 iconSize: 28.0,
                                 icon: Icon(
-                                  Icons.repeat,
+                                  currentMusic.isRepeatEnabled
+                                      ? FlutterRemix.repeat_one_line
+                                      : FlutterRemix.repeat_2_line,
                                   color: currentMusic.isRepeatEnabled
                                       ? Theme.of(context).colorScheme.primary
                                       : onSecondary,
@@ -119,19 +125,31 @@ class PlayerControls extends StatelessWidget {
                         opacity: fastOpacity,
                         child: Padding(
                           padding: EdgeInsets.symmetric(
-                            horizontal: 84.0 * (2 * (!bounceDown ? inverseClampedProgressValue : 0.0) + 1),
+                            horizontal:
+                                84.0 *
+                                (2 *
+                                        (!bounceDown
+                                            ? inverseClampedProgressValue
+                                            : 0.0) +
+                                    1),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               IconButton(
-                                iconSize: 40.0,
-                                icon: Icon(Icons.skip_previous_rounded, color: onSecondary),
+                                iconSize: 36.0,
+                                icon: Icon(
+                                  FlutterRemix.skip_back_fill,
+                                  color: onSecondary,
+                                ),
                                 onPressed: () => currentMusic.playPrevious(),
                               ),
                               IconButton(
-                                iconSize: 40.0,
-                                icon: Icon(Icons.skip_next_rounded, color: onSecondary),
+                                iconSize: 36.0,
+                                icon: Icon(
+                                  FlutterRemix.skip_forward_fill,
+                                  color: onSecondary,
+                                ),
                                 onPressed: () => currentMusic.playNext(),
                               ),
                             ],
@@ -140,23 +158,41 @@ class PlayerControls extends StatelessWidget {
                       ),
                     Padding(
                       padding:
-                          EdgeInsets.all(12.0 * inverseClampedProgressValue).add(
+                          EdgeInsets.all(
+                            12.0 * inverseClampedProgressValue,
+                          ).add(
                             EdgeInsets.only(
                               right: !bounceDown
                                   ? !bounceUp
-                                        ? screenSize.width * reverseClampedProgressValue / 2 -
-                                            80 * reverseClampedProgressValue / 2 +
-                                            (queueProgressValue * 24.0)
-                                        : screenSize.width * clampedProgressValue / 2 -
-                                            80 * clampedProgressValue / 2
-                                  : screenSize.width * bounceClampedProgressValue / 2 -
-                                      80 * bounceClampedProgressValue / 2 +
-                                      (queueProgressValue * 24.0),
+                                        ? screenSize.width *
+                                                  reverseClampedProgressValue /
+                                                  2 -
+                                              80 *
+                                                  reverseClampedProgressValue /
+                                                  2 +
+                                              (queueProgressValue * 24.0)
+                                        : screenSize.width *
+                                                  clampedProgressValue /
+                                                  2 -
+                                              80 * clampedProgressValue / 2
+                                  : screenSize.width *
+                                            bounceClampedProgressValue /
+                                            2 -
+                                        80 * bounceClampedProgressValue / 2 +
+                                        (queueProgressValue * 24.0),
                             ),
                           ),
                       child: SizedBox(
-                        height: rangeProgress(a: 60.0, b: 80.0, c: reverseProgressValue),
-                        width: rangeProgress(a: 60.0, b: 80.0, c: reverseProgressValue),
+                        height: rangeProgress(
+                          a: 60.0,
+                          b: 80.0,
+                          c: reverseProgressValue,
+                        ),
+                        width: rangeProgress(
+                          a: 60.0,
+                          b: 80.0,
+                          c: reverseProgressValue,
+                        ),
                         child: FloatingActionButton(
                           onPressed: onTogglePlay,
                           elevation: 0,
@@ -164,12 +200,20 @@ class PlayerControls extends StatelessWidget {
                           hoverElevation: 0,
                           highlightElevation: 0,
                           disabledElevation: 0,
-                          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100.0)),
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(100.0),
+                          ),
                           child: AnimatedIcon(
                             progress: playPauseAnim,
                             icon: AnimatedIcons.play_pause,
-                            size: rangeProgress(a: 32.0, b: 46.0, c: reverseProgressValue),
+                            size: rangeProgress(
+                              a: 32.0,
+                              b: 46.0,
+                              c: reverseProgressValue,
+                            ),
                           ),
                         ),
                       ),
@@ -185,48 +229,101 @@ class PlayerControls extends StatelessWidget {
           Opacity(
             opacity: fastOpacity,
             child: Transform.translate(
-              offset: Offset(0, bottomOffset + (-maxOffset / 4.0 * progressValue)),
-              child: Align(
-                alignment: Alignment.bottomLeft,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    StreamBuilder<Duration>(
-                      stream: currentMusic.positionStream,
-                      builder: (context, posSnap) {
-                        final pos = posSnap.data ?? Duration.zero;
-                        final dur = currentMusic.duration ?? Duration.zero;
-                        final sliderVal = dur.inMilliseconds > 0
-                            ? (pos.inMilliseconds / dur.inMilliseconds).clamp(0.0, 1.0)
-                            : 0.0;
-                        return Slider(
-                          value: sliderVal,
-                          onChanged: (v) {
-                            if (dur.inMilliseconds > 0) {
-                              currentMusic.seek(Duration(milliseconds: (v * dur.inMilliseconds).round()));
-                            }
-                          },
-                        );
-                      },
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                      child: StreamBuilder<Duration>(
-                        stream: currentMusic.positionStream,
-                        builder: (context, posSnap) {
-                          final pos = posSnap.data ?? Duration.zero;
-                          final dur = currentMusic.duration ?? Duration.zero;
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(_formatDuration(pos), style: TextStyle(color: onSecondary)),
-                              Text(_formatDuration(dur), style: TextStyle(color: onSecondary)),
-                            ],
+              offset: Offset(
+                0,
+                bottomOffset + (-maxOffset / 4.3 * progressValue),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 25),
+                child: Align(
+                  alignment: Alignment.bottomLeft,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      StreamBuilder<PlayerState>(
+                        stream: currentMusic.playerStateStream,
+                        builder: (context, stateSnap) {
+                          final isPlaying = stateSnap.data?.playing ?? false;
+                          return TweenAnimationBuilder<double>(
+                            tween: Tween<double>(
+                              begin: 0.0,
+                              end: isPlaying ? 3.0 : 0.0,
+                            ),
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            builder: (context, amplitude, _) {
+                              return StreamBuilder<Duration>(
+                                stream: currentMusic.positionStream,
+                                builder: (context, posSnap) {
+                                  final pos = posSnap.data ?? Duration.zero;
+                                  final dur =
+                                      currentMusic.duration ?? Duration.zero;
+                                  final sliderVal = dur.inMilliseconds > 0
+                                      ? (pos.inMilliseconds /
+                                                dur.inMilliseconds)
+                                            .clamp(0.0, 1.0)
+                                      : 0.0;
+                                  return WaveSlider(
+                                    value: sliderVal,
+                                    theme: WaveSliderTheme(
+                                      activeColor: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                      thumbColor: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                      inactiveColor: Theme.of(context)
+                                          .colorScheme
+                                          .primary
+                                          .withValues(alpha: .3),
+                                      amplitude: amplitude,
+                                      frequency: 15,
+                                      strokeWidth: 2.8,
+                                      thumbShape: WaveSliderThumbShape.bar,
+                                    ),
+                                    onChanged: (v) {
+                                      if (dur.inMilliseconds > 0) {
+                                        currentMusic.seek(
+                                          Duration(
+                                            milliseconds:
+                                                (v * dur.inMilliseconds)
+                                                    .round(),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                  );
+                                },
+                              );
+                            },
                           );
                         },
                       ),
-                    ),
-                  ],
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 0.0),
+                        child: StreamBuilder<Duration>(
+                          stream: currentMusic.positionStream,
+                          builder: (context, posSnap) {
+                            final pos = posSnap.data ?? Duration.zero;
+                            final dur = currentMusic.duration ?? Duration.zero;
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  pos.shortFormat(),
+                                  style: TextStyle(color: onSecondary),
+                                ),
+                                Text(
+                                  dur.shortFormat(),
+                                  style: TextStyle(color: onSecondary),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

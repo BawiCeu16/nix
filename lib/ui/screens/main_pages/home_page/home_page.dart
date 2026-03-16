@@ -1,9 +1,11 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_remix/flutter_remix.dart';
 import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/music_provider.dart';
+import 'package:nix/providers/user_provider.dart';
 import 'package:nix/ui/widgets/list_item/song_card_tile.dart';
 import 'package:nix/ui/widgets/list_item/track_tile.dart';
 import '../../music_pages/albums_page.dart';
@@ -23,8 +25,11 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final user = context.watch<UserProvider>();
+
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainer,
+
       body: SafeArea(
         bottom: false,
         child: CustomScrollView(
@@ -40,23 +45,41 @@ class HomePage extends StatelessWidget {
               expandedHeight: 180,
               flexibleSpace: FlexibleSpaceBar(
                 titlePadding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-                title: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                title: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(
-                      _greeting(),
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _greeting(),
+                            style: Theme.of(context).textTheme.labelMedium
+                                ?.copyWith(color: colorScheme.onSurfaceVariant),
+                          ),
+                          Text(
+                            user.userName,
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: colorScheme.onSurface,
+                                ),
+                          ),
+                        ],
                       ),
                     ),
-                    Text(
-                      "Nix User",
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
+                    // CircleAvatar(
+                    //   radius: 20,
+                    //   backgroundColor: UserProvider
+                    //       .avatarColors[user.avatarIndex]
+                    //       .withValues(alpha: 0.2),
+                    //   child: Icon(
+                    //     UserProvider.avatarIcons[user.avatarIndex],
+                    //     color: UserProvider.avatarColors[user.avatarIndex],
+                    //     size: 20,
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
@@ -335,7 +358,9 @@ class _AlbumCard extends StatelessWidget {
                     ? Image.memory(artwork, fit: BoxFit.cover)
                     : Container(
                         color: colorScheme.secondaryContainer,
-                        child: const Center(child: Icon(Icons.album, size: 36)),
+                        child: const Center(
+                          child: Icon(FlutterRemix.disc_line, size: 36),
+                        ),
                       ),
               ),
             ),

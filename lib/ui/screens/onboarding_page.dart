@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:nix/ui/screens/navigation_screen.dart';
 import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
+import 'package:nix/ui/widgets/buttons/expressive_huge_button.dart';
+import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:nix/providers/user_provider.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -66,23 +70,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
       });
     }
   }
-
-  static const List<Color> _avatarColors = [
-    Colors.blue,
-    Colors.red,
-    Colors.green,
-    Colors.orange,
-    Colors.purple,
-    Colors.teal,
-  ];
-  static const List<IconData> _avatarIcons = [
-    FlutterRemix.user_3_line,
-    FlutterRemix.user_5_line,
-    FlutterRemix.user_6_line,
-    FlutterRemix.user_smile_line,
-    FlutterRemix.ghost_line,
-    FlutterRemix.robot_line,
-  ];
 
   void _nextPage() {
     if (_currentPage < 3) {
@@ -162,7 +149,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
           ),
         ),
         const SizedBox(height: 48),
-        ExpressiveToneButton(onPressed: _nextPage, child: const Text('Next')),
+        ExpressiveHugeButton(
+          onPressed: _nextPage,
+          child: Icon(
+            FlutterRemix.arrow_right_line,
+            size: 30,
+            color: Theme.of(context).colorScheme.onPrimary,
+          ),
+        ),
       ],
     );
   }
@@ -201,7 +195,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
     final allGranted = _audioGranted && _notificationGranted;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
+      padding: const EdgeInsets.symmetric(horizontal: 25),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -219,60 +213,62 @@ class _OnboardingPageState extends State<OnboardingPage> {
           ),
           const SizedBox(height: 24),
           Card(
-            child: Column(
-              children: [
-                ListTile(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(12),
-                      topRight: Radius.circular(12),
+            elevation: 0,
+            margin: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.all(3.0),
+              child: Column(
+                spacing: 0,
+                children: [
+                  CardListTile(
+                    isFirst: true,
+                    leading: Icon(
+                      FlutterRemix.headphone_line,
+                      color: colorScheme.primary,
                     ),
+                    title: 'Audio Access',
+                    subtitle: 'Allow access to your audio files to play music',
+                    trailing: _audioGranted
+                        ? Icon(
+                            FlutterRemix.checkbox_circle_fill,
+                            color: colorScheme.primary,
+                          )
+                        : const Icon(FlutterRemix.close_circle_line),
+
+                    onTap: _requestAudioPermission,
                   ),
-                  leading: Icon(
-                    FlutterRemix.headphone_line,
-                    color: colorScheme.primary,
-                  ),
-                  title: const Text('Audio Access'),
-                  subtitle: const Text(
-                    'Allow access to your audio files to play music',
-                  ),
-                  trailing: _audioGranted
-                      ? Icon(
-                          FlutterRemix.checkbox_circle_fill,
-                          color: colorScheme.primary,
-                        )
-                      : const Icon(FlutterRemix.close_circle_line),
-                  onTap: _requestAudioPermission,
-                ),
-                ListTile(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(12),
-                      bottomRight: Radius.circular(12),
+                  const SizedBox(height: 2.5),
+                  CardListTile(
+                    isFirst: false,
+
+                    leading: Icon(
+                      FlutterRemix.notification_3_line,
+                      color: colorScheme.primary,
                     ),
+                    title: 'Notifications',
+                    subtitle:
+                        'Allow notifications to receive updates about your music',
+                    trailing: _notificationGranted
+                        ? Icon(
+                            FlutterRemix.checkbox_circle_fill,
+                            color: colorScheme.primary,
+                          )
+                        : const Icon(FlutterRemix.close_circle_line),
+                    isLast: true,
+                    onTap: _requestNotificationPermission,
                   ),
-                  leading: Icon(
-                    FlutterRemix.notification_3_line,
-                    color: colorScheme.primary,
-                  ),
-                  title: const Text('Notifications'),
-                  subtitle: const Text(
-                    'Allow notifications to receive updates about your music',
-                  ),
-                  trailing: _notificationGranted
-                      ? Icon(
-                          FlutterRemix.checkbox_circle_fill,
-                          color: colorScheme.primary,
-                        )
-                      : const Icon(FlutterRemix.close_circle_line),
-                  onTap: _requestNotificationPermission,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
+
           const SizedBox(height: 32),
           ExpressiveToneButton(
-            onPressed: allGranted ? _nextPage : null,
+            onPressed: allGranted
+                ? _nextPage
+                : _notificationGranted
+                ? _requestAudioPermission
+                : _requestNotificationPermission,
             child: Text(allGranted ? 'Next' : 'Grant all permissions'),
           ),
         ],
@@ -297,7 +293,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
             height: 80,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              itemCount: 6,
+              itemCount: UserProvider.avatarIcons.length,
               itemBuilder: (context, index) {
                 final isSelected = _selectedAvatarIndex == index;
                 return GestureDetector(
@@ -315,12 +311,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     ),
                     child: CircleAvatar(
                       radius: 30,
-                      backgroundColor: _avatarColors[index].withValues(
-                        alpha: 0.2,
-                      ),
+                      backgroundColor: UserProvider.avatarColors[index]
+                          .withValues(alpha: 0.2),
                       child: Icon(
-                        _avatarIcons[index],
-                        color: _avatarColors[index],
+                        UserProvider.avatarIcons[index],
+                        color: UserProvider.avatarColors[index],
                       ),
                     ),
                   ),
@@ -348,12 +343,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     _nameController.text.trim().length >= 3
                 ? () async {
                     final settingsBox = Hive.box('settings');
+                    final userProvider = context.read<UserProvider>();
+
                     await settingsBox.put('hasCompletedOnboarding', true);
-                    await settingsBox.put(
-                      'username',
-                      _nameController.text.trim(),
-                    );
-                    await settingsBox.put('avatarIndex', _selectedAvatarIndex);
+                    userProvider.setUserName(_nameController.text.trim());
+                    userProvider.setAvatarIndex(_selectedAvatarIndex);
 
                     if (!mounted) return;
                     Navigator.of(context).pushReplacement(

@@ -488,14 +488,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.6.0"
-  palette_generator:
-    dependency: "direct main"
-    description:
-      name: palette_generator
-      sha256: "4420f7ccc3f0a4a906144e73f8b6267cd940b64f57a7262e95cb8cec3a8ae0ed"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.3.3+7"
   path:
     dependency: transitive
     description:
@@ -789,6 +781,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "15.0.2"
+  wave_slider_flutter:
+    dependency: "direct main"
+    description:
+      name: wave_slider_flutter
+      sha256: "2a33d0eb595a921e1da186dc6347cde16391d63d0052843ac7583ae4a601cb9b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.4"
   web:
     dependency: transitive
     description:

@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_remix/flutter_remix.dart';
 import 'package:hive/hive.dart';
 import 'package:nix/models/music/song.dart';
 
@@ -41,7 +42,7 @@ class SongCardTile extends StatelessWidget {
                   : Container(
                       color: colorScheme.secondaryContainer,
                       child: const Center(
-                        child: Icon(Icons.music_note, size: 36),
+                        child: Icon(FlutterRemix.music_2_line, size: 36),
                       ),
                     ),
             ),

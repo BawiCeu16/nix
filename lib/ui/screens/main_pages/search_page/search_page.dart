@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/ui/widgets/list_item/track_tile.dart';
@@ -56,11 +57,14 @@ class _SearchPageState extends State<SearchPage> {
                   elevation: const WidgetStatePropertyAll(0),
                   controller: _searchController,
                   hintText: "Search songs, artists, albums...",
-                  leading: const Icon(Icons.search),
+                  leading: Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: const Icon(FlutterRemix.search_line),
+                  ),
                   trailing: [
                     if (_searchController.text.isNotEmpty)
                       IconButton(
-                        icon: const Icon(Icons.clear),
+                        icon: const Icon(FlutterRemix.close_line),
                         onPressed: () {
                           _searchController.clear();
                           _onSearchChanged('', music);
@@ -79,7 +83,7 @@ class _SearchPageState extends State<SearchPage> {
               hasScrollBody: false,
               child: Center(
                 child: Text(
-                  "Find your favorite tunes.",
+                  "Type something to search...",
                   style: TextStyle(color: colorScheme.onSurfaceVariant),
                 ),
               ),

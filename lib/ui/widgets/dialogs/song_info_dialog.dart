@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
+import 'package:nix/ui/widgets/buttons/expressive_button.dart';
+import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
+import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 
 class SongInfoDialog extends StatelessWidget {
   const SongInfoDialog({
@@ -10,6 +13,7 @@ class SongInfoDialog extends StatelessWidget {
     this.duration = "0:00",
     this.size = "0.0 MB",
     this.filePath = "/storage/emulated/0/Music/dummy.mp3",
+    this.songUri,
   });
 
   final String title;
@@ -18,75 +22,68 @@ class SongInfoDialog extends StatelessWidget {
   final String duration;
   final String size;
   final String filePath;
+  final String? songUri;
 
-  static void show(BuildContext context) {
-    showDialog(context: context, builder: (context) => const SongInfoDialog());
+  static void show(
+    BuildContext context, {
+    String title = "Unknown Title",
+    String artist = "Unknown Artist",
+    String album = "Unknown Album",
+    String duration = "0:00",
+    String size = "0.0 MB",
+    String filePath = "/storage/emulated/0/Music/dummy.mp3",
+    String? songUri,
+  }) {
+    NixDialog.show(
+      context: context,
+      title: title,
+      subtitle: artist,
+      songUri: songUri,
+      children: [
+        CardListTile(
+          title: "Album",
+          subtitle: album,
+          icon: FlutterRemix.disc_line,
+          isFirst: true,
+          onTap: () {},
+        ),
+        const SizedBox(height: 2.5),
+        CardListTile(
+          title: "Duration",
+          subtitle: duration,
+          icon: FlutterRemix.time_line,
+          onTap: () {},
+        ),
+        const SizedBox(height: 2.5),
+        CardListTile(
+          title: "Size",
+          subtitle: size,
+          icon: FlutterRemix.hard_drive_2_line,
+          onTap: () {},
+        ),
+        const SizedBox(height: 2.5),
+        CardListTile(
+          title: "File Path",
+          subtitle: filePath,
+          icon: FlutterRemix.folder_music_line,
+          isLast: true,
+          onTap: () {},
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          child: ExpressiveButton(
+            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+            child: const Text("CLOSE"),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              minVerticalPadding: 0,
-              leading: const Icon(FlutterRemix.music_2_line),
-              title: const Text("Title"),
-              subtitle: Text(title),
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              minVerticalPadding: 0,
-              leading: const Icon(FlutterRemix.user_3_line),
-              title: const Text("Artist"),
-              subtitle: Text(artist),
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              minVerticalPadding: 0,
-              leading: const Icon(FlutterRemix.disc_line),
-              title: const Text("Album"),
-              subtitle: Text(album),
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              minVerticalPadding: 0,
-              leading: const Icon(FlutterRemix.time_line),
-              title: const Text("Duration"),
-              subtitle: Text(duration),
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              minVerticalPadding: 0,
-              leading: const Icon(FlutterRemix.hard_drive_2_line),
-              title: const Text("Size"),
-              subtitle: Text(size),
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              minVerticalPadding: 0,
-              leading: const Icon(FlutterRemix.folder_music_line),
-              title: const Text("File Path"),
-              subtitle: Text(filePath),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text("Close"),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
+    // This build method is now rarely used directly as we use .show()
+    return const SizedBox.shrink();
   }
 }

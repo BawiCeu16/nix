@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter_remix/flutter_remix.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
@@ -48,6 +48,9 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
   late double sMaxOffset;
   late AnimationController sAnim;
 
+  // Queue View Controller
+  late ScrollController queueScrollController;
+
   // Playback Animation
   late AnimationController playPauseAnim;
 
@@ -60,6 +63,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
       upperBound: 1,
       value: 0.0,
     );
+    queueScrollController = ScrollController();
     playPauseAnim = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
@@ -92,6 +96,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
   @override
   void dispose() {
     sAnim.dispose();
+    queueScrollController.dispose();
     playPauseAnim.dispose();
     super.dispose();
   }
@@ -386,6 +391,16 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                             width: double.infinity,
                             decoration: BoxDecoration(
                               borderRadius: borderRadius,
+                              boxShadow: [
+                                // BoxShadow(
+                                //   color: clampedProgressValue > 0
+                                //       ? Theme.of(context).colorScheme.onSurface
+                                //             .withValues(alpha: .1)
+                                //       : Colors.black12,
+                                //   blurRadius: 7,
+                                //   offset: Offset(0, 0),
+                                // ),
+                              ],
                               color: Theme.of(context).colorScheme.surface,
                             ),
                           ),
@@ -420,7 +435,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                                 child: IconButton(
                                   onPressed: () {},
                                   icon: Icon(
-                                    CupertinoIcons.quote_bubble,
+                                    FlutterRemix.chat_quote_line,
                                     size: 28.0,
                                     color: Theme.of(
                                       context,
@@ -453,7 +468,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                                 child: IconButton(
                                   onPressed: snapToQueue,
                                   icon: Icon(
-                                    Icons.queue_music,
+                                    FlutterRemix.play_list_line,
                                     size: 24.0,
                                     color: Theme.of(
                                       context,
@@ -523,6 +538,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                     queueProgressValue: queueProgressValue,
                     maxOffset: maxOffset,
                     topInset: topInset,
+                    controller: queueScrollController,
                   ),
                 ],
               );

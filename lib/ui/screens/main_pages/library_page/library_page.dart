@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
+import 'package:nix/providers/user_provider.dart';
 import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/music_provider.dart';
@@ -19,6 +20,8 @@ class LibraryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<UserProvider>();
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
       appBar: AppBar(
@@ -43,12 +46,25 @@ class LibraryPage extends StatelessWidget {
                 // User Profile
                 ListTile(
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
                   ),
                   tileColor: Theme.of(context).colorScheme.surface,
-                  leading: const CircleAvatar(child: Icon(Icons.person)),
-                  title: const Text("Nix User"),
-                  subtitle: const Text("nix user"),
+                  leading: CircleAvatar(
+                    radius: 30,
+                    backgroundColor: UserProvider.avatarColors[user.avatarIndex]
+                        .withValues(alpha: 0.2),
+                    child: Icon(
+                      UserProvider.avatarIcons[user.avatarIndex],
+                      color: UserProvider.avatarColors[user.avatarIndex],
+                      size: 30,
+                    ),
+                  ),
+                  title: Text(user.userName),
+                  subtitle: const Text("View your music profile"),
                   onTap: () => _push(context, const ProfilePage()),
                 ),
                 const SizedBox(height: 10),
@@ -68,7 +84,7 @@ class LibraryPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2.5),
                 CardListTile(
                   title: 'Recently Listened',
                   icon: FlutterRemix.time_line,
@@ -82,7 +98,7 @@ class LibraryPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2.5),
                 CardListTile(
                   title: 'Favorites',
                   icon: FlutterRemix.heart_3_fill,
@@ -107,21 +123,21 @@ class LibraryPage extends StatelessWidget {
                   isFirst: true,
                   onTap: () => _push(context, const ArtistsPage()),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2.5),
                 CardListTile(
                   title: 'Albums',
                   icon: FlutterRemix.disc_line,
                   subtitle: '${music.albums.length} albums',
                   onTap: () => _push(context, const AlbumsPage()),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2.5),
                 CardListTile(
                   title: 'Playlists',
                   icon: FlutterRemix.play_list_line,
                   subtitle: '${music.playlists.length} playlists',
                   onTap: () => _push(context, const PlaylistsPage()),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2.5),
                 CardListTile(
                   title: 'All Songs',
                   icon: FlutterRemix.music_2_line,

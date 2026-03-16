@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_remix/flutter_remix.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import '../../../core/math_utils.dart';
@@ -73,7 +74,7 @@ class TrackInfo extends StatelessWidget {
                         12.0 * (1 - bounceClampedProgressValue),
                       ).add(
                         EdgeInsets.symmetric(
-                          horizontal: 16.0 * bounceClampedProgressValue,
+                          horizontal: 20.0 * bounceClampedProgressValue,
                         ),
                       ),
                   child: Align(
@@ -122,7 +123,9 @@ class TrackInfo extends StatelessWidget {
                                         ),
                                         fontWeight: FontWeight.w600,
                                         height: 1,
-                                        color: Theme.of(context).colorScheme.onSurface,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurface,
                                       ),
                                     ),
                                     Text(
@@ -135,7 +138,10 @@ class TrackInfo extends StatelessWidget {
                                           b: 17.0,
                                           c: bounceProgressValue,
                                         ),
-                                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: .7),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withValues(alpha: .7),
                                       ),
                                     ),
                                   ],
@@ -145,7 +151,9 @@ class TrackInfo extends StatelessWidget {
                             // Favorite Icon
                             Opacity(
                               opacity:
-                                  (inverseAboveOne(bounceProgressValue) * 10 - 9).clamp(0, 1),
+                                  (inverseAboveOne(bounceProgressValue) * 10 -
+                                          9)
+                                      .clamp(0, 1),
                               child: Transform.translate(
                                 offset: Offset(
                                   -100 * (1.0 - bounceClampedProgressValue),
@@ -155,12 +163,16 @@ class TrackInfo extends StatelessWidget {
                                   onTap: song != null
                                       ? () => music.toggleFavorite(song)
                                       : null,
-                                  child: Icon(
-                                    isFav ? Icons.favorite : Icons.favorite_border,
+                                    child: Icon(
+                                      isFav
+                                          ? FlutterRemix.heart_fill
+                                          : FlutterRemix.heart_line,
                                     size: 32.0,
                                     color: isFav
                                         ? Theme.of(context).colorScheme.primary
-                                        : Theme.of(context).colorScheme.onSecondaryContainer,
+                                        : Theme.of(
+                                            context,
+                                          ).colorScheme.onSecondaryContainer,
                                   ),
                                 ),
                               ),

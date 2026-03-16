@@ -6,6 +6,7 @@ import 'providers/will_pop_provider.dart';
 import 'providers/current_music_provider.dart';
 import 'providers/music_provider.dart';
 import 'providers/settings_provider.dart';
+import 'providers/user_provider.dart';
 import 'ui/screens/navigation_screen.dart';
 import 'ui/screens/onboarding_page.dart';
 
@@ -38,6 +39,7 @@ void main() async {
         ),
         ChangeNotifierProvider(create: (_) => MusicProvider()..init()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider(create: (_) => UserProvider()),
         Provider(create: (_) => WillPopProvider()),
       ],
       child: const NixApp(),

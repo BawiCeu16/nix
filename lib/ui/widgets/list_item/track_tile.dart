@@ -7,6 +7,9 @@ import 'package:nix/models/music/song.dart';
 import 'package:nix/models/music/playlist.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/music_provider.dart';
+import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
+import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
+import 'package:nix/core/format.dart';
 
 class TrackTile extends StatefulWidget {
   final Song track;
@@ -38,9 +41,7 @@ class _TrackTileState extends State<TrackTile> {
   }
 
   String get _formattedDuration {
-    final min = (widget.track.duration / 60000).floor();
-    final sec = ((widget.track.duration / 1000) % 60).floor().toString().padLeft(2, '0');
-    return '$min:$sec';
+    return Duration(milliseconds: widget.track.duration).shortFormat();
   }
 
   @override
@@ -58,7 +59,7 @@ class _TrackTileState extends State<TrackTile> {
     final targetScale = _isPressed ? 0.98 : 1.0;
 
     return Padding(
-      padding: EdgeInsets.only(bottom: widget.isLast ? 0.0 : 3.0),
+      padding: EdgeInsets.only(bottom: widget.isLast ? 0.0 : 2.5),
       child: Dismissible(
         key: ValueKey(widget.track.id),
         confirmDismiss: (direction) async {
@@ -109,62 +110,77 @@ class _TrackTileState extends State<TrackTile> {
         child: Selector<CurrentMusicProvider, Song?>(
           selector: (_, p) => p.playing,
           builder: (context, currentlyPlaying, child) {
-            final isNowPlaying = currentlyPlaying != null && currentlyPlaying.id == widget.track.id;
+            final isNowPlaying =
+                currentlyPlaying != null &&
+                currentlyPlaying.id == widget.track.id;
 
             return GestureDetector(
               onTapDown: (_) => _setPressed(true),
               onTapUp: (_) => _setPressed(false),
               onTapCancel: () => _setPressed(false),
-              onTap: widget.onPressed ?? () {
-                FocusScope.of(context).requestFocus(FocusNode());
-                final currentMusic = context.read<CurrentMusicProvider>();
-                Playlist? pl;
-                if (widget.playlistContext != null) {
-                  pl = Playlist(
-                    id: 'queue_${DateTime.now().millisecondsSinceEpoch}',
-                    name: 'Queue',
-                    songs: widget.playlistContext!,
-                    createdAt: DateTime.now(),
-                  );
-                }
-                currentMusic.playSong(widget.track, playlist: pl);
-              },
+              onTap:
+                  widget.onPressed ??
+                  () {
+                    FocusScope.of(context).requestFocus(FocusNode());
+                    final currentMusic = context.read<CurrentMusicProvider>();
+                    Playlist? pl;
+                    if (widget.playlistContext != null) {
+                      pl = Playlist(
+                        id: 'queue_${DateTime.now().millisecondsSinceEpoch}',
+                        name: 'Queue',
+                        songs: widget.playlistContext!,
+                        createdAt: DateTime.now(),
+                      );
+                    }
+                    currentMusic.playSong(widget.track, playlist: pl);
+                  },
               onLongPress: () {
                 HapticFeedback.mediumImpact();
                 final music = context.read<MusicProvider>();
                 final isFav = music.isFavorite(widget.track);
-                showModalBottomSheet(
+                NixDialog.show(
                   context: context,
-                  builder: (ctx) => SafeArea(
-                    child: Wrap(
-                      children: [
-                        ListTile(
-                          leading: Icon(isFav ? FlutterRemix.heart_3_fill : FlutterRemix.heart_3_line),
-                          title: Text(isFav ? "Remove from Favorites" : "Add to Favorites"),
-                          onTap: () {
-                            music.toggleFavorite(widget.track);
-                            Navigator.pop(ctx);
-                          },
-                        ),
-                        ListTile(
-                          leading: const Icon(FlutterRemix.skip_forward_fill),
-                          title: const Text("Play Next"),
-                          onTap: () {
-                            context.read<CurrentMusicProvider>().queueNext(widget.track);
-                            Navigator.pop(ctx);
-                          },
-                        ),
-                        ListTile(
-                          leading: const Icon(FlutterRemix.play_list_add_line),
-                          title: const Text("Add to Queue"),
-                          onTap: () {
-                            context.read<CurrentMusicProvider>().appendToQueue(widget.track);
-                            Navigator.pop(ctx);
-                          },
-                        ),
-                      ],
+                  title: widget.track.title,
+                  subtitle: widget.track.artist,
+                  songUri: widget.track.uri,
+                  children: [
+                    CardListTile(
+                      title: isFav
+                          ? "Remove from Favorites"
+                          : "Add to Favorites",
+                      icon: isFav
+                          ? FlutterRemix.heart_3_fill
+                          : FlutterRemix.heart_3_line,
+                      isFirst: true,
+                      onTap: () {
+                        music.toggleFavorite(widget.track);
+                        Navigator.of(context, rootNavigator: true).pop();
+                      },
                     ),
-                  ),
+                    const SizedBox(height: 2.5),
+                    CardListTile(
+                      title: "Play Next",
+                      icon: FlutterRemix.skip_forward_fill,
+                      onTap: () {
+                        context.read<CurrentMusicProvider>().queueNext(
+                          widget.track,
+                        );
+                        Navigator.of(context, rootNavigator: true).pop();
+                      },
+                    ),
+                    const SizedBox(height: 2.5),
+                    CardListTile(
+                      title: "Add to Queue",
+                      icon: FlutterRemix.play_list_add_line,
+                      isLast: true,
+                      onTap: () {
+                        context.read<CurrentMusicProvider>().appendToQueue(
+                          widget.track,
+                        );
+                        Navigator.of(context, rootNavigator: true).pop();
+                      },
+                    ),
+                  ],
                 );
               },
               child: AnimatedScale(
@@ -183,13 +199,19 @@ class _TrackTileState extends State<TrackTile> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4.0),
                       child: ListTile(
-                        leading: _ArtworkLeading(songUri: widget.track.uri, isPlaying: isNowPlaying),
+                        leading: _ArtworkLeading(
+                          songUri: widget.track.uri,
+                          isPlaying: isNowPlaying,
+                        ),
                         title: Text(
                           widget.track.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: isNowPlaying
-                              ? TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary)
+                              ? TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).colorScheme.primary,
+                                )
                               : null,
                         ),
                         subtitle: Text(
@@ -198,33 +220,59 @@ class _TrackTileState extends State<TrackTile> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         trailing: IconButton(
-                          icon: Icon(FlutterRemix.more_2_fill, color: Theme.of(context).colorScheme.onSurfaceVariant, size: 20),
+                          icon: Icon(
+                            FlutterRemix.more_2_fill,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                            size: 20,
+                          ),
                           onPressed: () {
                             final music = context.read<MusicProvider>();
                             final isFav = music.isFavorite(widget.track);
-                            showModalBottomSheet(
+                            NixDialog.show(
                               context: context,
-                              builder: (ctx) => SafeArea(
-                                child: Wrap(
-                                  children: [
-                                    ListTile(
-                                      leading: Icon(isFav ? FlutterRemix.heart_3_fill : FlutterRemix.heart_3_line),
-                                      title: Text(isFav ? "Remove from Favorites" : "Add to Favorites"),
-                                      onTap: () { music.toggleFavorite(widget.track); Navigator.pop(ctx); },
-                                    ),
-                                    ListTile(
-                                      leading: const Icon(FlutterRemix.skip_forward_fill),
-                                      title: const Text("Play Next"),
-                                      onTap: () { context.read<CurrentMusicProvider>().queueNext(widget.track); Navigator.pop(ctx); },
-                                    ),
-                                    ListTile(
-                                      leading: const Icon(FlutterRemix.play_list_add_line),
-                                      title: const Text("Add to Queue"),
-                                      onTap: () { context.read<CurrentMusicProvider>().appendToQueue(widget.track); Navigator.pop(ctx); },
-                                    ),
-                                  ],
+                              title: widget.track.title,
+                              subtitle: widget.track.artist,
+                              songUri: widget.track.uri,
+                              children: [
+                                CardListTile(
+                                  title: isFav
+                                      ? "Remove from Favorites"
+                                      : "Add to Favorites",
+                                  icon: isFav
+                                      ? FlutterRemix.heart_3_fill
+                                      : FlutterRemix.heart_3_line,
+                                  isFirst: true,
+                                  onTap: () {
+                                    music.toggleFavorite(widget.track);
+                                    Navigator.pop(context);
+                                  },
                                 ),
-                              ),
+                                const SizedBox(height: 2.5),
+                                CardListTile(
+                                  title: "Play Next",
+                                  icon: FlutterRemix.skip_forward_fill,
+                                  onTap: () {
+                                    context
+                                        .read<CurrentMusicProvider>()
+                                        .queueNext(widget.track);
+                                    Navigator.pop(context);
+                                  },
+                                ),
+                                const SizedBox(height: 2.5),
+                                CardListTile(
+                                  title: "Add to Queue",
+                                  icon: FlutterRemix.play_list_add_line,
+                                  isLast: true,
+                                  onTap: () {
+                                    context
+                                        .read<CurrentMusicProvider>()
+                                        .appendToQueue(widget.track);
+                                    Navigator.pop(context);
+                                  },
+                                ),
+                              ],
                             );
                           },
                         ),
@@ -275,7 +323,9 @@ class _ArtworkLeading extends StatelessWidget {
                     ? Theme.of(context).colorScheme.primaryContainer
                     : Theme.of(context).colorScheme.surfaceContainerHighest,
                 child: Icon(
-                  isPlaying ? Icons.equalizer : Icons.music_note,
+                  isPlaying
+                      ? FlutterRemix.pulse_fill
+                      : FlutterRemix.music_2_line,
                   color: isPlaying
                       ? Theme.of(context).colorScheme.primary
                       : Theme.of(context).colorScheme.onSurfaceVariant,

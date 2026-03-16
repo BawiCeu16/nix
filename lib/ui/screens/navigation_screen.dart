@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
 import '../../providers/will_pop_provider.dart';
 import '../../providers/current_music_provider.dart';
@@ -154,16 +155,18 @@ class _NavigationScreenState extends State<NavigationScreen>
                           setState(() => _selectedIndex = i),
                       destinations: const [
                         NavigationDestination(
-                          icon: Icon(Icons.home_outlined),
-                          selectedIcon: Icon(Icons.home),
+                          icon: Icon(FlutterRemix.home_line),
+                          selectedIcon: Icon(FlutterRemix.home_fill),
                           label: "Home",
                         ),
                         NavigationDestination(
-                          icon: Icon(Icons.search),
+                          icon: Icon(FlutterRemix.search_line),
+                          selectedIcon: Icon(FlutterRemix.search_fill),
                           label: "Search",
                         ),
                         NavigationDestination(
-                          icon: Icon(Icons.library_music_outlined),
+                          icon: Icon(FlutterRemix.music_2_line),
+                          selectedIcon: Icon(FlutterRemix.music_2_fill),
                           label: "Library",
                         ),
                       ],

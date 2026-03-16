@@ -89,7 +89,10 @@ class QueueTile extends StatelessWidget {
                           ? Theme.of(context).colorScheme.primaryContainer
                           : Theme.of(context).colorScheme.secondaryContainer,
                       child: isPlaying
-                          ? Icon(FlutterRemix.play_fill, color: Theme.of(context).colorScheme.primary)
+                          ? Icon(
+                              FlutterRemix.play_fill,
+                              color: Theme.of(context).colorScheme.primary,
+                            )
                           : const Icon(FlutterRemix.music_2_line),
                     ),
             ),
@@ -99,17 +102,26 @@ class QueueTile extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: isPlaying
-                ? TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary)
+                ? TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  )
                 : null,
           ),
-          subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
+          subtitle: Text(
+            subtitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           visualDensity: VisualDensity.compact,
           onTap: onTap,
-          trailing: trailing ?? Icon(
-            FlutterRemix.menu_line,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-            size: 20,
-          ),
+          trailing:
+              trailing ??
+              Icon(
+                FlutterRemix.menu_line,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                size: 20,
+              ),
         ),
       ),
     );
