@@ -23,60 +23,57 @@ class PlaylistDialogs {
       context: context,
       title: isEditing ? "Rename Playlist" : "New Playlist",
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: Column(
-            children: [
-              TextField(
-                controller: controller,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: "Playlist Name",
-                  filled: true,
-                  fillColor: Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainerHighest,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
+        Column(
+          children: [
+            TextField(
+              controller: controller,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: "Playlist Name",
+                filled: true,
+                fillColor: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
                 ),
               ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: ExpressiveToneButton(
-                      onPressed: () =>
-                          Navigator.of(context, rootNavigator: true).pop(),
-                      child: const Text("Cancel"),
-                    ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: ExpressiveToneButton(
+                    onPressed: () =>
+                        Navigator.of(context, rootNavigator: true).pop(),
+                    child: const Text("Cancel"),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ExpressiveButton(
-                        onPressed: () {
-                          final name = controller.text.trim();
-                          if (name.isNotEmpty) {
-                            final music = context.read<MusicProvider>();
-                            if (isEditing) {
-                              music.renamePlaylist(playlistId, name);
-                            } else {
-                              music.createPlaylist(name, songs);
-                            }
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ExpressiveButton(
+                      onPressed: () {
+                        final name = controller.text.trim();
+                        if (name.isNotEmpty) {
+                          final music = context.read<MusicProvider>();
+                          if (isEditing) {
+                            music.renamePlaylist(playlistId, name);
+                          } else {
+                            music.createPlaylist(name, songs);
                           }
-                          Navigator.of(context, rootNavigator: true).pop();
-                        },
-                        child: Text(isEditing ? "Rename" : "Create"),
-                      ),
+                        }
+                        Navigator.of(context, rootNavigator: true).pop();
+                      },
+                      child: Text(isEditing ? "Rename" : "Create"),
                     ),
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
       ],
     );

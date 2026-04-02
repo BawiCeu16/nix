@@ -57,7 +57,7 @@ class NixDialog extends StatelessWidget {
 
     return Center(
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+        margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         constraints: const BoxConstraints(maxWidth: 400),
         decoration: BoxDecoration(
           color: colorScheme.surfaceContainer,
