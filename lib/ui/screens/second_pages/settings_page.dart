@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
+import 'package:nix/ui/screens/second_pages/settings_details/about_page.dart';
 import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
-import './settings_details/profile_settings_page.dart';
+import 'package:nix/ui/widgets/common/nix_section_header.dart';
+import 'profile_page.dart';
 import './settings_details/appearance_settings_page.dart';
 import './settings_details/playback_settings_page.dart';
 
@@ -24,15 +26,18 @@ class SettingsPage extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         physics: const BouncingScrollPhysics(),
         children: [
-          _SectionHeader(title: 'Personalization'),
+          const NixSectionHeader(
+            title: 'Personalization Settings',
+            topPadding: 12,
+          ),
           CardListTile(
             title: 'Profile',
             subtitle: 'Nickname, avatar, and account info',
             icon: FlutterRemix.user_3_line,
             isFirst: true,
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const ProfileSettingsPage()),
-            ),
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const ProfilePage())),
           ),
           const SizedBox(height: 2.5),
           CardListTile(
@@ -54,35 +59,18 @@ class SettingsPage extends StatelessWidget {
             ),
           ),
 
-          _SectionHeader(title: 'About'),
+          const NixSectionHeader(title: 'About', topPadding: 32),
           CardListTile(
-            title: 'Nix Music',
-            subtitle: 'Version 1.0.0',
+            title: 'About nix',
+            subtitle: 'Info, version and more.',
             icon: FlutterRemix.information_line,
             isFirst: true,
             isLast: true,
-            onTap: () {},
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const AboutPage())),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 8, top: 20, bottom: 8),
-      child: Text(
-        title.toUpperCase(),
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.bold,
-        ),
       ),
     );
   }

@@ -37,6 +37,11 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   Playlist? _currentPlaylist;
   bool _isShuffleEnabled = false;
   bool _isRepeatEnabled = false;
+  // Stream for signaling when a song starts playing
+  final StreamController<Song> _onSongPlayedController =
+      StreamController<Song>.broadcast();
+  Stream<Song> get onSongPlayedStream => _onSongPlayedController.stream;
+
   AudioLoadingState _audioLoadingState = AudioLoadingState.idle;
   Color? _dynamicSeedColor;
 
@@ -153,6 +158,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
 
       await _audioPlayer.setAudioSource(AudioSource.file(song.uri));
       await _audioPlayer.play();
+      _onSongPlayedController.add(song);
 
       // Extract colors from artwork for dynamic theming
       if (artworkBytes != null) {
@@ -385,6 +391,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
 
   @override
   void dispose() {
+    _onSongPlayedController.close();
     _audioPlayer.dispose();
     super.dispose();
   }

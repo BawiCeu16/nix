@@ -4,6 +4,7 @@ import 'package:nix/providers/user_provider.dart';
 import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/music_provider.dart';
+import 'package:nix/ui/widgets/common/nix_section_header.dart';
 import '../../music_pages/albums_page.dart';
 import '../../music_pages/artists_page.dart';
 import '../../music_pages/playlists_page.dart';
@@ -68,6 +69,7 @@ class LibraryPage extends StatelessWidget {
                   onTap: () => _push(context, const ProfilePage()),
                 ),
                 const SizedBox(height: 10),
+                const NixSectionHeader(title: 'Personal', topPadding: 16),
 
                 // Dynamic stats
                 CardListTile(
@@ -113,7 +115,8 @@ class LibraryPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 24),
+                const NixSectionHeader(title: 'Library', topPadding: 0),
 
                 // Media categories
                 CardListTile(

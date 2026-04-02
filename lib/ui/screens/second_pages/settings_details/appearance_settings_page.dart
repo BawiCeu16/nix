@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
+import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
+import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 import 'package:provider/provider.dart';
 import '../../../../providers/settings_provider.dart';
-import '../../../widgets/list_item/card_list_tile.dart';
-import '../../../widgets/dialogs/nix_dialog.dart';
+import '../../../widgets/list_item/nix_choice_chip.dart';
+import '../../../widgets/common/nix_section_header.dart';
 
 class AppearanceSettingsPage extends StatelessWidget {
   const AppearanceSettingsPage({super.key});
@@ -25,37 +27,35 @@ class AppearanceSettingsPage extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         physics: const BouncingScrollPhysics(),
         children: [
-          const Padding(
-            padding: EdgeInsets.only(left: 8, top: 12, bottom: 8),
-            child: Text(
-              'THEME',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-                letterSpacing: 1.2,
+          const NixSectionHeader(title: 'Theme', topPadding: 16),
+          Card(
+            elevation: 0,
+            margin: EdgeInsets.zero,
+            color: colorScheme.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(100),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+              child: Row(
+                children: ThemeMode.values.map((mode) {
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: NixChoiceChip<ThemeMode>(
+                        label: mode.name.toUpperCase(),
+                        value: mode,
+                        groupValue: settingsParams.themeMode,
+                        onChanged: (v) => settingsParams.setThemeMode(v),
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
             ),
-          ),
-          CardListTile(
-            title: 'Theme Mode',
-            subtitle: settingsParams.themeMode.name.toUpperCase(),
-            icon: FlutterRemix.contrast_2_line,
-            isFirst: true,
-            isLast: true,
-            onTap: () => _showThemeModeDialog(context, settingsParams),
           ),
 
-          const Padding(
-            padding: EdgeInsets.only(left: 8, top: 24, bottom: 8),
-            child: Text(
-              'COLORS',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-                letterSpacing: 1.2,
-              ),
-            ),
-          ),
+          const NixSectionHeader(title: 'Colors', topPadding: 24),
           CardListTile(
             title: 'Accent Color Mode',
             subtitle: settingsParams.accentColorMode.name.toUpperCase(),
@@ -69,95 +69,8 @@ class AppearanceSettingsPage extends StatelessWidget {
             const SizedBox(height: 2.5),
             _CustomColorPicker(settings: settingsParams),
           ],
-
-          const SizedBox(height: 24),
-          // Preview Card
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            color: colorScheme.surface,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Preview',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Container(
-                          height: 12,
-                          decoration: BoxDecoration(
-                            color: colorScheme.secondaryContainer,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    height: 12,
-                    width: 140,
-                    decoration: BoxDecoration(
-                      color: colorScheme.tertiaryContainer,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
         ],
       ),
-    );
-  }
-
-  void _showThemeModeDialog(BuildContext context, SettingsProvider settings) {
-    NixDialog.show(
-      context: context,
-      title: ' Theme Mode',
-      children: ThemeMode.values.map((mode) {
-        final index = ThemeMode.values.indexOf(mode);
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: index == ThemeMode.values.length - 1 ? 0.0 : 2.5,
-          ),
-          child: CardListTile(
-            title: mode.name.toUpperCase(),
-            onTap: () {
-              settings.setThemeMode(mode);
-              Navigator.of(context, rootNavigator: true).pop();
-            },
-            trailing: IgnorePointer(
-              child: Radio<ThemeMode>(
-                value: mode,
-                groupValue: settings.themeMode,
-                onChanged: (_) {},
-              ),
-            ),
-            isFirst: index == 0,
-            isLast: index == ThemeMode.values.length - 1,
-          ),
-        );
-      }).toList(),
     );
   }
 
@@ -230,7 +143,10 @@ class _CustomColorPicker extends StatelessWidget {
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(
+          bottom: Radius.circular(16),
+          top: Radius.circular(5),
+        ),
       ),
       color: colorScheme.surface,
       child: Padding(
@@ -249,6 +165,7 @@ class _CustomColorPicker extends StatelessWidget {
               height: 44,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 itemCount: _colors.length,
                 itemBuilder: (context, index) {

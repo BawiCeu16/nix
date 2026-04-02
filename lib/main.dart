@@ -38,7 +38,9 @@ void main() async {
         ChangeNotifierProvider<CurrentMusicProvider>.value(
           value: _audioHandler!,
         ),
-        ChangeNotifierProvider(create: (_) => MusicProvider()..init()),
+        ChangeNotifierProvider(
+          create: (_) => MusicProvider()..init(currentMusic: _audioHandler),
+        ),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => SleepTimerProvider()),

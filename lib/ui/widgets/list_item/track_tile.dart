@@ -12,6 +12,8 @@ import 'package:nix/ui/widgets/dialogs/playlist_dialogs.dart';
 import 'package:nix/ui/widgets/dialogs/song_info_dialog.dart';
 import 'package:nix/core/format.dart';
 import 'package:nix/core/artwork_helper.dart';
+import '../../screens/music_pages/artists_page.dart';
+import '../../screens/music_pages/albums_page.dart';
 
 class TrackTile extends StatefulWidget {
   final Song track;
@@ -123,6 +125,35 @@ class _TrackTileState extends State<TrackTile> {
           onTap: () {
             Navigator.of(context, rootNavigator: true).pop();
             PlaylistDialogs.showPlaylistPicker(context, widget.track);
+          },
+        ),
+        const SizedBox(height: 2.5),
+        CardListTile(
+          title: "Go to Artist",
+          icon: FlutterRemix.user_4_line,
+          onTap: () {
+            Navigator.of(context, rootNavigator: true).pop();
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => ArtistSongsPage(artistName: widget.track.artist),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 2.5),
+        CardListTile(
+          title: "Go to Album",
+          icon: FlutterRemix.disc_line,
+          onTap: () {
+            Navigator.of(context, rootNavigator: true).pop();
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => AlbumSongsPage(
+                  albumTitle: widget.track.album,
+                  albumArtist: widget.track.artist,
+                ),
+              ),
+            );
           },
         ),
         const SizedBox(height: 2.5),

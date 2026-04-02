@@ -3,6 +3,7 @@ import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
 import '../../../../providers/settings_provider.dart';
 import '../../../widgets/list_item/card_list_tile.dart';
+import '../../../widgets/common/nix_section_header.dart';
 
 class PlaybackSettingsPage extends StatelessWidget {
   const PlaybackSettingsPage({super.key});
@@ -24,17 +25,7 @@ class PlaybackSettingsPage extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         physics: const BouncingScrollPhysics(),
         children: [
-          const Padding(
-            padding: EdgeInsets.only(left: 8, top: 12, bottom: 8),
-            child: Text(
-              'GENERAL',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-                letterSpacing: 1.2,
-              ),
-            ),
-          ),
+          const NixSectionHeader(title: 'General', topPadding: 12),
           CardListTile(
             title: 'Auto Play',
             subtitle: 'Start next song automatically when current song ends',

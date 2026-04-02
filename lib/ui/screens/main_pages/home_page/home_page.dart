@@ -10,6 +10,7 @@ import 'package:nix/providers/user_provider.dart';
 import 'package:nix/ui/widgets/list_item/song_card_tile.dart';
 import 'package:nix/models/music/playlist.dart';
 import 'package:nix/ui/widgets/list_item/track_tile.dart';
+import 'package:nix/ui/widgets/common/nix_section_header.dart';
 import '../../music_pages/albums_page.dart';
 import '../../music_pages/songs_page.dart';
 
@@ -113,14 +114,21 @@ class HomePage extends StatelessWidget {
               ),
 
               // ── Recently Listened ──
-              _SectionHeader(
-                title: 'Recently Listened',
-                onShowAll: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => SongsPage(
-                      title: 'Recently Listened',
-                      songsSource: () =>
-                          context.read<MusicProvider>().recentlyPlayed.songs,
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: NixSectionHeader(
+                    title: 'Recently Listened',
+                    onShowAll: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => SongsPage(
+                          title: 'Recently Listened',
+                          songsSource: () => context
+                              .read<MusicProvider>()
+                              .recentlyPlayed
+                              .songs,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -181,11 +189,16 @@ class HomePage extends StatelessWidget {
               ),
 
               // ── Albums ──
-              _SectionHeader(
-                title: 'Albums',
-                onShowAll: () => Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => const AlbumsPage())),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: NixSectionHeader(
+                    title: 'Albums',
+                    onShowAll: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const AlbumsPage()),
+                    ),
+                  ),
+                ),
               ),
               Consumer<MusicProvider>(
                 builder: (context, music, child) {
@@ -250,13 +263,19 @@ class HomePage extends StatelessWidget {
               ),
 
               // ── All Songs ──
-              _SectionHeader(
-                title: 'All Songs',
-                onShowAll: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => SongsPage(
-                      title: 'All Songs',
-                      songsSource: () => context.read<MusicProvider>().songs,
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: NixSectionHeader(
+                    title: 'All Songs',
+                    onShowAll: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => SongsPage(
+                          title: 'All Songs',
+                          songsSource: () =>
+                              context.read<MusicProvider>().songs,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -312,37 +331,6 @@ class HomePage extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Section Header with "Show All" button ──
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title, this.onShowAll});
-  final String title;
-  final VoidCallback? onShowAll;
-
-  @override
-  Widget build(BuildContext context) {
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.only(left: 24, top: 10, right: 8, bottom: 0),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                title.toUpperCase(),
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-            ),
-            if (onShowAll != null)
-              TextButton(onPressed: onShowAll, child: const Text('See All')),
-          ],
         ),
       ),
     );

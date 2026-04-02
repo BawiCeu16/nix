@@ -10,6 +10,7 @@ import '../models/music/album.dart';
 import '../models/music/artist.dart';
 import '../models/music/playlist.dart';
 import '../models/music/images.dart';
+import 'current_music_provider.dart';
 
 class MusicProvider extends ChangeNotifier {
   List<Song> _songs = [];
@@ -24,12 +25,20 @@ class MusicProvider extends ChangeNotifier {
   Playlist? _recentlyPlayedCache;
   Playlist? _topPlayedCache;
   Playlist? _favoritesCache;
+  StreamSubscription<Song>? _playbackSubscription;
 
   // Getters
   List<Song> get songs => _songs;
   List<Album> get albums => _albums;
   List<Artist> get artists => _artists;
   List<Playlist> get playlists => _playlists;
+
+  void refreshCaches() {
+    _recentlyPlayedCache = _calculateRecentlyPlayed();
+    _topPlayedCache = _calculateTopPlayed();
+    _favoritesCache = _calculateFavorites();
+    notifyListeners();
+  }
 
   Playlist get recentlyPlayed =>
       _recentlyPlayedCache ??
@@ -153,11 +162,22 @@ class MusicProvider extends ChangeNotifier {
   bool get hasScanned => _hasScanned;
   String? get error => _error;
 
-  Future<void> init({List<String>? customFolders}) async {
+  Future<void> init({
+    List<String>? customFolders,
+    CurrentMusicProvider? currentMusic,
+  }) async {
     await Hive.openBox<int>('favorites');
     await Hive.openBox<String>('playlists');
     await Hive.openBox<int>('play_history');
     await Hive.openBox<int>('play_counts');
+
+    if (currentMusic != null) {
+      _playbackSubscription?.cancel();
+      _playbackSubscription = currentMusic.onSongPlayedStream.listen((_) {
+        refreshCaches();
+      });
+    }
+
     await scanDevice(customFolders: customFolders);
   }
 
@@ -564,5 +584,11 @@ class MusicProvider extends ChangeNotifier {
   // Get albums by artist
   List<Album> getAlbumsByArtist(String artistName) {
     return _albums.where((album) => album.artist == artistName).toList();
+  }
+
+  @override
+  void dispose() {
+    _playbackSubscription?.cancel();
+    super.dispose();
   }
 }

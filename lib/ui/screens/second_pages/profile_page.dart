@@ -4,6 +4,8 @@ import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/providers/user_provider.dart';
 import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
+import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
+import 'package:nix/ui/widgets/common/nix_section_header.dart';
 import 'package:provider/provider.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -70,14 +72,41 @@ class _ProfilePageState extends State<ProfilePage> {
           Center(
             child: Column(
               children: [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundColor: UserProvider.avatarColors[user.avatarIndex]
-                      .withValues(alpha: 0.2),
-                  child: Icon(
-                    UserProvider.avatarIcons[user.avatarIndex],
-                    color: UserProvider.avatarColors[user.avatarIndex],
-                    size: 50,
+                GestureDetector(
+                  onTap: _isEditing
+                      ? () => _showAvatarPicker(context, user)
+                      : null,
+                  child: Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 50,
+                        backgroundColor: UserProvider
+                            .avatarColors[user.avatarIndex]
+                            .withValues(alpha: 0.2),
+                        child: Icon(
+                          UserProvider.avatarIcons[user.avatarIndex],
+                          color: UserProvider.avatarColors[user.avatarIndex],
+                          size: 50,
+                        ),
+                      ),
+                      if (_isEditing)
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: colorScheme.primary,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              FlutterRemix.pencil_fill,
+                              size: 16,
+                              color: colorScheme.onPrimary,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -103,7 +132,9 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           onSubmitted: (_) {
                             if (_nameController.text.trim().isNotEmpty) {
-                              context.read<UserProvider>().setUserName(_nameController.text.trim());
+                              context.read<UserProvider>().setUserName(
+                                _nameController.text.trim(),
+                              );
                             }
                             setState(() => _isEditing = false);
                           },
@@ -136,8 +167,7 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 32),
 
           if (music.topPlayed.songs.isNotEmpty) ...[
-            const _SectionHeader(title: 'TOP LISTENED'),
-            const SizedBox(height: 8),
+            const NixSectionHeader(title: 'Top Listened', topPadding: 32),
             ...List.generate(music.topPlayed.songs.take(5).length, (index) {
               final song = music.topPlayed.songs[index];
               return Padding(
@@ -161,8 +191,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ],
 
           if (music.recentlyPlayed.songs.isNotEmpty) ...[
-            const _SectionHeader(title: 'RECENTLY LISTENED'),
-            const SizedBox(height: 8),
+            const NixSectionHeader(title: 'Recently Listened', topPadding: 32),
             ...List.generate(music.recentlyPlayed.songs.take(5).length, (
               index,
             ) {
@@ -184,11 +213,41 @@ class _ProfilePageState extends State<ProfilePage> {
             }),
             const SizedBox(height: 24),
           ],
-          
+
           // Fix for keyboard top bar behavior (SearchPage style)
           SizedBox(height: 120 + keyboardHeight),
         ],
       ),
+    );
+  }
+
+  void _showAvatarPicker(BuildContext context, UserProvider user) {
+    NixDialog.show(
+      context: context,
+      title: 'Select Avatar',
+      children: List.generate(UserProvider.avatarIcons.length, (index) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: index == UserProvider.avatarIcons.length - 1 ? 0.0 : 2.5,
+          ),
+          child: CardListTile(
+            title: 'Avatar ${index + 1}',
+            icon: UserProvider.avatarIcons[index],
+            trailing: user.avatarIndex == index
+                ? Icon(
+                    FlutterRemix.check_line,
+                    color: Theme.of(context).colorScheme.primary,
+                  )
+                : null,
+            isFirst: index == 0,
+            isLast: index == UserProvider.avatarIcons.length - 1,
+            onTap: () {
+              user.setAvatarIndex(index);
+              Navigator.of(context, rootNavigator: true).pop();
+            },
+          ),
+        );
+      }),
     );
   }
 }
@@ -218,24 +277,6 @@ class _StatItem extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: TextStyle(
-        fontWeight: FontWeight.bold,
-        fontSize: 12,
-        letterSpacing: 1.2,
-        color: Theme.of(context).colorScheme.primary,
-      ),
     );
   }
 }
