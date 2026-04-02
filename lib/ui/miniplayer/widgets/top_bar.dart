@@ -7,6 +7,8 @@ import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 import 'package:nix/ui/widgets/dialogs/playlist_dialogs.dart';
 import 'package:nix/ui/widgets/dialogs/song_info_dialog.dart';
+import 'package:nix/ui/widgets/dialogs/sleep_timer_dialog.dart';
+import 'package:nix/providers/sleep_timer_provider.dart';
 import 'package:nix/core/format.dart';
 
 class TopBar extends StatelessWidget {
@@ -103,6 +105,15 @@ class TopBar extends StatelessWidget {
                             onTap: () {
                               Navigator.of(context, rootNavigator: true).pop();
                               PlaylistDialogs.showPlaylistPicker(context, song);
+                            },
+                          ),
+                          const SizedBox(height: 2.5),
+                          CardListTile(
+                            title: "Sleep Timer${context.read<SleepTimerProvider>().isActive ? ' (${context.read<SleepTimerProvider>().remainingTime?.shortFormat()})' : ''}",
+                            icon: FlutterRemix.timer_line,
+                            onTap: () {
+                              Navigator.of(context, rootNavigator: true).pop();
+                              SleepTimerDialog.show(context);
                             },
                           ),
                           const SizedBox(height: 2.5),
