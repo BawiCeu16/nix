@@ -39,14 +39,18 @@ class AppearanceSettingsPage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
               child: Row(
                 children: ThemeMode.values.map((mode) {
+                  final isFirst = mode == ThemeMode.values.first;
+                  final isLast = mode == ThemeMode.values.last;
                   return Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 1.5),
                       child: NixChoiceChip<ThemeMode>(
                         label: mode.name.toUpperCase(),
                         value: mode,
                         groupValue: settingsParams.themeMode,
                         onChanged: (v) => settingsParams.setThemeMode(v),
+                        isFirst: isFirst,
+                        isLast: isLast,
                       ),
                     ),
                   );

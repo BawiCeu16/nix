@@ -28,7 +28,7 @@ class NixSectionHeader extends StatelessWidget {
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
                 color: colorScheme.primary,
                 fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
+                // letterSpacing: 1.2,
               ),
             ),
           ),

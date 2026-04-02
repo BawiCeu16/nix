@@ -88,7 +88,7 @@ class HomePage extends StatelessWidget {
                             ),
                             Text(
                               user.userName,
-                              style: Theme.of(context).textTheme.titleLarge
+                              style: Theme.of(context).textTheme.headlineSmall
                                   ?.copyWith(
                                     fontWeight: FontWeight.w700,
                                     color: colorScheme.onSurface,

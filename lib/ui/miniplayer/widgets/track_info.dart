@@ -106,37 +106,91 @@ class TrackInfo extends StatelessWidget {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      title,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontSize: rangeProgress(
-                                          a: 18.0,
-                                          b: 24.0,
-                                          c: data.bounceProgress,
+                                    AnimatedSwitcher(
+                                      duration: const Duration(
+                                        milliseconds: 350,
+                                      ),
+                                      transitionBuilder: (child, animation) {
+                                        return FadeTransition(
+                                          opacity: animation,
+                                          child: SlideTransition(
+                                            position:
+                                                Tween<Offset>(
+                                                  begin: const Offset(0.0, 0.1),
+                                                  end: Offset.zero,
+                                                ).animate(
+                                                  CurvedAnimation(
+                                                    parent: animation,
+                                                    curve: Curves.easeOutQuad,
+                                                  ),
+                                                ),
+                                            child: Align(
+                                              alignment: Alignment.centerLeft,
+                                              child: child,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: Text(
+                                        title,
+                                        key: ValueKey(title),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: rangeProgress(
+                                            a: 18.0,
+                                            b: 24.0,
+                                            c: data.bounceProgress,
+                                          ),
+                                          fontWeight: FontWeight.w600,
+                                          height: 1,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface,
                                         ),
-                                        fontWeight: FontWeight.w600,
-                                        height: 1,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onSurface,
                                       ),
                                     ),
-                                    Text(
-                                      artist,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontSize: rangeProgress(
-                                          a: 15.0,
-                                          b: 17.0,
-                                          c: data.bounceProgress,
+                                    AnimatedSwitcher(
+                                      duration: const Duration(
+                                        milliseconds: 350,
+                                      ),
+                                      transitionBuilder: (child, animation) {
+                                        return FadeTransition(
+                                          opacity: animation,
+                                          child: SlideTransition(
+                                            position:
+                                                Tween<Offset>(
+                                                  begin: const Offset(0.0, 0.1),
+                                                  end: Offset.zero,
+                                                ).animate(
+                                                  CurvedAnimation(
+                                                    parent: animation,
+                                                    curve: Curves.easeOutQuad,
+                                                  ),
+                                                ),
+                                            child: Align(
+                                              alignment: Alignment.centerLeft,
+                                              child: child,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: Text(
+                                        artist,
+                                        key: ValueKey(artist),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: rangeProgress(
+                                            a: 15.0,
+                                            b: 17.0,
+                                            c: data.bounceProgress,
+                                          ),
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withValues(alpha: .7),
                                         ),
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface
-                                            .withValues(alpha: .7),
                                       ),
                                     ),
                                   ],
