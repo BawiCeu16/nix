@@ -31,7 +31,7 @@ class SongInfoDialog extends StatelessWidget {
     String album = "Unknown Album",
     String duration = "0:00",
     String size = "0.0 MB",
-    String filePath = "/storage/emulated/0/Music/dummy.mp3",
+    String filePath = "/storage/emulated/0/Music/music.flac",
     String? songUri,
   }) {
     NixDialog.show(
@@ -69,7 +69,7 @@ class SongInfoDialog extends StatelessWidget {
           isLast: true,
           onTap: () {},
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         SizedBox(
           width: double.infinity,
           child: ExpressiveButton(

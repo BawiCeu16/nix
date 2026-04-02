@@ -7,11 +7,13 @@ import 'package:provider/provider.dart';
 import '../../core/math_utils.dart';
 import '../../providers/will_pop_provider.dart';
 import '../../providers/current_music_provider.dart';
+import '../../providers/settings_provider.dart';
 import 'widgets/top_bar.dart';
 import 'widgets/track_image.dart';
 import 'widgets/track_info.dart';
 import 'widgets/player_controls.dart';
 import 'widgets/queue_view.dart';
+import 'models/animation_data.dart';
 
 class NowPlaying extends StatefulWidget {
   final AnimationController animation;
@@ -86,11 +88,21 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final bool firstLoad = offset == 0.0 && prevOffset == 0.0;
+
     screenSize = MediaQuery.of(context).size;
     maxOffset = screenSize.height;
     sMaxOffset = screenSize.width;
     topInset = MediaQuery.of(context).padding.top;
     bottomInset = MediaQuery.of(context).padding.bottom;
+
+    if (firstLoad) {
+      if (widget.animation.value < 0.0) {
+        widget.animation.value = 0.0;
+      }
+      offset = widget.animation.value * maxOffset;
+      prevOffset = offset;
+    }
   }
 
   @override
@@ -99,6 +111,99 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
     queueScrollController.dispose();
     playPauseAnim.dispose();
     super.dispose();
+  }
+
+  double _applyStagedClamping(double currentOffset) {
+    final settings = context.read<SettingsProvider>();
+    double lowerBound = -1.1 * headRoom;
+    double upperBound = maxOffset * 2;
+
+    if (prevOffset < 10.0 && settings.swipeToDismiss) {
+      // Starting from Miniplayer, allow dismissal
+      lowerBound = -0.11 * maxOffset;
+      upperBound = maxOffset;
+    } else if (prevOffset < maxOffset - 10.0) {
+      // Locked in Mini/Expanded section
+      upperBound = maxOffset;
+    } else if (prevOffset > maxOffset + 10.0) {
+      // Locked in Expanded/Queue section
+      lowerBound = maxOffset;
+    }
+
+    return currentOffset.clamp(lowerBound, upperBound);
+  }
+
+  PlayerAnimationData _calculateAnimationData(double progressValue) {
+    final double clampedProgressValue = progressValue.clamp(0, 1);
+    final double inverseProgressValue = 1 - progressValue;
+    final double inverseClampedProgressValue = 1 - clampedProgressValue;
+
+    final double reverseProgressValue = inverseAboveOne(progressValue);
+    final double reverseClampedProgressValue = reverseProgressValue.clamp(0, 1);
+
+    final double queueProgressValue = progressValue.clamp(1.0, 3.0) - 1.0;
+    final double queueClampedProgressValue = queueProgressValue.clamp(0.0, 1.0);
+
+    final double bounceProgressValue = !bounceUp
+        ? !bounceDown
+              ? reverseProgressValue
+              : 1 - (progressValue - 1)
+        : progressValue;
+    final double bounceClampedProgressValue = bounceProgressValue.clamp(
+      0.0,
+      1.0,
+    );
+
+    final BorderRadius borderRadius = BorderRadius.only(
+      topLeft: Radius.circular(20.0 + 6.0 * progressValue),
+      topRight: Radius.circular(20.0 + 6.0 * progressValue),
+      bottomLeft: Radius.circular(
+        20.0 * (1 - progressValue * 10 + 9).clamp(0, 1),
+      ),
+      bottomRight: Radius.circular(
+        20.0 * (1 - progressValue * 10 + 9).clamp(0, 1),
+      ),
+    );
+
+    final double bottomOffset =
+        (-80 * inverseClampedProgressValue +
+            progressValue.clamp(-1, 0) * -200) -
+        (bottomInset * inverseClampedProgressValue);
+
+    final double opacity = (bounceClampedProgressValue * 5 - 4).clamp(0, 1);
+    final double fastOpacity = (bounceClampedProgressValue * 10 - 9).clamp(
+      0,
+      1,
+    );
+    final double topRowOpacity = reverseClampedProgressValue;
+
+    double panelHeight = maxOffset / 1.6;
+    if (progressValue > 1.0) {
+      panelHeight = rangeProgress(
+        a: panelHeight,
+        b: maxOffset / 1.6 - 100.0 - topInset,
+        c: queueClampedProgressValue,
+      );
+    }
+
+    return PlayerAnimationData(
+      progress: progressValue,
+      clampedProgress: clampedProgressValue,
+      inverseProgress: inverseProgressValue,
+      inverseClampedProgress: inverseClampedProgressValue,
+      reverseProgress: reverseProgressValue,
+      reverseClampedProgress: reverseClampedProgressValue,
+      queueProgress: queueProgressValue,
+      queueClampedProgress: queueClampedProgressValue,
+      bounceProgress: bounceProgressValue,
+      bounceClampedProgress: bounceClampedProgressValue,
+      opacity: opacity,
+      fastOpacity: fastOpacity,
+      topRowOpacity: topRowOpacity,
+      bottomOffset: bottomOffset,
+      panelHeight: panelHeight,
+      borderRadius: borderRadius,
+    );
   }
 
   void togglePlay() {
@@ -116,25 +221,34 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
     final speed = velocity.getVelocity().pixelsPerSecond.dy;
     const threshold = 500.0;
 
-    if (prevOffset > maxOffset) {
+    // Staged Snapping: Lock animations in each section
+    if (prevOffset > maxOffset + 100.0) {
+      // Started in Queue section [1, 2], can only snap back to Expanded or stay in Queue
       if (speed > threshold || distance > actuationOffset) {
         snapToExpanded();
       } else {
         snapToQueue();
       }
-    } else if (prevOffset > maxOffset / 2) {
+    } else if (prevOffset < maxOffset - 100.0) {
+      // Started in Mini/Expanded section [0, 1]
+      if (-speed > threshold || -distance > actuationOffset) {
+        snapToExpanded();
+      } else if (context.read<SettingsProvider>().swipeToDismiss &&
+          offset < -actuationOffset / 2) {
+        // Swiped down from Miniplayer far enough
+        snapToDismissed();
+      } else {
+        snapToMini();
+      }
+    } else {
+      // Started at Expanded (threshold allows for small variances)
+      // Can go to Mini (Down) or Queue (Up)
       if (speed > threshold || distance > actuationOffset) {
         snapToMini();
       } else if (-speed > threshold || -distance > actuationOffset) {
         snapToQueue();
       } else {
         snapToExpanded();
-      }
-    } else {
-      if (-speed > threshold || -distance > actuationOffset) {
-        snapToExpanded();
-      } else {
-        snapToMini();
       }
     }
   }
@@ -156,6 +270,22 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
     offset = maxOffset * 2;
     bounceUp = false;
     snap(haptic: haptic);
+  }
+
+  void snapToDismissed({bool haptic = true}) {
+    offset = -0.1 * maxOffset;
+    if (haptic) HapticFeedback.heavyImpact();
+    widget.animation
+        .animateTo(
+          -0.1,
+          curve: bouncingCurve,
+          duration: const Duration(milliseconds: 300),
+        )
+        .then((_) {
+          if (mounted) {
+            context.read<CurrentMusicProvider>().stop();
+          }
+        });
   }
 
   void snap({bool haptic = true}) {
@@ -249,7 +379,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
           velocity.addPosition(event.timeStamp, event.position);
 
           offset -= event.delta.dy;
-          offset = offset.clamp(-headRoom, maxOffset * 2);
+          offset = _applyStagedClamping(offset);
           widget.animation.animateTo(
             offset / maxOffset,
             duration: Duration.zero,
@@ -267,7 +397,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
               return;
             }
             offset -= details.primaryDelta ?? 0;
-            offset = offset.clamp(-headRoom, maxOffset * 2 + headRoom / 2);
+            offset = _applyStagedClamping(offset);
             widget.animation.animateTo(
               offset / maxOffset,
               duration: Duration.zero,
@@ -306,124 +436,53 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
           child: AnimatedBuilder(
             animation: widget.animation,
             builder: (context, child) {
-              final double progressValue = widget.animation.value;
-              final double clampedProgressValue = progressValue.clamp(0, 1);
-              final double inverseProgressValue = 1 - progressValue;
-              final double inverseClampedProgressValue =
-                  1 - clampedProgressValue;
-
-              final double reverseProgressValue = inverseAboveOne(
-                progressValue,
-              );
-              final double reverseClampedProgressValue = reverseProgressValue
-                  .clamp(0, 1);
-
-              final double queueProgressValue =
-                  progressValue.clamp(1.0, 3.0) - 1.0;
-              final double queueClampedProgressValue = queueProgressValue.clamp(
-                0.0,
-                1.0,
-              );
-
-              final double bounceProgressValue = !bounceUp
-                  ? !bounceDown
-                        ? reverseProgressValue
-                        : 1 - (progressValue - 1)
-                  : progressValue;
-              final double bounceClampedProgressValue = bounceProgressValue
-                  .clamp(0.0, 1.0);
-
-              final BorderRadius borderRadius = BorderRadius.only(
-                topLeft: Radius.circular(20.0 + 6.0 * progressValue),
-                topRight: Radius.circular(20.0 + 6.0 * progressValue),
-                bottomLeft: Radius.circular(
-                  20.0 * (1 - progressValue * 10 + 9).clamp(0, 1),
-                ),
-                bottomRight: Radius.circular(
-                  20.0 * (1 - progressValue * 10 + 9).clamp(0, 1),
-                ),
-              );
-
-              final double bottomOffset =
-                  (-80 * inverseClampedProgressValue +
-                      progressValue.clamp(-1, 0) * -200) -
-                  (bottomInset * inverseClampedProgressValue);
-
-              final double opacity = (bounceClampedProgressValue * 5 - 4).clamp(
-                0,
-                1,
-              );
-              final double fastOpacity = (bounceClampedProgressValue * 10 - 9)
-                  .clamp(0, 1);
-              final double topRowOpacity = reverseClampedProgressValue;
-
-              double panelHeight = maxOffset / 1.6;
-              if (progressValue > 1.0) {
-                panelHeight = rangeProgress(
-                  a: panelHeight,
-                  b: maxOffset / 1.6 - 100.0 - topInset,
-                  c: queueClampedProgressValue,
-                );
-              }
+              final data = _calculateAnimationData(widget.animation.value);
 
               return Stack(
                 children: [
-                  //This is the background of the mini player
-                  Container(
-                    color: progressValue > 0 ? Colors.transparent : null,
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Transform.translate(
-                        offset: Offset(0, bottomOffset),
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal:
-                                12 *
-                                (1 - clampedProgressValue * 10 + 9).clamp(0, 1),
-                            vertical: 12 * inverseClampedProgressValue,
+                  // Background component of the player
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Transform.translate(
+                      offset: Offset(0, data.bottomOffset),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal:
+                              12 *
+                              (1 - data.clampedProgress * 10 + 9).clamp(0, 1),
+                          vertical: 12 * data.inverseClampedProgress,
+                        ),
+                        child: Container(
+                          height: rangeProgress(
+                            a: 82.0,
+                            b: data.panelHeight,
+                            c: data.progress.clamp(0, 3),
                           ),
-                          child: Container(
-                            height: rangeProgress(
-                              a: 82.0,
-                              b: panelHeight,
-                              c: progressValue.clamp(0, 3),
-                            ),
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              borderRadius: borderRadius,
-                              boxShadow: [
-                                // BoxShadow(
-                                //   color: clampedProgressValue > 0
-                                //       ? Theme.of(context).colorScheme.onSurface
-                                //             .withValues(alpha: .1)
-                                //       : Colors.black12,
-                                //   blurRadius: 7,
-                                //   offset: Offset(0, 0),
-                                // ),
-                              ],
-                              color: Theme.of(context).colorScheme.surface,
-                            ),
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            borderRadius: data.borderRadius,
+                            color: Theme.of(context).colorScheme.surface,
                           ),
                         ),
                       ),
                     ),
                   ),
-                  //This is the top bar
-                  if (topRowOpacity > 0.0)
+                  // Horizontal top bar
+                  if (data.topRowOpacity > 0.0)
                     TopBar(
-                      topRowOpacity: topRowOpacity,
-                      bounceProgressValue: bounceProgressValue,
+                      topRowOpacity: data.topRowOpacity,
+                      bounceProgressValue: data.bounceProgress,
                       onSecondary: onSecondary,
                       onSnapToMini: snapToMini,
                     ),
-                  //This is the lyrics button
-                  if (opacity > 0.0)
+                  // Lyrics button
+                  if (data.opacity > 0.0)
                     Material(
                       type: MaterialType.transparency,
                       child: Opacity(
-                        opacity: opacity,
+                        opacity: data.opacity,
                         child: Transform.translate(
-                          offset: Offset(-50, -100 * inverseProgressValue),
+                          offset: Offset(-50, -100 * data.inverseProgress),
                           child: Align(
                             alignment: Alignment.bottomRight,
                             child: SafeArea(
@@ -434,13 +493,11 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                                 ),
                                 child: IconButton(
                                   onPressed: () {},
-                                  icon: Icon(
+                                  icon: const Icon(
                                     FlutterRemix.chat_quote_line,
                                     size: 28.0,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSecondaryContainer,
                                   ),
+                                  color: onSecondary,
                                 ),
                               ),
                             ),
@@ -448,15 +505,15 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                         ),
                       ),
                     ),
-                  //This is the queue button
+                  // Queue access button
                   Offstage(
-                    offstage: opacity == 0.0,
+                    offstage: data.opacity == 0.0,
                     child: Material(
                       type: MaterialType.transparency,
                       child: Opacity(
-                        opacity: opacity,
+                        opacity: data.opacity,
                         child: Transform.translate(
-                          offset: Offset(0, -100 * inverseProgressValue),
+                          offset: Offset(0, -100 * data.inverseProgress),
                           child: Align(
                             alignment: Alignment.bottomRight,
                             child: SafeArea(
@@ -467,13 +524,11 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                                 ),
                                 child: IconButton(
                                   onPressed: snapToQueue,
-                                  icon: Icon(
+                                  icon: const Icon(
                                     FlutterRemix.play_list_line,
                                     size: 24.0,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSecondaryContainer,
                                   ),
+                                  color: onSecondary,
                                 ),
                               ),
                             ),
@@ -482,22 +537,17 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                       ),
                     ),
                   ),
-                  //This is the track info
                   TrackInfo(
                     sAnim: sAnim,
                     sMaxOffset: sMaxOffset,
                     stParallax: stParallax,
-                    queueProgressValue: queueProgressValue,
                     maxOffset: maxOffset,
                     topInset: topInset,
                     bounceUp: bounceUp,
                     bounceDown: bounceDown,
-                    bounceProgressValue: bounceProgressValue,
-                    bottomOffset: bottomOffset,
-                    bounceClampedProgressValue: bounceClampedProgressValue,
                     screenSize: screenSize,
+                    data: data,
                   ),
-                  //This is the track image
                   TrackImage(
                     sAnim: sAnim,
                     sMaxOffset: sMaxOffset,
@@ -506,36 +556,22 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                     maxOffset: maxOffset,
                     topInset: topInset,
                     bounceDown: bounceDown,
-                    queueProgressValue: queueProgressValue,
-                    bounceProgressValue: bounceProgressValue,
-                    bottomOffset: bottomOffset,
-                    bounceClampedProgressValue: bounceClampedProgressValue,
                     screenSize: screenSize,
+                    data: data,
                   ),
-                  //This is the player controls
                   PlayerControls(
-                    bottomOffset: bottomOffset,
                     maxOffset: maxOffset,
-                    bounceProgressValue: bounceProgressValue,
                     topInset: topInset,
                     bounceUp: bounceUp,
                     bounceDown: bounceDown,
-                    queueProgressValue: queueProgressValue,
-                    inverseClampedProgressValue: inverseClampedProgressValue,
-                    fastOpacity: fastOpacity,
                     onSecondary: onSecondary,
-                    reverseClampedProgressValue: reverseClampedProgressValue,
-                    clampedProgressValue: clampedProgressValue,
                     screenSize: screenSize,
-                    reverseProgressValue: reverseProgressValue,
                     onTogglePlay: togglePlay,
                     playPauseAnim: playPauseAnim,
-                    progressValue: progressValue,
-                    bounceClampedProgressValue: bounceClampedProgressValue,
+                    data: data,
                   ),
-                  //This is the queue view
                   QueueView(
-                    queueProgressValue: queueProgressValue,
+                    queueProgressValue: data.queueProgress,
                     maxOffset: maxOffset,
                     topInset: topInset,
                     controller: queueScrollController,

@@ -1,0 +1,171 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_remix/flutter_remix.dart';
+import 'package:provider/provider.dart';
+import 'package:nix/models/music/song.dart';
+import 'package:nix/providers/music_provider.dart';
+import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
+import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
+import 'package:nix/ui/widgets/buttons/expressive_button.dart';
+import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
+
+class PlaylistDialogs {
+  /// Handles both creating a new playlist and renaming an existing one.
+  static void showPlaylistActionDialog(
+    BuildContext context, {
+    String? initialName,
+    String? playlistId,
+    List<Song> songs = const [],
+  }) {
+    final controller = TextEditingController(text: initialName);
+    final isEditing = playlistId != null;
+
+    NixDialog.show(
+      context: context,
+      title: isEditing ? "Rename Playlist" : "New Playlist",
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: Column(
+            children: [
+              TextField(
+                controller: controller,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: "Playlist Name",
+                  filled: true,
+                  fillColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: ExpressiveToneButton(
+                      onPressed: () =>
+                          Navigator.of(context, rootNavigator: true).pop(),
+                      child: const Text("Cancel"),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ExpressiveButton(
+                        onPressed: () {
+                          final name = controller.text.trim();
+                          if (name.isNotEmpty) {
+                            final music = context.read<MusicProvider>();
+                            if (isEditing) {
+                              music.renamePlaylist(playlistId, name);
+                            } else {
+                              music.createPlaylist(name, songs);
+                            }
+                          }
+                          Navigator.of(context, rootNavigator: true).pop();
+                        },
+                        child: Text(isEditing ? "Rename" : "Create"),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Unified delete confirmation dialog.
+  static void showDeleteConfirmation(
+    BuildContext context,
+    String id,
+    String name,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => SizedBox(
+        width: 200,
+        child: AlertDialog(
+          title: const Text("Delete Playlist?"),
+          content: Text("Are you sure you want to delete \"$name\"?"),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            ExpressiveToneButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            const SizedBox(width: 8),
+            ExpressiveButton(
+              onPressed: () {
+                context.read<MusicProvider>().deletePlaylist(id);
+                Navigator.pop(context);
+              },
+              child: const Text("Delete"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Shows the playlist picker for adding a song to a playlist.
+  static void showPlaylistPicker(BuildContext context, Song song) {
+    final music = context.read<MusicProvider>();
+    final playlists = music.playlists;
+
+    NixDialog.show(
+      context: context,
+      title: "Add to Playlist",
+      subtitle: song.title,
+      children: [
+        if (playlists.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(child: Text("No playlists found.")),
+          )
+        else
+          ...playlists.map((playlist) {
+            final isFirst = playlist == playlists.first;
+            final isLast = playlist == playlists.last;
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CardListTile(
+                  title: playlist.name,
+                  icon: FlutterRemix.play_list_add_line,
+                  isFirst: isFirst,
+                  isLast: isLast,
+                  onTap: () {
+                    music.addSongToPlaylist(playlist.id, song);
+                    Navigator.of(context, rootNavigator: true).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Added to ${playlist.name}')),
+                    );
+                  },
+                ),
+                if (!isLast) const SizedBox(height: 2.5),
+              ],
+            );
+          }),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: ExpressiveButton(
+            onPressed: () {
+              Navigator.of(context, rootNavigator: true).pop();
+              showPlaylistActionDialog(context, songs: [song]);
+            },
+            child: const Text("CREATE NEW PLAYLIST"),
+          ),
+        ),
+      ],
+    );
+  }
+}

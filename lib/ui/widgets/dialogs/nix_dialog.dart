@@ -62,13 +62,13 @@ class NixDialog extends StatelessWidget {
         decoration: BoxDecoration(
           color: colorScheme.surfaceContainer,
           borderRadius: BorderRadius.circular(28),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
+          // boxShadow: [
+          //   BoxShadow(
+          //     color: Colors.black.withValues(alpha: 0.2),
+          //     blurRadius: 20,
+          //     offset: const Offset(0, 10),
+          //   ),
+          // ],
         ),
         clipBehavior: Clip.antiAlias,
         child: Material(
@@ -105,11 +105,11 @@ class NixDialog extends StatelessWidget {
                           children: [
                             Text(
                               title!,
-                              style: textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
+                              style: textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w500,
                                 color: colorScheme.onSurface,
                               ),
-                              maxLines: 2,
+                              maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             if (subtitle != null)
@@ -138,7 +138,7 @@ class NixDialog extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 0),
             ],
           ),
         ),

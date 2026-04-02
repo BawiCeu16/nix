@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_remix/flutter_remix.dart';
-import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/models/music/song.dart';
 import 'package:nix/models/music/playlist.dart';
@@ -9,7 +8,10 @@ import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
+import 'package:nix/ui/widgets/dialogs/playlist_dialogs.dart';
+import 'package:nix/ui/widgets/dialogs/song_info_dialog.dart';
 import 'package:nix/core/format.dart';
+import 'package:nix/core/artwork_helper.dart';
 
 class TrackTile extends StatefulWidget {
   final Song track;
@@ -44,6 +46,108 @@ class _TrackTileState extends State<TrackTile> {
     return Duration(milliseconds: widget.track.duration).shortFormat();
   }
 
+  void _handleQueueAction(
+    BuildContext context,
+    QueueResult result,
+    String actionType,
+  ) {
+    if (!context.mounted) return;
+    String message = '';
+    switch (result) {
+      case QueueResult.success:
+        message = actionType == 'next'
+            ? '"${widget.track.title}" will play next'
+            : 'Added "${widget.track.title}" to queue';
+        break;
+      case QueueResult.duplicate:
+        message = '"${widget.track.title}" is already in the queue';
+        break;
+      case QueueResult.error:
+        message = 'Failed to update queue';
+        break;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _showTrackMenu(BuildContext context) {
+    final music = context.read<MusicProvider>();
+    final currentMusic = context.read<CurrentMusicProvider>();
+    final isFav = music.isFavorite(widget.track);
+
+    NixDialog.show(
+      context: context,
+      title: widget.track.title,
+      subtitle: widget.track.artist,
+      songUri: widget.track.uri,
+      children: [
+        CardListTile(
+          title: isFav ? "Remove from Favorites" : "Add to Favorites",
+          icon: isFav ? FlutterRemix.heart_3_fill : FlutterRemix.heart_3_line,
+          isFirst: true,
+          onTap: () {
+            music.toggleFavorite(widget.track);
+            Navigator.of(context, rootNavigator: true).pop();
+          },
+        ),
+        const SizedBox(height: 2.5),
+        CardListTile(
+          title: "Play Next",
+          icon: FlutterRemix.skip_forward_fill,
+          onTap: () {
+            final result = currentMusic.queueNext(widget.track);
+            Navigator.of(context, rootNavigator: true).pop();
+            _handleQueueAction(context, result, 'next');
+          },
+        ),
+        const SizedBox(height: 2.5),
+        CardListTile(
+          title: "Add to Queue",
+          icon: FlutterRemix.play_list_add_line,
+          onTap: () {
+            final result = currentMusic.appendToQueue(widget.track);
+            Navigator.of(context, rootNavigator: true).pop();
+            _handleQueueAction(context, result, 'append');
+          },
+        ),
+        const SizedBox(height: 2.5),
+        CardListTile(
+          title: "Add to Playlist",
+          icon: FlutterRemix.add_box_line,
+          onTap: () {
+            Navigator.of(context, rootNavigator: true).pop();
+            PlaylistDialogs.showPlaylistPicker(context, widget.track);
+          },
+        ),
+        const SizedBox(height: 2.5),
+        CardListTile(
+          title: "Song Info",
+          icon: FlutterRemix.information_line,
+          isLast: true,
+          onTap: () {
+            Navigator.of(context, rootNavigator: true).pop();
+            SongInfoDialog.show(
+              context,
+              title: widget.track.title,
+              artist: widget.track.artist,
+              album: widget.track.album,
+              duration: _formattedDuration,
+              size: widget.track.size.formatBytes(),
+              filePath: widget.track.uri,
+              songUri: widget.track.uri,
+            );
+          },
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final defaultRadius = BorderRadius.only(
@@ -63,15 +167,10 @@ class _TrackTileState extends State<TrackTile> {
       child: Dismissible(
         key: ValueKey(widget.track.id),
         confirmDismiss: (direction) async {
-          context.read<CurrentMusicProvider>().queueNext(widget.track);
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('"${widget.track.title}" will play next'),
-                duration: const Duration(seconds: 2),
-              ),
-            );
-          }
+          final result = context.read<CurrentMusicProvider>().queueNext(
+            widget.track,
+          );
+          _handleQueueAction(context, result, 'next');
           return false;
         },
         direction: DismissDirection.startToEnd,
@@ -136,51 +235,15 @@ class _TrackTileState extends State<TrackTile> {
                   },
               onLongPress: () {
                 HapticFeedback.mediumImpact();
-                final music = context.read<MusicProvider>();
-                final isFav = music.isFavorite(widget.track);
-                NixDialog.show(
-                  context: context,
+                SongInfoDialog.show(
+                  context,
                   title: widget.track.title,
-                  subtitle: widget.track.artist,
+                  artist: widget.track.artist,
+                  album: widget.track.album,
+                  duration: _formattedDuration,
+                  size: widget.track.size.formatBytes(),
+                  filePath: widget.track.uri,
                   songUri: widget.track.uri,
-                  children: [
-                    CardListTile(
-                      title: isFav
-                          ? "Remove from Favorites"
-                          : "Add to Favorites",
-                      icon: isFav
-                          ? FlutterRemix.heart_3_fill
-                          : FlutterRemix.heart_3_line,
-                      isFirst: true,
-                      onTap: () {
-                        music.toggleFavorite(widget.track);
-                        Navigator.of(context, rootNavigator: true).pop();
-                      },
-                    ),
-                    const SizedBox(height: 2.5),
-                    CardListTile(
-                      title: "Play Next",
-                      icon: FlutterRemix.skip_forward_fill,
-                      onTap: () {
-                        context.read<CurrentMusicProvider>().queueNext(
-                          widget.track,
-                        );
-                        Navigator.of(context, rootNavigator: true).pop();
-                      },
-                    ),
-                    const SizedBox(height: 2.5),
-                    CardListTile(
-                      title: "Add to Queue",
-                      icon: FlutterRemix.play_list_add_line,
-                      isLast: true,
-                      onTap: () {
-                        context.read<CurrentMusicProvider>().appendToQueue(
-                          widget.track,
-                        );
-                        Navigator.of(context, rootNavigator: true).pop();
-                      },
-                    ),
-                  ],
                 );
               },
               child: AnimatedScale(
@@ -227,54 +290,7 @@ class _TrackTileState extends State<TrackTile> {
                             ).colorScheme.onSurfaceVariant,
                             size: 20,
                           ),
-                          onPressed: () {
-                            final music = context.read<MusicProvider>();
-                            final isFav = music.isFavorite(widget.track);
-                            NixDialog.show(
-                              context: context,
-                              title: widget.track.title,
-                              subtitle: widget.track.artist,
-                              songUri: widget.track.uri,
-                              children: [
-                                CardListTile(
-                                  title: isFav
-                                      ? "Remove from Favorites"
-                                      : "Add to Favorites",
-                                  icon: isFav
-                                      ? FlutterRemix.heart_3_fill
-                                      : FlutterRemix.heart_3_line,
-                                  isFirst: true,
-                                  onTap: () {
-                                    music.toggleFavorite(widget.track);
-                                    Navigator.pop(context);
-                                  },
-                                ),
-                                const SizedBox(height: 2.5),
-                                CardListTile(
-                                  title: "Play Next",
-                                  icon: FlutterRemix.skip_forward_fill,
-                                  onTap: () {
-                                    context
-                                        .read<CurrentMusicProvider>()
-                                        .queueNext(widget.track);
-                                    Navigator.pop(context);
-                                  },
-                                ),
-                                const SizedBox(height: 2.5),
-                                CardListTile(
-                                  title: "Add to Queue",
-                                  icon: FlutterRemix.play_list_add_line,
-                                  isLast: true,
-                                  onTap: () {
-                                    context
-                                        .read<CurrentMusicProvider>()
-                                        .appendToQueue(widget.track);
-                                    Navigator.pop(context);
-                                  },
-                                ),
-                              ],
-                            );
-                          },
+                          onPressed: () => _showTrackMenu(context),
                         ),
                         visualDensity: VisualDensity.compact,
                       ),
@@ -299,17 +315,9 @@ class _ArtworkLeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Uint8List? artworkBytes;
-
-    try {
-      if (Hive.isBoxOpen('cached_images')) {
-        final box = Hive.box('cached_images');
-        final data = box.get(songUri);
-        if (data != null && data is Uint8List) {
-          artworkBytes = data;
-        }
-      }
-    } catch (_) {}
+    final artworkBytes = ArtworkHelper.getArtwork(songUri);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
@@ -320,15 +328,15 @@ class _ArtworkLeading extends StatelessWidget {
             ? Image.memory(artworkBytes, fit: BoxFit.cover)
             : Container(
                 color: isPlaying
-                    ? Theme.of(context).colorScheme.primaryContainer
-                    : Theme.of(context).colorScheme.surfaceContainerHighest,
+                    ? colorScheme.primaryContainer
+                    : colorScheme.surfaceContainerHighest,
                 child: Icon(
                   isPlaying
                       ? FlutterRemix.pulse_fill
                       : FlutterRemix.music_2_line,
                   color: isPlaying
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
                 ),
               ),
       ),

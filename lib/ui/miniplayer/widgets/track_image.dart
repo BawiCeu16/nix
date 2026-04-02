@@ -5,6 +5,7 @@ import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import '../../../core/math_utils.dart';
+import '../models/animation_data.dart';
 
 class TrackImage extends StatelessWidget {
   final Animation<double> sAnim;
@@ -14,11 +15,8 @@ class TrackImage extends StatelessWidget {
   final double maxOffset;
   final double topInset;
   final bool bounceDown;
-  final double queueProgressValue;
-  final double bounceProgressValue;
-  final double bottomOffset;
-  final double bounceClampedProgressValue;
   final Size screenSize;
+  final PlayerAnimationData data;
 
   const TrackImage({
     super.key,
@@ -29,11 +27,8 @@ class TrackImage extends StatelessWidget {
     required this.maxOffset,
     required this.topInset,
     required this.bounceDown,
-    required this.queueProgressValue,
-    required this.bounceProgressValue,
-    required this.bottomOffset,
-    required this.bounceClampedProgressValue,
     required this.screenSize,
+    required this.data,
   });
 
   @override
@@ -45,9 +40,9 @@ class TrackImage extends StatelessWidget {
       try {
         if (Hive.isBoxOpen('cached_images')) {
           final box = Hive.box('cached_images');
-          final data = box.get(currentSong.uri);
-          if (data != null && data is Uint8List) {
-            artworkBytes = data;
+          final artworkData = box.get(currentSong.uri);
+          if (artworkData != null && artworkData is Uint8List) {
+            artworkBytes = artworkData;
           }
         }
       } catch (_) {}
@@ -64,43 +59,43 @@ class TrackImage extends StatelessWidget {
               !bounceUp
                   ? (-maxOffset + topInset + 108.0) *
                         (!bounceDown
-                            ? queueProgressValue
-                            : (1 - bounceProgressValue))
+                            ? data.queueProgress
+                            : (1 - data.bounceProgress))
                   : 0.0,
             ),
             child: Transform.translate(
               offset: Offset(
                 0,
-                bottomOffset +
-                    (-maxOffset / 2.30 * bounceProgressValue.clamp(0, 2)),
+                data.bottomOffset +
+                    (-maxOffset / 2.30 * data.bounceProgress.clamp(0, 2)),
               ),
               child: Padding(
                 padding: EdgeInsets.all(
-                  12.0 * (1 - bounceClampedProgressValue),
-                ).add(EdgeInsets.only(left: 22.0 * bounceClampedProgressValue)),
+                  12.0 * (1 - data.bounceClampedProgress),
+                ).add(EdgeInsets.only(left: 22.0 * data.bounceClampedProgress)),
                 child: Align(
                   alignment: Alignment.bottomLeft,
                   child: SizedBox(
                     height: rangeProgress(
                       a: 82.0,
                       b: screenSize.width - 46.0,
-                      c: bounceClampedProgressValue,
+                      c: data.bounceClampedProgress,
                     ),
                     width: rangeProgress(
                       a: 82.0,
                       b: screenSize.width - 46.0,
-                      c: bounceClampedProgressValue,
+                      c: data.bounceClampedProgress,
                     ),
                     child: Padding(
                       padding: EdgeInsets.all(
-                        12.0 * (1 - bounceClampedProgressValue),
+                        12.0 * (1 - data.bounceClampedProgress),
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(
                           rangeProgress(
                             a: 100.0,
                             b: 15.0,
-                            c: bounceClampedProgressValue,
+                            c: data.bounceClampedProgress,
                           ),
                         ),
                         child: artworkBytes != null
@@ -110,12 +105,17 @@ class TrackImage extends StatelessWidget {
                                 gaplessPlayback: true,
                               )
                             : Container(
-                                color: Theme.of(context).colorScheme.primaryContainer,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primaryContainer,
                                 child: Center(
                                   child: Icon(
                                     FlutterRemix.music_2_fill,
                                     size: 40,
-                                    color: Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: .5),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimaryContainer
+                                        .withValues(alpha: .5),
                                   ),
                                 ),
                               ),

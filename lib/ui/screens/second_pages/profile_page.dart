@@ -35,9 +35,11 @@ class _ProfilePageState extends State<ProfilePage> {
     final user = context.watch<UserProvider>();
     final music = context.watch<MusicProvider>();
     final colorScheme = Theme.of(context).colorScheme;
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainer,
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('Profile'),
         backgroundColor: colorScheme.surfaceContainer,
@@ -99,6 +101,12 @@ class _ProfilePageState extends State<ProfilePage> {
                               vertical: 12,
                             ),
                           ),
+                          onSubmitted: (_) {
+                            if (_nameController.text.trim().isNotEmpty) {
+                              context.read<UserProvider>().setUserName(_nameController.text.trim());
+                            }
+                            setState(() => _isEditing = false);
+                          },
                         ),
                       )
                     : Text(
@@ -165,9 +173,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   title: song.title,
                   subtitle: song.artist,
                   icon: FlutterRemix.time_line,
-                  isFirst: index == 0,
-                  isLast:
-                      index == music.recentlyPlayed.songs.take(5).length - 1,
                   onTap: () {
                     context.read<CurrentMusicProvider>().playSong(
                       song,
@@ -179,6 +184,9 @@ class _ProfilePageState extends State<ProfilePage> {
             }),
             const SizedBox(height: 24),
           ],
+          
+          // Fix for keyboard top bar behavior (SearchPage style)
+          SizedBox(height: 120 + keyboardHeight),
         ],
       ),
     );
@@ -201,6 +209,7 @@ class _StatItem extends StatelessWidget {
             context,
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
+        const SizedBox(height: 4),
         Text(
           label.toUpperCase(),
           style: Theme.of(context).textTheme.labelSmall?.copyWith(

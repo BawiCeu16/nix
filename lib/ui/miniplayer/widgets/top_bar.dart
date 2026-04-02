@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:nix/providers/current_music_provider.dart';
-import 'package:nix/core/format.dart';
+import 'package:nix/providers/music_provider.dart';
+import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
+import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
+import 'package:nix/ui/widgets/dialogs/playlist_dialogs.dart';
 import 'package:nix/ui/widgets/dialogs/song_info_dialog.dart';
+import 'package:nix/core/format.dart';
 
 class TopBar extends StatelessWidget {
   final double topRowOpacity;
@@ -74,17 +78,55 @@ class TopBar extends StatelessWidget {
                       final song = currentMusic.currentSong;
                       if (song == null) return;
 
-                      SongInfoDialog.show(
-                        context,
+                      final music = context.read<MusicProvider>();
+                      final isFav = music.isFavorite(song);
+
+                      NixDialog.show(
+                        context: context,
                         title: song.title,
-                        artist: song.artist,
-                        album: song.album,
-                        duration: Duration(
-                          milliseconds: song.duration,
-                        ).shortFormat(),
-                        size: song.size.formatBytes(),
-                        filePath: song.uri,
+                        subtitle: song.artist,
                         songUri: song.uri,
+                        children: [
+                          CardListTile(
+                            title: isFav ? "Remove from Favorites" : "Add to Favorites",
+                            icon: isFav ? FlutterRemix.heart_3_fill : FlutterRemix.heart_3_line,
+                            isFirst: true,
+                            onTap: () {
+                              music.toggleFavorite(song);
+                              Navigator.of(context, rootNavigator: true).pop();
+                            },
+                          ),
+                          const SizedBox(height: 2.5),
+                          CardListTile(
+                            title: "Add to Playlist",
+                            icon: FlutterRemix.add_box_line,
+                            onTap: () {
+                              Navigator.of(context, rootNavigator: true).pop();
+                              PlaylistDialogs.showPlaylistPicker(context, song);
+                            },
+                          ),
+                          const SizedBox(height: 2.5),
+                          CardListTile(
+                            title: "Song Info",
+                            icon: FlutterRemix.information_line,
+                            isLast: true,
+                            onTap: () {
+                              Navigator.of(context, rootNavigator: true).pop();
+                              SongInfoDialog.show(
+                                context,
+                                title: song.title,
+                                artist: song.artist,
+                                album: song.album,
+                                duration: Duration(
+                                  milliseconds: song.duration,
+                                ).shortFormat(),
+                                size: song.size.formatBytes(),
+                                filePath: song.uri,
+                                songUri: song.uri,
+                              );
+                            },
+                          ),
+                        ],
                       );
                     },
                     icon: Icon(FlutterRemix.more_fill, color: onSecondary),

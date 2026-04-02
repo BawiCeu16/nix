@@ -24,21 +24,39 @@ class QueueView extends StatefulWidget {
 }
 
 class _QueueViewState extends State<QueueView> {
+  @override
+  void didUpdateWidget(covariant QueueView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.queueProgressValue == 1.0 &&
+        oldWidget.queueProgressValue < 1.0) {
+      _scrollToCurrentSong();
+    }
+  }
+
+  void _scrollToCurrentSong() {
+    if (widget.queueProgressValue < 1.0) return;
+
+    final currentMusic = context.read<CurrentMusicProvider>();
+    final playing = currentMusic.playing;
+    if (playing == null) return;
+
+    final songs = currentMusic.currentPlaylist?.songs ?? [];
+    final currentIndex = songs.indexWhere((s) => s.id == playing.id);
+
+    if (currentIndex >= 0 && widget.controller?.hasClients == true) {
+      widget.controller?.animateTo(
+        currentIndex * 72.0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
   void _reorderCallback(int oldIndex, int newIndex) {
     if (newIndex > oldIndex) newIndex--;
     final currentMusic = context.read<CurrentMusicProvider>();
-    final playlist = currentMusic.currentPlaylist;
-    final songs = playlist?.songs ?? [];
-    final currentSong = currentMusic.currentSong;
 
-    final currentIndex = currentSong != null
-        ? songs.indexWhere((s) => s.id == currentSong.id)
-        : -1;
-
-    final realOld = (currentIndex >= 0 ? currentIndex + 1 : 0) + oldIndex;
-    final realNew = (currentIndex >= 0 ? currentIndex + 1 : 0) + newIndex;
-
-    currentMusic.reorderQueue(realOld, realNew);
+    currentMusic.reorderQueue(oldIndex, newIndex);
     HapticFeedback.lightImpact();
   }
 
@@ -47,15 +65,9 @@ class _QueueViewState extends State<QueueView> {
     final currentMusic = context.watch<CurrentMusicProvider>();
     final playlist = currentMusic.currentPlaylist;
     final songs = playlist?.songs ?? [];
-    final currentSong = currentMusic.currentSong;
 
-    // Find current index to show "Up Next"
-    final currentIndex = currentSong != null
-        ? songs.indexWhere((s) => s.id == currentSong.id)
-        : -1;
-    final upNextSongs = currentIndex >= 0 && currentIndex < songs.length - 1
-        ? songs.sublist(currentIndex + 1)
-        : songs;
+    //show the whole queue.
+    final queueSongs = songs;
 
     return Transform.translate(
       offset: Offset(0, (1 - widget.queueProgressValue) * widget.maxOffset),
@@ -87,7 +99,7 @@ class _QueueViewState extends State<QueueView> {
                     ),
                   ),
                   Expanded(
-                    child: upNextSongs.isEmpty
+                    child: queueSongs.isEmpty
                         ? const Center(child: Text("Nothing in the queue."))
                         : CustomScrollView(
                             controller: widget.queueProgressValue == 1.0
@@ -106,7 +118,7 @@ class _QueueViewState extends State<QueueView> {
                                 ),
                                 sliver: SliverToBoxAdapter(
                                   child: Text(
-                                    "Up Next",
+                                    "Queue",
                                     style: TextStyle(
                                       fontSize: 22.0,
                                       fontWeight: FontWeight.w700,
@@ -119,7 +131,7 @@ class _QueueViewState extends State<QueueView> {
                                 ),
                               ),
                               SliverReorderableList(
-                                itemCount: upNextSongs.length,
+                                itemCount: queueSongs.length,
                                 onReorder: _reorderCallback,
                                 proxyDecorator: (child, index, animation) {
                                   return AnimatedBuilder(
@@ -138,13 +150,15 @@ class _QueueViewState extends State<QueueView> {
                                   );
                                 },
                                 itemBuilder: (context, index) {
-                                  final song = upNextSongs[index];
+                                  final song = queueSongs[index];
                                   return QueueTile(
                                     key: ValueKey('queue_${song.id}_$index'),
                                     title: song.title,
                                     subtitle: song.artist,
                                     songUri: song.uri,
                                     itemIndex: index,
+                                    isPlaying:
+                                        currentMusic.playing?.id == song.id,
                                     onTap: () {
                                       currentMusic.playSong(
                                         song,
@@ -173,9 +187,9 @@ class _QueueViewState extends State<QueueView> {
                                   );
                                 },
                               ),
-                              // const SliverPadding(
-                              //   padding: EdgeInsets.only(bottom: 100),
-                              // ),
+                              const SliverPadding(
+                                padding: EdgeInsets.only(bottom: 120),
+                              ),
                             ],
                           ),
                   ),

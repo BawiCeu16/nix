@@ -61,9 +61,10 @@ class NixApp extends StatelessWidget {
         return Consumer2<SettingsProvider, CurrentMusicProvider>(
           builder: (context, settings, music, child) {
             Color seedColor = Colors.blue;
-            
+
             // Determine seed color based on mode
-            if (settings.accentColorMode == AccentColorMode.device && lightDynamic != null) {
+            if (settings.accentColorMode == AccentColorMode.device &&
+                lightDynamic != null) {
               seedColor = lightDynamic.primary;
             } else if (settings.accentColorMode == AccentColorMode.dynamic) {
               seedColor = music.dynamicSeedColor ?? Colors.blue;

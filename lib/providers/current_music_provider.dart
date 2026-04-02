@@ -11,8 +11,19 @@ import 'package:hive/hive.dart';
 import '../models/music/song.dart';
 import '../models/music/playlist.dart';
 import '../providers/settings_provider.dart';
+import '../core/artwork_helper.dart';
 
 enum AudioLoadingState { idle, loading, loaded, error }
+
+/// Result of a queue operation, used by the UI to show appropriate feedback.
+enum QueueResult {
+  /// Song was successfully added.
+  success,
+  /// The song is already in the queue.
+  duplicate,
+  /// The operation failed for an unexpected reason.
+  error,
+}
 
 class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   final AudioPlayer _audioPlayer = AudioPlayer();
@@ -102,13 +113,16 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       _currentPlaylist = playlist ?? _getDefaultPlaylistForSong(song);
 
       // Update MediaItem for system notification
-      final box = await Hive.openBox("cached_images");
-      final artworkBytes = box.get(song.uri);
+      await Hive.openBox("cached_images");
+      final artworkBytes = ArtworkHelper.getArtwork(song.uri);
 
       String? artPath;
       if (artworkBytes != null) {
         final tempDir = await getTemporaryDirectory();
-        final file = File('${tempDir.path}/${song.id}.jpg');
+        // Use a hash of the artwork bytes in the filename to ensure
+        // the system media notification doesn't cache a stale or wrong image
+        // for the same song ID.
+        final file = File('${tempDir.path}/${song.id}_${artworkBytes.length}.jpg');
         if (!await file.exists()) {
           await file.writeAsBytes(artworkBytes);
         }
@@ -255,25 +269,60 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
     }
   }
 
-  void queueNext(Song song) {
-    if (_currentPlaylist == null) {
-      _currentPlaylist = _getDefaultPlaylistForSong(song);
-    } else {
+  /// Inserts [song] immediately after the currently playing track.
+  ///
+  /// Returns a [QueueResult] so the UI can show contextual feedback.
+  QueueResult queueNext(Song song) {
+    try {
+      if (_currentPlaylist == null) {
+        _currentPlaylist = _getDefaultPlaylistForSong(song);
+        notifyListeners();
+        return QueueResult.success;
+      }
+
+      // Check for duplicate – skip if already queued right after current
       final currentIndex = _currentSong != null
           ? _currentPlaylist!.songs.indexOf(_currentSong!)
           : -1;
-      _currentPlaylist!.songs.insert(currentIndex + 1, song);
+      final nextIndex = currentIndex + 1;
+      if (nextIndex < _currentPlaylist!.songs.length &&
+          _currentPlaylist!.songs[nextIndex].id == song.id) {
+        return QueueResult.duplicate;
+      }
+
+      _currentPlaylist!.songs.insert(nextIndex, song);
+      notifyListeners();
+      return QueueResult.success;
+    } catch (e) {
+      debugPrint('Error in queueNext: $e');
+      return QueueResult.error;
     }
-    notifyListeners();
   }
 
-  void appendToQueue(Song song) {
-    if (_currentPlaylist == null) {
-      _currentPlaylist = _getDefaultPlaylistForSong(song);
-    } else {
+  /// Appends [song] to the end of the current queue.
+  ///
+  /// Returns a [QueueResult] so the UI can show contextual feedback.
+  QueueResult appendToQueue(Song song) {
+    try {
+      if (_currentPlaylist == null) {
+        _currentPlaylist = _getDefaultPlaylistForSong(song);
+        notifyListeners();
+        return QueueResult.success;
+      }
+
+      // Check for duplicate at the end of the queue
+      if (_currentPlaylist!.songs.isNotEmpty &&
+          _currentPlaylist!.songs.last.id == song.id) {
+        return QueueResult.duplicate;
+      }
+
       _currentPlaylist!.songs.add(song);
+      notifyListeners();
+      return QueueResult.success;
+    } catch (e) {
+      debugPrint('Error in appendToQueue: $e');
+      return QueueResult.error;
     }
-    notifyListeners();
   }
 
   void removeFromQueue(int index) {

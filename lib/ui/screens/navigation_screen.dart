@@ -39,10 +39,19 @@ class _NavigationScreenState extends State<NavigationScreen>
       lowerBound: -0.1,
       value: 0.0,
     );
+    context.read<CurrentMusicProvider>().addListener(_onPlaybackChanged);
+  }
+
+  void _onPlaybackChanged() {
+    final provider = context.read<CurrentMusicProvider>();
+    if (provider.currentSong != null && animation.value < 0.0) {
+      animation.value = 0.0;
+    }
   }
 
   @override
   void dispose() {
+    context.read<CurrentMusicProvider>().removeListener(_onPlaybackChanged);
     animation.dispose();
     super.dispose();
   }
@@ -177,38 +186,45 @@ class _NavigationScreenState extends State<NavigationScreen>
 
               // 1st Overlay: Opacity (Black + onSecondary Dimming)
               Positioned.fill(
-                child: AnimatedBuilder(
-                  animation: animation,
-                  builder: (context, child) {
-                    if (animation.value > 0.01) {
-                      return Container(
-                        color: Theme.of(context).colorScheme.surface.withValues(
-                          alpha: (animation.value * 1.2).clamp(0, 1),
-                        ),
-                      );
-                    } else {
-                      return const SizedBox();
-                    }
-                  },
+                child: IgnorePointer(
+                  ignoring: animation.value <= 0.01,
+                  child: AnimatedBuilder(
+                    animation: animation,
+                    builder: (context, child) {
+                      if (animation.value > 0.01) {
+                        return Container(
+                          color: Theme.of(context).colorScheme.surface
+                              .withValues(
+                                alpha: (animation.value * 1.2).clamp(0, 1),
+                              ),
+                        );
+                      } else {
+                        return const SizedBox();
+                      }
+                    },
+                  ),
                 ),
               ),
 
               // 2nd Overlay: Player Wallpaper
               Positioned.fill(
-                child: AnimatedBuilder(
-                  animation: animation,
-                  builder: (context, child) {
-                    if (animation.value > 0.01) {
-                      return Opacity(
-                        opacity: animation.value.clamp(0.0, 1.0),
-                        child: Container(
-                          color: Theme.of(context).colorScheme.surface,
-                        ),
-                      );
-                    } else {
-                      return const SizedBox();
-                    }
-                  },
+                child: IgnorePointer(
+                  ignoring: animation.value <= 0.01,
+                  child: AnimatedBuilder(
+                    animation: animation,
+                    builder: (context, child) {
+                      if (animation.value > 0.01) {
+                        return Opacity(
+                          opacity: animation.value.clamp(0.0, 1.0),
+                          child: Container(
+                            color: Theme.of(context).colorScheme.surface,
+                          ),
+                        );
+                      } else {
+                        return const SizedBox();
+                      }
+                    },
+                  ),
                 ),
               ),
 

@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
+import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
+import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
+import 'package:nix/ui/widgets/common/nix_empty_state.dart';
+import 'package:nix/ui/widgets/dialogs/playlist_dialogs.dart';
 import 'package:nix/ui/screens/music_pages/views/playlist_view_page.dart';
 
 class PlaylistsPage extends StatefulWidget {
@@ -13,55 +18,29 @@ class PlaylistsPage extends StatefulWidget {
 }
 
 class _PlaylistsPageState extends State<PlaylistsPage> {
-  void _showCreateDialog(BuildContext context) {
-    final controller = TextEditingController();
+  void _showPlaylistMenu(BuildContext context, String id, String name) {
     NixDialog.show(
       context: context,
-      title: "New Playlist",
+      title: name,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Column(
-            children: [
-              TextField(
-                controller: controller,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: "Playlist Name",
-                  filled: true,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: ElevatedButton(
-                  onPressed: () {
-                    final name = controller.text.trim();
-                    if (name.isNotEmpty) {
-                      context.read<MusicProvider>().createPlaylist(name, []);
-                    }
-                    Navigator.of(context, rootNavigator: true).pop();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: const Text("Create"),
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
-                child: const Text("Cancel"),
-              ),
-            ],
-          ),
+        CardListTile(
+          title: "Rename",
+          icon: FlutterRemix.edit_line,
+          isFirst: true,
+          onTap: () {
+            Navigator.of(context, rootNavigator: true).pop();
+            PlaylistDialogs.showPlaylistActionDialog(context, initialName: name, playlistId: id);
+          },
+        ),
+        const SizedBox(height: 2),
+        CardListTile(
+          title: "Delete",
+          icon: FlutterRemix.delete_bin_line,
+          isLast: true,
+          onTap: () {
+            Navigator.of(context, rootNavigator: true).pop();
+            PlaylistDialogs.showDeleteConfirmation(context, id, name);
+          },
         ),
       ],
     );
@@ -79,50 +58,101 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
           IconButton(
             icon: const Icon(FlutterRemix.add_line),
             tooltip: 'New playlist',
-            onPressed: () => _showCreateDialog(context),
+            onPressed: () => PlaylistDialogs.showPlaylistActionDialog(context),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        elevation: 0,
-        onPressed: () => _showCreateDialog(context),
-        tooltip: 'New playlist',
-        child: const Icon(FlutterRemix.add_line),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   elevation: 0,
+      //   onPressed: () => _showCreateDialog(context),
+      //   tooltip: 'New playlist',
+      //   child: const Icon(FlutterRemix.add_line),
+      // ),
       body: Consumer<MusicProvider>(
         builder: (context, music, child) {
           final playlists = music.playlists;
+          final colorScheme = Theme.of(context).colorScheme;
 
           if (playlists.isEmpty) {
-            return const Center(child: Text("No playlists found."));
+            return NixEmptyState(
+              icon: FlutterRemix.play_list_2_line,
+              title: "No playlists yet",
+              action: ExpressiveToneButton(
+                onPressed: () => PlaylistDialogs.showPlaylistActionDialog(context),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(FlutterRemix.add_line, size: 20),
+                    SizedBox(width: 8),
+                    Text("Create Playlist"),
+                  ],
+                ),
+              ),
+            );
           }
 
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0),
-            child: ListView.builder(
-              padding: const EdgeInsets.only(bottom: 120, top: 10),
-              itemCount: playlists.length,
-              itemBuilder: (context, index) {
-                final playlist = playlists[index];
-                return ListTile(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  tileColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  leading: Container(
-                    width: 48, height: 48,
+          return ListView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+            physics: const BouncingScrollPhysics(),
+            itemCount: playlists.length,
+            itemBuilder: (context, index) {
+              final playlist = playlists[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Dismissible(
+                  key: ValueKey(playlist.id),
+                  direction: DismissDirection.endToStart,
+                  background: Container(
+                    padding: const EdgeInsets.only(right: 24),
+                    alignment: Alignment.centerRight,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      color: Theme.of(context).colorScheme.secondaryContainer,
+                      color: colorScheme.errorContainer,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(FlutterRemix.play_list_line, color: Theme.of(context).colorScheme.onSecondaryContainer),
+                    child: Icon(
+                      FlutterRemix.delete_bin_line,
+                      color: colorScheme.onErrorContainer,
+                    ),
                   ),
-                  title: Text(playlist.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle: Text('${playlist.songs.length} tracks'),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => PlaylistViewPage(playlistName: playlist.name)),
+                  confirmDismiss: (direction) async {
+                    PlaylistDialogs.showDeleteConfirmation(context, playlist.id, playlist.name);
+                    return false;
+                  },
+                  child: CardListTile(
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            PlaylistViewPage(playlistName: playlist.name),
+                      ),
+                    ),
+                    onLongPress: () {
+                      HapticFeedback.mediumImpact();
+                      _showPlaylistMenu(context, playlist.id, playlist.name);
+                    },
+                    isFirst: index == 0,
+                    isLast: index == playlists.length - 1,
+                    title: playlist.name,
+                    subtitle: '${playlist.songs.length} tracks',
+                    leading: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color: colorScheme.secondaryContainer,
+                      ),
+                      child: Icon(
+                        FlutterRemix.play_list_line,
+                        color: colorScheme.onSecondaryContainer,
+                      ),
+                    ),
+                    trailing: Icon(
+                      FlutterRemix.arrow_right_s_line,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           );
         },
       ),

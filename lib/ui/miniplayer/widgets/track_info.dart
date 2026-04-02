@@ -4,35 +4,30 @@ import 'package:flutter_remix/flutter_remix.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import '../../../core/math_utils.dart';
+import '../models/animation_data.dart';
 
 class TrackInfo extends StatelessWidget {
   final Animation<double> sAnim;
   final double sMaxOffset;
   final double stParallax;
-  final double queueProgressValue;
   final double maxOffset;
   final double topInset;
   final bool bounceUp;
   final bool bounceDown;
-  final double bounceProgressValue;
-  final double bottomOffset;
-  final double bounceClampedProgressValue;
   final Size screenSize;
+  final PlayerAnimationData data;
 
   const TrackInfo({
     super.key,
     required this.sAnim,
     required this.sMaxOffset,
     required this.stParallax,
-    required this.queueProgressValue,
     required this.maxOffset,
     required this.topInset,
     required this.bounceUp,
     required this.bounceDown,
-    required this.bounceProgressValue,
-    required this.bottomOffset,
-    required this.bounceClampedProgressValue,
     required this.screenSize,
+    required this.data,
   });
 
   @override
@@ -54,27 +49,27 @@ class TrackInfo extends StatelessWidget {
             child: Transform.translate(
               offset: Offset(
                 -sAnim.value * sMaxOffset / stParallax +
-                    (12.0 * queueProgressValue),
+                    (12.0 * data.queueProgress),
                 (-maxOffset + topInset + 102.0) *
                     (!bounceUp
                         ? !bounceDown
-                              ? queueProgressValue
-                              : (1 - bounceProgressValue)
+                              ? data.queueProgress
+                              : (1 - data.bounceProgress)
                         : 0.0),
               ),
               child: Transform.translate(
                 offset: Offset(
                   0,
-                  bottomOffset +
-                      (-maxOffset / 3.6 * bounceProgressValue.clamp(0, 2)),
+                  data.bottomOffset +
+                      (-maxOffset / 3.6 * data.bounceProgress.clamp(0, 2)),
                 ),
                 child: Padding(
                   padding:
                       EdgeInsets.all(
-                        12.0 * (1 - bounceClampedProgressValue),
+                        12.0 * (1 - data.bounceClampedProgress),
                       ).add(
                         EdgeInsets.symmetric(
-                          horizontal: 20.0 * bounceClampedProgressValue,
+                          horizontal: 20.0 * data.bounceClampedProgress,
                         ),
                       ),
                   child: Align(
@@ -85,7 +80,7 @@ class TrackInfo extends StatelessWidget {
                           bottom: rangeProgress(
                             a: 0,
                             b: screenSize.width / 16,
-                            c: bounceClampedProgressValue,
+                            c: data.bounceClampedProgress,
                           ),
                         ),
                       ),
@@ -93,7 +88,7 @@ class TrackInfo extends StatelessWidget {
                         height: rangeProgress(
                           a: 58.0,
                           b: 82.0,
-                          c: bounceClampedProgressValue,
+                          c: data.bounceClampedProgress,
                         ),
                         child: Row(
                           children: [
@@ -101,7 +96,7 @@ class TrackInfo extends StatelessWidget {
                               width: rangeProgress(
                                 a: 82.0,
                                 b: 8.0,
-                                c: bounceClampedProgressValue,
+                                c: data.bounceClampedProgress,
                               ),
                             ),
                             Expanded(
@@ -119,7 +114,7 @@ class TrackInfo extends StatelessWidget {
                                         fontSize: rangeProgress(
                                           a: 18.0,
                                           b: 24.0,
-                                          c: bounceProgressValue,
+                                          c: data.bounceProgress,
                                         ),
                                         fontWeight: FontWeight.w600,
                                         height: 1,
@@ -136,7 +131,7 @@ class TrackInfo extends StatelessWidget {
                                         fontSize: rangeProgress(
                                           a: 15.0,
                                           b: 17.0,
-                                          c: bounceProgressValue,
+                                          c: data.bounceProgress,
                                         ),
                                         color: Theme.of(context)
                                             .colorScheme
@@ -151,22 +146,22 @@ class TrackInfo extends StatelessWidget {
                             // Favorite Icon
                             Opacity(
                               opacity:
-                                  (inverseAboveOne(bounceProgressValue) * 10 -
+                                  (inverseAboveOne(data.bounceProgress) * 10 -
                                           9)
                                       .clamp(0, 1),
                               child: Transform.translate(
                                 offset: Offset(
-                                  -100 * (1.0 - bounceClampedProgressValue),
+                                  -100 * (1.0 - data.bounceClampedProgress),
                                   0.0,
                                 ),
                                 child: GestureDetector(
                                   onTap: song != null
                                       ? () => music.toggleFavorite(song)
                                       : null,
-                                    child: Icon(
-                                      isFav
-                                          ? FlutterRemix.heart_fill
-                                          : FlutterRemix.heart_line,
+                                  child: Icon(
+                                    isFav
+                                        ? FlutterRemix.heart_fill
+                                        : FlutterRemix.heart_line,
                                     size: 32.0,
                                     color: isFav
                                         ? Theme.of(context).colorScheme.primary

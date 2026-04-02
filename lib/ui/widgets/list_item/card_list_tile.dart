@@ -8,6 +8,7 @@ class CardListTile extends StatefulWidget {
     this.icon,
     this.leading,
     required this.onTap,
+    this.onLongPress,
     this.subtitle,
     this.trailing,
     this.isFirst = false,
@@ -19,6 +20,7 @@ class CardListTile extends StatefulWidget {
   final IconData? icon;
   final Widget? leading;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
   final String? subtitle;
   final Widget? trailing;
   final bool isFirst;
@@ -82,12 +84,13 @@ class _CardListTileState extends State<CardListTile> {
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
+                      maxLines: 4,
                     )
                   : null,
-              trailing:
-                  widget.trailing ??
-                  const Icon(FlutterRemix.arrow_right_s_line),
+              trailing: widget.trailing ?? null,
+              // const Icon(FlutterRemix.arrow_right_s_line),
               onTap: widget.onTap,
+              onLongPress: widget.onLongPress,
             ),
           ),
         ),

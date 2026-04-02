@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
@@ -7,9 +8,12 @@ import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/providers/user_provider.dart';
 import 'package:nix/ui/widgets/list_item/song_card_tile.dart';
+import 'package:nix/models/music/playlist.dart';
 import 'package:nix/ui/widgets/list_item/track_tile.dart';
 import '../../music_pages/albums_page.dart';
 import '../../music_pages/songs_page.dart';
+
+import 'package:expressive_refresh/expressive_refresh.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -27,254 +31,287 @@ class HomePage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final user = context.watch<UserProvider>();
 
-    return Scaffold(
-      backgroundColor: colorScheme.surfaceContainer,
-
-      body: SafeArea(
-        bottom: false,
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            // ── SliverAppBar with greeting ──
-            SliverAppBar(
-              backgroundColor: Colors.transparent,
-              surfaceTintColor: Colors.transparent,
-              pinned: false,
-              floating: false,
-              snap: false,
-              expandedHeight: 180,
-              flexibleSpace: FlexibleSpaceBar(
-                titlePadding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-                title: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _greeting(),
-                            style: Theme.of(context).textTheme.labelMedium
-                                ?.copyWith(color: colorScheme.onSurfaceVariant),
-                          ),
-                          Text(
-                            user.userName,
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: colorScheme.onSurface,
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // CircleAvatar(
-                    //   radius: 20,
-                    //   backgroundColor: UserProvider
-                    //       .avatarColors[user.avatarIndex]
-                    //       .withValues(alpha: 0.2),
-                    //   child: Icon(
-                    //     UserProvider.avatarIcons[user.avatarIndex],
-                    //     color: UserProvider.avatarColors[user.avatarIndex],
-                    //     size: 20,
-                    //   ),
-                    // ),
-                  ],
-                ),
-              ),
+    final brightness = Theme.of(context).brightness;
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: brightness == Brightness.dark
+          ? SystemUiOverlayStyle.light.copyWith(
+              statusBarColor: Colors.transparent,
+            )
+          : SystemUiOverlayStyle.dark.copyWith(
+              statusBarColor: Colors.transparent,
             ),
-
-            // ── Recently Listened ──
-            _SectionHeader(
-              title: 'Recently Listened',
-              onShowAll: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => SongsPage(
-                    title: 'Recently Listened',
-                    songsSource: () =>
-                        context.read<MusicProvider>().recentlyPlayed.songs,
+      child: Scaffold(
+        backgroundColor: colorScheme.surfaceContainer,
+        body: ExpressiveRefreshIndicator(
+          onRefresh: () async {
+            await context.read<MusicProvider>().scanDevice();
+          },
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
+            slivers: [
+              // ── SliverAppBar with greeting ──
+              SliverAppBar(
+                systemOverlayStyle: brightness == Brightness.dark
+                    ? SystemUiOverlayStyle.light.copyWith(
+                        statusBarColor: Colors.transparent,
+                      )
+                    : SystemUiOverlayStyle.dark.copyWith(
+                        statusBarColor: Colors.transparent,
+                      ),
+                backgroundColor: Colors.transparent,
+                surfaceTintColor: Colors.transparent,
+                elevation: 0,
+                scrolledUnderElevation: 0,
+                pinned: false,
+                floating: false,
+                snap: false,
+                expandedHeight: 180,
+                flexibleSpace: FlexibleSpaceBar(
+                  titlePadding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                  title: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _greeting(),
+                              style: Theme.of(context).textTheme.labelMedium
+                                  ?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                            ),
+                            Text(
+                              user.userName,
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: colorScheme.onSurface,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // CircleAvatar(
+                      //   radius: 20,
+                      //   backgroundColor: UserProvider
+                      //       .avatarColors[user.avatarIndex]
+                      //       .withValues(alpha: 0.2),
+                      //   child: Icon(
+                      //     UserProvider.avatarIcons[user.avatarIndex],
+                      //     color: UserProvider.avatarColors[user.avatarIndex],
+                      //     size: 20,
+                      //   ),
+                      // ),
+                    ],
                   ),
                 ),
               ),
-            ),
-            Consumer<MusicProvider>(
-              builder: (context, music, child) {
-                final recentSongs = music.recentlyPlayed.songs;
-                if (recentSongs.isEmpty) {
-                  return const SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 24.0,
-                        vertical: 12.0,
-                      ),
-                      child: Text("No recents yet."),
-                    ),
-                  );
-                }
-                return SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                    child: SizedBox(
-                      height: 212,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        physics: const BouncingScrollPhysics(),
-                        itemCount: recentSongs.take(10).length,
-                        itemBuilder: (context, index) {
-                          final song = recentSongs[index];
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 5.0,
-                            ),
-                            child: SizedBox(
-                              width: 160.0,
-                              child: GestureDetector(
-                                onTap: () => context
-                                    .read<CurrentMusicProvider>()
-                                    .playSong(song),
-                                child: SongCardTile(song: song),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
 
-            // ── Albums ──
-            _SectionHeader(
-              title: 'Albums',
-              onShowAll: () => Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (_) => const AlbumsPage())),
-            ),
-            Consumer<MusicProvider>(
-              builder: (context, music, child) {
-                final albums = music.albums;
-                if (albums.isEmpty) {
-                  return const SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 24.0,
-                        vertical: 12.0,
-                      ),
-                      child: Text("No albums found."),
+              // ── Recently Listened ──
+              _SectionHeader(
+                title: 'Recently Listened',
+                onShowAll: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => SongsPage(
+                      title: 'Recently Listened',
+                      songsSource: () =>
+                          context.read<MusicProvider>().recentlyPlayed.songs,
                     ),
-                  );
-                }
-                return SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                    child: SizedBox(
-                      height: 212,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        physics: const BouncingScrollPhysics(),
-                        itemCount: albums.take(10).length,
-                        itemBuilder: (context, index) {
-                          final album = albums[index];
-                          // Try to get artwork from the first song in this album
-                          final albumSongs = music.songs.where(
-                            (s) => s.album == album.title,
-                          );
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 5.0,
-                            ),
-                            child: SizedBox(
-                              width: 160.0,
-                              child: _AlbumCard(
-                                title: album.title,
-                                subtitle: album.artist,
-                                firstSongUri: albumSongs.isNotEmpty
-                                    ? albumSongs.first.uri
-                                    : null,
-                                onTap: () {
-                                  final songs = music.songs
-                                      .where((s) => s.album == album.title)
-                                      .toList();
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => SongsPage(
-                                        title: album.title,
-                                        songsSource: () => songs,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-
-            // ── All Songs ──
-            _SectionHeader(
-              title: 'All Songs',
-              onShowAll: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => SongsPage(
-                    title: 'All Songs',
-                    songsSource: () => context.read<MusicProvider>().songs,
                   ),
                 ),
               ),
-            ),
-            Consumer<MusicProvider>(
-              builder: (context, music, child) {
-                if (music.isLoading) {
-                  return const SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.all(24.0),
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
-                  );
-                }
-
-                final songs = music.songs;
-                if (songs.isEmpty) {
-                  return SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Center(
-                        child: Text(music.error ?? "No songs found. :("),
-                      ),
-                    ),
-                  );
-                }
-
-                return SliverList.builder(
-                  itemCount: songs.length + 1,
-                  itemBuilder: (context, index) {
-                    if (index == songs.length)
-                      return const SizedBox(height: 120);
-                    final song = songs[index];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12.0,
-                        vertical: 0.0,
-                      ),
-                      child: TrackTile(
-                        track: song,
-                        playlistContext: songs,
-                        isFirst: index == 0,
-                        isLast: index == songs.length - 1,
+              Consumer<MusicProvider>(
+                builder: (context, music, child) {
+                  final recentSongs = music.recentlyPlayed.songs;
+                  if (recentSongs.isEmpty) {
+                    return const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 24.0,
+                          vertical: 12.0,
+                        ),
+                        child: Text("No recents yet."),
                       ),
                     );
-                  },
-                );
-              },
-            ),
-          ],
+                  }
+                  return SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                      child: SizedBox(
+                        height: 212,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          itemCount: recentSongs.take(10).length,
+                          itemBuilder: (context, index) {
+                            final song = recentSongs[index];
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 5.0,
+                              ),
+                              child: SizedBox(
+                                width: 160.0,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    final currentMusic = context
+                                        .read<CurrentMusicProvider>();
+                                    final pl = Playlist(
+                                      id: 'recently_played',
+                                      name: 'Recently Listened',
+                                      songs: recentSongs,
+                                      createdAt: DateTime.now(),
+                                    );
+                                    currentMusic.playSong(song, playlist: pl);
+                                  },
+                                  child: SongCardTile(song: song),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+              // ── Albums ──
+              _SectionHeader(
+                title: 'Albums',
+                onShowAll: () => Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const AlbumsPage())),
+              ),
+              Consumer<MusicProvider>(
+                builder: (context, music, child) {
+                  final albums = music.albums;
+                  if (albums.isEmpty) {
+                    return const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 24.0,
+                          vertical: 12.0,
+                        ),
+                        child: Text("No albums found."),
+                      ),
+                    );
+                  }
+                  return SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                      child: SizedBox(
+                        height: 212,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          itemCount: albums.take(10).length,
+                          itemBuilder: (context, index) {
+                            final album = albums[index];
+                            // Try to get artwork from the first song in this album
+                            final albumSongs = music.songs.where(
+                              (s) => s.album == album.title,
+                            );
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 5.0,
+                              ),
+                              child: SizedBox(
+                                width: 160.0,
+                                child: _AlbumCard(
+                                  title: album.title,
+                                  subtitle: album.artist,
+                                  firstSongUri: albumSongs.isNotEmpty
+                                      ? albumSongs.first.uri
+                                      : null,
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => AlbumSongsPage(
+                                          albumTitle: album.title,
+                                          albumArtist: album.artist,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+              // ── All Songs ──
+              _SectionHeader(
+                title: 'All Songs',
+                onShowAll: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => SongsPage(
+                      title: 'All Songs',
+                      songsSource: () => context.read<MusicProvider>().songs,
+                    ),
+                  ),
+                ),
+              ),
+              Consumer<MusicProvider>(
+                builder: (context, music, child) {
+                  if (music.isLoading) {
+                    return const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.all(24.0),
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                    );
+                  }
+
+                  final allSongs = music.songs;
+                  final songs = allSongs.take(6).toList();
+                  if (songs.isEmpty) {
+                    return SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Center(
+                          child: Text(music.error ?? "No songs found. :("),
+                        ),
+                      ),
+                    );
+                  }
+
+                  return SliverList.builder(
+                    itemCount: songs.length + (allSongs.length > 6 ? 0 : 1),
+                    itemBuilder: (context, index) {
+                      if (index == songs.length && allSongs.length <= 6) {
+                        return const SizedBox(height: 120);
+                      }
+                      if (index >= songs.length) return const SizedBox.shrink();
+                      final song = songs[index];
+
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12.0,
+                          vertical: 0.0,
+                        ),
+                        child: TrackTile(
+                          track: song,
+                          playlistContext: allSongs,
+                          isFirst: index == 0,
+                          isLast: index == songs.length - 1,
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -21,13 +21,44 @@ class MusicProvider extends ChangeNotifier {
   bool _hasScanned = false;
   String? _error;
 
+  Playlist? _recentlyPlayedCache;
+  Playlist? _topPlayedCache;
+  Playlist? _favoritesCache;
+
   // Getters
   List<Song> get songs => _songs;
   List<Album> get albums => _albums;
   List<Artist> get artists => _artists;
   List<Playlist> get playlists => _playlists;
 
-  Playlist get recentlyPlayed {
+  Playlist get recentlyPlayed =>
+      _recentlyPlayedCache ??
+      Playlist(
+        id: 'recently_played',
+        name: 'Recently Listened',
+        songs: [],
+        createdAt: DateTime.now(),
+      );
+
+  Playlist get topPlayed =>
+      _topPlayedCache ??
+      Playlist(
+        id: 'top_played',
+        name: 'Top Listened',
+        songs: [],
+        createdAt: DateTime.now(),
+      );
+
+  Playlist get favorites =>
+      _favoritesCache ??
+      Playlist(
+        id: 'favorites',
+        name: 'Favorites',
+        songs: [],
+        createdAt: DateTime.now(),
+      );
+
+  Playlist _calculateRecentlyPlayed() {
     if (!Hive.isBoxOpen('play_history')) {
       return Playlist(
         id: 'recently_played',
@@ -60,11 +91,11 @@ class MusicProvider extends ChangeNotifier {
     );
   }
 
-  Playlist get topPlayed {
+  Playlist _calculateTopPlayed() {
     if (!Hive.isBoxOpen('play_counts')) {
       return Playlist(
         id: 'top_played',
-        name: 'Most Played',
+        name: 'Top Listened',
         songs: [],
         createdAt: DateTime.now(),
       );
@@ -91,7 +122,7 @@ class MusicProvider extends ChangeNotifier {
     );
   }
 
-  Playlist get favorites {
+  Playlist _calculateFavorites() {
     if (!Hive.isBoxOpen('favorites')) {
       return Playlist(
         id: 'favorites',
@@ -101,9 +132,8 @@ class MusicProvider extends ChangeNotifier {
       );
     }
     final favoritesBox = Hive.box<int>('favorites');
-    // Keys are song IDs, values are timestamps (millisSinceEpoch)
     final entries = favoritesBox.toMap().entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value)); // latest first
+      ..sort((a, b) => b.value.compareTo(a.value));
     final orderedIds = entries.map((e) => e.key as int).toList();
     final songMap = {for (final s in _songs) s.id: s};
     final favoriteSongs = orderedIds
@@ -158,6 +188,7 @@ class MusicProvider extends ChangeNotifier {
       _loadPlaylists();
 
       _hasScanned = true;
+      _refreshCaches();
     } catch (e) {
       _error = 'Failed to scan device: $e';
       debugPrint('Error scanning device: $e');
@@ -165,6 +196,12 @@ class MusicProvider extends ChangeNotifier {
 
     _isLoading = false;
     notifyListeners();
+  }
+
+  void _refreshCaches() {
+    _recentlyPlayedCache = _calculateRecentlyPlayed();
+    _topPlayedCache = _calculateTopPlayed();
+    _favoritesCache = _calculateFavorites();
   }
 
   Future<List<Directory>> _getMusicDirectories(
@@ -399,6 +436,7 @@ class MusicProvider extends ChangeNotifier {
     } else {
       await box.put(song.id, DateTime.now().millisecondsSinceEpoch);
     }
+    _favoritesCache = _calculateFavorites();
     notifyListeners();
   }
 
@@ -451,6 +489,30 @@ class MusicProvider extends ChangeNotifier {
     notifyListeners();
     final box = Hive.box<String>('playlists');
     await box.delete(playlistId);
+  }
+
+  Future<void> renamePlaylist(String playlistId, String newName) async {
+    final index = _playlists.indexWhere((p) => p.id == playlistId);
+    if (index != -1) {
+      _playlists[index] = _playlists[index].copyWith(name: newName);
+      notifyListeners();
+      await _savePlaylist(_playlists[index]);
+    }
+  }
+
+  Future<void> reorderPlaylistSongs(
+    String playlistId,
+    int oldIndex,
+    int newIndex,
+  ) async {
+    final playlist = _playlists.firstWhere((p) => p.id == playlistId);
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+    final song = playlist.songs.removeAt(oldIndex);
+    playlist.songs.insert(newIndex, song);
+    notifyListeners();
+    await _savePlaylist(playlist);
   }
 
   // Search functionality

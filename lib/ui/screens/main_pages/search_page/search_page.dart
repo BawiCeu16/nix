@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/music_provider.dart';
@@ -36,87 +37,114 @@ class _SearchPageState extends State<SearchPage> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final music = context.watch<MusicProvider>();
-
-    return Scaffold(
-      backgroundColor: colorScheme.surfaceContainer,
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          SliverAppBar(
-            floating: false,
-            snap: false,
-            scrolledUnderElevation: 0,
-            backgroundColor: Colors.transparent,
-            expandedHeight: 30,
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(60),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-                child: SearchBar(
-                  backgroundColor: WidgetStatePropertyAll(colorScheme.surface),
-                  elevation: const WidgetStatePropertyAll(0),
-                  controller: _searchController,
-                  hintText: "Search songs, artists, albums...",
-                  leading: Padding(
-                    padding: const EdgeInsets.only(left: 8.0),
-                    child: const Icon(FlutterRemix.search_line),
-                  ),
-                  trailing: [
-                    if (_searchController.text.isNotEmpty)
-                      IconButton(
-                        icon: const Icon(FlutterRemix.close_line),
-                        onPressed: () {
-                          _searchController.clear();
-                          _onSearchChanged('', music);
-                        },
+    final brightness = Theme.of(context).brightness;
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: brightness == Brightness.dark
+          ? SystemUiOverlayStyle.light.copyWith(
+              statusBarColor: Colors.transparent,
+            )
+          : SystemUiOverlayStyle.dark.copyWith(
+              statusBarColor: Colors.transparent,
+            ),
+      child: Scaffold(
+        backgroundColor: colorScheme.surfaceContainer,
+        resizeToAvoidBottomInset: false,
+        body: SafeArea(
+          bottom: false,
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              SliverAppBar(
+                systemOverlayStyle: brightness == Brightness.dark
+                    ? SystemUiOverlayStyle.light.copyWith(
+                        statusBarColor: Colors.transparent,
+                      )
+                    : SystemUiOverlayStyle.dark.copyWith(
+                        statusBarColor: Colors.transparent,
                       ),
-                  ],
-                  onChanged: (val) => _onSearchChanged(val, music),
+                floating: false,
+                snap: false,
+                scrolledUnderElevation: 0,
+                elevation: 0,
+                backgroundColor: Colors.transparent,
+                expandedHeight: 30,
+                bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(60),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                    child: SearchBar(
+                      backgroundColor: WidgetStatePropertyAll(
+                        colorScheme.surface,
+                      ),
+                      elevation: const WidgetStatePropertyAll(0),
+                      controller: _searchController,
+                      hintText: "Search songs, artists, albums...",
+                      textInputAction: TextInputAction.search,
+                      leading: Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
+                        child: const Icon(FlutterRemix.search_line),
+                      ),
+                      trailing: [
+                        if (_searchController.text.isNotEmpty)
+                          IconButton(
+                            icon: const Icon(FlutterRemix.close_line),
+                            onPressed: () {
+                              _searchController.clear();
+                              _onSearchChanged('', music);
+                            },
+                          ),
+                      ],
+                      onChanged: (val) => _onSearchChanged(val, music),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
 
-          // Results or placeholder
-          if (_searchResults.isEmpty && _searchController.text.isEmpty)
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(
-                child: Text(
-                  "Type something to search...",
-                  style: TextStyle(color: colorScheme.onSurfaceVariant),
+              // Results or placeholder
+              if (_searchResults.isEmpty && _searchController.text.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Text(
+                      "Type something to search...",
+                      style: TextStyle(color: colorScheme.onSurfaceVariant),
+                    ),
+                  ),
+                )
+              else if (_searchResults.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Text(
+                      "No results found.",
+                      style: TextStyle(color: colorScheme.onSurfaceVariant),
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  sliver: SliverList.builder(
+                    itemCount: _searchResults.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index == _searchResults.length)
+                        return SizedBox(
+                          height:
+                              120 + MediaQuery.of(context).viewInsets.bottom,
+                        );
+                      final song = _searchResults[index];
+                      return TrackTile(
+                        track: song,
+                        playlistContext: _searchResults,
+                        isFirst: index == 0,
+                        isLast: index == _searchResults.length - 1,
+                      );
+                    },
+                  ),
                 ),
-              ),
-            )
-          else if (_searchResults.isEmpty)
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(
-                child: Text(
-                  "No results found.",
-                  style: TextStyle(color: colorScheme.onSurfaceVariant),
-                ),
-              ),
-            )
-          else
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              sliver: SliverList.builder(
-                itemCount: _searchResults.length + 1,
-                itemBuilder: (context, index) {
-                  if (index == _searchResults.length)
-                    return const SizedBox(height: 120);
-                  final song = _searchResults[index];
-                  return TrackTile(
-                    track: song,
-                    playlistContext: _searchResults,
-                    isFirst: index == 0,
-                    isLast: index == _searchResults.length - 1,
-                  );
-                },
-              ),
-            ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }

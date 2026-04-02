@@ -54,4 +54,11 @@ class SettingsProvider with ChangeNotifier {
     _box.put('customAccentColor', color.value);
     notifyListeners();
   }
+
+  // Swipe to Dismiss
+  bool get swipeToDismiss => _box.get('swipeToDismiss', defaultValue: true);
+  set swipeToDismiss(bool value) {
+    _box.put('swipeToDismiss', value);
+    notifyListeners();
+  }
 }

@@ -6,47 +6,30 @@ import 'package:just_audio/just_audio.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:wave_slider_flutter/wave_slider_flutter.dart';
 import '../../../core/math_utils.dart';
+import '../models/animation_data.dart';
 
 class PlayerControls extends StatelessWidget {
-  final double bottomOffset;
   final double maxOffset;
-  final double bounceProgressValue;
   final double topInset;
   final bool bounceUp;
   final bool bounceDown;
-  final double queueProgressValue;
-  final double inverseClampedProgressValue;
-  final double fastOpacity;
   final Color onSecondary;
-  final double reverseClampedProgressValue;
-  final double clampedProgressValue;
   final Size screenSize;
-  final double reverseProgressValue;
   final VoidCallback onTogglePlay;
   final Animation<double> playPauseAnim;
-  final double progressValue;
-  final double bounceClampedProgressValue;
+  final PlayerAnimationData data;
 
   const PlayerControls({
     super.key,
-    required this.bottomOffset,
     required this.maxOffset,
-    required this.bounceProgressValue,
     required this.topInset,
     required this.bounceUp,
     required this.bounceDown,
-    required this.queueProgressValue,
-    required this.inverseClampedProgressValue,
-    required this.fastOpacity,
     required this.onSecondary,
-    required this.reverseClampedProgressValue,
-    required this.clampedProgressValue,
     required this.screenSize,
-    required this.reverseProgressValue,
     required this.onTogglePlay,
     required this.playPauseAnim,
-    required this.progressValue,
-    required this.bounceClampedProgressValue,
+    required this.data,
   });
 
   @override
@@ -62,32 +45,32 @@ class PlayerControls extends StatelessWidget {
           child: Transform.translate(
             offset: Offset(
               0,
-              bottomOffset +
-                  (-maxOffset / 7.5 * bounceProgressValue) +
+              data.bottomOffset +
+                  (-maxOffset / 7.5 * data.bounceProgress) +
                   ((-maxOffset + topInset + 80.0) *
                       (!bounceUp
                           ? !bounceDown
-                                ? queueProgressValue
-                                : (1 - bounceProgressValue)
+                                ? data.queueProgress
+                                : (1 - data.bounceProgress)
                           : 0.0)),
             ),
             child: Padding(
-              padding: EdgeInsets.all(12.0 * inverseClampedProgressValue),
+              padding: EdgeInsets.all(12.0 * data.inverseClampedProgress),
               child: Align(
                 alignment: Alignment.bottomRight,
                 child: Stack(
                   alignment: Alignment.centerRight,
                   children: [
-                    if (fastOpacity > 0.0)
+                    if (data.fastOpacity > 0.0)
                       Opacity(
-                        opacity: fastOpacity,
+                        opacity: data.fastOpacity,
                         child: Padding(
                           padding: EdgeInsets.symmetric(
                             horizontal:
                                 24.0 *
                                 (16 *
                                         (!bounceDown
-                                            ? inverseClampedProgressValue
+                                            ? data.inverseClampedProgress
                                             : 0.0) +
                                     1),
                           ),
@@ -120,16 +103,16 @@ class PlayerControls extends StatelessWidget {
                           ),
                         ),
                       ),
-                    if (fastOpacity > 0.0)
+                    if (data.fastOpacity > 0.0)
                       Opacity(
-                        opacity: fastOpacity,
+                        opacity: data.fastOpacity,
                         child: Padding(
                           padding: EdgeInsets.symmetric(
                             horizontal:
                                 84.0 *
                                 (2 *
                                         (!bounceDown
-                                            ? inverseClampedProgressValue
+                                            ? data.inverseClampedProgress
                                             : 0.0) +
                                     1),
                           ),
@@ -159,39 +142,39 @@ class PlayerControls extends StatelessWidget {
                     Padding(
                       padding:
                           EdgeInsets.all(
-                            12.0 * inverseClampedProgressValue,
+                            12.0 * data.inverseClampedProgress,
                           ).add(
                             EdgeInsets.only(
                               right: !bounceDown
                                   ? !bounceUp
                                         ? screenSize.width *
-                                                  reverseClampedProgressValue /
+                                                  data.reverseClampedProgress /
                                                   2 -
                                               80 *
-                                                  reverseClampedProgressValue /
+                                                  data.reverseClampedProgress /
                                                   2 +
-                                              (queueProgressValue * 24.0)
+                                              (data.queueProgress * 24.0)
                                         : screenSize.width *
-                                                  clampedProgressValue /
+                                                  data.clampedProgress /
                                                   2 -
-                                              80 * clampedProgressValue / 2
+                                              80 * data.clampedProgress / 2
                                   : screenSize.width *
-                                            bounceClampedProgressValue /
+                                            data.bounceClampedProgress /
                                             2 -
-                                        80 * bounceClampedProgressValue / 2 +
-                                        (queueProgressValue * 24.0),
+                                        80 * data.bounceClampedProgress / 2 +
+                                        (data.queueProgress * 24.0),
                             ),
                           ),
                       child: SizedBox(
                         height: rangeProgress(
                           a: 60.0,
                           b: 80.0,
-                          c: reverseProgressValue,
+                          c: data.reverseProgress,
                         ),
                         width: rangeProgress(
                           a: 60.0,
                           b: 80.0,
-                          c: reverseProgressValue,
+                          c: data.reverseProgress,
                         ),
                         child: FloatingActionButton(
                           onPressed: onTogglePlay,
@@ -212,7 +195,7 @@ class PlayerControls extends StatelessWidget {
                             size: rangeProgress(
                               a: 32.0,
                               b: 46.0,
-                              c: reverseProgressValue,
+                              c: data.reverseProgress,
                             ),
                           ),
                         ),
@@ -225,13 +208,13 @@ class PlayerControls extends StatelessWidget {
           ),
         ),
         // SLIDER
-        if (fastOpacity > 0.0)
+        if (data.fastOpacity > 0.0)
           Opacity(
-            opacity: fastOpacity,
+            opacity: data.fastOpacity,
             child: Transform.translate(
               offset: Offset(
                 0,
-                bottomOffset + (-maxOffset / 4.3 * progressValue),
+                data.bottomOffset + (-maxOffset / 4.3 * data.progress),
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25),
