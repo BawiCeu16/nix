@@ -13,7 +13,7 @@ class SongInfoDialog extends StatelessWidget {
     this.duration = "0:00",
     this.size = "0.0 MB",
     this.filePath = "/storage/emulated/0/Music/dummy.mp3",
-    this.songUri,
+    this.songId,
   });
 
   final String title;
@@ -22,7 +22,7 @@ class SongInfoDialog extends StatelessWidget {
   final String duration;
   final String size;
   final String filePath;
-  final String? songUri;
+  final int? songId;
 
   static void show(
     BuildContext context, {
@@ -32,13 +32,13 @@ class SongInfoDialog extends StatelessWidget {
     String duration = "0:00",
     String size = "0.0 MB",
     String filePath = "/storage/emulated/0/Music/music.flac",
-    String? songUri,
+    int? songId,
   }) {
     NixDialog.show(
       context: context,
       title: title,
       subtitle: artist,
-      songUri: songUri,
+      songId: songId,
       children: [
         CardListTile(
           title: "Album",

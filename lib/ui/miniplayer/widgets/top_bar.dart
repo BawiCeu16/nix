@@ -87,7 +87,7 @@ class TopBar extends StatelessWidget {
                         context: context,
                         title: song.title,
                         subtitle: song.artist,
-                        songUri: song.uri,
+                        songId: song.id,
                         children: [
                           CardListTile(
                             title: isFav ? "Remove from Favorites" : "Add to Favorites",
@@ -133,7 +133,7 @@ class TopBar extends StatelessWidget {
                                 ).shortFormat(),
                                 size: song.size.formatBytes(),
                                 filePath: song.uri,
-                                songUri: song.uri,
+                                songId: song.id,
                               );
                             },
                           ),

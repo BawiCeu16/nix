@@ -9,7 +9,6 @@ import 'package:nix/models/music/song.dart';
 import 'package:nix/ui/widgets/common/nix_empty_state.dart';
 import 'package:nix/ui/widgets/common/nix_action_row.dart';
 import 'package:nix/ui/widgets/common/nix_page_header.dart';
-import 'package:nix/core/artwork_helper.dart';
 import 'package:nix/ui/widgets/dialogs/playlist_dialogs.dart';
 
 class PlaylistViewPage extends StatelessWidget {
@@ -61,7 +60,7 @@ class PlaylistViewPage extends StatelessWidget {
           }
 
           final songs = List<Song>.from(pl?.songs ?? []);
-          final artwork = ArtworkHelper.getFirstArtwork(songs.map((s) => s.uri).toList());
+          final firstSongId = songs.isNotEmpty ? songs.first.id : null;
 
           if (songs.isEmpty) {
             return NixEmptyState(
@@ -98,7 +97,7 @@ class PlaylistViewPage extends StatelessWidget {
                   key: const ValueKey('header'),
                   title: playlistName,
                   subtitle: "${songs.length} Tracks",
-                  artwork: artwork,
+                  songId: firstSongId,
                   actionRow: NixActionRow(
                     onShuffle: () {
                       final audio = context.read<CurrentMusicProvider>();

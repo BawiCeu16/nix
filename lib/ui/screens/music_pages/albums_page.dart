@@ -9,7 +9,7 @@ import 'package:nix/ui/widgets/list_item/track_tile.dart';
 import 'package:nix/ui/widgets/common/nix_empty_state.dart';
 import 'package:nix/ui/widgets/common/nix_action_row.dart';
 import 'package:nix/ui/widgets/common/nix_page_header.dart';
-import 'package:nix/core/artwork_helper.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 
 enum _AlbumSort { defaultOrder, aToZ, zToA }
 
@@ -84,9 +84,9 @@ class _AlbumsPageState extends State<AlbumsPage> {
             itemBuilder: (context, index) {
               final album = albums[index];
               final albumSongs = music.getSongsByAlbum(album.title);
-              final artwork = ArtworkHelper.getFirstArtwork(
-                albumSongs.map((s) => s.uri).toList(),
-              );
+              final firstSongId = albumSongs.isNotEmpty
+                  ? albumSongs.first.id
+                  : null;
 
               return GestureDetector(
                 onTap: () {
@@ -104,14 +104,31 @@ class _AlbumsPageState extends State<AlbumsPage> {
                   clipBehavior: Clip.antiAlias,
                   color: colorScheme.surfaceContainerHighest,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Expanded(
-                        child: artwork != null
-                            ? Image.memory(artwork, fit: BoxFit.cover)
+                        child: firstSongId != null
+                            ? QueryArtworkWidget(
+                                id: firstSongId,
+                                type: ArtworkType.AUDIO,
+                                keepOldArtwork: true,
+                                artworkFit: BoxFit.cover,
+                                artworkBorder: BorderRadius.circular(8),
+                                artworkQuality: FilterQuality.high,
+                                artworkWidth: 400,
+                                artworkHeight: 400,
+                                nullArtworkWidget: Container(
+                                  color: colorScheme.primaryContainer,
+                                  child: Icon(
+                                    FlutterRemix.disc_line,
+                                    size: 48,
+                                    color: colorScheme.onPrimaryContainer,
+                                  ),
+                                ),
+                              )
                             : Container(
                                 color: colorScheme.primaryContainer,
                                 child: Icon(
@@ -183,9 +200,7 @@ class AlbumSongsPage extends StatelessWidget {
       body: Consumer<MusicProvider>(
         builder: (context, music, child) {
           final songs = music.getSongsByAlbum(albumTitle);
-          final artwork = ArtworkHelper.getFirstArtwork(
-            songs.map((s) => s.uri).toList(),
-          );
+          final firstSongId = songs.isNotEmpty ? songs.first.id : null;
 
           if (songs.isEmpty) {
             return const NixEmptyState(
@@ -203,7 +218,7 @@ class AlbumSongsPage extends StatelessWidget {
                 return NixPageHeader(
                   title: albumTitle,
                   subtitle: "$albumArtist • ${songs.length} Songs",
-                  artwork: artwork,
+                  songId: firstSongId,
                   fallbackIcon: FlutterRemix.disc_line,
                   actionRow: NixActionRow(
                     onShuffle: () {

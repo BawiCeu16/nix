@@ -7,11 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:hive/hive.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 
 import '../models/music/song.dart';
 import '../models/music/playlist.dart';
 import '../providers/settings_provider.dart';
-import '../core/artwork_helper.dart';
 
 enum AudioLoadingState { idle, loading, loaded, error }
 
@@ -118,8 +118,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       _currentPlaylist = playlist ?? _getDefaultPlaylistForSong(song);
 
       // Update MediaItem for system notification
-      await Hive.openBox("cached_images");
-      final artworkBytes = ArtworkHelper.getArtwork(song.uri);
+      final artworkBytes = await OnAudioQuery().queryArtwork(song.id, ArtworkType.AUDIO);
 
       String? artPath;
       if (artworkBytes != null) {

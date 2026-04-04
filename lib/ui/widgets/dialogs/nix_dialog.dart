@@ -1,19 +1,18 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
 import 'package:flutter_remix/flutter_remix.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 
 class NixDialog extends StatelessWidget {
   final String? title;
   final String? subtitle;
-  final String? songUri;
+  final int? songId;
   final List<Widget> children;
 
   const NixDialog({
     super.key,
     this.title,
     this.subtitle,
-    this.songUri,
+    this.songId,
     required this.children,
   });
 
@@ -21,7 +20,7 @@ class NixDialog extends StatelessWidget {
     required BuildContext context,
     String? title,
     String? subtitle,
-    String? songUri,
+    int? songId,
     required List<Widget> children,
   }) {
     return showGeneralDialog<T>(
@@ -33,7 +32,7 @@ class NixDialog extends StatelessWidget {
         return NixDialog(
           title: title,
           subtitle: subtitle,
-          songUri: songUri,
+          songId: songId,
           children: children,
         );
       },
@@ -44,16 +43,6 @@ class NixDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-
-    Uint8List? artwork;
-    if (songUri != null) {
-      try {
-        if (Hive.isBoxOpen('cached_images')) {
-          final data = Hive.box('cached_images').get(songUri);
-          if (data != null && data is Uint8List) artwork = data;
-        }
-      } catch (_) {}
-    }
 
     return Center(
       child: Container(
@@ -81,20 +70,26 @@ class NixDialog extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
                   child: Row(
                     children: [
-                      if (songUri != null || artwork != null) ...[
+                      if (songId != null) ...[
                         ClipRRect(
                           borderRadius: BorderRadius.circular(16),
                           child: SizedBox(
                             width: 68,
                             height: 68,
-                            child: artwork != null
-                                ? Image.memory(artwork, fit: BoxFit.cover)
-                                : Container(
-                                    color: colorScheme.secondaryContainer,
-                                    child: const Icon(
-                                      FlutterRemix.music_2_line,
-                                    ),
-                                  ),
+                            child: QueryArtworkWidget(
+                              id: songId!,
+                              type: ArtworkType.AUDIO,
+                              keepOldArtwork: true,
+                              artworkFit: BoxFit.cover,
+                              artworkBorder: BorderRadius.circular(16),
+                              artworkQuality: FilterQuality.high,
+                              artworkWidth: 200,
+                              artworkHeight: 200,
+                              nullArtworkWidget: Container(
+                                color: colorScheme.secondaryContainer,
+                                child: const Icon(FlutterRemix.music_2_line),
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 16),

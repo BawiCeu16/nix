@@ -1,14 +1,13 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
-import 'package:hive/hive.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 
 class QueueTile extends StatelessWidget {
   const QueueTile({
     super.key,
     this.title = "Queue Track",
     this.subtitle = "Queue Artist",
-    this.songUri,
+    this.songId,
     this.itemIndex = 0,
     this.isPlaying = false,
     this.onTap,
@@ -18,7 +17,7 @@ class QueueTile extends StatelessWidget {
 
   final String title;
   final String subtitle;
-  final String? songUri;
+  final int? songId;
   final int itemIndex;
   final bool isPlaying;
   final VoidCallback? onTap;
@@ -27,15 +26,6 @@ class QueueTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Fetch artwork from Hive
-    Uint8List? artwork;
-    try {
-      if (songUri != null && Hive.isBoxOpen('cached_images')) {
-        final data = Hive.box('cached_images').get(songUri);
-        if (data != null && data is Uint8List) artwork = data;
-      }
-    } catch (_) {}
-
     return Material(
       type: MaterialType.transparency,
       child: Dismissible(
@@ -82,8 +72,28 @@ class QueueTile extends StatelessWidget {
             child: SizedBox(
               width: 48,
               height: 48,
-              child: artwork != null
-                  ? Image.memory(artwork, fit: BoxFit.cover)
+              child: songId != null
+                  ? QueryArtworkWidget(
+                      id: songId!,
+                      type: ArtworkType.AUDIO,
+                      keepOldArtwork: true,
+                      artworkFit: BoxFit.cover,
+                      artworkBorder: BorderRadius.circular(8),
+                      artworkQuality: FilterQuality.high,
+                      artworkWidth: 200,
+                      artworkHeight: 200,
+                      nullArtworkWidget: Container(
+                        color: isPlaying
+                            ? Theme.of(context).colorScheme.primaryContainer
+                            : Theme.of(context).colorScheme.secondaryContainer,
+                        child: isPlaying
+                            ? Icon(
+                                FlutterRemix.play_fill,
+                                color: Theme.of(context).colorScheme.primary,
+                              )
+                            : const Icon(FlutterRemix.music_2_line),
+                      ),
+                    )
                   : Container(
                       color: isPlaying
                           ? Theme.of(context).colorScheme.primaryContainer

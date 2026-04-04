@@ -155,7 +155,7 @@ class _QueueViewState extends State<QueueView> {
                                     key: ValueKey('queue_${song.id}_$index'),
                                     title: song.title,
                                     subtitle: song.artist,
-                                    songUri: song.uri,
+                                    songId: song.id,
                                     itemIndex: index,
                                     isPlaying:
                                         currentMusic.playing?.id == song.id,

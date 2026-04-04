@@ -1,11 +1,11 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 
 class NixPageHeader extends StatelessWidget {
   final String title;
   final String subtitle;
-  final Uint8List? artwork;
+  final int? songId;
   final IconData fallbackIcon;
   final Widget? actionRow;
 
@@ -13,7 +13,7 @@ class NixPageHeader extends StatelessWidget {
     super.key,
     required this.title,
     required this.subtitle,
-    this.artwork,
+    this.songId,
     this.fallbackIcon = FlutterRemix.play_list_fill,
     this.actionRow,
   });
@@ -34,8 +34,22 @@ class NixPageHeader extends StatelessWidget {
               width: 300,
               height: 300,
               color: colorScheme.secondaryContainer,
-              child: artwork != null
-                  ? Image.memory(artwork!, fit: BoxFit.cover)
+              child: songId != null
+                  ? QueryArtworkWidget(
+                      id: songId!,
+                      type: ArtworkType.AUDIO,
+                      keepOldArtwork: true,
+                      artworkFit: BoxFit.cover,
+                      artworkBorder: BorderRadius.circular(8),
+                      artworkQuality: FilterQuality.high,
+                      artworkWidth: 800,
+                      artworkHeight: 800,
+                      nullArtworkWidget: Icon(
+                        fallbackIcon,
+                        size: 80,
+                        color: colorScheme.onSecondaryContainer,
+                      ),
+                    )
                   : Icon(
                       fallbackIcon,
                       size: 80,

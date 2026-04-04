@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:audio_metadata_reader/audio_metadata_reader.dart' as amr;
+import 'package:on_audio_query/on_audio_query.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:hive/hive.dart';
 import '../models/music/song.dart';
 import '../models/music/album.dart';
@@ -14,6 +14,7 @@ import 'current_music_provider.dart';
 
 class MusicProvider extends ChangeNotifier {
   List<Song> _songs = [];
+  final OnAudioQuery _audioQuery = OnAudioQuery();
   List<Album> _albums = [];
   List<Artist> _artists = [];
   final List<Playlist> _playlists = [];
@@ -189,29 +190,56 @@ class MusicProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final directories = await _getMusicDirectories(customFolders);
-      final audioFiles = <File>[];
-
-      for (final dir in directories) {
-        if (await dir.exists()) {
-          audioFiles.addAll(await _scanDirectoryForAudioFiles(dir));
+      bool permissionStatus = false;
+      if (Platform.isIOS) {
+        permissionStatus = await _audioQuery.permissionsStatus();
+        if (!permissionStatus) {
+            permissionStatus = await _audioQuery.permissionsRequest();
         }
+      } else {
+        final audioStatus = await Permission.audio.request();
+        final storageStatus = await Permission.storage.request();
+        permissionStatus = audioStatus.isGranted || storageStatus.isGranted;
       }
 
-      // Convert files to songs
-      _songs = await _convertFilesToSongs(audioFiles);
+      if (!permissionStatus) {
+         _error = 'Storage permission not granted. Cannot scan music.';
+         _isLoading = false;
+         notifyListeners();
+         return;
+      }
 
-      // Group songs into albums and artists
+      final audioList = await _audioQuery.querySongs(
+        sortType: null,
+        orderType: OrderType.ASC_OR_SMALLER,
+        uriType: UriType.EXTERNAL,
+        ignoreCase: true,
+      );
+
+      final validAudio = audioList.where((item) => 
+         item.isMusic == true || item.isPodcast == true
+      ).toList();
+
+      _songs = validAudio.map((audio) {
+        return Song(
+          id: audio.id,
+          title: audio.title,
+          artist: audio.artist ?? '<Unknown>',
+          album: audio.album ?? '<Unknown>',
+          uri: audio.data,
+          duration: audio.duration ?? 0,
+          size: audio.size,
+        );
+      }).toList();
+
       _createAlbumsAndArtists();
-
-      // Load user playlists
       _loadPlaylists();
-
+      
       _hasScanned = true;
       _refreshCaches();
     } catch (e) {
       _error = 'Failed to scan device: $e';
-      debugPrint('Error scanning device: $e');
+      debugPrint('Error querying MediaStore: $e');
     }
 
     _isLoading = false;
@@ -222,126 +250,6 @@ class MusicProvider extends ChangeNotifier {
     _recentlyPlayedCache = _calculateRecentlyPlayed();
     _topPlayedCache = _calculateTopPlayed();
     _favoritesCache = _calculateFavorites();
-  }
-
-  Future<List<Directory>> _getMusicDirectories(
-    List<String>? customFolders,
-  ) async {
-    final directories = <Directory>[];
-
-    // Common music directories
-    if (Platform.isAndroid) {
-      directories.addAll([
-        Directory('/storage/emulated/0/Music'),
-        Directory('/storage/emulated/0/Download'),
-        Directory('/storage/emulated/0/DCIM'),
-      ]);
-
-      // Try to get external storage directories
-      try {
-        final externalDirs = await getExternalStorageDirectories();
-        if (externalDirs != null) {
-          for (final dir in externalDirs) {
-            directories.add(dir);
-          }
-        }
-      } catch (e) {
-        debugPrint('Error getting external directories: $e');
-      }
-    } else if (Platform.isIOS) {
-      final documentsDir = await getApplicationDocumentsDirectory();
-      directories.add(Directory('${documentsDir.path}/Music'));
-    }
-
-    if (customFolders != null && customFolders.isNotEmpty) {
-      for (final path in customFolders) {
-        final dir = Directory(path);
-        // Avoid adding duplicates
-        if (!directories.any((d) => d.path == dir.path)) {
-          directories.add(dir);
-        }
-      }
-    }
-
-    return directories;
-  }
-
-  Future<List<File>> _scanDirectoryForAudioFiles(Directory directory) async {
-    final audioFiles = <File>[];
-    final audioExtensions = ['.mp3', '.m4a', '.aac', '.ogg', '.wav', '.flac'];
-
-    try {
-      await for (final entity in directory.list(
-        recursive: true,
-        followLinks: false,
-      )) {
-        if (entity is File) {
-          final extension = entity.path.toLowerCase();
-          if (audioExtensions.any((ext) => extension.endsWith(ext))) {
-            audioFiles.add(entity);
-          }
-        }
-      }
-    } catch (e) {
-      debugPrint('Error scanning directory ${directory.path}: $e');
-    }
-
-    return audioFiles;
-  }
-
-  Future<List<Song>> _convertFilesToSongs(List<File> files) async {
-    final songs = <Song>[];
-    final box = await Hive.openBox("cached_images");
-
-    for (int i = 0; i < files.length; i++) {
-      final file = files[i];
-      try {
-        final metadata = amr.readMetadata(file, getImage: true);
-
-        String title =
-            metadata.title ?? file.path.split('/').last.split('.').first;
-        String artist = metadata.artist ?? 'Unknown Artist';
-        String album = metadata.album ?? 'Unknown Album';
-        int duration = metadata.duration?.inMilliseconds ?? 0;
-
-        // Save artwork to Hive if available
-        if (metadata.pictures.isNotEmpty) {
-          final picture = metadata.pictures.first;
-          await box.put(file.path, picture.bytes);
-        }
-
-        final song = Song(
-          id: i,
-          title: title,
-          artist: artist,
-          album: album,
-          uri: file.path,
-          duration: duration,
-          size: await file.length(),
-        );
-
-        songs.add(song);
-      } catch (e) {
-        debugPrint('Error processing file ${file.path}: $e');
-        // Fallback to basic info if metadata reading fails
-        final fileName = file.path.split('/').last;
-        final nameWithoutExtension = fileName.split('.').first;
-
-        songs.add(
-          Song(
-            id: i,
-            title: nameWithoutExtension,
-            artist: 'Unknown Artist',
-            album: 'Unknown Album',
-            uri: file.path,
-            duration: 0,
-            size: await file.length(),
-          ),
-        );
-      }
-    }
-
-    return songs;
   }
 
   void _createAlbumsAndArtists() {
@@ -368,7 +276,7 @@ class MusicProvider extends ChangeNotifier {
 
       // Use the first song's artwork for the album
       if (songsInAlbum.isNotEmpty) {
-        albumImages = Images(sources: {'default': songsInAlbum.first.uri});
+        albumImages = Images(sources: {'default': songsInAlbum.first.id.toString()});
       }
 
       final album = Album(

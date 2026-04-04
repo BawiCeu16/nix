@@ -9,7 +9,7 @@ import 'package:nix/models/music/artist.dart';
 import 'package:nix/models/music/song.dart';
 import 'package:nix/ui/widgets/list_item/track_tile.dart';
 import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
-import 'package:nix/core/artwork_helper.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 
 enum _ArtistSort { defaultOrder, aToZ, zToA }
 
@@ -82,9 +82,9 @@ class _ArtistsPageState extends State<ArtistsPage> {
               final artist = artists[index];
               // Get first song by this artist for artwork using helper
               final artistSongs = music.getSongsByArtist(artist.name);
-              final artwork = ArtworkHelper.getFirstArtwork(
-                artistSongs.map((s) => s.uri).toList(),
-              );
+              final firstSongId = artistSongs.isNotEmpty
+                  ? artistSongs.first.id
+                  : null;
 
               return GestureDetector(
                 onTap: () {
@@ -103,12 +103,23 @@ class _ArtistsPageState extends State<ArtistsPage> {
                       height: 130,
                       color: colorScheme.secondaryContainer,
                       clipBehavior: Clip.antiAlias,
-                      child: artwork != null
-                          ? Image.memory(
-                              artwork,
-                              fit: BoxFit.cover,
-                              width: 130,
-                              height: 130,
+                      child: firstSongId != null
+                          ? QueryArtworkWidget(
+                              id: firstSongId,
+                              type: ArtworkType.AUDIO,
+                              keepOldArtwork: true,
+                              artworkFit: BoxFit.cover,
+                              artworkBorder: BorderRadius.circular(16),
+                              artworkQuality: FilterQuality.high,
+                              artworkWidth: 400,
+                              artworkHeight: 400,
+                              nullArtworkWidget: Center(
+                                child: Icon(
+                                  FlutterRemix.user_4_fill,
+                                  size: 48,
+                                  color: colorScheme.onSecondaryContainer,
+                                ),
+                              ),
                             )
                           : Center(
                               child: Icon(
@@ -171,9 +182,7 @@ class ArtistSongsPage extends StatelessWidget {
         builder: (context, music, child) {
           final songs = music.getSongsByArtist(artistName);
           final albums = music.getAlbumsByArtist(artistName);
-          final artwork = ArtworkHelper.getFirstArtwork(
-            songs.map((s) => s.uri).toList(),
-          );
+          final firstSongId = songs.isNotEmpty ? songs.first.id : null;
 
           if (songs.isEmpty) {
             return const Center(child: Text("No songs found for this artist."));
@@ -195,12 +204,23 @@ class ArtistSongsPage extends StatelessWidget {
                         height: 300,
                         color: colorScheme.secondaryContainer,
                         clipBehavior: Clip.antiAlias,
-                        child: artwork != null
-                            ? Image.memory(
-                                artwork,
-                                fit: BoxFit.cover,
-                                width: 200,
-                                height: 200,
+                        child: firstSongId != null
+                            ? QueryArtworkWidget(
+                                id: firstSongId,
+                                type: ArtworkType.AUDIO,
+                                keepOldArtwork: true,
+                                artworkFit: BoxFit.cover,
+                                artworkBorder: BorderRadius.circular(32),
+                                artworkQuality: FilterQuality.high,
+                                artworkWidth: 800,
+                                artworkHeight: 800,
+                                nullArtworkWidget: Center(
+                                  child: Icon(
+                                    FlutterRemix.user_4_fill,
+                                    size: 64,
+                                    color: colorScheme.onSecondaryContainer,
+                                  ),
+                                ),
                               )
                             : Center(
                                 child: Icon(

@@ -11,7 +11,7 @@ import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 import 'package:nix/ui/widgets/dialogs/playlist_dialogs.dart';
 import 'package:nix/ui/widgets/dialogs/song_info_dialog.dart';
 import 'package:nix/core/format.dart';
-import 'package:nix/core/artwork_helper.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 import '../../screens/music_pages/artists_page.dart';
 import '../../screens/music_pages/albums_page.dart';
 
@@ -87,7 +87,7 @@ class _TrackTileState extends State<TrackTile> {
       context: context,
       title: widget.track.title,
       subtitle: widget.track.artist,
-      songUri: widget.track.uri,
+      songId: widget.track.id,
       children: [
         CardListTile(
           title: isFav ? "Remove from Favorites" : "Add to Favorites",
@@ -135,7 +135,8 @@ class _TrackTileState extends State<TrackTile> {
             Navigator.of(context, rootNavigator: true).pop();
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (_) => ArtistSongsPage(artistName: widget.track.artist),
+                builder: (_) =>
+                    ArtistSongsPage(artistName: widget.track.artist),
               ),
             );
           },
@@ -171,7 +172,7 @@ class _TrackTileState extends State<TrackTile> {
               duration: _formattedDuration,
               size: widget.track.size.formatBytes(),
               filePath: widget.track.uri,
-              songUri: widget.track.uri,
+              songId: widget.track.id,
             );
           },
         ),
@@ -274,7 +275,7 @@ class _TrackTileState extends State<TrackTile> {
                   duration: _formattedDuration,
                   size: widget.track.size.formatBytes(),
                   filePath: widget.track.uri,
-                  songUri: widget.track.uri,
+                  songId: widget.track.id,
                 );
               },
               child: AnimatedScale(
@@ -294,7 +295,7 @@ class _TrackTileState extends State<TrackTile> {
                       padding: const EdgeInsets.symmetric(vertical: 4.0),
                       child: ListTile(
                         leading: _ArtworkLeading(
-                          songUri: widget.track.uri,
+                          songId: widget.track.id,
                           isPlaying: isNowPlaying,
                         ),
                         title: Text(
@@ -337,16 +338,15 @@ class _TrackTileState extends State<TrackTile> {
   }
 }
 
-/// Shows artwork from Hive cached_images box, or a music icon placeholder
+/// Shows artwork from MediaStore via on_audio_query
 class _ArtworkLeading extends StatelessWidget {
-  final String songUri;
+  final int songId;
   final bool isPlaying;
 
-  const _ArtworkLeading({required this.songUri, required this.isPlaying});
+  const _ArtworkLeading({required this.songId, required this.isPlaying});
 
   @override
   Widget build(BuildContext context) {
-    final artworkBytes = ArtworkHelper.getArtwork(songUri);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -355,21 +355,27 @@ class _ArtworkLeading extends StatelessWidget {
       child: SizedBox(
         width: 48,
         height: 48,
-        child: artworkBytes != null
-            ? Image.memory(artworkBytes, fit: BoxFit.cover)
-            : Container(
-                color: isPlaying
-                    ? colorScheme.primaryContainer
-                    : colorScheme.surfaceContainerHighest,
-                child: Icon(
-                  isPlaying
-                      ? FlutterRemix.pulse_fill
-                      : FlutterRemix.music_2_line,
-                  color: isPlaying
-                      ? colorScheme.primary
-                      : colorScheme.onSurfaceVariant,
-                ),
-              ),
+        child: QueryArtworkWidget(
+          id: songId,
+          type: ArtworkType.AUDIO,
+          keepOldArtwork: true,
+          artworkFit: BoxFit.cover,
+          artworkBorder: BorderRadius.circular(8),
+          artworkQuality: FilterQuality.high,
+          artworkWidth: 200,
+          artworkHeight: 200,
+          nullArtworkWidget: Container(
+            color: isPlaying
+                ? colorScheme.primaryContainer
+                : colorScheme.surfaceContainerHighest,
+            child: Icon(
+              isPlaying ? FlutterRemix.pulse_fill : FlutterRemix.music_2_line,
+              color: isPlaying
+                  ? colorScheme.primary
+                  : colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
       ),
     );
   }

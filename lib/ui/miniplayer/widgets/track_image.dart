@@ -1,7 +1,6 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
-import 'package:hive/hive.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import '../../../core/math_utils.dart';
@@ -34,19 +33,6 @@ class TrackImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentSong = context.watch<CurrentMusicProvider>().currentSong;
-
-    Uint8List? artworkBytes;
-    if (currentSong != null) {
-      try {
-        if (Hive.isBoxOpen('cached_images')) {
-          final box = Hive.box('cached_images');
-          final artworkData = box.get(currentSong.uri);
-          if (artworkData != null && artworkData is Uint8List) {
-            artworkBytes = artworkData;
-          }
-        }
-      } catch (_) {}
-    }
 
     return AnimatedBuilder(
       animation: sAnim,
@@ -98,11 +84,31 @@ class TrackImage extends StatelessWidget {
                             c: data.bounceClampedProgress,
                           ),
                         ),
-                        child: artworkBytes != null
-                            ? Image.memory(
-                                artworkBytes,
-                                fit: BoxFit.cover,
-                                gaplessPlayback: true,
+                        child: currentSong != null
+                            ? QueryArtworkWidget(
+                                id: currentSong.id,
+                                type: ArtworkType.AUDIO,
+                                keepOldArtwork: true,
+                                artworkFit: BoxFit.cover,
+                                artworkBorder: BorderRadius.circular(15),
+                                artworkQuality: FilterQuality.high,
+                                artworkWidth: 800,
+                                artworkHeight: 800,
+                                nullArtworkWidget: Container(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primaryContainer,
+                                  child: Center(
+                                    child: Icon(
+                                      FlutterRemix.music_2_fill,
+                                      size: 40,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer
+                                          .withValues(alpha: .5),
+                                    ),
+                                  ),
+                                ),
                               )
                             : Container(
                                 color: Theme.of(

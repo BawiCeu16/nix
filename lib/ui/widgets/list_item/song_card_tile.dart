@@ -1,7 +1,6 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
-import 'package:hive/hive.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 import 'package:nix/models/music/song.dart';
 
 /// A card tile that shows a song's artwork from the Hive cached_images box,
@@ -16,14 +15,6 @@ class SongCardTile extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    Uint8List? artwork;
-    try {
-      if (Hive.isBoxOpen('cached_images')) {
-        final data = Hive.box('cached_images').get(song.uri);
-        if (data != null && data is Uint8List) artwork = data;
-      }
-    } catch (_) {}
-
     return Card(
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
@@ -37,14 +28,22 @@ class SongCardTile extends StatelessWidget {
             aspectRatio: 1.0,
             child: SizedBox(
               width: double.infinity,
-              child: artwork != null
-                  ? Image.memory(artwork, fit: BoxFit.cover)
-                  : Container(
-                      color: colorScheme.secondaryContainer,
-                      child: const Center(
-                        child: Icon(FlutterRemix.music_2_line, size: 36),
-                      ),
-                    ),
+              child: QueryArtworkWidget(
+                id: song.id,
+                type: ArtworkType.AUDIO,
+                keepOldArtwork: true,
+                artworkFit: BoxFit.cover,
+                artworkBorder: BorderRadius.circular(8),
+                artworkQuality: FilterQuality.high,
+                artworkWidth: 400,
+                artworkHeight: 400,
+                nullArtworkWidget: Container(
+                  color: colorScheme.secondaryContainer,
+                  child: const Center(
+                    child: Icon(FlutterRemix.music_2_line, size: 36),
+                  ),
+                ),
+              ),
             ),
           ),
           // ── Text area ──

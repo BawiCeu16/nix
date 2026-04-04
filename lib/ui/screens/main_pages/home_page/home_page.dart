@@ -1,8 +1,7 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_remix/flutter_remix.dart';
-import 'package:hive/hive.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/music_provider.dart';
@@ -238,8 +237,8 @@ class HomePage extends StatelessWidget {
                                 child: _AlbumCard(
                                   title: album.title,
                                   subtitle: album.artist,
-                                  firstSongUri: albumSongs.isNotEmpty
-                                      ? albumSongs.first.uri
+                                  firstSongId: albumSongs.isNotEmpty
+                                      ? albumSongs.first.id
                                       : null,
                                   onTap: () {
                                     Navigator.of(context).push(
@@ -337,17 +336,17 @@ class HomePage extends StatelessWidget {
   }
 }
 
-// ── Album Card with artwork from Hive ──
+// ── Album Card with artwork from MediaStore ──
 class _AlbumCard extends StatelessWidget {
   final String title;
   final String subtitle;
-  final String? firstSongUri;
+  final int? firstSongId;
   final VoidCallback? onTap;
 
   const _AlbumCard({
     required this.title,
     required this.subtitle,
-    this.firstSongUri,
+    this.firstSongId,
     this.onTap,
   });
 
@@ -355,14 +354,6 @@ class _AlbumCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-
-    Uint8List? artwork;
-    try {
-      if (firstSongUri != null && Hive.isBoxOpen('cached_images')) {
-        final data = Hive.box('cached_images').get(firstSongUri);
-        if (data != null && data is Uint8List) artwork = data;
-      }
-    } catch (_) {}
 
     return Card(
       margin: EdgeInsets.zero,
@@ -379,8 +370,23 @@ class _AlbumCard extends StatelessWidget {
               aspectRatio: 1.0,
               child: SizedBox(
                 width: double.infinity,
-                child: artwork != null
-                    ? Image.memory(artwork, fit: BoxFit.cover)
+                child: firstSongId != null
+                    ? QueryArtworkWidget(
+                        id: firstSongId!,
+                        type: ArtworkType.AUDIO,
+                        keepOldArtwork: true,
+                        artworkFit: BoxFit.cover,
+                        artworkBorder: BorderRadius.circular(8),
+                        artworkQuality: FilterQuality.high,
+                        artworkWidth: 400,
+                        artworkHeight: 400,
+                        nullArtworkWidget: Container(
+                          color: colorScheme.secondaryContainer,
+                          child: const Center(
+                            child: Icon(FlutterRemix.disc_line, size: 36),
+                          ),
+                        ),
+                      )
                     : Container(
                         color: colorScheme.secondaryContainer,
                         child: const Center(
