@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:provider/provider.dart';
-import '../../../../providers/settings_provider.dart';
-import '../../../../providers/user_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../widgets/list_item/card_list_tile.dart';
 import '../../../widgets/common/nix_section_header.dart';
 
@@ -51,7 +49,6 @@ class AboutPage extends StatelessWidget {
                           child: Image.asset(
                             'assets/logo.png',
                             fit: BoxFit.cover,
-
                             errorBuilder: (context, error, stackTrace) => Icon(
                               FlutterRemix.music_2_fill,
                               size: 50,
@@ -86,11 +83,15 @@ class AboutPage extends StatelessWidget {
               const NixSectionHeader(title: 'Developer', topPadding: 40),
               CardListTile(
                 title: 'Bawiceu',
-                subtitle: 'Lead Developer & Designer',
-                icon: FlutterRemix.code_s_slash_line,
+                subtitle: 'Developer & Designer',
+                leading: const CircleAvatar(
+                  radius: 20,
+                  backgroundImage: AssetImage('assets/logo.png'),
+                ),
                 isFirst: true,
                 isLast: true,
-                onTap: () {}, // Could link to a profile
+                onTap: () =>
+                    _launchURL(context, 'https://bawiceu16.github.io/bawiceu.dev/'),
               ),
 
               const NixSectionHeader(
@@ -102,14 +103,14 @@ class AboutPage extends StatelessWidget {
                 subtitle: 'Source code and contributions',
                 icon: FlutterRemix.github_line,
                 isFirst: true,
-                onTap: () {},
+                onTap: () => _launchURL(context, 'https://github.com/BawiCeu16/nix'),
               ),
               const SizedBox(height: 2.5),
               CardListTile(
                 title: 'Telegram',
                 subtitle: 'Join our community',
                 icon: FlutterRemix.telegram_line,
-                onTap: () {},
+                onTap: () => _launchURL(context, 'https://t.me/bawiceuapp'),
               ),
               const SizedBox(height: 2.5),
               CardListTile(
@@ -117,7 +118,7 @@ class AboutPage extends StatelessWidget {
                 subtitle: 'Help us improve Nix',
                 icon: FlutterRemix.bug_2_line,
                 isLast: true,
-                onTap: () {},
+                onTap: () => _launchURL(context, 'mailto:bawiceu1428@gmail.com'),
               ),
 
               const NixSectionHeader(title: 'Legal & Tools', topPadding: 32),
@@ -163,7 +164,6 @@ class AboutPage extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              // Note: Ideally, clear Hive boxes here
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Settings have been reset.')),
@@ -174,5 +174,20 @@ class AboutPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _launchURL(BuildContext context, String url) async {
+    try {
+      final Uri uri = Uri.parse(url);
+      if (!await launchUrl(uri, mode: LaunchMode.platformDefault)) {
+        throw 'Could not launch $url';
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error opening link: $url')),
+        );
+      }
+    }
   }
 }

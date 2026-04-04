@@ -43,7 +43,7 @@ class AppearanceSettingsPage extends StatelessWidget {
                   final isLast = mode == ThemeMode.values.last;
                   return Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 1.5),
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: NixChoiceChip<ThemeMode>(
                         label: mode.name.toUpperCase(),
                         value: mode,
