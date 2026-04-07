@@ -10,7 +10,7 @@ class PlaybackSettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settingsParams = context.watch<SettingsProvider>();
+    final settings = context.watch<SettingsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -28,37 +28,33 @@ class PlaybackSettingsPage extends StatelessWidget {
           const NixSectionHeader(title: 'General', topPadding: 12),
           CardListTile(
             title: 'Auto Play',
-            subtitle: 'Start next song automatically when current song ends',
+            subtitle: 'Keep playing similar tracks when your current song ends',
             icon: FlutterRemix.play_circle_line,
             trailing: Switch(
-              value: settingsParams.autoPlay,
-              onChanged: (val) => settingsParams.autoPlay = val,
+              value: settings.autoPlay,
+              onChanged: (value) => settings.setAutoPlay(value),
             ),
             isFirst: true,
-            onTap: () => settingsParams.autoPlay = !settingsParams.autoPlay,
+            onTap: () => settings.setAutoPlay(!settings.autoPlay),
           ),
           const SizedBox(height: 2.5),
           CardListTile(
-            title: 'Swipe to Dismiss',
-            subtitle: 'Swipe down on miniplayer to stop playback',
+            title: 'Swipe Down to Dismiss',
+            subtitle: 'Allow closing the player by swiping down fully',
             icon: FlutterRemix.arrow_down_circle_line,
             trailing: Switch(
-              value: settingsParams.swipeToDismiss,
-              onChanged: (val) => settingsParams.swipeToDismiss = val,
+              value: settings.swipeToDismiss,
+              onChanged: (value) => settings.setSwipeToDismiss(value),
             ),
             isLast: true,
-            onTap: () =>
-                settingsParams.swipeToDismiss = !settingsParams.swipeToDismiss,
+            onTap: () => settings.setSwipeToDismiss(!settings.swipeToDismiss),
           ),
 
           const Padding(
             padding: EdgeInsets.only(left: 12, top: 24, right: 12),
             child: Text(
               'Gestures allow for a more intuitive control of your music. Auto Play ensures your music никогда doesn\'t stop.',
-              style: TextStyle(
-                fontSize: 13,
-                height: 1.5,
-              ),
+              style: TextStyle(fontSize: 13, height: 1.5),
             ),
           ),
         ],

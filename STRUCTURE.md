@@ -18,6 +18,7 @@ lib/
 │
 ├── core/
 │   ├── format.dart                    # Extension methods: duration, bytes formatting
+│   ├── hive_keys.dart                 # Centralized constants for all persistent storage keys
 │   └── math_utils.dart                # Pure math helpers: rangeProgress, norm, inverseAboveOne
 │
 ├── models/
@@ -25,8 +26,7 @@ lib/
 │       ├── song.dart                  # Song value object
 │       ├── album.dart                 # Album value object
 │       ├── artist.dart                # Artist value object
-│       ├── playlist.dart              # Playlist value object (contains List<Song>)
-│       └── images.dart                # Artwork cache model (Hive)
+│       └── playlist.dart              # Playlist value object (contains List<Song>)
 │
 ├── providers/
 │   ├── current_music_provider.dart    # BaseAudioHandler: playback, queue, shuffle, seek
@@ -37,6 +37,8 @@ lib/
 │   └── will_pop_provider.dart         # Back-button interception bridge
 │
 └── ui/
+    ├── theme/
+    │   └── nix_theme.dart             # Material 3 dynamic color theme builder
     ├── miniplayer/
     │   ├── models/
     │   │   └── animation_data.dart    # PlayerAnimationData: computed progress values bundle

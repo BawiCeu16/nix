@@ -96,17 +96,6 @@ class HomePage extends StatelessWidget {
                           ],
                         ),
                       ),
-                      // CircleAvatar(
-                      //   radius: 20,
-                      //   backgroundColor: UserProvider
-                      //       .avatarColors[user.avatarIndex]
-                      //       .withValues(alpha: 0.2),
-                      //   child: Icon(
-                      //     UserProvider.avatarIcons[user.avatarIndex],
-                      //     color: UserProvider.avatarColors[user.avatarIndex],
-                      //     size: 20,
-                      //   ),
-                      // ),
                     ],
                   ),
                 ),
@@ -311,7 +300,6 @@ class HomePage extends StatelessWidget {
                       }
                       if (index >= songs.length) return const SizedBox.shrink();
                       final song = songs[index];
-
                       return Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12.0,

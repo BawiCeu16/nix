@@ -9,7 +9,7 @@ import '../models/music/song.dart';
 import '../models/music/album.dart';
 import '../models/music/artist.dart';
 import '../models/music/playlist.dart';
-import '../models/music/images.dart';
+import '../core/hive_keys.dart';
 import 'current_music_provider.dart';
 
 class MusicProvider extends ChangeNotifier {
@@ -20,8 +20,9 @@ class MusicProvider extends ChangeNotifier {
   final List<Playlist> _playlists = [];
 
   bool _isLoading = false;
-  bool _hasScanned = false;
+  final bool _hasScanned = false;
   String? _error;
+  DateTime? _lastScanned;
 
   Playlist? _recentlyPlayedCache;
   Playlist? _topPlayedCache;
@@ -33,7 +34,9 @@ class MusicProvider extends ChangeNotifier {
   List<Album> get albums => _albums;
   List<Artist> get artists => _artists;
   List<Playlist> get playlists => _playlists;
+  DateTime? get lastScanned => _lastScanned;
 
+  /// Refreshes all cached playlists (recently played, top played, favorites).
   void refreshCaches() {
     _recentlyPlayedCache = _calculateRecentlyPlayed();
     _topPlayedCache = _calculateTopPlayed();
@@ -69,7 +72,7 @@ class MusicProvider extends ChangeNotifier {
       );
 
   Playlist _calculateRecentlyPlayed() {
-    if (!Hive.isBoxOpen('play_history')) {
+    if (!Hive.isBoxOpen(HiveKeys.playHistoryBox)) {
       return Playlist(
         id: 'recently_played',
         name: 'Recently Listened',
@@ -77,7 +80,7 @@ class MusicProvider extends ChangeNotifier {
         createdAt: DateTime.now(),
       );
     }
-    final historyBox = Hive.box<int>('play_history');
+    final historyBox = Hive.box<int>(HiveKeys.playHistoryBox);
     final history = historyBox.toMap();
     final sortedEntries = history.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
@@ -102,7 +105,7 @@ class MusicProvider extends ChangeNotifier {
   }
 
   Playlist _calculateTopPlayed() {
-    if (!Hive.isBoxOpen('play_counts')) {
+    if (!Hive.isBoxOpen(HiveKeys.playCountsBox)) {
       return Playlist(
         id: 'top_played',
         name: 'Top Listened',
@@ -110,7 +113,7 @@ class MusicProvider extends ChangeNotifier {
         createdAt: DateTime.now(),
       );
     }
-    final countsBox = Hive.box<int>('play_counts');
+    final countsBox = Hive.box<int>(HiveKeys.playCountsBox);
     final counts = countsBox.toMap();
     final sortedEntries = counts.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
@@ -133,7 +136,7 @@ class MusicProvider extends ChangeNotifier {
   }
 
   Playlist _calculateFavorites() {
-    if (!Hive.isBoxOpen('favorites')) {
+    if (!Hive.isBoxOpen(HiveKeys.favoritesBox)) {
       return Playlist(
         id: 'favorites',
         name: 'Favorites',
@@ -141,7 +144,7 @@ class MusicProvider extends ChangeNotifier {
         createdAt: DateTime.now(),
       );
     }
-    final favoritesBox = Hive.box<int>('favorites');
+    final favoritesBox = Hive.box<int>(HiveKeys.favoritesBox);
     final entries = favoritesBox.toMap().entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
     final orderedIds = entries.map((e) => e.key as int).toList();
@@ -163,14 +166,15 @@ class MusicProvider extends ChangeNotifier {
   bool get hasScanned => _hasScanned;
   String? get error => _error;
 
+  /// Initializes storage and begins background device scan.
   Future<void> init({
     List<String>? customFolders,
     CurrentMusicProvider? currentMusic,
   }) async {
-    await Hive.openBox<int>('favorites');
-    await Hive.openBox<String>('playlists');
-    await Hive.openBox<int>('play_history');
-    await Hive.openBox<int>('play_counts');
+    await Hive.openBox<int>(HiveKeys.favoritesBox);
+    await Hive.openBox<String>(HiveKeys.playlistsBox);
+    await Hive.openBox<int>(HiveKeys.playHistoryBox);
+    await Hive.openBox<int>(HiveKeys.playCountsBox);
 
     if (currentMusic != null) {
       _playbackSubscription?.cancel();
@@ -182,6 +186,7 @@ class MusicProvider extends ChangeNotifier {
     await scanDevice(customFolders: customFolders);
   }
 
+  /// Scans the device for valid audio files and builds the library state.
   Future<void> scanDevice({List<String>? customFolders}) async {
     if (_isLoading) return;
 
@@ -194,7 +199,7 @@ class MusicProvider extends ChangeNotifier {
       if (Platform.isIOS) {
         permissionStatus = await _audioQuery.permissionsStatus();
         if (!permissionStatus) {
-            permissionStatus = await _audioQuery.permissionsRequest();
+          permissionStatus = await _audioQuery.permissionsRequest();
         }
       } else {
         final audioStatus = await Permission.audio.request();
@@ -203,10 +208,10 @@ class MusicProvider extends ChangeNotifier {
       }
 
       if (!permissionStatus) {
-         _error = 'Storage permission not granted. Cannot scan music.';
-         _isLoading = false;
-         notifyListeners();
-         return;
+        _error = 'Storage permission not granted. Cannot scan music.';
+        _isLoading = false;
+        notifyListeners();
+        return;
       }
 
       final audioList = await _audioQuery.querySongs(
@@ -216,12 +221,13 @@ class MusicProvider extends ChangeNotifier {
         ignoreCase: true,
       );
 
-      final validAudio = audioList.where((item) => 
-         item.isMusic == true || item.isPodcast == true
-      ).toList();
+      final validAudio = audioList
+          .where((item) => item.isMusic == true || item.isPodcast == true)
+          .toList();
 
       _songs = validAudio.map((audio) {
         return Song(
+          dateAdded: audio.dateAdded ?? 0,
           id: audio.id,
           title: audio.title,
           artist: audio.artist ?? '<Unknown>',
@@ -234,9 +240,9 @@ class MusicProvider extends ChangeNotifier {
 
       _createAlbumsAndArtists();
       _loadPlaylists();
-      
-      _hasScanned = true;
-      _refreshCaches();
+
+      _rebuildCaches();
+      _lastScanned = DateTime.now();
     } catch (e) {
       _error = 'Failed to scan device: $e';
       debugPrint('Error querying MediaStore: $e');
@@ -246,7 +252,7 @@ class MusicProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _refreshCaches() {
+  void _rebuildCaches() {
     _recentlyPlayedCache = _calculateRecentlyPlayed();
     _topPlayedCache = _calculateTopPlayed();
     _favoritesCache = _calculateFavorites();
@@ -272,19 +278,11 @@ class MusicProvider extends ChangeNotifier {
 
     final Map<String, Album> createdAlbums = {};
     albumMap.forEach((albumTitle, songsInAlbum) {
-      Images? albumImages;
-
-      // Use the first song's artwork for the album
-      if (songsInAlbum.isNotEmpty) {
-        albumImages = Images(sources: {'default': songsInAlbum.first.id.toString()});
-      }
-
       final album = Album(
         id: createdAlbums.length,
         title: albumTitle,
         artist: songsInAlbum.first.artist,
         numOfSongs: songsInAlbum.length,
-        images: albumImages,
       );
       createdAlbums[albumTitle] = album;
     });
@@ -304,18 +302,12 @@ class MusicProvider extends ChangeNotifier {
     });
     _artists = createdArtists.values.toList();
 
-    // Re-link songs to their album and artist objects
-    _songs = _songs.map((song) {
-      return song.copyWith(
-        albumObj: createdAlbums[song.album],
-        artistObj: createdArtists[song.artist],
-      );
-    }).toList();
+    // Note: Song.albumObj and Song.artistObj were removed as they were not read by any UI component.
   }
 
   void _loadPlaylists() {
     _playlists.clear();
-    final box = Hive.box<String>('playlists');
+    final box = Hive.box<String>(HiveKeys.playlistsBox);
     for (final key in box.keys) {
       final jsonStr = box.get(key);
       if (jsonStr != null) {
@@ -352,12 +344,14 @@ class MusicProvider extends ChangeNotifier {
   }
 
   // Favorites management
+  /// Checks if a [song] is marked as favorite.
   bool isFavorite(Song song) {
-    return Hive.box<int>('favorites').containsKey(song.id);
+    return Hive.box<int>(HiveKeys.favoritesBox).containsKey(song.id);
   }
 
+  /// Toggles the favorite status for a [song].
   Future<void> toggleFavorite(Song song) async {
-    final box = Hive.box<int>('favorites');
+    final box = Hive.box<int>(HiveKeys.favoritesBox);
 
     if (box.containsKey(song.id)) {
       await box.delete(song.id);
@@ -369,7 +363,7 @@ class MusicProvider extends ChangeNotifier {
   }
 
   Future<void> _savePlaylist(Playlist p) async {
-    final box = Hive.box<String>('playlists');
+    final box = Hive.box<String>(HiveKeys.playlistsBox);
     final data = {
       'id': p.id,
       'name': p.name,
@@ -415,7 +409,7 @@ class MusicProvider extends ChangeNotifier {
   Future<void> deletePlaylist(String playlistId) async {
     _playlists.removeWhere((p) => p.id == playlistId);
     notifyListeners();
-    final box = Hive.box<String>('playlists');
+    final box = Hive.box<String>(HiveKeys.playlistsBox);
     await box.delete(playlistId);
   }
 

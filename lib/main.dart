@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:audio_service/audio_service.dart';
+import 'package:dynamic_color/dynamic_color.dart';
+import 'core/hive_keys.dart';
 import 'providers/will_pop_provider.dart';
 import 'providers/current_music_provider.dart';
 import 'providers/music_provider.dart';
@@ -10,15 +12,14 @@ import 'providers/user_provider.dart';
 import 'providers/sleep_timer_provider.dart';
 import 'ui/screens/navigation_screen.dart';
 import 'ui/screens/onboarding_page.dart';
-
-import 'package:dynamic_color/dynamic_color.dart';
+import 'ui/theme/nix_theme.dart';
 
 CurrentMusicProvider? _audioHandler;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
-  await Hive.openBox('settings');
+  await Hive.openBox(HiveKeys.settingsBox);
 
   _audioHandler = await AudioService.init(
     builder: () => CurrentMusicProvider(),
@@ -29,7 +30,7 @@ void main() async {
     ),
   );
 
-  // Initialize audio handler
+  /// Initialize audio handler before running app
   await _audioHandler!.init();
 
   runApp(
@@ -51,15 +52,24 @@ void main() async {
   );
 }
 
-class NixApp extends StatelessWidget {
+class NixApp extends StatefulWidget {
   const NixApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Inject SettingsProvider into CurrentMusicProvider
+  State<NixApp> createState() => _NixAppState();
+}
+
+class _NixAppState extends State<NixApp> {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Inject SettingsProvider into CurrentMusicProvider safely
     final settings = context.watch<SettingsProvider>();
     context.read<CurrentMusicProvider>().updateSettings(settings);
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return DynamicColorBuilder(
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
         return Consumer2<SettingsProvider, CurrentMusicProvider>(
@@ -76,27 +86,12 @@ class NixApp extends StatelessWidget {
               seedColor = settings.customAccentColor;
             }
 
-            final theme = ThemeData(
-              colorScheme: ColorScheme.fromSeed(
-                seedColor: seedColor,
-                brightness: Brightness.light,
-              ),
-              splashFactory: NoSplash.splashFactory,
-              useMaterial3: true,
-            );
+            final theme = NixTheme.buildLightTheme(seedColor);
+            final darkTheme = NixTheme.buildDarkTheme(seedColor);
 
-            final darkTheme = ThemeData(
-              colorScheme: ColorScheme.fromSeed(
-                seedColor: seedColor,
-                brightness: Brightness.dark,
-              ),
-              splashFactory: NoSplash.splashFactory,
-              useMaterial3: true,
-            );
-
-            final settingsBox = Hive.box('settings');
+            final settingsBox = Hive.box(HiveKeys.settingsBox);
             final bool hasCompletedOnboarding = settingsBox.get(
-              'hasCompletedOnboarding',
+              HiveKeys.onboarding,
               defaultValue: false,
             );
 

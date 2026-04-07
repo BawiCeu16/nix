@@ -1,6 +1,3 @@
-import 'album.dart';
-import 'artist.dart';
-
 class Song {
   final int id;
   final String title;
@@ -9,8 +6,7 @@ class Song {
   final String uri;
   final int duration;
   final int size;
-  final Album? albumObj;
-  final Artist? artistObj;
+  final int dateAdded;
 
   Song({
     required this.id,
@@ -20,8 +16,7 @@ class Song {
     required this.uri,
     required this.duration,
     this.size = 0,
-    this.albumObj,
-    this.artistObj,
+    required this.dateAdded,
   });
 
   Song copyWith({
@@ -32,8 +27,7 @@ class Song {
     String? uri,
     int? duration,
     int? size,
-    Album? albumObj,
-    Artist? artistObj,
+    int? dateAdded,
   }) {
     return Song(
       id: id ?? this.id,
@@ -43,8 +37,7 @@ class Song {
       uri: uri ?? this.uri,
       duration: duration ?? this.duration,
       size: size ?? this.size,
-      albumObj: albumObj ?? this.albumObj,
-      artistObj: artistObj ?? this.artistObj,
+      dateAdded: dateAdded ?? this.dateAdded,
     );
   }
 

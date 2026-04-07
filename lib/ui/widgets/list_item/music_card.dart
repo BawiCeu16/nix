@@ -39,7 +39,9 @@ class MusicCard extends StatelessWidget {
                 width: double.infinity,
                 child: Container(
                   color: colorScheme.secondaryContainer,
-                  child: const Center(child: Icon(FlutterRemix.music_2_line, size: 36)),
+                  child: const Center(
+                    child: Icon(FlutterRemix.music_2_line, size: 36),
+                  ),
                 ),
               ),
             ),

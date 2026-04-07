@@ -16,8 +16,7 @@ class Playlist {
   });
 
   /// Total duration of all songs in milliseconds.
-  int get totalDurationMs =>
-      songs.fold<int>(0, (sum, s) => sum + s.duration);
+  int get totalDurationMs => songs.fold<int>(0, (sum, s) => sum + s.duration);
 
   Playlist copyWith({
     String? id,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_remix/flutter_remix.dart';
 
 class CardListTile extends StatefulWidget {
   const CardListTile({
@@ -87,7 +86,7 @@ class _CardListTileState extends State<CardListTile> {
                       maxLines: 4,
                     )
                   : null,
-              trailing: widget.trailing ?? null,
+              trailing: widget.trailing,
               // const Icon(FlutterRemix.arrow_right_s_line),
               onTap: widget.onTap,
               onLongPress: widget.onLongPress,

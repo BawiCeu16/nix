@@ -2,10 +2,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'current_music_provider.dart';
 
+/// Provides a countdown sleep timer that automatically stops playback when finished.
 class SleepTimerProvider extends ChangeNotifier {
   Timer? _timer;
   Duration? _remainingTime;
-  
+
   bool get isActive => _timer != null;
   Duration? get remainingTime => _remainingTime;
 

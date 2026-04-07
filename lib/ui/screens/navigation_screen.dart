@@ -22,11 +22,29 @@ class _NavigationScreenState extends State<NavigationScreen>
   late AnimationController animation;
   double? bottom;
 
-  // 1. ADD THIS: Keys to control each tab's independent Navigator
+  // Keys to control each tab's independent Navigator
   final List<GlobalKey<NavigatorState>> _navigatorKeys = [
-    GlobalKey<NavigatorState>(), // Home
-    GlobalKey<NavigatorState>(), // Search
-    GlobalKey<NavigatorState>(), // Library
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+  ];
+
+  static const List<NavigationDestination> _navDestinations = [
+    NavigationDestination(
+      icon: Icon(FlutterRemix.home_line),
+      selectedIcon: Icon(FlutterRemix.home_fill),
+      label: "Home",
+    ),
+    NavigationDestination(
+      icon: Icon(FlutterRemix.search_line),
+      selectedIcon: Icon(FlutterRemix.search_fill),
+      label: "Search",
+    ),
+    NavigationDestination(
+      icon: Icon(FlutterRemix.music_2_line),
+      selectedIcon: Icon(FlutterRemix.music_2_fill),
+      label: "Library",
+    ),
   ];
 
   @override
@@ -56,7 +74,7 @@ class _NavigationScreenState extends State<NavigationScreen>
     super.dispose();
   }
 
-  // 2. ADD THIS: A helper to build a nested Navigator for each tab
+  // Helper to build a nested Navigator for each tab
   Widget _buildTabNavigator(int index, Widget page) {
     return Navigator(
       key: _navigatorKeys[index],
@@ -80,10 +98,17 @@ class _NavigationScreenState extends State<NavigationScreen>
           canPop: false,
           onPopInvokedWithResult: (bool didPop, dynamic result) async {
             if (didPop) return;
-
             // A. Ask the provider if the player is open and needs to be closed
-            final canPopApp = willPop.popper != null ? willPop.popper!() : true;
+            final canPopApp = willPop.handler != null
+                ? willPop.handler!()
+                : true;
             if (!canPopApp) return;
+            // Handle dialogs on the root navigator first
+            final route = ModalRoute.of(context);
+            if (route != null && !route.isCurrent) {
+              Navigator.of(context, rootNavigator: true).pop();
+              return;
+            }
 
             // B. If player is closed, check if the current tab has a page to go back to (like leaving AlbumsPage)
             final currentNavigator =
@@ -162,67 +187,38 @@ class _NavigationScreenState extends State<NavigationScreen>
                       selectedIndex: _selectedIndex,
                       onDestinationSelected: (i) =>
                           setState(() => _selectedIndex = i),
-                      destinations: const [
-                        NavigationDestination(
-                          icon: Icon(FlutterRemix.home_line),
-                          selectedIcon: Icon(FlutterRemix.home_fill),
-                          label: "Home",
-                        ),
-                        NavigationDestination(
-                          icon: Icon(FlutterRemix.search_line),
-                          selectedIcon: Icon(FlutterRemix.search_fill),
-                          label: "Search",
-                        ),
-                        NavigationDestination(
-                          icon: Icon(FlutterRemix.music_2_line),
-                          selectedIcon: Icon(FlutterRemix.music_2_fill),
-                          label: "Library",
-                        ),
-                      ],
+                      destinations: _navDestinations,
                     ),
                   ),
                 ),
               ),
 
-              // 1st Overlay: Opacity (Black + onSecondary Dimming)
+              // Player Overlay: Opacity (Black + onSecondary Dimming) & Wallpaper
               Positioned.fill(
                 child: IgnorePointer(
                   ignoring: animation.value <= 0.01,
                   child: AnimatedBuilder(
                     animation: animation,
                     builder: (context, child) {
-                      if (animation.value > 0.01) {
-                        return Container(
-                          color: Theme.of(context).colorScheme.surface
-                              .withValues(
-                                alpha: (animation.value * 1.2).clamp(0, 1),
-                              ),
-                        );
-                      } else {
-                        return const SizedBox();
-                      }
-                    },
-                  ),
-                ),
-              ),
+                      if (animation.value <= 0.01) return const SizedBox();
 
-              // 2nd Overlay: Player Wallpaper
-              Positioned.fill(
-                child: IgnorePointer(
-                  ignoring: animation.value <= 0.01,
-                  child: AnimatedBuilder(
-                    animation: animation,
-                    builder: (context, child) {
-                      if (animation.value > 0.01) {
-                        return Opacity(
-                          opacity: animation.value.clamp(0.0, 1.0),
-                          child: Container(
-                            color: Theme.of(context).colorScheme.surface,
+                      final opacityValue = animation.value.clamp(0.0, 1.0);
+                      final dimValue = (animation.value * 1.2).clamp(0.0, 1.0);
+                      final surfaceColor = Theme.of(
+                        context,
+                      ).colorScheme.surface;
+
+                      return Stack(
+                        children: [
+                          Container(
+                            color: surfaceColor.withValues(alpha: dimValue),
                           ),
-                        );
-                      } else {
-                        return const SizedBox();
-                      }
+                          Opacity(
+                            opacity: opacityValue,
+                            child: Container(color: surfaceColor),
+                          ),
+                        ],
+                      );
                     },
                   ),
                 ),

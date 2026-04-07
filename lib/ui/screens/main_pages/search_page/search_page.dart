@@ -127,11 +127,12 @@ class _SearchPageState extends State<SearchPage> {
                   sliver: SliverList.builder(
                     itemCount: _searchResults.length + 1,
                     itemBuilder: (context, index) {
-                      if (index == _searchResults.length)
+                      if (index == _searchResults.length) {
                         return SizedBox(
                           height:
                               120 + MediaQuery.of(context).viewInsets.bottom,
                         );
+                      }
                       final song = _searchResults[index];
                       return TrackTile(
                         track: song,

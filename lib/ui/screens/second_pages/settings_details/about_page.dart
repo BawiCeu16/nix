@@ -90,8 +90,10 @@ class AboutPage extends StatelessWidget {
                 ),
                 isFirst: true,
                 isLast: true,
-                onTap: () =>
-                    _launchURL(context, 'https://bawiceu16.github.io/bawiceu.dev/'),
+                onTap: () => _launchURL(
+                  context,
+                  'https://bawiceu16.github.io/bawiceu.dev/',
+                ),
               ),
 
               const NixSectionHeader(
@@ -103,7 +105,8 @@ class AboutPage extends StatelessWidget {
                 subtitle: 'Source code and contributions',
                 icon: FlutterRemix.github_line,
                 isFirst: true,
-                onTap: () => _launchURL(context, 'https://github.com/BawiCeu16/nix'),
+                onTap: () =>
+                    _launchURL(context, 'https://github.com/BawiCeu16/nix'),
               ),
               const SizedBox(height: 2.5),
               CardListTile(
@@ -118,7 +121,8 @@ class AboutPage extends StatelessWidget {
                 subtitle: 'Help us improve Nix',
                 icon: FlutterRemix.bug_2_line,
                 isLast: true,
-                onTap: () => _launchURL(context, 'mailto:bawiceu1428@gmail.com'),
+                onTap: () =>
+                    _launchURL(context, 'mailto:bawiceu1428@gmail.com'),
               ),
 
               const NixSectionHeader(title: 'Legal & Tools', topPadding: 32),
@@ -184,9 +188,9 @@ class AboutPage extends StatelessWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error opening link: $url')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error opening link: $url')));
       }
     }
   }

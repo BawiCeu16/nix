@@ -90,8 +90,12 @@ class TopBar extends StatelessWidget {
                         songId: song.id,
                         children: [
                           CardListTile(
-                            title: isFav ? "Remove from Favorites" : "Add to Favorites",
-                            icon: isFav ? FlutterRemix.heart_3_fill : FlutterRemix.heart_3_line,
+                            title: isFav
+                                ? "Remove from Favorites"
+                                : "Add to Favorites",
+                            icon: isFav
+                                ? FlutterRemix.heart_3_fill
+                                : FlutterRemix.heart_3_line,
                             isFirst: true,
                             onTap: () {
                               music.toggleFavorite(song);
@@ -109,7 +113,8 @@ class TopBar extends StatelessWidget {
                           ),
                           const SizedBox(height: 2.5),
                           CardListTile(
-                            title: "Sleep Timer${context.read<SleepTimerProvider>().isActive ? ' (${context.read<SleepTimerProvider>().remainingTime?.shortFormat()})' : ''}",
+                            title:
+                                "Sleep Timer${context.read<SleepTimerProvider>().isActive ? ' (${context.read<SleepTimerProvider>().remainingTime?.shortFormat()})' : ''}",
                             icon: FlutterRemix.timer_line,
                             onTap: () {
                               Navigator.of(context, rootNavigator: true).pop();

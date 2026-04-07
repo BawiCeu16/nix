@@ -46,17 +46,21 @@ class PlaylistViewPage extends StatelessWidget {
           bool isSystemPlaylist = false;
 
           // Resolve playlist (User or System)
-          if (playlistName == "Recently Listened" || playlistId == "recently_played") {
+          if (playlistName == "Recently Listened" ||
+              playlistId == "recently_played") {
             pl = music.recentlyPlayed;
             isSystemPlaylist = true;
           } else if (playlistName == "Favorites" || playlistId == "favorites") {
             pl = music.favorites;
             isSystemPlaylist = true;
-          } else if (playlistName == "Top Listened" || playlistId == "top_played") {
+          } else if (playlistName == "Top Listened" ||
+              playlistId == "top_played") {
             pl = music.topPlayed;
             isSystemPlaylist = true;
           } else {
-            pl = music.playlists.where((p) => p.name == playlistName || p.id == playlistId).firstOrNull;
+            pl = music.playlists
+                .where((p) => p.name == playlistName || p.id == playlistId)
+                .firstOrNull;
           }
 
           final songs = List<Song>.from(pl?.songs ?? []);
@@ -78,19 +82,21 @@ class PlaylistViewPage extends StatelessWidget {
               if (isSystemPlaylist) return;
               // Adjust for header at index 0
               if (oldIndex < 1 || oldIndex > songs.length) return;
-              
+
               int adjustedOld = oldIndex - 1;
               int adjustedNew = newIndex - 1;
-              
+
               if (adjustedNew < 0) adjustedNew = 0;
               if (adjustedNew >= songs.length) adjustedNew = songs.length - 1;
 
-              music.reorderPlaylistSongs(pl!.id, adjustedOld, adjustedNew + (oldIndex < newIndex ? 1 : 0));
+              music.reorderPlaylistSongs(
+                pl!.id,
+                adjustedOld,
+                adjustedNew + (oldIndex < newIndex ? 1 : 0),
+              );
             },
-            proxyDecorator: (child, index, animation) => Material(
-              color: Colors.transparent,
-              child: child,
-            ),
+            proxyDecorator: (child, index, animation) =>
+                Material(color: Colors.transparent, child: child),
             itemBuilder: (context, index) {
               if (index == 0) {
                 return NixPageHeader(
@@ -106,7 +112,10 @@ class PlaylistViewPage extends StatelessWidget {
                       audio.playSong(shuffled.first, playlist: pl);
                     },
                     onPlay: () {
-                      context.read<CurrentMusicProvider>().playSong(songs.first, playlist: pl);
+                      context.read<CurrentMusicProvider>().playSong(
+                        songs.first,
+                        playlist: pl,
+                      );
                     },
                   ),
                 );
@@ -139,7 +148,10 @@ class PlaylistViewPage extends StatelessWidget {
                       color: colorScheme.errorContainer,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(FlutterRemix.delete_bin_line, color: colorScheme.onErrorContainer),
+                    child: Icon(
+                      FlutterRemix.delete_bin_line,
+                      color: colorScheme.onErrorContainer,
+                    ),
                   ),
                   onDismissed: (_) {
                     music.removeSongFromPlaylist(pl!.id, song);
@@ -154,10 +166,7 @@ class PlaylistViewPage extends StatelessWidget {
                 );
               }
 
-              return Container(
-                key: ValueKey('song_${song.id}'),
-                child: tile,
-              );
+              return Container(key: ValueKey('song_${song.id}'), child: tile);
             },
           );
         },

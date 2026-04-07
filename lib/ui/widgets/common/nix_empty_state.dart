@@ -49,10 +49,7 @@ class NixEmptyState extends StatelessWidget {
                 ),
               ),
             ],
-            if (action != null) ...[
-              const SizedBox(height: 32),
-              action!,
-            ],
+            if (action != null) ...[const SizedBox(height: 32), action!],
           ],
         ),
       ),

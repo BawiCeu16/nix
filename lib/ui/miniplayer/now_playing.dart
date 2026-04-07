@@ -113,8 +113,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  double _applyStagedClamping(double currentOffset) {
-    final settings = context.read<SettingsProvider>();
+  double _applyStagedClamping(double currentOffset, SettingsProvider settings) {
     double lowerBound = -1.1 * headRoom;
     double upperBound = maxOffset * 2;
 
@@ -347,6 +346,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
     final Color onSecondary = Theme.of(
       context,
     ).colorScheme.onSecondaryContainer;
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
 
     // --- CONSUMER & POPPER REGISTRATION ADDED HERE ---
     return Consumer<WillPopProvider>(
@@ -378,8 +378,9 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
           if (event.position.dy > screenSize.height - deadSpace) return;
           velocity.addPosition(event.timeStamp, event.position);
 
+          final settings = context.read<SettingsProvider>();
           offset -= event.delta.dy;
-          offset = _applyStagedClamping(offset);
+          offset = _applyStagedClamping(offset, settings);
           widget.animation.animateTo(
             offset / maxOffset,
             duration: Duration.zero,
@@ -396,8 +397,9 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
             if (details.globalPosition.dy > screenSize.height - deadSpace) {
               return;
             }
+            final settings = context.read<SettingsProvider>();
             offset -= details.primaryDelta ?? 0;
-            offset = _applyStagedClamping(offset);
+            offset = _applyStagedClamping(offset, settings);
             widget.animation.animateTo(
               offset / maxOffset,
               duration: Duration.zero,
@@ -492,12 +494,11 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                                   vertical: 12.0,
                                 ),
                                 child: IconButton(
-                                  onPressed: () {},
+                                  onPressed: null, // TODO: lyrics
                                   icon: const Icon(
                                     FlutterRemix.chat_quote_line,
-                                    size: 28.0,
                                   ),
-                                  color: onSecondary,
+                                  color: colorScheme.onSurface,
                                 ),
                               ),
                             ),

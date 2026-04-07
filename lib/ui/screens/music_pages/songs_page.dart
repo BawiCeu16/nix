@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
-import 'package:provider/provider.dart';
 import 'package:nix/ui/widgets/list_item/track_tile.dart';
 import 'package:nix/models/music/song.dart';
-import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/ui/widgets/common/nix_empty_state.dart';
 
 enum _SongSort { defaultOrder, aToZ, zToA, duration }

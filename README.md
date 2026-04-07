@@ -30,6 +30,9 @@ A fast, minimal music player for Android built with Flutter.
 | Theming | `dynamic_color` (Material You) |
 | UI extras | `expressive_refresh`, `flutter_m3shapes_extended` |
 
+## Current Status: Production-Ready
+The UI/UX and design system are currently complete. The recent major refactor modernized the folder structure, centralized the styling tokens to the `NixTheme` class, decoupled all storage keys into a `HiveKeys` constant file, cleaned up completely unused logic strings, and documented public methods. The application is production-stable and scalable.
+
 ## Getting Started
 
 ```bash

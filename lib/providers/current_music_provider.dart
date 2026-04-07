@@ -11,20 +11,26 @@ import 'package:on_audio_query/on_audio_query.dart';
 
 import '../models/music/song.dart';
 import '../models/music/playlist.dart';
+import '../core/hive_keys.dart';
 import '../providers/settings_provider.dart';
 
+/// Loading states for the audio player.
 enum AudioLoadingState { idle, loading, loaded, error }
 
 /// Result of a queue operation, used by the UI to show appropriate feedback.
 enum QueueResult {
   /// Song was successfully added.
   success,
+
   /// The song is already in the queue.
   duplicate,
+
   /// The operation failed for an unexpected reason.
   error,
 }
 
+/// Core audio playback engine and state manager.
+/// Acts as the BaseAudioHandler for audio_service to enable background playback.
 class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   final AudioPlayer _audioPlayer = AudioPlayer();
   SettingsProvider? _settingsProvider;
@@ -118,7 +124,10 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       _currentPlaylist = playlist ?? _getDefaultPlaylistForSong(song);
 
       // Update MediaItem for system notification
-      final artworkBytes = await OnAudioQuery().queryArtwork(song.id, ArtworkType.AUDIO);
+      final artworkBytes = await OnAudioQuery().queryArtwork(
+        song.id,
+        ArtworkType.AUDIO,
+      );
 
       String? artPath;
       if (artworkBytes != null) {
@@ -126,7 +135,9 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
         // Use a hash of the artwork bytes in the filename to ensure
         // the system media notification doesn't cache a stale or wrong image
         // for the same song ID.
-        final file = File('${tempDir.path}/${song.id}_${artworkBytes.length}.jpg');
+        final file = File(
+          '${tempDir.path}/${song.id}_${artworkBytes.length}.png',
+        );
         if (!await file.exists()) {
           await file.writeAsBytes(artworkBytes);
         }
@@ -145,10 +156,10 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
 
       // Record play history and count
       try {
-        final historyBox = await Hive.openBox<int>('play_history');
+        final historyBox = await Hive.openBox<int>(HiveKeys.playHistoryBox);
         await historyBox.put(song.id, DateTime.now().millisecondsSinceEpoch);
 
-        final countsBox = await Hive.openBox<int>('play_counts');
+        final countsBox = await Hive.openBox<int>(HiveKeys.playCountsBox);
         final currentCount = countsBox.get(song.id, defaultValue: 0) ?? 0;
         await countsBox.put(song.id, currentCount + 1);
       } catch (e) {
@@ -181,7 +192,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       final scheme = await ColorScheme.fromImageProvider(
         provider: MemoryImage(artworkBytes),
       );
-      
+
       _dynamicSeedColor = scheme.primary;
       notifyListeners();
     } catch (e) {
@@ -199,10 +210,6 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   @override
   Future<void> pause() async {
     await _audioPlayer.pause();
-  }
-
-  Future<void> resume() async {
-    await _audioPlayer.play();
   }
 
   @override

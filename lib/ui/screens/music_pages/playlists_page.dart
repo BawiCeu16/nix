@@ -29,7 +29,11 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
           isFirst: true,
           onTap: () {
             Navigator.of(context, rootNavigator: true).pop();
-            PlaylistDialogs.showPlaylistActionDialog(context, initialName: name, playlistId: id);
+            PlaylistDialogs.showPlaylistActionDialog(
+              context,
+              initialName: name,
+              playlistId: id,
+            );
           },
         ),
         const SizedBox(height: 2),
@@ -78,7 +82,8 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
               icon: FlutterRemix.play_list_2_line,
               title: "No playlists yet",
               action: ExpressiveToneButton(
-                onPressed: () => PlaylistDialogs.showPlaylistActionDialog(context),
+                onPressed: () =>
+                    PlaylistDialogs.showPlaylistActionDialog(context),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -115,7 +120,11 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
                     ),
                   ),
                   confirmDismiss: (direction) async {
-                    PlaylistDialogs.showDeleteConfirmation(context, playlist.id, playlist.name);
+                    PlaylistDialogs.showDeleteConfirmation(
+                      context,
+                      playlist.id,
+                      playlist.name,
+                    );
                     return false;
                   },
                   child: CardListTile(
