@@ -11,6 +11,7 @@ import '../../music_pages/playlists_page.dart';
 import '../../music_pages/songs_page.dart';
 import '../../second_pages/profile_page.dart';
 import '../../second_pages/settings_page.dart';
+import 'package:nix/ui/widgets/common/nix_refreshable_list.dart';
 
 class LibraryPage extends StatelessWidget {
   const LibraryPage({super.key});
@@ -40,122 +41,128 @@ class LibraryPage extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10),
         child: Consumer<MusicProvider>(
           builder: (context, music, child) {
-            return ListView(
-              padding: const EdgeInsets.symmetric(vertical: 20.0),
-              physics: const BouncingScrollPhysics(),
-              children: [
-                // User Profile
-                ListTile(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(100),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  tileColor: Theme.of(context).colorScheme.surface,
-                  leading: CircleAvatar(
-                    radius: 30,
-                    backgroundColor: UserProvider.avatarColors[user.avatarIndex]
-                        .withValues(alpha: 0.2),
-                    child: Icon(
-                      UserProvider.avatarIcons[user.avatarIndex],
-                      color: UserProvider.avatarColors[user.avatarIndex],
-                      size: 30,
-                    ),
-                  ),
-                  title: Text(user.userName),
-                  subtitle: const Text("View your music profile"),
-                  onTap: () => _push(context, const ProfilePage()),
+            return NixRefreshableList(
+              onRefresh: () async => await music.scanDevice(),
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: 20.0),
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
                 ),
-                const SizedBox(height: 10),
-                const NixSectionHeader(title: 'Personal', topPadding: 16),
+                children: [
+                  // User Profile
+                  ListTile(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    tileColor: Theme.of(context).colorScheme.surface,
+                    leading: CircleAvatar(
+                      radius: 30,
+                      backgroundColor: UserProvider
+                          .avatarColors[user.avatarIndex]
+                          .withValues(alpha: 0.2),
+                      child: Icon(
+                        UserProvider.avatarIcons[user.avatarIndex],
+                        color: UserProvider.avatarColors[user.avatarIndex],
+                        size: 30,
+                      ),
+                    ),
+                    title: Text(user.userName),
+                    subtitle: const Text("View your music profile"),
+                    onTap: () => _push(context, const ProfilePage()),
+                  ),
+                  const SizedBox(height: 10),
+                  const NixSectionHeader(title: 'Personal', topPadding: 16),
 
-                // Dynamic stats
-                CardListTile(
-                  title: 'Top Listened',
-                  icon: FlutterRemix.fire_fill,
-                  subtitle: '${music.topPlayed.songs.length} tracks',
-                  isFirst: true,
-                  onTap: () => _push(
-                    context,
-                    SongsPage(
-                      title: 'Top Listened',
-                      songsSource: () =>
-                          context.read<MusicProvider>().topPlayed.songs,
+                  // Dynamic stats
+                  CardListTile(
+                    title: 'Top Listened',
+                    icon: FlutterRemix.fire_fill,
+                    subtitle: '${music.topPlayed.songs.length} tracks',
+                    isFirst: true,
+                    onTap: () => _push(
+                      context,
+                      SongsPage(
+                        title: 'Top Listened',
+                        songsSource: () =>
+                            context.read<MusicProvider>().topPlayed.songs,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 2.5),
-                CardListTile(
-                  title: 'Recently Listened',
-                  icon: FlutterRemix.time_line,
-                  subtitle: '${music.recentlyPlayed.songs.length} tracks',
-                  onTap: () => _push(
-                    context,
-                    SongsPage(
-                      title: 'Recently Listened',
-                      songsSource: () =>
-                          context.read<MusicProvider>().recentlyPlayed.songs,
+                  const SizedBox(height: 2.5),
+                  CardListTile(
+                    title: 'Recently Listened',
+                    icon: FlutterRemix.time_line,
+                    subtitle: '${music.recentlyPlayed.songs.length} tracks',
+                    onTap: () => _push(
+                      context,
+                      SongsPage(
+                        title: 'Recently Listened',
+                        songsSource: () =>
+                            context.read<MusicProvider>().recentlyPlayed.songs,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 2.5),
-                CardListTile(
-                  title: 'Favorites',
-                  icon: FlutterRemix.heart_3_fill,
-                  subtitle: '${music.favorites.songs.length} tracks',
-                  isLast: true,
-                  onTap: () => _push(
-                    context,
-                    SongsPage(
-                      title: 'Favorites',
-                      songsSource: () =>
-                          context.read<MusicProvider>().favorites.songs,
+                  const SizedBox(height: 2.5),
+                  CardListTile(
+                    title: 'Favorites',
+                    icon: FlutterRemix.heart_3_fill,
+                    subtitle: '${music.favorites.songs.length} tracks',
+                    isLast: true,
+                    onTap: () => _push(
+                      context,
+                      SongsPage(
+                        title: 'Favorites',
+                        songsSource: () =>
+                            context.read<MusicProvider>().favorites.songs,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                const NixSectionHeader(title: 'Library', topPadding: 0),
+                  const SizedBox(height: 24),
+                  const NixSectionHeader(title: 'Library', topPadding: 0),
 
-                // Media categories
-                CardListTile(
-                  title: 'Artists',
-                  icon: FlutterRemix.user_4_line,
-                  subtitle: '${music.artists.length} artists',
-                  isFirst: true,
-                  onTap: () => _push(context, const ArtistsPage()),
-                ),
-                const SizedBox(height: 2.5),
-                CardListTile(
-                  title: 'Albums',
-                  icon: FlutterRemix.disc_line,
-                  subtitle: '${music.albums.length} albums',
-                  onTap: () => _push(context, const AlbumsPage()),
-                ),
-                const SizedBox(height: 2.5),
-                CardListTile(
-                  title: 'Playlists',
-                  icon: FlutterRemix.play_list_line,
-                  subtitle: '${music.playlists.length} playlists',
-                  onTap: () => _push(context, const PlaylistsPage()),
-                ),
-                const SizedBox(height: 2.5),
-                CardListTile(
-                  title: 'All Songs',
-                  icon: FlutterRemix.music_2_line,
-                  subtitle: '${music.songs.length} tracks',
-                  isLast: true,
-                  onTap: () => _push(
-                    context,
-                    SongsPage(
-                      title: 'All Songs',
-                      songsSource: () => context.read<MusicProvider>().songs,
+                  // Media categories
+                  CardListTile(
+                    title: 'Artists',
+                    icon: FlutterRemix.user_4_line,
+                    subtitle: '${music.artists.length} artists',
+                    isFirst: true,
+                    onTap: () => _push(context, const ArtistsPage()),
+                  ),
+                  const SizedBox(height: 2.5),
+                  CardListTile(
+                    title: 'Albums',
+                    icon: FlutterRemix.disc_line,
+                    subtitle: '${music.albums.length} albums',
+                    onTap: () => _push(context, const AlbumsPage()),
+                  ),
+                  const SizedBox(height: 2.5),
+                  CardListTile(
+                    title: 'Playlists',
+                    icon: FlutterRemix.play_list_line,
+                    subtitle: '${music.playlists.length} playlists',
+                    onTap: () => _push(context, const PlaylistsPage()),
+                  ),
+                  const SizedBox(height: 2.5),
+                  CardListTile(
+                    title: 'All Songs',
+                    icon: FlutterRemix.music_2_line,
+                    subtitle: '${music.songs.length} tracks',
+                    isLast: true,
+                    onTap: () => _push(
+                      context,
+                      SongsPage(
+                        title: 'All Songs',
+                        songsSource: () => context.read<MusicProvider>().songs,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 80),
-              ],
+                  const SizedBox(height: 80),
+                ],
+              ),
             );
           },
         ),

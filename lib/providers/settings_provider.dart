@@ -75,4 +75,75 @@ class SettingsProvider with ChangeNotifier {
     _box.put(HiveKeys.swipeToDismiss, value);
     notifyListeners();
   }
+
+  // Minimum Duration
+  /// Filter out songs with duration less than this (in seconds).
+  int get minDuration => _box.get(HiveKeys.minDuration, defaultValue: 0);
+
+  void setMinDuration(int seconds) {
+    _box.put(HiveKeys.minDuration, seconds);
+    notifyListeners();
+  }
+
+  // Haptic Feedback
+  /// Whether haptic feedback (vibration) is enabled for major actions.
+  bool get enableHaptics =>
+      _box.get(HiveKeys.enableHaptics, defaultValue: true);
+
+  void setEnableHaptics(bool value) {
+    _box.put(HiveKeys.enableHaptics, value);
+    notifyListeners();
+  }
+
+  // Playback Speed
+  /// The current playback speed multiplier (e.g., 1.0, 1.5).
+  double get playbackSpeed =>
+      _box.get(HiveKeys.playbackSpeed, defaultValue: 1.0);
+
+  void setPlaybackSpeed(double value) {
+    _box.put(HiveKeys.playbackSpeed, value);
+    notifyListeners();
+  }
+
+  // Reset Speed on New Track
+  /// Whether the playback speed should reset to 1.0 when a new track starts.
+  bool get resetSpeedOnNewTrack =>
+      _box.get(HiveKeys.resetSpeedOnNewTrack, defaultValue: true);
+
+  void setResetSpeedOnNewTrack(bool value) {
+    _box.put(HiveKeys.resetSpeedOnNewTrack, value);
+    notifyListeners();
+  }
+
+  // Search History
+  /// List of recent search queries.
+  List<String> get searchHistory {
+    final List<dynamic> history = _box.get(
+      HiveKeys.searchHistory,
+      defaultValue: [],
+    );
+    return history.cast<String>();
+  }
+
+  void addSearchQuery(String query) {
+    if (query.isEmpty) return;
+    final List<String> history = searchHistory;
+    history.remove(query); // Remove if exists to move to top
+    history.insert(0, query);
+    if (history.length > 10) history.removeLast(); // Limit to 10
+    _box.put(HiveKeys.searchHistory, history);
+    notifyListeners();
+  }
+
+  void removeSearchQuery(String query) {
+    final List<String> history = searchHistory;
+    history.remove(query);
+    _box.put(HiveKeys.searchHistory, history);
+    notifyListeners();
+  }
+
+  void clearSearchHistory() {
+    _box.put(HiveKeys.searchHistory, []);
+    notifyListeners();
+  }
 }

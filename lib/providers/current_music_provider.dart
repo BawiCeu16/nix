@@ -180,6 +180,12 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
 
       _audioLoadingState = AudioLoadingState.loaded;
       notifyListeners();
+
+      // Apply saved playback speed
+      if (_settingsProvider?.resetSpeedOnNewTrack == true) {
+        _settingsProvider?.setPlaybackSpeed(1.0);
+      }
+      await _audioPlayer.setSpeed(_settingsProvider?.playbackSpeed ?? 1.0);
     } catch (e) {
       _audioLoadingState = AudioLoadingState.error;
       debugPrint('Error playing song: $e');
@@ -224,6 +230,13 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   @override
   Future<void> seek(Duration position) async {
     await _audioPlayer.seek(position);
+  }
+
+  @override
+  Future<void> setSpeed(double speed) async {
+    await _audioPlayer.setSpeed(speed);
+    _settingsProvider?.setPlaybackSpeed(speed);
+    notifyListeners();
   }
 
   @override

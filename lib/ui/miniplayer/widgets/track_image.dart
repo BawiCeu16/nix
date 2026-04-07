@@ -3,6 +3,9 @@ import 'package:flutter_remix/flutter_remix.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
+import 'package:nix/providers/sleep_timer_provider.dart';
+import '../../widgets/dialogs/sleep_timer_dialog.dart';
+import '../../../core/format.dart';
 import '../../../core/math_utils.dart';
 import '../models/animation_data.dart';
 
@@ -84,47 +87,106 @@ class TrackImage extends StatelessWidget {
                             c: data.bounceClampedProgress,
                           ),
                         ),
-                        child: currentSong != null
-                            ? QueryArtworkWidget(
-                                id: currentSong.id,
-                                type: ArtworkType.AUDIO,
-                                keepOldArtwork: true,
-                                artworkFit: BoxFit.cover,
-                                artworkBorder: BorderRadius.circular(15),
-                                artworkQuality: FilterQuality.high,
-                                artworkWidth: 800,
-                                artworkHeight: 800,
-                                nullArtworkWidget: Container(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.primaryContainer,
-                                  child: Center(
-                                    child: Icon(
-                                      FlutterRemix.music_2_fill,
-                                      size: 40,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onPrimaryContainer
-                                          .withValues(alpha: .5),
+                        child: Stack(
+                          children: [
+                            currentSong != null
+                                ? QueryArtworkWidget(
+                                    id: currentSong.id,
+                                    type: ArtworkType.AUDIO,
+                                    keepOldArtwork: true,
+                                    artworkFit: BoxFit.cover,
+                                    artworkBorder: BorderRadius.circular(15),
+                                    artworkQuality: FilterQuality.high,
+                                    artworkWidth: 800,
+                                    artworkHeight: 800,
+                                    nullArtworkWidget: Container(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primaryContainer,
+                                      child: Center(
+                                        child: Icon(
+                                          FlutterRemix.music_2_fill,
+                                          size: 40,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onPrimaryContainer
+                                              .withValues(alpha: .5),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : Container(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primaryContainer,
+                                    child: Center(
+                                      child: Icon(
+                                        FlutterRemix.music_2_fill,
+                                        size: 40,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimaryContainer
+                                            .withValues(alpha: .5),
+                                      ),
                                     ),
                                   ),
-                                ),
-                              )
-                            : Container(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.primaryContainer,
-                                child: Center(
-                                  child: Icon(
-                                    FlutterRemix.music_2_fill,
-                                    size: 40,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onPrimaryContainer
-                                        .withValues(alpha: .5),
+                            // Sleep Timer Indicator
+                            Consumer<SleepTimerProvider>(
+                              builder: (context, timer, _) {
+                                if (!timer.isActive) return const SizedBox();
+                                final opacity = (data.bounceClampedProgress -
+                                        data.queueClampedProgress)
+                                    .clamp(0.0, 1.0);
+                                if (opacity == 0) return const SizedBox();
+
+                                return Positioned(
+                                  top: 12,
+                                  left: 12,
+                                  child: Opacity(
+                                    opacity: opacity,
+                                    child: GestureDetector(
+                                      onLongPress: () {
+                                        SleepTimerDialog.show(context);
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color:
+                                              Colors.black.withValues(alpha: 0.5),
+                                          borderRadius:
+                                              BorderRadius.circular(100),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(
+                                              FlutterRemix.timer_2_line,
+                                              size: 14,
+                                              color: Colors.white,
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              timer.remainingTime?.shortFormat() ??
+                                                  "00:00",
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

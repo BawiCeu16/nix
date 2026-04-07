@@ -186,6 +186,35 @@ class MusicProvider extends ChangeNotifier {
     await scanDevice(customFolders: customFolders);
   }
 
+  /// Completely resets the music library by clearing Hive boxes and re-scanning.
+  Future<void> resetLibrary() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      if (Hive.isBoxOpen(HiveKeys.playHistoryBox)) {
+        await Hive.box<int>(HiveKeys.playHistoryBox).clear();
+      }
+      if (Hive.isBoxOpen(HiveKeys.playCountsBox)) {
+        await Hive.box<int>(HiveKeys.playCountsBox).clear();
+      }
+      if (Hive.isBoxOpen(HiveKeys.favoritesBox)) {
+        await Hive.box<int>(HiveKeys.favoritesBox).clear();
+      }
+      if (Hive.isBoxOpen(HiveKeys.playlistsBox)) {
+        await Hive.box<String>(HiveKeys.playlistsBox).clear();
+      }
+
+      // Re-scan library
+      _isLoading = false;
+      await scanDevice();
+    } catch (e) {
+      debugPrint('Error resetting library: $e');
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   /// Scans the device for valid audio files and builds the library state.
   Future<void> scanDevice({List<String>? customFolders}) async {
     if (_isLoading) return;
@@ -221,9 +250,18 @@ class MusicProvider extends ChangeNotifier {
         ignoreCase: true,
       );
 
-      final validAudio = audioList
-          .where((item) => item.isMusic == true || item.isPodcast == true)
-          .toList();
+      // Read min duration from settings
+      final settingsBox = Hive.box(HiveKeys.settingsBox);
+      final int minDurationSeconds =
+          settingsBox.get(HiveKeys.minDuration, defaultValue: 0) ?? 0;
+      final int minDurationMs = minDurationSeconds * 1000;
+
+      final validAudio = audioList.where((item) {
+        final bool isAcceptedType =
+            item.isMusic == true || item.isPodcast == true;
+        final bool isLongEnough = (item.duration ?? 0) >= minDurationMs;
+        return isAcceptedType && isLongEnough;
+      }).toList();
 
       _songs = validAudio.map((audio) {
         return Song(

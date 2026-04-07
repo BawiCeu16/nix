@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:nix/providers/sleep_timer_provider.dart';
+import 'package:nix/ui/widgets/dialogs/sleep_timer_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:nix/providers/current_music_provider.dart';
@@ -7,9 +9,8 @@ import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 import 'package:nix/ui/widgets/dialogs/playlist_dialogs.dart';
 import 'package:nix/ui/widgets/dialogs/song_info_dialog.dart';
-import 'package:nix/ui/widgets/dialogs/sleep_timer_dialog.dart';
-import 'package:nix/providers/sleep_timer_provider.dart';
 import 'package:nix/core/format.dart';
+import '../../widgets/dialogs/playback_control_dialog.dart';
 
 class TopBar extends StatelessWidget {
   final double topRowOpacity;
@@ -109,6 +110,16 @@ class TopBar extends StatelessWidget {
                             onTap: () {
                               Navigator.of(context, rootNavigator: true).pop();
                               PlaylistDialogs.showPlaylistPicker(context, song);
+                            },
+                          ),
+                          const SizedBox(height: 2.5),
+                          CardListTile(
+                            title: "Playback Controls",
+                            icon: FlutterRemix.equalizer_line,
+                            onTap: () {
+                              // Close current dialog and open sleep timer dialog
+                              Navigator.pop(context);
+                              PlaybackControlDialog.show(context);
                             },
                           ),
                           const SizedBox(height: 2.5),

@@ -31,6 +31,7 @@ class LibrarySettingsPage extends StatelessWidget {
           const NixSectionHeader(title: 'Organization', topPadding: 16),
           CardListTile(
             title: 'Filter Short Audio',
+            subtitle: _getDurationLabel(settings.minDuration),
             icon: FlutterRemix.filter_line,
             isFirst: true,
             onTap: () => _showFilterDialog(context, settings, music),
@@ -53,6 +54,16 @@ class LibrarySettingsPage extends StatelessWidget {
                 );
               }
             },
+          ),
+
+          const NixSectionHeader(title: 'Danger Zone', topPadding: 32),
+          CardListTile(
+            title: 'Reset Library Database',
+            subtitle: 'Clear all history, favorites, and re-scan',
+            icon: FlutterRemix.delete_bin_line,
+            isFirst: true,
+            isLast: true,
+            onTap: () => _showResetConfirmation(context, music),
           ),
 
           const Padding(
@@ -81,7 +92,7 @@ class LibrarySettingsPage extends StatelessWidget {
     final options = [0, 30, 60, 120];
     NixDialog.show(
       context: context,
-      title: ' Minimum Duration',
+      title: 'Minimum Duration',
       children: options.map((sec) {
         final index = options.indexOf(sec);
         return Padding(
@@ -90,15 +101,67 @@ class LibrarySettingsPage extends StatelessWidget {
           ),
           child: CardListTile(
             title: sec == 0 ? 'Off (Show All)' : _getDurationLabel(sec),
-            onTap: () async {},
+            onTap: () async {
+              Navigator.of(context, rootNavigator: true).pop();
+              settings.setMinDuration(sec);
+              // Trigger re-scan to apply filter
+              await music.scanDevice();
+            },
             trailing: IgnorePointer(
-              child: Radio<int>(value: sec, onChanged: (_) {}),
+              child: Radio<int>(
+                value: sec,
+                groupValue: settings.minDuration,
+                onChanged: (_) {},
+                activeColor: Theme.of(context).colorScheme.primary,
+              ),
             ),
             isFirst: index == 0,
             isLast: index == options.length - 1,
           ),
         );
       }).toList(),
+    );
+  }
+
+  void _showResetConfirmation(BuildContext context, MusicProvider music) {
+    NixDialog.show(
+      context: context,
+      title: 'Reset Library?',
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Text(
+            'This will permanently clear your favorites, play counts, and history. The app will then re-scan your device for music.',
+            style: TextStyle(fontSize: 14),
+          ),
+        ),
+        const SizedBox(height: 16),
+        CardListTile(
+          title: 'Confirm Reset',
+          icon: FlutterRemix.check_line,
+          isFirst: true,
+          onTap: () async {
+            Navigator.of(context, rootNavigator: true).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Resetting library...')),
+            );
+            await music.resetLibrary();
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Library has been reset.')),
+              );
+            }
+          },
+        ),
+        const SizedBox(height: 2.5),
+        CardListTile(
+          title: 'Cancel',
+          icon: FlutterRemix.close_line,
+          isLast: true,
+          onTap: () => Navigator.of(context, rootNavigator: true).pop(),
+        ),
+      ],
     );
   }
 }

@@ -16,9 +16,14 @@ abstract final class HiveKeys {
   static const String customAccentColor = 'customAccentColor';
   static const String autoPlay = 'autoPlay';
   static const String swipeToDismiss = 'swipeToDismiss';
+  static const String minDuration = 'minDuration';
+  static const String enableHaptics = 'enableHaptics';
+  static const String playbackSpeed = 'playbackSpeed';
+  static const String resetSpeedOnNewTrack = 'resetSpeedOnNewTrack';
   static const String onboarding = 'hasCompletedOnboarding';
 
   // ── User keys ──────────────────────────────────────────────────────────────
   static const String username = 'username';
   static const String avatarIndex = 'avatarIndex';
+  static const String searchHistory = 'searchHistory';
 }

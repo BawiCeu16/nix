@@ -6,6 +6,7 @@ import 'package:nix/models/music/song.dart';
 import 'package:nix/models/music/playlist.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/music_provider.dart';
+import 'package:nix/providers/settings_provider.dart';
 import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 import 'package:nix/ui/widgets/dialogs/playlist_dialogs.dart';
@@ -266,7 +267,9 @@ class _TrackTileState extends State<TrackTile> {
                     currentMusic.playSong(widget.track, playlist: pl);
                   },
               onLongPress: () {
-                HapticFeedback.mediumImpact();
+                if (context.read<SettingsProvider>().enableHaptics) {
+                  HapticFeedback.mediumImpact();
+                }
                 SongInfoDialog.show(
                   context,
                   title: widget.track.title,

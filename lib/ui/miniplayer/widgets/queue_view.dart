@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
+import 'package:nix/providers/settings_provider.dart';
 import 'package:nix/ui/widgets/list_item/queue_tile.dart';
 
 class QueueView extends StatefulWidget {
@@ -57,7 +58,9 @@ class _QueueViewState extends State<QueueView> {
     final currentMusic = context.read<CurrentMusicProvider>();
 
     currentMusic.reorderQueue(oldIndex, newIndex);
-    HapticFeedback.lightImpact();
+    if (context.read<SettingsProvider>().enableHaptics) {
+      HapticFeedback.lightImpact();
+    }
   }
 
   @override

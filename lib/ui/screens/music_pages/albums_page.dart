@@ -10,6 +10,7 @@ import 'package:nix/ui/widgets/common/nix_empty_state.dart';
 import 'package:nix/ui/widgets/common/nix_action_row.dart';
 import 'package:nix/ui/widgets/common/nix_page_header.dart';
 import 'package:on_audio_query/on_audio_query.dart';
+import 'package:nix/ui/widgets/common/nix_refreshable_list.dart';
 
 enum _AlbumSort { defaultOrder, aToZ, zToA }
 
@@ -59,68 +60,78 @@ class _AlbumsPageState extends State<AlbumsPage> {
             albums.sort((a, b) => b.title.compareTo(a.title));
           }
 
-          if (albums.isEmpty) {
-            return const NixEmptyState(
+          return NixRefreshableList(
+            isEmpty: albums.isEmpty,
+            onRefresh: () async => await music.scanDevice(),
+            emptyState: const NixEmptyState(
               icon: FlutterRemix.disc_line,
               title: "No albums found",
-            );
-          }
-
-          return GridView.builder(
-            padding: const EdgeInsets.only(
-              bottom: 120,
-              left: 16,
-              right: 16,
-              top: 8,
             ),
-            physics: const BouncingScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 0.78,
-            ),
-            itemCount: albums.length,
-            itemBuilder: (context, index) {
-              final album = albums[index];
-              final albumSongs = music.getSongsByAlbum(album.title);
-              final firstSongId = albumSongs.isNotEmpty
-                  ? albumSongs.first.id
-                  : null;
+            child: GridView.builder(
+              padding: const EdgeInsets.only(
+                bottom: 120,
+                left: 16,
+                right: 16,
+                top: 8,
+              ),
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 0.78,
+              ),
+              itemCount: albums.length,
+              itemBuilder: (context, index) {
+                final album = albums[index];
+                final albumSongs = music.getSongsByAlbum(album.title);
+                final firstSongId =
+                    albumSongs.isNotEmpty ? albumSongs.first.id : null;
 
-              return GestureDetector(
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => AlbumSongsPage(
-                        albumTitle: album.title,
-                        albumArtist: album.artist,
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => AlbumSongsPage(
+                          albumTitle: album.title,
+                          albumArtist: album.artist,
+                        ),
                       ),
+                    );
+                  },
+                  child: Card(
+                    elevation: 0,
+                    clipBehavior: Clip.antiAlias,
+                    color: colorScheme.surfaceContainerHighest,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  );
-                },
-                child: Card(
-                  elevation: 0,
-                  clipBehavior: Clip.antiAlias,
-                  color: colorScheme.surfaceContainerHighest,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        child: firstSongId != null
-                            ? QueryArtworkWidget(
-                                id: firstSongId,
-                                type: ArtworkType.AUDIO,
-                                keepOldArtwork: true,
-                                artworkFit: BoxFit.cover,
-                                artworkBorder: BorderRadius.circular(8),
-                                artworkQuality: FilterQuality.high,
-                                artworkWidth: 400,
-                                artworkHeight: 400,
-                                nullArtworkWidget: Container(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: firstSongId != null
+                              ? QueryArtworkWidget(
+                                  id: firstSongId,
+                                  type: ArtworkType.AUDIO,
+                                  keepOldArtwork: true,
+                                  artworkFit: BoxFit.cover,
+                                  artworkBorder: BorderRadius.circular(8),
+                                  artworkQuality: FilterQuality.high,
+                                  artworkWidth: 400,
+                                  artworkHeight: 400,
+                                  nullArtworkWidget: Container(
+                                    color: colorScheme.primaryContainer,
+                                    child: Icon(
+                                      FlutterRemix.disc_line,
+                                      size: 48,
+                                      color: colorScheme.onPrimaryContainer,
+                                    ),
+                                  ),
+                                )
+                              : Container(
                                   color: colorScheme.primaryContainer,
                                   child: Icon(
                                     FlutterRemix.disc_line,
@@ -128,46 +139,42 @@ class _AlbumsPageState extends State<AlbumsPage> {
                                     color: colorScheme.onPrimaryContainer,
                                   ),
                                 ),
-                              )
-                            : Container(
-                                color: colorScheme.primaryContainer,
-                                child: Icon(
-                                  FlutterRemix.disc_line,
-                                  size: 48,
-                                  color: colorScheme.onPrimaryContainer,
-                                ),
-                              ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              album.title,
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              album.artist,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
                         ),
-                      ),
-                    ],
+                        Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                album.title,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                album.artist,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           );
         },
       ),
@@ -202,53 +209,56 @@ class AlbumSongsPage extends StatelessWidget {
           final songs = music.getSongsByAlbum(albumTitle);
           final firstSongId = songs.isNotEmpty ? songs.first.id : null;
 
-          if (songs.isEmpty) {
-            return const NixEmptyState(
+          return NixRefreshableList(
+            isEmpty: songs.isEmpty,
+            onRefresh: () async => await music.scanDevice(),
+            emptyState: const NixEmptyState(
               icon: FlutterRemix.music_2_line,
               title: "No songs found in this album",
-            );
-          }
+            ),
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              itemCount: songs.length + 2, // Header + Songs + Bottom Padding
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return NixPageHeader(
+                    title: albumTitle,
+                    subtitle: "$albumArtist • ${songs.length} Songs",
+                    songId: firstSongId,
+                    fallbackIcon: FlutterRemix.disc_line,
+                    actionRow: NixActionRow(
+                      onShuffle: () {
+                        final audio = context.read<CurrentMusicProvider>();
+                        final shuffled = List<Song>.from(songs)..shuffle();
+                        if (!audio.isShuffleEnabled) audio.toggleShuffle();
+                        audio.playSong(shuffled.first);
+                      },
+                      onPlay: () {
+                        context.read<CurrentMusicProvider>().playSong(
+                              songs.first,
+                            );
+                      },
+                      playLabel: "Play All",
+                    ),
+                  );
+                }
 
-          return ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            physics: const BouncingScrollPhysics(),
-            itemCount: songs.length + 2, // Header + Songs + Bottom Padding
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                return NixPageHeader(
-                  title: albumTitle,
-                  subtitle: "$albumArtist • ${songs.length} Songs",
-                  songId: firstSongId,
-                  fallbackIcon: FlutterRemix.disc_line,
-                  actionRow: NixActionRow(
-                    onShuffle: () {
-                      final audio = context.read<CurrentMusicProvider>();
-                      final shuffled = List<Song>.from(songs)..shuffle();
-                      if (!audio.isShuffleEnabled) audio.toggleShuffle();
-                      audio.playSong(shuffled.first);
-                    },
-                    onPlay: () {
-                      context.read<CurrentMusicProvider>().playSong(
-                        songs.first,
-                      );
-                    },
-                    playLabel: "Play All",
-                  ),
+                if (index == songs.length + 1) {
+                  return const SizedBox(height: 120);
+                }
+
+                final song = songs[index - 1];
+                return TrackTile(
+                  track: song,
+                  playlistContext: songs,
+                  isFirst: index == 1,
+                  isLast: index == songs.length,
                 );
-              }
-
-              if (index == songs.length + 1) {
-                return const SizedBox(height: 120);
-              }
-
-              final song = songs[index - 1];
-              return TrackTile(
-                track: song,
-                playlistContext: songs,
-                isFirst: index == 1,
-                isLast: index == songs.length,
-              );
-            },
+              },
+            ),
           );
         },
       ),

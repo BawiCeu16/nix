@@ -3,12 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/music_provider.dart';
+import 'package:nix/providers/settings_provider.dart';
 import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
 import 'package:nix/ui/widgets/common/nix_empty_state.dart';
 import 'package:nix/ui/widgets/dialogs/playlist_dialogs.dart';
 import 'package:nix/ui/screens/music_pages/views/playlist_view_page.dart';
+import 'package:nix/ui/widgets/common/nix_refreshable_list.dart';
 
 class PlaylistsPage extends StatefulWidget {
   const PlaylistsPage({super.key});
@@ -76,9 +78,10 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
         builder: (context, music, child) {
           final playlists = music.playlists;
           final colorScheme = Theme.of(context).colorScheme;
-
-          if (playlists.isEmpty) {
-            return NixEmptyState(
+          return NixRefreshableList(
+            isEmpty: playlists.isEmpty,
+            onRefresh: () async => await music.scanDevice(),
+            emptyState: NixEmptyState(
               icon: FlutterRemix.play_list_2_line,
               title: "No playlists yet",
               action: ExpressiveToneButton(
@@ -93,75 +96,78 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
                   ],
                 ),
               ),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
-            physics: const BouncingScrollPhysics(),
-            itemCount: playlists.length,
-            itemBuilder: (context, index) {
-              final playlist = playlists[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 2),
-                child: Dismissible(
-                  key: ValueKey(playlist.id),
-                  direction: DismissDirection.endToStart,
-                  background: Container(
-                    padding: const EdgeInsets.only(right: 24),
-                    alignment: Alignment.centerRight,
-                    decoration: BoxDecoration(
-                      color: colorScheme.errorContainer,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      FlutterRemix.delete_bin_line,
-                      color: colorScheme.onErrorContainer,
-                    ),
-                  ),
-                  confirmDismiss: (direction) async {
-                    PlaylistDialogs.showDeleteConfirmation(
-                      context,
-                      playlist.id,
-                      playlist.name,
-                    );
-                    return false;
-                  },
-                  child: CardListTile(
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            PlaylistViewPage(playlistName: playlist.name),
-                      ),
-                    ),
-                    onLongPress: () {
-                      HapticFeedback.mediumImpact();
-                      _showPlaylistMenu(context, playlist.id, playlist.name);
-                    },
-                    isFirst: index == 0,
-                    isLast: index == playlists.length - 1,
-                    title: playlist.name,
-                    subtitle: '${playlist.songs.length} tracks',
-                    leading: Container(
-                      width: 48,
-                      height: 48,
+            ),
+            child: ListView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              itemCount: playlists.length,
+              itemBuilder: (context, index) {
+                final playlist = playlists[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Dismissible(
+                    key: ValueKey(playlist.id),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      padding: const EdgeInsets.only(right: 24),
+                      alignment: Alignment.centerRight,
                       decoration: BoxDecoration(
+                        color: colorScheme.errorContainer,
                         borderRadius: BorderRadius.circular(12),
-                        color: colorScheme.secondaryContainer,
                       ),
                       child: Icon(
-                        FlutterRemix.play_list_line,
-                        color: colorScheme.onSecondaryContainer,
+                        FlutterRemix.delete_bin_line,
+                        color: colorScheme.onErrorContainer,
                       ),
                     ),
-                    trailing: Icon(
-                      FlutterRemix.arrow_right_s_line,
-                      color: colorScheme.onSurfaceVariant,
+                    confirmDismiss: (direction) async {
+                      PlaylistDialogs.showDeleteConfirmation(
+                        context,
+                        playlist.id,
+                        playlist.name,
+                      );
+                      return false;
+                    },
+                    child: CardListTile(
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              PlaylistViewPage(playlistName: playlist.name),
+                        ),
+                      ),
+                      onLongPress: () {
+                        if (context.read<SettingsProvider>().enableHaptics) {
+                          HapticFeedback.mediumImpact();
+                        }
+                        _showPlaylistMenu(context, playlist.id, playlist.name);
+                      },
+                      isFirst: index == 0,
+                      isLast: index == playlists.length - 1,
+                      title: playlist.name,
+                      subtitle: '${playlist.songs.length} tracks',
+                      leading: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: colorScheme.secondaryContainer,
+                        ),
+                        child: Icon(
+                          FlutterRemix.play_list_line,
+                          color: colorScheme.onSecondaryContainer,
+                        ),
+                      ),
+                      trailing: Icon(
+                        FlutterRemix.arrow_right_s_line,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           );
         },
       ),

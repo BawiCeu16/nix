@@ -3,6 +3,9 @@ import 'package:flutter_remix/flutter_remix.dart';
 import 'package:nix/ui/widgets/list_item/track_tile.dart';
 import 'package:nix/models/music/song.dart';
 import 'package:nix/ui/widgets/common/nix_empty_state.dart';
+import 'package:provider/provider.dart';
+import 'package:nix/providers/music_provider.dart';
+import 'package:nix/ui/widgets/common/nix_refreshable_list.dart';
 
 enum _SongSort { defaultOrder, aToZ, zToA, duration }
 
@@ -72,25 +75,31 @@ class _SongsPageState extends State<SongsPage> {
       // ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12.0),
-        child: songsList.isEmpty
-            ? const NixEmptyState(
-                icon: FlutterRemix.music_2_line,
-                title: "No songs available",
-              )
-            : ListView.builder(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.only(bottom: 120, top: 8),
-                itemCount: songsList.length,
-                itemBuilder: (context, index) {
-                  final song = songsList[index];
-                  return TrackTile(
-                    track: song,
-                    playlistContext: songsList,
-                    isFirst: index == 0,
-                    isLast: index == songsList.length - 1,
-                  );
-                },
-              ),
+        child: NixRefreshableList(
+          isEmpty: songsList.isEmpty,
+          onRefresh: () async =>
+              await context.read<MusicProvider>().scanDevice(),
+          emptyState: const NixEmptyState(
+            icon: FlutterRemix.music_2_line,
+            title: "No songs available",
+          ),
+          child: ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
+            padding: const EdgeInsets.only(bottom: 120, top: 8),
+            itemCount: songsList.length,
+            itemBuilder: (context, index) {
+              final song = songsList[index];
+              return TrackTile(
+                track: song,
+                playlistContext: songsList,
+                isFirst: index == 0,
+                isLast: index == songsList.length - 1,
+              );
+            },
+          ),
+        ),
       ),
     );
   }

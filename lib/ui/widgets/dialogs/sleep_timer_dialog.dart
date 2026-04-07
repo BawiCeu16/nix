@@ -7,6 +7,7 @@ import '../../../providers/current_music_provider.dart';
 import '../buttons/expressive_button.dart';
 import 'nix_dialog.dart';
 import '../../../core/format.dart';
+import '../common/nix_slider.dart';
 
 class SleepTimerDialog extends StatefulWidget {
   const SleepTimerDialog({super.key});
@@ -89,27 +90,13 @@ class _SleepTimerDialogState extends State<SleepTimerDialog> {
           ),
         ),
         const SizedBox(height: 12),
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            trackHeight: 3.0,
-
-            thumbShape: _NixThumbShape(
-              label: _formatDuration(_customMinutes),
-              color: colorScheme.primary,
-              textColor: colorScheme.onPrimary,
-            ),
-            overlayShape: SliderComponentShape.noOverlay,
-            activeTrackColor: colorScheme.primary,
-            inactiveTrackColor: colorScheme.primary.withValues(alpha: 0.15),
-            overlayColor: colorScheme.primary.withValues(alpha: 0.1),
-          ),
-          child: Slider(
-            value: _customMinutes,
-            min: 1,
-            max: 120,
-            divisions: 119,
-            onChanged: (v) => setState(() => _customMinutes = v),
-          ),
+        NixSlider(
+          value: _customMinutes,
+          min: 1,
+          max: 120,
+          divisions: 119,
+          label: _formatDuration(_customMinutes),
+          onChanged: (v) => setState(() => _customMinutes = v),
         ),
         const SizedBox(height: 32),
         Row(
@@ -176,66 +163,5 @@ class _SleepTimerDialogState extends State<SleepTimerDialog> {
         );
       }).toList(),
     );
-  }
-}
-
-class _NixThumbShape extends SliderComponentShape {
-  final String label;
-  final Color color;
-  final Color textColor;
-
-  const _NixThumbShape({
-    required this.label,
-    required this.color,
-    required this.textColor,
-  });
-
-  @override
-  Size getPreferredSize(bool isEnabled, bool isDiscrete) {
-    return const Size(64, 32);
-  }
-
-  @override
-  void paint(
-    PaintingContext context,
-    Offset center, {
-    required Animation<double> activationAnimation,
-    required Animation<double> enableAnimation,
-    required bool isDiscrete,
-    required TextPainter labelPainter,
-    required RenderBox parentBox,
-    required SliderThemeData sliderTheme,
-    required TextDirection textDirection,
-    required double value,
-    required double textScaleFactor,
-    required Size sizeWithOverflow,
-  }) {
-    final Canvas canvas = context.canvas;
-
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    // Draw a pill-shaped thumb
-    final rrect = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: center, width: 45, height: 20),
-      const Radius.circular(100),
-    );
-    canvas.drawRRect(rrect, paint);
-
-    // Draw the text inside the thumb
-    final tp = TextPainter(
-      text: TextSpan(
-        text: label,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-          color: textColor,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-    tp.layout();
-    tp.paint(canvas, center - Offset(tp.width / 2, tp.height / 2));
   }
 }

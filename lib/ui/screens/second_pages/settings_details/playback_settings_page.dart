@@ -46,8 +46,32 @@ class PlaybackSettingsPage extends StatelessWidget {
               value: settings.swipeToDismiss,
               onChanged: (value) => settings.setSwipeToDismiss(value),
             ),
-            isLast: true,
             onTap: () => settings.setSwipeToDismiss(!settings.swipeToDismiss),
+          ),
+          const SizedBox(height: 2.5),
+          CardListTile(
+            title: 'Haptic Feedback',
+            subtitle: 'Vibrate during navigation and playback control',
+            icon: FlutterRemix.smartphone_line,
+            trailing: Switch(
+              value: settings.enableHaptics,
+              onChanged: (value) => settings.setEnableHaptics(value),
+            ),
+            isLast: false,
+            onTap: () => settings.setEnableHaptics(!settings.enableHaptics),
+          ),
+          const SizedBox(height: 2.5),
+          CardListTile(
+            title: 'Reset on New Track',
+            subtitle: 'Always return to 1.0x when starting a new song',
+            icon: FlutterRemix.refresh_line,
+            trailing: Switch(
+              value: settings.resetSpeedOnNewTrack,
+              onChanged: (value) => settings.setResetSpeedOnNewTrack(value),
+            ),
+            isLast: true,
+            onTap: () =>
+                settings.setResetSpeedOnNewTrack(!settings.resetSpeedOnNewTrack),
           ),
 
           const Padding(

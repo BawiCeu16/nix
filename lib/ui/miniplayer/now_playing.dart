@@ -273,7 +273,9 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
 
   void snapToDismissed({bool haptic = true}) {
     offset = -0.1 * maxOffset;
-    if (haptic) HapticFeedback.heavyImpact();
+    if (haptic && context.read<SettingsProvider>().enableHaptics) {
+      HapticFeedback.heavyImpact();
+    }
     widget.animation
         .animateTo(
           -0.1,
@@ -288,7 +290,9 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
   }
 
   void snap({bool haptic = true}) {
-    if (haptic) HapticFeedback.mediumImpact();
+    if (haptic && context.read<SettingsProvider>().enableHaptics) {
+      HapticFeedback.mediumImpact();
+    }
     widget.animation
         .animateTo(
           offset / maxOffset,
@@ -302,7 +306,9 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
 
   // --- Horizontal Snapping ---
   void snapToPrev() {
-    HapticFeedback.mediumImpact();
+    if (context.read<SettingsProvider>().enableHaptics) {
+      HapticFeedback.mediumImpact();
+    }
     sOffset = -sMaxOffset;
     sAnim
         .animateTo(
@@ -317,7 +323,9 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
   }
 
   void snapToCurrent() {
-    HapticFeedback.mediumImpact();
+    if (context.read<SettingsProvider>().enableHaptics) {
+      HapticFeedback.mediumImpact();
+    }
     sOffset = 0;
     sAnim.animateTo(
       0.0,
@@ -327,7 +335,9 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
   }
 
   void snapToNext() {
-    HapticFeedback.mediumImpact();
+    if (context.read<SettingsProvider>().enableHaptics) {
+      HapticFeedback.mediumImpact();
+    }
     sOffset = sMaxOffset;
     sAnim
         .animateTo(
