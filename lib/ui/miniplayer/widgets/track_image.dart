@@ -11,7 +11,7 @@ import '../../../core/math_utils.dart';
 import '../models/animation_data.dart';
 
 class TrackImage extends StatelessWidget {
-  final Animation<double> sAnim;
+  final AnimationController sAnim;
   final double sMaxOffset;
   final double siParallax;
   final bool bounceUp;
@@ -80,20 +80,29 @@ class TrackImage extends StatelessWidget {
                       padding: EdgeInsets.all(
                         12.0 * (1 - data.bounceClampedProgress),
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(
-                          rangeProgress(
-                            a: 100.0,
-                            b: 15.0,
-                            c: data.bounceClampedProgress,
-                          ),
-                        ),
-                        child: Stack(
-                          children: [
-                            currentSong != null
-                                ? NixArtwork(
-                                    id: currentSong.id,
-                                    type: ArtworkType.AUDIO,
+                      child: Stack(
+                        children: [
+                          currentSong != null
+                              ? NixArtwork(
+                                  id: currentSong.id,
+                                  type: ArtworkType.AUDIO,
+                                  borderRadius: BorderRadius.circular(
+                                    rangeProgress(
+                                      a: 100.0,
+                                      b: 15.0,
+                                      c: data.bounceClampedProgress,
+                                    ),
+                                  ),
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  quality: NixArtworkQuality.high,
+                                )
+                              : Container(
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primaryContainer,
                                     borderRadius: BorderRadius.circular(
                                       rangeProgress(
                                         a: 100.0,
@@ -101,92 +110,74 @@ class TrackImage extends StatelessWidget {
                                         c: data.bounceClampedProgress,
                                       ),
                                     ),
-                                    fit: BoxFit.cover,
-                                    width: double.infinity,
-                                    height: double.infinity,
-                                    quality: NixArtworkQuality.high, // Best of the best
-                                  )
-                                : Container(
-                                    decoration: BoxDecoration(
+                                  ),
+                                  child: Center(
+                                    child: Icon(
+                                      FlutterRemix.music_2_fill,
+                                      size: 40,
                                       color: Theme.of(context)
                                           .colorScheme
-                                          .primaryContainer,
-                                      borderRadius: BorderRadius.circular(
-                                        rangeProgress(
-                                          a: 100.0,
-                                          b: 15.0,
-                                          c: data.bounceClampedProgress,
-                                        ),
-                                      ),
-                                    ),
-                                    child: Center(
-                                      child: Icon(
-                                        FlutterRemix.music_2_fill,
-                                        size: 40,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onPrimaryContainer
-                                            .withValues(alpha: .5),
-                                      ),
+                                          .onPrimaryContainer
+                                          .withValues(alpha: .5),
                                     ),
                                   ),
-                            // Sleep Timer Indicator
-                            Consumer<SleepTimerProvider>(
-                              builder: (context, timer, _) {
-                                if (!timer.isActive) return const SizedBox();
-                                final opacity = (data.bounceClampedProgress -
-                                        data.queueClampedProgress)
-                                    .clamp(0.0, 1.0);
-                                if (opacity == 0) return const SizedBox();
+                                ),
+                          // Sleep Timer Indicator
+                          Consumer<SleepTimerProvider>(
+                            builder: (context, timer, _) {
+                              if (!timer.isActive) return const SizedBox();
+                              final opacity = (data.bounceClampedProgress -
+                                      data.queueClampedProgress)
+                                  .clamp(0.0, 1.0);
+                              if (opacity == 0) return const SizedBox();
 
-                                return Positioned(
-                                  top: 12,
-                                  left: 12,
-                                  child: Opacity(
-                                    opacity: opacity,
-                                    child: GestureDetector(
-                                      onLongPress: () {
-                                        SleepTimerDialog.show(context);
-                                      },
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color:
-                                              Colors.black.withValues(alpha: 0.5),
-                                          borderRadius:
-                                              BorderRadius.circular(100),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Icon(
-                                              FlutterRemix.timer_2_line,
-                                              size: 14,
-                                              color: Colors.white,
-                                            ),
-                                            const SizedBox(width: 6),
-                                            Text(
-                                              timer.remainingTime?.shortFormat() ??
-                                                  "00:00",
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                              return Positioned(
+                                top: 12,
+                                left: 12,
+                                child: Opacity(
+                                  opacity: opacity,
+                                  child: GestureDetector(
+                                    onLongPress: () {
+                                      SleepTimerDialog.show(context);
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
                                       ),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            Colors.black.withValues(alpha: 0.5),
+                                        borderRadius:
+                                            BorderRadius.circular(100),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(
+                                            FlutterRemix.timer_2_line,
+                                            size: 14,
+                                            color: Colors.white,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          timer.remainingTime?.shortFormat() ??
+                                              "00:00",
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
+                                ),
+                              ),
+                            );
+                          },
+                          ),
+                        ],
                       ),
                     ),
                   ),

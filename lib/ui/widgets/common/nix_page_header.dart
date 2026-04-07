@@ -36,7 +36,6 @@ class NixPageHeader extends StatelessWidget {
                 ? NixArtwork(
                     id: songId!,
                     type: ArtworkType.AUDIO,
-                    borderRadius: BorderRadius.circular(16),
                     fit: BoxFit.cover,
                     width: 300,
                     height: 300,

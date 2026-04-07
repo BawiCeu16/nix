@@ -68,13 +68,13 @@ class QueueTile extends StatelessWidget {
         movementDuration: const Duration(milliseconds: 50),
         resizeDuration: const Duration(milliseconds: 50),
         child: ListTile(
-          leading: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+          leading: SizedBox(
+            width: 48,
+            height: 48,
             child: songId != null
                 ? NixArtwork(
                     id: songId!,
                     type: ArtworkType.AUDIO,
-                    borderRadius: BorderRadius.circular(8),
                     width: 48,
                     height: 48,
                   )

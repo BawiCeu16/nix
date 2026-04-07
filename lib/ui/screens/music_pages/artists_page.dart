@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_m3shapes_extended/flutter_m3shapes_extended.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:nix/ui/widgets/buttons/expressive_button.dart';
 import 'package:provider/provider.dart';
@@ -103,19 +102,12 @@ class _ArtistsPageState extends State<ArtistsPage> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      M3EContainer.c9SidedCookie(
+                      NixArtwork(
+                        id: firstSongId ?? 0,
+                        type: ArtworkType.AUDIO,
                         width: 130,
                         height: 130,
-                        color: colorScheme.secondaryContainer,
-                        clipBehavior: Clip.antiAlias,
-                        child: NixArtwork(
-                          id: firstSongId ?? 0,
-                          type: ArtworkType.AUDIO,
-                          borderRadius: BorderRadius.circular(16),
-                          width: 130,
-                          height: 130,
-                          quality: NixArtworkQuality.medium, // Optimized high fidelity
-                        ),
+                        quality: NixArtworkQuality.medium, // Optimized high fidelity
                       ),
                       const SizedBox(height: 10),
                       Text(
@@ -193,19 +185,12 @@ class ArtistSongsPage extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 32),
                     child: Column(
                       children: [
-                        M3EContainer.c9SidedCookie(
-                          width: 300,
-                          height: 300,
-                          color: colorScheme.secondaryContainer,
-                          clipBehavior: Clip.antiAlias,
-                        child: NixArtwork(
+                        NixArtwork(
                           id: firstSongId ?? 0,
                           type: ArtworkType.AUDIO,
-                          borderRadius: BorderRadius.circular(32),
                           width: 300,
                           height: 300,
                           quality: NixArtworkQuality.high, // Profile picture needs high res
-                        ),
                         ),
                         const SizedBox(height: 20),
                         Text(

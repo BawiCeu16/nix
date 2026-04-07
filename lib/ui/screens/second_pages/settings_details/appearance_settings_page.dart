@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
+import 'artwork_shape_settings_page.dart';
 import 'package:provider/provider.dart';
 import '../../../../providers/settings_provider.dart';
 import '../../../widgets/list_item/nix_choice_chip.dart';
@@ -84,9 +85,20 @@ class AppearanceSettingsPage extends StatelessWidget {
               onChanged: (v) => settingsParams.setUseAmoledMode(v),
             ),
             isFirst: true,
-            isLast: true,
             onTap: () =>
                 settingsParams.setUseAmoledMode(!settingsParams.useAmoledMode),
+          ),
+          const SizedBox(height: 2.5),
+          CardListTile(
+            title: 'Artwork Shape',
+            subtitle: settingsParams.artworkShape.name.toUpperCase(),
+            icon: FlutterRemix.shape_2_line,
+            isLast: true,
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const ArtworkShapeSettingsPage(),
+              ),
+            ),
           ),
           const SizedBox(height: 120),
         ],

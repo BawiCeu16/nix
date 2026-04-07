@@ -104,10 +104,10 @@ class _AlbumsPageState extends State<AlbumsPage> {
                   },
                   child: Card(
                     elevation: 0,
-                    clipBehavior: Clip.antiAlias,
-                    color: colorScheme.surfaceContainerHighest,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                    clipBehavior: Clip.none,
+                    color: Colors.transparent,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -116,7 +116,6 @@ class _AlbumsPageState extends State<AlbumsPage> {
                         child: NixArtwork(
                           id: firstSongId ?? 0,
                           type: ArtworkType.AUDIO,
-                          borderRadius: BorderRadius.circular(8),
                           fit: BoxFit.cover,
                           width: double.infinity,
                           height: double.infinity,

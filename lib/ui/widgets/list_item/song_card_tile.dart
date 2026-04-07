@@ -17,8 +17,9 @@ class SongCardTile extends StatelessWidget {
 
     return Card(
       margin: EdgeInsets.zero,
-      clipBehavior: Clip.antiAlias,
+      clipBehavior: Clip.none,
       elevation: 0,
+      color: Colors.transparent,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -31,7 +32,6 @@ class SongCardTile extends StatelessWidget {
               child: NixArtwork(
                 id: song.id,
                 type: ArtworkType.AUDIO,
-                borderRadius: BorderRadius.circular(8),
                 fit: BoxFit.cover,
                 width: double.infinity,
                 height: double.infinity,

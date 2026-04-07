@@ -352,15 +352,11 @@ class _ArtworkLeading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: NixArtwork(
-        id: songId,
-        type: ArtworkType.AUDIO,
-        borderRadius: BorderRadius.circular(8),
-        width: 48,
-        height: 48,
-      ),
+    return NixArtwork(
+      id: songId,
+      type: ArtworkType.AUDIO,
+      width: 48,
+      height: 48,
     );
   }
 }

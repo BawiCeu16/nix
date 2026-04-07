@@ -22,6 +22,7 @@ abstract final class HiveKeys {
   static const String resetSpeedOnNewTrack = 'resetSpeedOnNewTrack';
   static const String skipSilence = 'skipSilence';
   static const String useAmoledMode = 'useAmoledMode';
+  static const String artworkShape = 'artworkShape';
   static const String onboarding = 'hasCompletedOnboarding';
 
   // ── User keys ──────────────────────────────────────────────────────────────

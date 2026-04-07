@@ -4,6 +4,26 @@ import '../core/hive_keys.dart';
 
 enum AccentColorMode { dynamic, device, custom }
 
+enum ArtworkShape {
+  rounded,
+  circle,
+  pixelCircle,
+  arch,
+  oval,
+  pill,
+  diamond,
+  gem,
+  verySunny,
+  sunny,
+  cookie4,
+  cookie6,
+  cookie9,
+  cookie12,
+  bun,
+}
+
+enum NavbarStyle { floating, standard }
+
 /// Manages app-wide settings like theme, accent color, and playback behaviors.
 /// Settings are persisted to the Hive.
 class SettingsProvider with ChangeNotifier {
@@ -114,11 +134,11 @@ class SettingsProvider with ChangeNotifier {
     _box.put(HiveKeys.resetSpeedOnNewTrack, value);
     notifyListeners();
   }
-  
+
   // Skip Silence
   /// Whether the player should automatically skip silent parts in the audio.
   bool get skipSilence => _box.get(HiveKeys.skipSilence, defaultValue: false);
-  
+
   void setSkipSilence(bool value) {
     _box.put(HiveKeys.skipSilence, value);
     notifyListeners();
@@ -131,6 +151,24 @@ class SettingsProvider with ChangeNotifier {
 
   void setUseAmoledMode(bool value) {
     _box.put(HiveKeys.useAmoledMode, value);
+    notifyListeners();
+  }
+
+  // Appearance - Artwork Shape
+  /// The global geometric shape for all artwork.
+  ArtworkShape get artworkShape {
+    final String shape = _box.get(
+      HiveKeys.artworkShape,
+      defaultValue: 'rounded',
+    );
+    return ArtworkShape.values.firstWhere(
+      (e) => e.name == shape,
+      orElse: () => ArtworkShape.rounded,
+    );
+  }
+
+  void setArtworkShape(ArtworkShape shape) {
+    _box.put(HiveKeys.artworkShape, shape.name);
     notifyListeners();
   }
 
