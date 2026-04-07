@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:on_audio_query/on_audio_query.dart';
+import '../common/nix_artwork.dart';
 
 class QueueTile extends StatelessWidget {
   const QueueTile({
@@ -69,43 +70,28 @@ class QueueTile extends StatelessWidget {
         child: ListTile(
           leading: ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: SizedBox(
-              width: 48,
-              height: 48,
-              child: songId != null
-                  ? QueryArtworkWidget(
-                      id: songId!,
-                      type: ArtworkType.AUDIO,
-                      keepOldArtwork: true,
-                      artworkFit: BoxFit.cover,
-                      artworkBorder: BorderRadius.circular(8),
-                      artworkQuality: FilterQuality.high,
-                      artworkWidth: 200,
-                      artworkHeight: 200,
-                      nullArtworkWidget: Container(
-                        color: isPlaying
-                            ? Theme.of(context).colorScheme.primaryContainer
-                            : Theme.of(context).colorScheme.secondaryContainer,
-                        child: isPlaying
-                            ? Icon(
-                                FlutterRemix.play_fill,
-                                color: Theme.of(context).colorScheme.primary,
-                              )
-                            : const Icon(FlutterRemix.music_2_line),
-                      ),
-                    )
-                  : Container(
+            child: songId != null
+                ? NixArtwork(
+                    id: songId!,
+                    type: ArtworkType.AUDIO,
+                    borderRadius: BorderRadius.circular(8),
+                    width: 48,
+                    height: 48,
+                  )
+                : Container(
+                    decoration: BoxDecoration(
                       color: isPlaying
                           ? Theme.of(context).colorScheme.primaryContainer
                           : Theme.of(context).colorScheme.secondaryContainer,
-                      child: isPlaying
-                          ? Icon(
-                              FlutterRemix.play_fill,
-                              color: Theme.of(context).colorScheme.primary,
-                            )
-                          : const Icon(FlutterRemix.music_2_line),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-            ),
+                    child: isPlaying
+                        ? Icon(
+                            FlutterRemix.play_fill,
+                            color: Theme.of(context).colorScheme.primary,
+                          )
+                        : const Icon(FlutterRemix.music_2_line),
+                  ),
           ),
           title: Text(
             title,

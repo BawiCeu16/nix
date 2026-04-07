@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:provider/provider.dart';
+import '../../widgets/common/nix_artwork.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/sleep_timer_provider.dart';
 import '../../widgets/dialogs/sleep_timer_dialog.dart';
@@ -90,35 +91,34 @@ class TrackImage extends StatelessWidget {
                         child: Stack(
                           children: [
                             currentSong != null
-                                ? QueryArtworkWidget(
+                                ? NixArtwork(
                                     id: currentSong.id,
                                     type: ArtworkType.AUDIO,
-                                    keepOldArtwork: true,
-                                    artworkFit: BoxFit.cover,
-                                    artworkBorder: BorderRadius.circular(15),
-                                    artworkQuality: FilterQuality.high,
-                                    artworkWidth: 800,
-                                    artworkHeight: 800,
-                                    nullArtworkWidget: Container(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primaryContainer,
-                                      child: Center(
-                                        child: Icon(
-                                          FlutterRemix.music_2_fill,
-                                          size: 40,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onPrimaryContainer
-                                              .withValues(alpha: .5),
+                                    borderRadius: BorderRadius.circular(
+                                      rangeProgress(
+                                        a: 100.0,
+                                        b: 15.0,
+                                        c: data.bounceClampedProgress,
+                                      ),
+                                    ),
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                    quality: NixArtworkQuality.high, // Best of the best
+                                  )
+                                : Container(
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primaryContainer,
+                                      borderRadius: BorderRadius.circular(
+                                        rangeProgress(
+                                          a: 100.0,
+                                          b: 15.0,
+                                          c: data.bounceClampedProgress,
                                         ),
                                       ),
                                     ),
-                                  )
-                                : Container(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primaryContainer,
                                     child: Center(
                                       child: Icon(
                                         FlutterRemix.music_2_fill,

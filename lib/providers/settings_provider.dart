@@ -124,6 +124,16 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Appearance - AMOLED Mode
+  /// Whether to use pure black (#000000) for dark mode.
+  bool get useAmoledMode =>
+      _box.get(HiveKeys.useAmoledMode, defaultValue: false);
+
+  void setUseAmoledMode(bool value) {
+    _box.put(HiveKeys.useAmoledMode, value);
+    notifyListeners();
+  }
+
   // Search History
   /// List of recent search queries.
   List<String> get searchHistory {

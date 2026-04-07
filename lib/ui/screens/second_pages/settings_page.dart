@@ -32,19 +32,10 @@ class SettingsPage extends StatelessWidget {
             topPadding: 12,
           ),
           CardListTile(
-            title: 'Profile',
-            subtitle: 'Nickname, avatar, and account info',
-            icon: FlutterRemix.user_3_line,
-            isFirst: true,
-            onTap: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const ProfilePage())),
-          ),
-          const SizedBox(height: 2.5),
-          CardListTile(
             title: 'Appearance',
             subtitle: 'Theme, accent colors, and styling',
             icon: FlutterRemix.palette_line,
+            isFirst: true,
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const AppearanceSettingsPage()),
             ),

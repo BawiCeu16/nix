@@ -87,7 +87,10 @@ class _NixAppState extends State<NixApp> {
             }
 
             final theme = NixTheme.buildLightTheme(seedColor);
-            final darkTheme = NixTheme.buildDarkTheme(seedColor);
+            final darkTheme = NixTheme.buildDarkTheme(
+              seedColor,
+              amoled: settings.useAmoledMode,
+            );
 
             final settingsBox = Hive.box(HiveKeys.settingsBox);
             final bool hasCompletedOnboarding = settingsBox.get(

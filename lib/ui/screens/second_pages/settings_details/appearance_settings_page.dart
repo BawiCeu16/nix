@@ -73,6 +73,22 @@ class AppearanceSettingsPage extends StatelessWidget {
             const SizedBox(height: 2.5),
             _CustomColorPicker(settings: settingsParams),
           ],
+
+          const NixSectionHeader(title: 'Experience', topPadding: 24),
+          CardListTile(
+            title: 'AMOLED Mode',
+            subtitle: 'Pure black for OLED screens',
+            icon: FlutterRemix.moon_clear_line,
+            trailing: Switch(
+              value: settingsParams.useAmoledMode,
+              onChanged: (v) => settingsParams.setUseAmoledMode(v),
+            ),
+            isFirst: true,
+            isLast: true,
+            onTap: () =>
+                settingsParams.setUseAmoledMode(!settingsParams.useAmoledMode),
+          ),
+          const SizedBox(height: 120),
         ],
       ),
     );

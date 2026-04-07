@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_remix/flutter_remix.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:nix/models/music/song.dart';
+import '../common/nix_artwork.dart';
 
 /// A card tile that shows a song's artwork from the Hive cached_images box,
 /// with title and subtitle text below.
@@ -28,21 +28,14 @@ class SongCardTile extends StatelessWidget {
             aspectRatio: 1.0,
             child: SizedBox(
               width: double.infinity,
-              child: QueryArtworkWidget(
+              child: NixArtwork(
                 id: song.id,
                 type: ArtworkType.AUDIO,
-                keepOldArtwork: true,
-                artworkFit: BoxFit.cover,
-                artworkBorder: BorderRadius.circular(8),
-                artworkQuality: FilterQuality.high,
-                artworkWidth: 400,
-                artworkHeight: 400,
-                nullArtworkWidget: Container(
-                  color: colorScheme.secondaryContainer,
-                  child: const Center(
-                    child: Icon(FlutterRemix.music_2_line, size: 36),
-                  ),
-                ),
+                borderRadius: BorderRadius.circular(8),
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+                quality: NixArtworkQuality.medium,
               ),
             ),
           ),

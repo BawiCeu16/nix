@@ -12,6 +12,7 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:nix/ui/widgets/common/nix_refreshable_list.dart';
 import 'package:nix/ui/widgets/common/nix_empty_state.dart';
 import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
+import '../../widgets/common/nix_artwork.dart';
 
 enum _ArtistSort { defaultOrder, aToZ, zToA }
 
@@ -107,31 +108,14 @@ class _ArtistsPageState extends State<ArtistsPage> {
                         height: 130,
                         color: colorScheme.secondaryContainer,
                         clipBehavior: Clip.antiAlias,
-                        child: firstSongId != null
-                            ? QueryArtworkWidget(
-                                id: firstSongId,
-                                type: ArtworkType.AUDIO,
-                                keepOldArtwork: true,
-                                artworkFit: BoxFit.cover,
-                                artworkBorder: BorderRadius.circular(16),
-                                artworkQuality: FilterQuality.high,
-                                artworkWidth: 400,
-                                artworkHeight: 400,
-                                nullArtworkWidget: Center(
-                                  child: Icon(
-                                    FlutterRemix.user_4_fill,
-                                    size: 48,
-                                    color: colorScheme.onSecondaryContainer,
-                                  ),
-                                ),
-                              )
-                            : Center(
-                                child: Icon(
-                                  FlutterRemix.user_4_fill,
-                                  size: 48,
-                                  color: colorScheme.onSecondaryContainer,
-                                ),
-                              ),
+                        child: NixArtwork(
+                          id: firstSongId ?? 0,
+                          type: ArtworkType.AUDIO,
+                          borderRadius: BorderRadius.circular(16),
+                          width: 130,
+                          height: 130,
+                          quality: NixArtworkQuality.medium, // Optimized high fidelity
+                        ),
                       ),
                       const SizedBox(height: 10),
                       Text(
@@ -214,31 +198,14 @@ class ArtistSongsPage extends StatelessWidget {
                           height: 300,
                           color: colorScheme.secondaryContainer,
                           clipBehavior: Clip.antiAlias,
-                          child: firstSongId != null
-                              ? QueryArtworkWidget(
-                                  id: firstSongId,
-                                  type: ArtworkType.AUDIO,
-                                  keepOldArtwork: true,
-                                  artworkFit: BoxFit.cover,
-                                  artworkBorder: BorderRadius.circular(32),
-                                  artworkQuality: FilterQuality.high,
-                                  artworkWidth: 800,
-                                  artworkHeight: 800,
-                                  nullArtworkWidget: Center(
-                                    child: Icon(
-                                      FlutterRemix.user_4_fill,
-                                      size: 64,
-                                      color: colorScheme.onSecondaryContainer,
-                                    ),
-                                  ),
-                                )
-                              : Center(
-                                  child: Icon(
-                                    FlutterRemix.user_4_fill,
-                                    size: 64,
-                                    color: colorScheme.onSecondaryContainer,
-                                  ),
-                                ),
+                        child: NixArtwork(
+                          id: firstSongId ?? 0,
+                          type: ArtworkType.AUDIO,
+                          borderRadius: BorderRadius.circular(32),
+                          width: 300,
+                          height: 300,
+                          quality: NixArtworkQuality.high, // Profile picture needs high res
+                        ),
                         ),
                         const SizedBox(height: 20),
                         Text(

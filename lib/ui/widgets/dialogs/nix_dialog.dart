@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_remix/flutter_remix.dart';
 import 'package:on_audio_query/on_audio_query.dart';
+import '../common/nix_artwork.dart';
 
 class NixDialog extends StatelessWidget {
   final String? title;
@@ -79,25 +79,16 @@ class NixDialog extends StatelessWidget {
                     child: Row(
                       children: [
                         if (songId != null) ...[
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: SizedBox(
+                          SizedBox(
+                            width: 68,
+                            height: 68,
+                            child: NixArtwork(
+                              id: songId!,
+                              type: ArtworkType.AUDIO,
+                              borderRadius: BorderRadius.circular(16),
                               width: 68,
                               height: 68,
-                              child: QueryArtworkWidget(
-                                id: songId!,
-                                type: ArtworkType.AUDIO,
-                                keepOldArtwork: true,
-                                artworkFit: BoxFit.cover,
-                                artworkBorder: BorderRadius.circular(16),
-                                artworkQuality: FilterQuality.high,
-                                artworkWidth: 200,
-                                artworkHeight: 200,
-                                nullArtworkWidget: Container(
-                                  color: colorScheme.secondaryContainer,
-                                  child: const Icon(FlutterRemix.music_2_line),
-                                ),
-                              ),
+                              quality: NixArtworkQuality.medium, // Dialog headers need crisp art
                             ),
                           ),
                           const SizedBox(width: 16),

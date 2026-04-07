@@ -11,6 +11,7 @@ import 'package:nix/ui/widgets/common/nix_action_row.dart';
 import 'package:nix/ui/widgets/common/nix_page_header.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:nix/ui/widgets/common/nix_refreshable_list.dart';
+import '../../widgets/common/nix_artwork.dart';
 
 enum _AlbumSort { defaultOrder, aToZ, zToA }
 
@@ -112,33 +113,15 @@ class _AlbumsPageState extends State<AlbumsPage> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Expanded(
-                          child: firstSongId != null
-                              ? QueryArtworkWidget(
-                                  id: firstSongId,
-                                  type: ArtworkType.AUDIO,
-                                  keepOldArtwork: true,
-                                  artworkFit: BoxFit.cover,
-                                  artworkBorder: BorderRadius.circular(8),
-                                  artworkQuality: FilterQuality.high,
-                                  artworkWidth: 400,
-                                  artworkHeight: 400,
-                                  nullArtworkWidget: Container(
-                                    color: colorScheme.primaryContainer,
-                                    child: Icon(
-                                      FlutterRemix.disc_line,
-                                      size: 48,
-                                      color: colorScheme.onPrimaryContainer,
-                                    ),
-                                  ),
-                                )
-                              : Container(
-                                  color: colorScheme.primaryContainer,
-                                  child: Icon(
-                                    FlutterRemix.disc_line,
-                                    size: 48,
-                                    color: colorScheme.onPrimaryContainer,
-                                  ),
-                                ),
+                        child: NixArtwork(
+                          id: firstSongId ?? 0,
+                          type: ArtworkType.AUDIO,
+                          borderRadius: BorderRadius.circular(8),
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                          quality: NixArtworkQuality.medium, // Optimized high fidelity
+                        ),
                         ),
                         Padding(
                           padding: const EdgeInsets.all(12.0),

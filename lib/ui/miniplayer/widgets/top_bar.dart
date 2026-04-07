@@ -78,6 +78,7 @@ class TopBar extends StatelessWidget {
                     ),
                   ),
                   IconButton.filledTonal(
+                    padding: EdgeInsets.symmetric(horizontal: 15),
                     onPressed: () {
                       final song = currentMusic.currentSong;
                       if (song == null) return;

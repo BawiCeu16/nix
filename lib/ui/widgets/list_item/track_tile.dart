@@ -13,6 +13,7 @@ import 'package:nix/ui/widgets/dialogs/playlist_dialogs.dart';
 import 'package:nix/ui/widgets/dialogs/song_info_dialog.dart';
 import 'package:nix/core/format.dart';
 import 'package:on_audio_query/on_audio_query.dart';
+import '../common/nix_artwork.dart';
 import '../../screens/music_pages/artists_page.dart';
 import '../../screens/music_pages/albums_page.dart';
 
@@ -350,35 +351,15 @@ class _ArtworkLeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
-      child: SizedBox(
+      child: NixArtwork(
+        id: songId,
+        type: ArtworkType.AUDIO,
+        borderRadius: BorderRadius.circular(8),
         width: 48,
         height: 48,
-        child: QueryArtworkWidget(
-          id: songId,
-          type: ArtworkType.AUDIO,
-          keepOldArtwork: true,
-          artworkFit: BoxFit.cover,
-          artworkBorder: BorderRadius.circular(8),
-          artworkQuality: FilterQuality.high,
-          artworkWidth: 200,
-          artworkHeight: 200,
-          nullArtworkWidget: Container(
-            color: isPlaying
-                ? colorScheme.primaryContainer
-                : colorScheme.surfaceContainerHighest,
-            child: Icon(
-              isPlaying ? FlutterRemix.pulse_fill : FlutterRemix.music_2_line,
-              color: isPlaying
-                  ? colorScheme.primary
-                  : colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
       ),
     );
   }

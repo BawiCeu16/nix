@@ -12,6 +12,7 @@ import 'package:nix/ui/widgets/list_item/track_tile.dart';
 import 'package:nix/ui/widgets/common/nix_section_header.dart';
 import '../../music_pages/albums_page.dart';
 import '../../music_pages/songs_page.dart';
+import '../../../widgets/common/nix_artwork.dart';
 
 import 'package:expressive_refresh/expressive_refresh.dart';
 
@@ -359,24 +360,20 @@ class _AlbumCard extends StatelessWidget {
               child: SizedBox(
                 width: double.infinity,
                 child: firstSongId != null
-                    ? QueryArtworkWidget(
+                    ? NixArtwork(
                         id: firstSongId!,
                         type: ArtworkType.AUDIO,
-                        keepOldArtwork: true,
-                        artworkFit: BoxFit.cover,
-                        artworkBorder: BorderRadius.circular(8),
-                        artworkQuality: FilterQuality.high,
-                        artworkWidth: 400,
-                        artworkHeight: 400,
-                        nullArtworkWidget: Container(
-                          color: colorScheme.secondaryContainer,
-                          child: const Center(
-                            child: Icon(FlutterRemix.disc_line, size: 36),
-                          ),
-                        ),
+                        borderRadius: BorderRadius.circular(8),
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                        quality: NixArtworkQuality.medium, // Optimized high fidelity
                       )
                     : Container(
-                        color: colorScheme.secondaryContainer,
+                        decoration: BoxDecoration(
+                          color: colorScheme.secondaryContainer,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                         child: const Center(
                           child: Icon(FlutterRemix.disc_line, size: 36),
                         ),
