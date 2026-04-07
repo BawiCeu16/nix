@@ -147,7 +147,43 @@ class _SearchPageState extends State<SearchPage> {
                                     ),
                               ),
                               TextButton(
-                                onPressed: () => settings.clearSearchHistory(),
+                                onPressed: () => NixDialog.show(
+                                  title: "Clear Search History?",
+                                  subtitle: "Remove all search history?",
+                                  children: [
+                                    Builder(
+                                      builder: (dialogContext) {
+                                        return Row(
+                                          children: [
+                                            Expanded(
+                                              child: ExpressiveToneButton(
+                                                onPressed: () => Navigator.of(
+                                                  dialogContext,
+                                                  rootNavigator: true,
+                                                ).pop(),
+                                                child: const Text("Cancel"),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: ExpressiveButton(
+                                                onPressed: () {
+                                                  settings.clearSearchHistory();
+                                                  Navigator.of(
+                                                    dialogContext,
+                                                    rootNavigator: true,
+                                                  ).pop();
+                                                },
+                                                child: const Text("Clear"),
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                  context: context,
+                                ),
                                 child: const Text("Clear All"),
                               ),
                             ],
@@ -189,28 +225,37 @@ class _SearchPageState extends State<SearchPage> {
                                     title: "Delete Search?",
                                     subtitle: "Remove '$query' from history?",
                                     children: [
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: ExpressiveToneButton(
-                                              onPressed: () =>
-                                                  Navigator.pop(context),
-                                              child: const Text("Cancel"),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: ExpressiveButton(
-                                              onPressed: () {
-                                                settings.removeSearchQuery(
-                                                  query,
-                                                );
-                                                Navigator.pop(context);
-                                              },
-                                              child: const Text("Delete"),
-                                            ),
-                                          ),
-                                        ],
+                                      Builder(
+                                        builder: (dialogContext) {
+                                          return Row(
+                                            children: [
+                                              Expanded(
+                                                child: ExpressiveToneButton(
+                                                  onPressed: () => Navigator.of(
+                                                    dialogContext,
+                                                    rootNavigator: true,
+                                                  ).pop(),
+                                                  child: const Text("Cancel"),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: ExpressiveButton(
+                                                  onPressed: () {
+                                                    settings.removeSearchQuery(
+                                                      query,
+                                                    );
+                                                    Navigator.of(
+                                                      dialogContext,
+                                                      rootNavigator: true,
+                                                    ).pop();
+                                                  },
+                                                  child: const Text("Delete"),
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                        },
                                       ),
                                     ],
                                   );

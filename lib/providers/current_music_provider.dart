@@ -48,6 +48,8 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       StreamController<Song>.broadcast();
   Stream<Song> get onSongPlayedStream => _onSongPlayedController.stream;
 
+  bool _isTransitioning = false;
+
   AudioLoadingState _audioLoadingState = AudioLoadingState.idle;
   Color? _dynamicSeedColor;
 
@@ -112,6 +114,24 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
           queueIndex: _currentPlaylist?.songs.indexOf(_currentSong!),
         ),
       );
+    });
+
+    // Smart Skip Silence (Trim Ending Air)
+    _audioPlayer.positionStream.listen((pos) {
+      final duration = _audioPlayer.duration;
+      final settings = _settingsProvider;
+      if (settings != null &&
+          settings.skipSilence &&
+          duration != null &&
+          _audioPlayer.playing &&
+          _audioPlayer.processingState == ProcessingState.ready &&
+          !_isTransitioning) {
+        final remaining = duration - pos;
+        // If less than 3.0s remains, skip to next song
+        if (remaining.inMilliseconds > 0 && remaining.inMilliseconds < 3000) {
+          playNext();
+        }
+      }
     });
   }
 
@@ -190,6 +210,8 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       _audioLoadingState = AudioLoadingState.error;
       debugPrint('Error playing song: $e');
       notifyListeners();
+    } finally {
+      _isTransitioning = false; // Always allow next transition
     }
   }
 
@@ -224,6 +246,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
     _currentSong = null;
     _currentPlaylist = null;
     _audioLoadingState = AudioLoadingState.idle;
+    _isTransitioning = false;
     notifyListeners();
   }
 
@@ -246,7 +269,11 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   Future<void> skipToPrevious() async => playPrevious();
 
   Future<void> playNext() async {
-    if (_currentPlaylist == null || _currentSong == null) return;
+    if (_currentPlaylist == null || _currentSong == null || _isTransitioning) {
+      return;
+    }
+
+    _isTransitioning = true; // Set guard
 
     if (_isShuffleEnabled && _currentPlaylist!.songs.length > 1) {
       int nextIndex;

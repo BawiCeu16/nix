@@ -48,10 +48,9 @@ class NixDialog extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return PopScope(
-      canPop: false,
+      canPop: true,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        Navigator.of(context, rootNavigator: true).pop();
       },
       child: Center(
         child: Container(

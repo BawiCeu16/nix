@@ -62,6 +62,17 @@ class PlaybackSettingsPage extends StatelessWidget {
           ),
           const SizedBox(height: 2.5),
           CardListTile(
+            title: 'Skip Ending Silence',
+            subtitle: 'Automatically trim silent gaps at song ending',
+            icon: FlutterRemix.scissors_line,
+            trailing: Switch(
+              value: settings.skipSilence,
+              onChanged: (value) => settings.setSkipSilence(value),
+            ),
+            onTap: () => settings.setSkipSilence(!settings.skipSilence),
+          ),
+          const SizedBox(height: 2.5),
+          CardListTile(
             title: 'Reset on New Track',
             subtitle: 'Always return to 1.0x when starting a new song',
             icon: FlutterRemix.refresh_line,

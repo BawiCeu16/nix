@@ -11,15 +11,15 @@ import '../../../providers/sleep_timer_provider.dart';
 import 'sleep_timer_dialog.dart';
 import '../../../core/format.dart';
 
-class PlaybackControlDialog extends StatelessWidget {
-  const PlaybackControlDialog({super.key});
+class PlaybackSpeedDialog extends StatelessWidget {
+  const PlaybackSpeedDialog({super.key});
 
   static void show(BuildContext context) {
     NixDialog.show(
       context: context,
-      title: "Playback Controls",
-      subtitle: "Fine-tune your listening experience",
-      children: [const PlaybackControlDialog()],
+      title: "Playback Speed",
+      subtitle: "Fine-tune your listening tempo",
+      children: [const PlaybackSpeedDialog()],
     );
   }
 

@@ -10,7 +10,8 @@ import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 import 'package:nix/ui/widgets/dialogs/playlist_dialogs.dart';
 import 'package:nix/ui/widgets/dialogs/song_info_dialog.dart';
 import 'package:nix/core/format.dart';
-import '../../widgets/dialogs/playback_control_dialog.dart';
+import '../../widgets/dialogs/playback_speed_dialog.dart';
+import '../../widgets/dialogs/skip_silence_dialog.dart';
 
 class TopBar extends StatelessWidget {
   final double topRowOpacity;
@@ -114,12 +115,20 @@ class TopBar extends StatelessWidget {
                           ),
                           const SizedBox(height: 2.5),
                           CardListTile(
-                            title: "Playback Controls",
-                            icon: FlutterRemix.equalizer_line,
+                            title: "Playback Speed",
+                            icon: FlutterRemix.speed_line,
                             onTap: () {
-                              // Close current dialog and open sleep timer dialog
                               Navigator.pop(context);
-                              PlaybackControlDialog.show(context);
+                              PlaybackSpeedDialog.show(context);
+                            },
+                          ),
+                          const SizedBox(height: 2.5),
+                          CardListTile(
+                            title: "Skip Silence",
+                            icon: FlutterRemix.scissors_cut_line,
+                            onTap: () {
+                              Navigator.pop(context);
+                              SkipSilenceDialog.show(context);
                             },
                           ),
                           const SizedBox(height: 2.5),

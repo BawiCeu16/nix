@@ -114,6 +114,15 @@ class SettingsProvider with ChangeNotifier {
     _box.put(HiveKeys.resetSpeedOnNewTrack, value);
     notifyListeners();
   }
+  
+  // Skip Silence
+  /// Whether the player should automatically skip silent parts in the audio.
+  bool get skipSilence => _box.get(HiveKeys.skipSilence, defaultValue: false);
+  
+  void setSkipSilence(bool value) {
+    _box.put(HiveKeys.skipSilence, value);
+    notifyListeners();
+  }
 
   // Search History
   /// List of recent search queries.
