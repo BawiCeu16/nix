@@ -12,6 +12,8 @@ import 'package:nix/ui/widgets/common/nix_page_header.dart';
 import 'package:nix/ui/widgets/dialogs/playlist_dialogs.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 
+import 'package:nix/ui/widgets/common/nix_playlist_cover.dart';
+
 class PlaylistViewPage extends StatelessWidget {
   final String playlistName;
   final String? playlistId;
@@ -36,8 +38,12 @@ class PlaylistViewPage extends StatelessWidget {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(FlutterRemix.add_line),
-            onPressed: () => PlaylistDialogs.showPlaylistActionDialog(context),
+            icon: const Icon(FlutterRemix.edit_line),
+            onPressed: () => PlaylistDialogs.showPlaylistActionDialog(
+              context,
+              initialName: playlistName,
+              playlistId: playlistId,
+            ),
           ),
         ],
       ),
@@ -47,27 +53,28 @@ class PlaylistViewPage extends StatelessWidget {
           bool isSystemPlaylist = false;
 
           // Resolve playlist (User or System)
-          if (playlistName == "Recently Listened" ||
-              playlistId == "recently_played") {
+          if (playlistId == "recently_played" ||
+              playlistName == "Recently Listened") {
             pl = music.recentlyPlayed;
             isSystemPlaylist = true;
-          } else if (playlistName == "Favorites" || playlistId == "favorites") {
+          } else if (playlistId == "favorites" || playlistName == "Favorites") {
             pl = music.favorites;
             isSystemPlaylist = true;
-          } else if (playlistName == "Top Listened" ||
-              playlistId == "top_played") {
+          } else if (playlistId == "top_played" ||
+              playlistName == "Top Listened") {
             pl = music.topPlayed;
             isSystemPlaylist = true;
           } else {
-            pl = music.playlists
-                .where((p) => p.name == playlistName || p.id == playlistId)
-                .firstOrNull;
+            // Find by ID first, then name
+            pl = music.playlists.firstWhere(
+              (p) => p.id == playlistId || p.name == playlistName,
+              orElse: () => music.playlists.first,
+            );
           }
 
-          final tracks = List<Track>.from(pl?.tracks ?? []);
-          final firstTrackId = tracks.isNotEmpty ? tracks.first.id : null;
+          final tracks = List<Track>.from(pl.tracks);
 
-          if (tracks.isEmpty) {
+          if (tracks.isEmpty && isSystemPlaylist) {
             return NixEmptyState(
               icon: FlutterRemix.music_2_line,
               title: "No tracks here yet",
@@ -81,7 +88,6 @@ class PlaylistViewPage extends StatelessWidget {
             itemCount: tracks.length + 2, // Header + Tracks + Bottom Padding
             onReorder: (oldIndex, newIndex) {
               if (isSystemPlaylist) return;
-              // Adjust for header at index 0
               if (oldIndex < 1 || oldIndex > tracks.length) return;
 
               int adjustedOld = oldIndex - 1;
@@ -90,35 +96,39 @@ class PlaylistViewPage extends StatelessWidget {
               if (adjustedNew < 0) adjustedNew = 0;
               if (adjustedNew >= tracks.length) adjustedNew = tracks.length - 1;
 
-              music.reorderPlaylistTracks(
-                pl!.id,
-                adjustedOld,
-                adjustedNew + (oldIndex < newIndex ? 1 : 0),
-              );
+              music.reorderPlaylistTracks(pl!.id, adjustedOld, adjustedNew);
             },
             proxyDecorator: (child, index, animation) =>
                 Material(color: Colors.transparent, child: child),
             itemBuilder: (context, index) {
               if (index == 0) {
-                return NixPageHeader(
+                return Column(
                   key: const ValueKey('header'),
-                  title: playlistName,
-                  subtitle: "${tracks.length} Tracks",
-                  trackId: firstTrackId,
-                  actionRow: NixActionRow(
-                    onShuffle: () {
-                      final audio = context.read<CurrentMusicProvider>();
-                      final shuffled = List<Track>.from(tracks)..shuffle();
-                      if (!audio.isShuffleEnabled) audio.toggleShuffle();
-                      audio.playTrack(shuffled.first, playlist: pl);
-                    },
-                    onPlay: () {
-                      context.read<CurrentMusicProvider>().playTrack(
-                        tracks.first,
+                  children: [
+                    NixPageHeader(
+                      title: pl!.name,
+                      subtitle: "${tracks.length} Tracks",
+                      customArtwork: NixPlaylistCover(
                         playlist: pl,
-                      );
-                    },
-                  ),
+                        size: 300,
+                        radius: 24,
+                      ),
+                      actionRow: NixActionRow(
+                        onShuffle: () {
+                          final audio = context.read<CurrentMusicProvider>();
+                          final shuffled = List<Track>.from(tracks)..shuffle();
+                          if (!audio.isShuffleEnabled) audio.toggleShuffle();
+                          audio.playTrack(shuffled.first, playlist: pl);
+                        },
+                        onPlay: () {
+                          context.read<CurrentMusicProvider>().playTrack(
+                            tracks.first,
+                            playlist: pl,
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 );
               }
 

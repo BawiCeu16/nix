@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/providers/user_provider.dart';
@@ -82,18 +83,30 @@ class HomePage extends StatelessWidget {
                           children: [
                             Text(
                               _greeting(),
-                              style: Theme.of(context).textTheme.labelMedium
-                                  ?.copyWith(
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
+                              style: GoogleFonts.getFont(
+                                'Special Gothic Expanded One',
+                                textStyle: Theme.of(context)
+                                    .textTheme
+                                    .labelMedium
+                                    ?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                      fontWeight: FontWeight.w300,
+                                      // letterSpacing: 1.2,
+                                    ),
+                              ),
                             ),
                             Text(
                               user.userName,
-                              style: Theme.of(context).textTheme.headlineSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: colorScheme.onSurface,
-                                  ),
+                              style: GoogleFonts.getFont(
+                                'Special Gothic Expanded One',
+                                textStyle: Theme.of(context)
+                                    .textTheme
+                                    .headlineSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w500,
+                                      color: colorScheme.onSurface,
+                                    ),
+                              ),
                             ),
                           ],
                         ),
@@ -142,8 +155,9 @@ class HomePage extends StatelessWidget {
                               child: ListView.builder(
                                 scrollDirection: Axis.horizontal,
                                 physics: const BouncingScrollPhysics(),
-                                itemCount:
-                                    music.recentlyPlayed.tracks.take(10).length,
+                                itemCount: music.recentlyPlayed.tracks
+                                    .take(10)
+                                    .length,
                                 itemBuilder: (context, index) {
                                   final track =
                                       music.recentlyPlayed.tracks[index];
@@ -185,9 +199,7 @@ class HomePage extends StatelessWidget {
                       child: NixSectionHeader(
                         title: 'Albums',
                         onShowAll: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const AlbumsPage(),
-                          ),
+                          MaterialPageRoute(builder: (_) => const AlbumsPage()),
                         ),
                       ),
                     ),

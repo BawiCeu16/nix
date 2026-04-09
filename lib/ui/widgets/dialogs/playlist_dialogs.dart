@@ -18,64 +18,219 @@ class PlaylistDialogs {
   }) {
     final controller = TextEditingController(text: initialName);
     final isEditing = playlistId != null;
+    final music = context.read<MusicProvider>();
+
+    int? selectedIcon = isEditing
+        ? music.playlists.firstWhere((p) => p.id == playlistId).iconCodePoint
+        : null;
+    int? selectedColor = isEditing
+        ? music.playlists.firstWhere((p) => p.id == playlistId).colorValue
+        : null;
 
     NixDialog.show(
       context: context,
       title: isEditing ? "Rename Playlist" : "New Playlist",
       children: [
-        Column(
-          children: [
-            TextField(
-              controller: controller,
-              autofocus: true,
-              decoration: InputDecoration(
-                hintText: "Playlist Name",
-                filled: true,
-                fillColor: Theme.of(
-                  context,
-                ).colorScheme.surfaceContainerHighest,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
+        StatefulBuilder(
+          builder: (context, setDialogState) {
+            final colorScheme = Theme.of(context).colorScheme;
+            return Column(
               children: [
-                Expanded(
-                  child: ExpressiveToneButton(
-                    onPressed: () =>
-                        Navigator.of(context, rootNavigator: true).pop(),
-                    child: const Text("Cancel"),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ExpressiveButton(
-                      onPressed: () {
-                        final name = controller.text.trim();
-                        if (name.isNotEmpty) {
-                          final music = context.read<MusicProvider>();
-                          if (isEditing) {
-                            music.renamePlaylist(playlistId, name);
-                          } else {
-                            music.createPlaylist(name, tracks);
-                          }
-                        }
-                        Navigator.of(context, rootNavigator: true).pop();
-                      },
-                      child: Text(isEditing ? "Rename" : "Create"),
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: "Playlist Name",
+                    filled: true,
+                    fillColor: colorScheme.surfaceContainerHighest,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
                     ),
                   ),
                 ),
+                const SizedBox(height: 16),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 4, bottom: 8),
+                    child: Text(
+                      "Appearance",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                // Icon Picker
+                SizedBox(
+                  height: 48,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      _buildIconOption(
+                        context,
+                        null,
+                        selectedIcon,
+                        (icon) => setDialogState(() => selectedIcon = icon),
+                      ),
+                      ...[
+                        FlutterRemix.play_list_2_line,
+                        FlutterRemix.heart_3_line,
+                        FlutterRemix.star_line,
+                        FlutterRemix.fire_line,
+                        FlutterRemix.music_2_line,
+                        FlutterRemix.mic_2_line,
+                        FlutterRemix.headphone_line,
+                        FlutterRemix.disc_line,
+                      ].map(
+                        (iconData) => _buildIconOption(
+                          context,
+                          iconData.codePoint,
+                          selectedIcon,
+                          (icon) => setDialogState(() => selectedIcon = icon),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Color Picker
+                SizedBox(
+                  height: 40,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      _buildColorOption(
+                        context,
+                        null,
+                        selectedColor,
+                        (color) => setDialogState(() => selectedColor = color),
+                      ),
+                      ...[
+                        Colors.redAccent.value,
+                        Colors.blueAccent.value,
+                        Colors.greenAccent.value,
+                        Colors.purpleAccent.value,
+                        Colors.orangeAccent.value,
+                        Colors.tealAccent.value,
+                        Colors.pinkAccent.value,
+                      ].map(
+                        (colorVal) => _buildColorOption(
+                          context,
+                          colorVal,
+                          selectedColor,
+                          (color) => setDialogState(() => selectedColor = color),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ExpressiveToneButton(
+                        onPressed: () =>
+                            Navigator.of(context, rootNavigator: true).pop(),
+                        child: const Text("Cancel"),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ExpressiveButton(
+                          onPressed: () {
+                            final name = controller.text.trim();
+                            if (name.isNotEmpty) {
+                              if (isEditing) {
+                                music.renamePlaylist(
+                                  playlistId,
+                                  name,
+                                  icon: selectedIcon,
+                                  color: selectedColor,
+                                );
+                              } else {
+                                music.createPlaylist(
+                                  name,
+                                  tracks,
+                                  icon: selectedIcon,
+                                  color: selectedColor,
+                                );
+                              }
+                            }
+                            Navigator.of(context, rootNavigator: true).pop();
+                          },
+                          child: Text(isEditing ? "Save" : "Create"),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
-            ),
-          ],
+            );
+          },
         ),
       ],
+    );
+  }
+
+  static Widget _buildIconOption(
+    BuildContext context,
+    int? codePoint,
+    int? current,
+    Function(int?) onSelect,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isSelected = current == codePoint;
+    return GestureDetector(
+      onTap: () => onSelect(codePoint),
+      child: Container(
+        width: 44,
+        height: 44,
+        margin: const EdgeInsets.only(right: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? colorScheme.primary : colorScheme.surfaceContainer,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(
+          codePoint != null
+              ? IconData(
+                  codePoint,
+                  fontFamily: 'FlutterRemix',
+                  fontPackage: 'flutter_remix',
+                )
+              : FlutterRemix.image_line,
+          color: isSelected ? colorScheme.onPrimary : colorScheme.onSurface,
+          size: 20,
+        ),
+      ),
+    );
+  }
+
+  static Widget _buildColorOption(
+    BuildContext context,
+    int? colorValue,
+    int? current,
+    Function(int?) onSelect,
+  ) {
+    final isSelected = current == colorValue;
+    return GestureDetector(
+      onTap: () => onSelect(colorValue),
+      child: Container(
+        width: 40,
+        height: 40,
+        margin: const EdgeInsets.only(right: 10),
+        decoration: BoxDecoration(
+          color: colorValue != null ? Color(colorValue) : Colors.grey,
+          shape: BoxShape.circle,
+          border: isSelected
+              ? Border.all(color: Colors.white, width: 3)
+              : Border.all(color: Colors.white.withValues(alpha: 0.3)),
+        ),
+        child: colorValue == null
+            ? const Icon(FlutterRemix.close_line, size: 16, color: Colors.white)
+            : null,
+      ),
     );
   }
 
@@ -136,15 +291,29 @@ class PlaylistDialogs {
               children: [
                 CardListTile(
                   title: playlist.name,
+                  subtitle: '${playlist.tracks.length} tracks',
                   icon: FlutterRemix.play_list_add_line,
                   isFirst: isFirst,
                   isLast: isLast,
-                  onTap: () {
-                    music.addTrackToPlaylist(playlist.id, track);
-                    Navigator.of(context, rootNavigator: true).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Added to ${playlist.name}')),
-                    );
+                  onTap: () async {
+                    final success =
+                        await music.addTrackToPlaylist(playlist.id, track);
+                    if (context.mounted) {
+                      Navigator.of(context, rootNavigator: true).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            success
+                                ? 'Added to ${playlist.name}'
+                                : 'Already in ${playlist.name}',
+                          ),
+                          backgroundColor: success
+                              ? null
+                              : Theme.of(context).colorScheme.error,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
                   },
                 ),
                 if (!isLast) const SizedBox(height: 2.5),

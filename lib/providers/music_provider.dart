@@ -390,10 +390,12 @@ class MusicProvider extends ChangeNotifier {
             data['createdAt'] as int,
           );
           final trackIdsList = data['trackIds'] as List<dynamic>;
-          final trackIdsSet = trackIdsList.map((e) => e as int).toSet();
+          final trackIds = trackIdsList.map((e) => e as int).toList();
 
-          final playlistTracks = _tracks
-              .where((s) => trackIdsSet.contains(s.id))
+          final trackMap = {for (final t in _tracks) t.id: t};
+          final playlistTracks = trackIds
+              .where((id) => trackMap.containsKey(id))
+              .map((id) => trackMap[id]!)
               .toList();
 
           _playlists.add(
@@ -402,6 +404,8 @@ class MusicProvider extends ChangeNotifier {
               name: name,
               tracks: playlistTracks,
               createdAt: createdAt,
+              iconCodePoint: data['iconCodePoint'] as int?,
+              colorValue: data['colorValue'] as int?,
             ),
           );
         } catch (e) {
@@ -440,17 +444,26 @@ class MusicProvider extends ChangeNotifier {
       'name': p.name,
       'createdAt': p.createdAt.millisecondsSinceEpoch,
       'trackIds': p.tracks.map((s) => s.id).toList(),
+      'iconCodePoint': p.iconCodePoint,
+      'colorValue': p.colorValue,
     };
     await box.put(p.id, jsonEncode(data));
   }
 
   // Playlist management
-  Future<void> createPlaylist(String name, List<Track> tracks) async {
+  Future<void> createPlaylist(
+    String name,
+    List<Track> tracks, {
+    int? icon,
+    int? color,
+  }) async {
     final playlist = Playlist(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: name,
-      tracks: tracks,
+      tracks: List.from(tracks),
       createdAt: DateTime.now(),
+      iconCodePoint: icon,
+      colorValue: color,
     );
 
     _playlists.add(playlist);
@@ -461,13 +474,15 @@ class MusicProvider extends ChangeNotifier {
     await _savePlaylist(playlist);
   }
 
-  Future<void> addTrackToPlaylist(String playlistId, Track track) async {
+  Future<bool> addTrackToPlaylist(String playlistId, Track track) async {
     final playlist = _playlists.firstWhere((p) => p.id == playlistId);
     if (!playlist.tracks.contains(track)) {
       playlist.tracks.add(track);
       notifyListeners();
       await _savePlaylist(playlist);
+      return true;
     }
+    return false;
   }
 
   Future<void> removeTrackFromPlaylist(String playlistId, Track track) async {
@@ -484,10 +499,21 @@ class MusicProvider extends ChangeNotifier {
     await box.delete(playlistId);
   }
 
-  Future<void> renamePlaylist(String playlistId, String newName) async {
+  Future<void> renamePlaylist(
+    String playlistId,
+    String newName, {
+    int? icon,
+    int? color,
+  }) async {
     final index = _playlists.indexWhere((p) => p.id == playlistId);
     if (index != -1) {
-      _playlists[index] = _playlists[index].copyWith(name: newName);
+      _playlists[index] = _playlists[index].copyWith(
+        name: newName,
+        iconCodePoint: icon,
+        colorValue: color,
+        clearIcon: icon == null,
+        clearColor: color == null,
+      );
       notifyListeners();
       await _savePlaylist(_playlists[index]);
     }

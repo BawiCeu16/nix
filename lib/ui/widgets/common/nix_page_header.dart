@@ -10,6 +10,8 @@ class NixPageHeader extends StatelessWidget {
   final int? trackId;
   final IconData fallbackIcon;
   final Widget? actionRow;
+  final bool hideArtwork;
+  final Widget? customArtwork;
 
   const NixPageHeader({
     super.key,
@@ -18,6 +20,8 @@ class NixPageHeader extends StatelessWidget {
     this.trackId,
     this.fallbackIcon = FlutterRemix.play_list_fill,
     this.actionRow,
+    this.hideArtwork = false,
+    this.customArtwork,
   });
 
   @override
@@ -30,31 +34,36 @@ class NixPageHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 24),
       child: Column(
         children: [
-          SizedBox(
-            width: 300,
-            height: 300,
-            child: trackId != null
-                ? NixArtwork(
-                    id: trackId!,
-                    type: ArtworkType.AUDIO,
-                    fit: BoxFit.cover,
-                    width: 300,
-                    height: 300,
-                    quality: NixArtworkQuality.high, // Header needs ultra-high res
-                  )
-                : Container(
-                    decoration: BoxDecoration(
-                      color: colorScheme.secondaryContainer,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Icon(
-                      fallbackIcon,
-                      size: 80,
-                      color: colorScheme.onSecondaryContainer,
-                    ),
-                  ),
-          ),
-          const SizedBox(height: 24),
+          if (!hideArtwork) ...[
+            SizedBox(
+              width: 300,
+              height: 300,
+              child:
+                  customArtwork ??
+                  (trackId != null
+                      ? NixArtwork(
+                          id: trackId!,
+                          type: ArtworkType.AUDIO,
+                          fit: BoxFit.cover,
+                          width: 300,
+                          height: 300,
+                          quality: NixArtworkQuality
+                              .high, // Header needs ultra-high res
+                        )
+                      : Container(
+                          decoration: BoxDecoration(
+                            color: colorScheme.secondaryContainer,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Icon(
+                            fallbackIcon,
+                            size: 80,
+                            color: colorScheme.onSecondaryContainer,
+                          ),
+                        )),
+            ),
+            const SizedBox(height: 24),
+          ],
           Text(
             title,
             style: textTheme.headlineSmall?.copyWith(
