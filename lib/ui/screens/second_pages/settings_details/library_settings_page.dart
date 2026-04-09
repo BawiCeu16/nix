@@ -8,6 +8,7 @@ import '../../../widgets/common/nix_section_header.dart';
 import '../../../widgets/dialogs/nix_dialog.dart';
 import '../../../widgets/buttons/expressive_button.dart';
 import '../../../widgets/buttons/expressive_tone_button.dart';
+import '../../../widgets/common/nix_bottom_spacer.dart';
 
 class LibrarySettingsPage extends StatelessWidget {
   const LibrarySettingsPage({super.key});
@@ -86,6 +87,7 @@ class LibrarySettingsPage extends StatelessWidget {
               style: TextStyle(fontSize: 13, height: 1.5),
             ),
           ),
+          const NixBottomSpacer(),
         ],
       ),
     );

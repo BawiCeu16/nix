@@ -6,6 +6,7 @@ import 'package:nix/providers/user_provider.dart';
 import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:nix/ui/widgets/common/nix_section_header.dart';
+import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 import 'package:provider/provider.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -37,7 +38,6 @@ class _ProfilePageState extends State<ProfilePage> {
     final user = context.watch<UserProvider>();
     final music = context.watch<MusicProvider>();
     final colorScheme = Theme.of(context).colorScheme;
-    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainer,
@@ -192,32 +192,8 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 24),
           ],
 
-          if (music.recentlyPlayed.tracks.isNotEmpty) ...[
-            const NixSectionHeader(title: 'Recently Listened', topPadding: 32),
-            ...List.generate(music.recentlyPlayed.tracks.take(5).length, (
-              index,
-            ) {
-              final track = music.recentlyPlayed.tracks[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 2.5),
-                child: CardListTile(
-                  title: track.title,
-                  subtitle: track.artist,
-                  icon: FlutterRemix.time_line,
-                  onTap: () {
-                    context.read<CurrentMusicProvider>().playTrack(
-                      track,
-                      playlist: music.recentlyPlayed,
-                    );
-                  },
-                ),
-              );
-            }),
-            const SizedBox(height: 24),
-          ],
-
           // Fix for keyboard top bar behavior (SearchPage style)
-          SizedBox(height: 120 + keyboardHeight),
+          const NixBottomSpacer(),
         ],
       ),
     );

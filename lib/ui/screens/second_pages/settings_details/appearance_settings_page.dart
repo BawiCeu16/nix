@@ -7,6 +7,7 @@ import 'package:nix/providers/settings_provider.dart';
 import 'package:nix/models/settings/artwork_quality.dart';
 import 'package:nix/ui/widgets/list_item/nix_choice_chip.dart';
 import 'package:nix/ui/widgets/common/nix_section_header.dart';
+import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 
 class AppearanceSettingsPage extends StatelessWidget {
   const AppearanceSettingsPage({super.key});
@@ -104,7 +105,7 @@ class AppearanceSettingsPage extends StatelessWidget {
             isLast: true,
             onTap: () => _showQualityDialog(context, settingsParams),
           ),
-          const SizedBox(height: 120),
+          const NixBottomSpacer(),
         ],
       ),
     );

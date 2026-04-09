@@ -6,6 +6,7 @@ import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 import 'package:nix/ui/widgets/common/nix_section_header.dart';
 import './settings_details/appearance_settings_page.dart';
 import './settings_details/playback_settings_page.dart';
+import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -71,6 +72,7 @@ class SettingsPage extends StatelessWidget {
               context,
             ).push(MaterialPageRoute(builder: (_) => const AboutPage())),
           ),
+          const NixBottomSpacer(),
         ],
       ),
     );

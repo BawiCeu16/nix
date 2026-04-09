@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:nix/providers/settings_provider.dart';
 import '../../../widgets/list_item/card_list_tile.dart';
 import '../../../widgets/common/nix_section_header.dart';
+import '../../../widgets/common/nix_bottom_spacer.dart';
 
 class PlaybackSettingsPage extends StatelessWidget {
   const PlaybackSettingsPage({super.key});
@@ -97,6 +98,7 @@ class PlaybackSettingsPage extends StatelessWidget {
               style: TextStyle(fontSize: 13, height: 1.5),
             ),
           ),
+          const NixBottomSpacer(),
         ],
       ),
     );

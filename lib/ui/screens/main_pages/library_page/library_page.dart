@@ -12,6 +12,7 @@ import '../../music_pages/tracks_page.dart';
 import '../../second_pages/profile_page.dart';
 import '../../second_pages/settings_page.dart';
 import 'package:nix/ui/widgets/common/nix_refreshable_list.dart';
+import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 
 class LibraryPage extends StatelessWidget {
   const LibraryPage({super.key});
@@ -46,7 +47,7 @@ class LibraryPage extends StatelessWidget {
             return NixRefreshableList(
               onRefresh: () async => await music.scanDevice(),
               child: ListView(
-                padding: const EdgeInsets.symmetric(vertical: 20.0),
+                padding: const EdgeInsets.only(top: 20.0),
                 physics: const AlwaysScrollableScrollPhysics(
                   parent: BouncingScrollPhysics(),
                 ),
@@ -163,7 +164,7 @@ class LibraryPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 80),
+                  const NixBottomSpacer(),
                 ],
               ),
             );

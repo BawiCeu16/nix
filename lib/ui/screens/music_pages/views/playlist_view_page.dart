@@ -10,6 +10,7 @@ import 'package:nix/ui/widgets/common/nix_empty_state.dart';
 import 'package:nix/ui/widgets/common/nix_action_row.dart';
 import 'package:nix/ui/widgets/common/nix_page_header.dart';
 import 'package:nix/ui/widgets/dialogs/playlist_dialogs.dart';
+import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 
 class PlaylistViewPage extends StatelessWidget {
   final String playlistName;
@@ -122,7 +123,7 @@ class PlaylistViewPage extends StatelessWidget {
               }
 
               if (index == tracks.length + 1) {
-                return const SizedBox(key: ValueKey('padding'), height: 120);
+                return const NixBottomSpacer(key: ValueKey('padding'));
               }
 
               final trackIndex = index - 1;

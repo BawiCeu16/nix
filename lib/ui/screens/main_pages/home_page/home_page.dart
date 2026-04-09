@@ -14,6 +14,7 @@ import 'package:nix/ui/screens/music_pages/albums_page.dart';
 import 'package:nix/ui/screens/music_pages/tracks_page.dart';
 import 'package:nix/ui/widgets/common/nix_artwork.dart';
 import 'package:expressive_refresh/expressive_refresh.dart';
+import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -30,6 +31,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final user = context.watch<UserProvider>();
+    final music = context.watch<MusicProvider>();
     final brightness = Theme.of(context).brightness;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -101,132 +103,125 @@ class HomePage extends StatelessWidget {
                 ),
               ),
 
-              // Opt. #5: Single Consumer<MusicProvider> for the entire page.
-              // Previously there were 3 separate consumers, tripling rebuilds.
-              Consumer<MusicProvider>(
-                builder: (context, music, child) {
-                  // Opt. #4: Pre-compute album→firstTrackId map ONCE here.
-                  // Previously this was an O(n×m) scan per album card per scroll.
-                  final Map<String, int> albumFirstTrackId = {};
-                  for (final track in music.tracks) {
-                    albumFirstTrackId.putIfAbsent(track.album, () => track.id);
-                  }
-
-                  final recentTracks = music.recentlyPlayed.tracks;
-                  final albums = music.albums;
-                  final allTracks = music.tracks;
-                  final previewTracks = allTracks.take(6).toList();
-
-                  return SliverMainAxisGroup(
-                    slivers: [
-                      // ── Recently Listened ──
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: NixSectionHeader(
-                            title: 'Recently Listened',
-                            onShowAll: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => TracksPage(
-                                  title: 'Recently Listened',
-                                  tracksSource: () => context
-                                      .read<MusicProvider>()
-                                      .recentlyPlayed
-                                      .tracks,
-                                ),
-                              ),
+              // Pre-compute album→firstTrackId map ONCE here.
+              // Logic moved into sliver list builder
+              SliverMainAxisGroup(
+                slivers: [
+                  // ── Recently Listened ──
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: NixSectionHeader(
+                        title: 'Recently Listened',
+                        onShowAll: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => TracksPage(
+                              title: 'Recently Listened',
+                              tracksSource: () => music.recentlyPlayed.tracks,
                             ),
                           ),
                         ),
                       ),
-                      SliverToBoxAdapter(
-                        child: recentTracks.isEmpty
-                            ? const Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 24.0,
-                                  vertical: 12.0,
-                                ),
-                                child: Text('No recents yet.'),
-                              )
-                            : Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12.0,
-                                ),
-                                child: SizedBox(
-                                  height: 212,
-                                  child: ListView.builder(
-                                    scrollDirection: Axis.horizontal,
-                                    physics: const BouncingScrollPhysics(),
-                                    itemCount: recentTracks.take(10).length,
-                                    itemBuilder: (context, index) {
-                                      final track = recentTracks[index];
-                                      return Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 5.0,
-                                        ),
-                                        child: SizedBox(
-                                          width: 160.0,
-                                          child: GestureDetector(
-                                            onTap: () {
-                                              final currentMusic = context
-                                                  .read<CurrentMusicProvider>();
-                                              final pl = Playlist(
-                                                id: 'recently_played',
-                                                name: 'Recently Listened',
-                                                tracks: recentTracks,
-                                                createdAt: DateTime.now(),
-                                              );
-                                              currentMusic.playTrack(
-                                                track,
-                                                playlist: pl,
-                                              );
-                                            },
-                                            child: TrackCardTile(track: track),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-                      ),
-
-                      // ── Albums ──
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: NixSectionHeader(
-                            title: 'Albums',
-                            onShowAll: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const AlbumsPage(),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: music.recentlyPlayed.tracks.isEmpty
+                        ? const Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 24.0,
+                              vertical: 12.0,
+                            ),
+                            child: Text('No recents yet.'),
+                          )
+                        : Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                            ),
+                            child: SizedBox(
+                              height: 212,
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                physics: const BouncingScrollPhysics(),
+                                itemCount:
+                                    music.recentlyPlayed.tracks.take(10).length,
+                                itemBuilder: (context, index) {
+                                  final track =
+                                      music.recentlyPlayed.tracks[index];
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 5.0,
+                                    ),
+                                    child: SizedBox(
+                                      width: 160.0,
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          final currentMusic = context
+                                              .read<CurrentMusicProvider>();
+                                          final pl = Playlist(
+                                            id: 'recently_played',
+                                            name: 'Recently Listened',
+                                            tracks: music.recentlyPlayed.tracks,
+                                            createdAt: DateTime.now(),
+                                          );
+                                          currentMusic.playTrack(
+                                            track,
+                                            playlist: pl,
+                                          );
+                                        },
+                                        child: TrackCardTile(track: track),
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
                             ),
                           ),
+                  ),
+
+                  // ── Albums ──
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: NixSectionHeader(
+                        title: 'Albums',
+                        onShowAll: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const AlbumsPage(),
+                          ),
                         ),
                       ),
-                      SliverToBoxAdapter(
-                        child: albums.isEmpty
-                            ? const Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 24.0,
-                                  vertical: 12.0,
-                                ),
-                                child: Text('No albums found.'),
-                              )
-                            : Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12.0,
-                                ),
-                                child: SizedBox(
-                                  height: 212,
-                                  child: ListView.builder(
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: music.albums.isEmpty
+                        ? const Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 24.0,
+                              vertical: 12.0,
+                            ),
+                            child: Text('No albums found.'),
+                          )
+                        : Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                            ),
+                            child: SizedBox(
+                              height: 212,
+                              child: Builder(
+                                builder: (context) {
+                                  final Map<String, int> albumFirstTrackId = {};
+                                  for (final track in music.tracks) {
+                                    albumFirstTrackId.putIfAbsent(
+                                      track.album,
+                                      () => track.id,
+                                    );
+                                  }
+                                  return ListView.builder(
                                     scrollDirection: Axis.horizontal,
                                     physics: const BouncingScrollPhysics(),
-                                    itemCount: albums.take(10).length,
+                                    itemCount: music.albums.take(10).length,
                                     itemBuilder: (context, index) {
-                                      final album = albums[index];
-                                      // Opt. #4: O(1) lookup instead of O(n) scan
+                                      final album = music.albums[index];
                                       final firstTrackId =
                                           albumFirstTrackId[album.title];
                                       return Padding(
@@ -255,76 +250,66 @@ class HomePage extends StatelessWidget {
                                         ),
                                       );
                                     },
-                                  ),
-                                ),
+                                  );
+                                },
                               ),
-                      ),
+                            ),
+                          ),
+                  ),
 
-                      // ── All Tracks ──
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: NixSectionHeader(
-                            title: 'All Tracks',
-                            onShowAll: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => TracksPage(
-                                  title: 'All Tracks',
-                                  tracksSource: () =>
-                                      context.read<MusicProvider>().tracks,
-                                ),
-                              ),
+                  // ── All Tracks ──
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: NixSectionHeader(
+                        title: 'All Tracks',
+                        onShowAll: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => TracksPage(
+                              title: 'All Tracks',
+                              tracksSource: () => music.tracks,
                             ),
                           ),
                         ),
                       ),
-                      if (music.isLoading)
-                        const SliverToBoxAdapter(
-                          child: Padding(
-                            padding: EdgeInsets.all(24.0),
-                            child: Center(child: CircularProgressIndicator()),
-                          ),
-                        )
-                      else if (previewTracks.isEmpty)
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.all(24.0),
-                            child: Center(
-                              child: Text(music.error ?? 'No tracks found. :('),
-                            ),
-                          ),
-                        )
-                      else
-                        SliverList.builder(
-                          itemCount:
-                              previewTracks.length +
-                              (allTracks.length > 6 ? 0 : 1),
-                          itemBuilder: (context, index) {
-                            if (index == previewTracks.length &&
-                                allTracks.length <= 6) {
-                              return const SizedBox(height: 120);
-                            }
-                            if (index >= previewTracks.length) {
-                              return const SizedBox.shrink();
-                            }
-                            final track = previewTracks[index];
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12.0,
-                              ),
-                              child: TrackTile(
-                                track: track,
-                                playlistContext: allTracks,
-                                isFirst: index == 0,
-                                isLast: index == previewTracks.length - 1,
-                              ),
-                            );
-                          },
+                    ),
+                  ),
+                  if (music.isLoading)
+                    const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.all(24.0),
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                    )
+                  else if (music.tracks.isEmpty)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Center(
+                          child: Text(music.error ?? 'No tracks found. :('),
                         ),
-                    ],
-                  );
-                },
+                      ),
+                    )
+                  else
+                    SliverList.builder(
+                      itemCount: music.tracks.take(6).length,
+                      itemBuilder: (context, index) {
+                        final previewTracks = music.tracks.take(6).toList();
+                        final track = previewTracks[index];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                          child: TrackTile(
+                            track: track,
+                            playlistContext: music.tracks,
+                            isFirst: index == 0,
+                            isLast: index == previewTracks.length - 1,
+                          ),
+                        );
+                      },
+                    ),
+                ],
               ),
+              const NixBottomSpacer.sliver(),
             ],
           ),
         ),

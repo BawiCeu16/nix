@@ -12,6 +12,7 @@ import 'package:nix/ui/widgets/common/nix_page_header.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:nix/ui/widgets/common/nix_refreshable_list.dart';
 import 'package:nix/ui/widgets/common/nix_artwork.dart';
+import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 
 enum _AlbumSort { defaultOrder, aToZ, zToA }
 
@@ -52,8 +53,8 @@ class _AlbumsPageState extends State<AlbumsPage> {
           ),
         ],
       ),
-      body: Consumer<MusicProvider>(
-        builder: (context, music, child) {
+      body: Consumer2<MusicProvider, CurrentMusicProvider>(
+        builder: (context, music, currentMusic, child) {
           List<Album> albums = List.from(music.albums);
           if (_sort == _AlbumSort.aToZ) {
             albums.sort((a, b) => a.title.compareTo(b.title));
@@ -69,8 +70,8 @@ class _AlbumsPageState extends State<AlbumsPage> {
               title: "No albums found",
             ),
             child: GridView.builder(
-              padding: const EdgeInsets.only(
-                bottom: 120,
+              padding: EdgeInsets.only(
+                bottom: NixBottomSpacer.calculateHeight(context),
                 left: 16,
                 right: 16,
                 top: 8,
@@ -88,8 +89,9 @@ class _AlbumsPageState extends State<AlbumsPage> {
               itemBuilder: (context, index) {
                 final album = albums[index];
                 final albumTracks = music.getTracksByAlbum(album.title);
-                final firstTrackId =
-                    albumTracks.isNotEmpty ? albumTracks.first.id : null;
+                final firstTrackId = albumTracks.isNotEmpty
+                    ? albumTracks.first.id
+                    : null;
 
                 return GestureDetector(
                   onTap: () {
@@ -113,14 +115,14 @@ class _AlbumsPageState extends State<AlbumsPage> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Expanded(
-                        child: NixArtwork(
-                          id: firstTrackId ?? 0,
-                          type: ArtworkType.AUDIO,
-                          fit: BoxFit.cover,
-                          width: 140,
-                          height: 140,
+                          child: NixArtwork(
+                            id: firstTrackId ?? 0,
+                            type: ArtworkType.AUDIO,
+                            fit: BoxFit.cover,
+                            width: 140,
+                            height: 140,
+                          ),
                         ),
-                      ),
                         Padding(
                           padding: const EdgeInsets.all(12.0),
                           child: Column(
@@ -128,9 +130,7 @@ class _AlbumsPageState extends State<AlbumsPage> {
                             children: [
                               Text(
                                 album.title,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
+                                style: Theme.of(context).textTheme.bodyMedium
                                     ?.copyWith(fontWeight: FontWeight.bold),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -138,9 +138,7 @@ class _AlbumsPageState extends State<AlbumsPage> {
                               const SizedBox(height: 2),
                               Text(
                                 album.artist,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
+                                style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(
                                       color: colorScheme.onSurfaceVariant,
                                     ),
@@ -219,8 +217,8 @@ class AlbumTracksPage extends StatelessWidget {
                       },
                       onPlay: () {
                         context.read<CurrentMusicProvider>().playTrack(
-                              tracks.first,
-                            );
+                          tracks.first,
+                        );
                       },
                       playLabel: "Play All",
                     ),
@@ -228,7 +226,7 @@ class AlbumTracksPage extends StatelessWidget {
                 }
 
                 if (index == tracks.length + 1) {
-                  return const SizedBox(height: 120);
+                  return const NixBottomSpacer();
                 }
 
                 final track = tracks[index - 1];

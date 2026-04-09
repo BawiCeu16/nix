@@ -12,6 +12,7 @@ import 'package:nix/ui/widgets/common/nix_refreshable_list.dart';
 import 'package:nix/ui/widgets/common/nix_empty_state.dart';
 import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
 import 'package:nix/ui/widgets/common/nix_artwork.dart';
+import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 
 enum _ArtistSort { defaultOrder, aToZ, zToA }
 
@@ -52,8 +53,8 @@ class _ArtistsPageState extends State<ArtistsPage> {
           ),
         ],
       ),
-      body: Consumer<MusicProvider>(
-        builder: (context, music, child) {
+      body: Consumer2<MusicProvider, CurrentMusicProvider>(
+        builder: (context, music, currentMusic, child) {
           List<Artist> artists = List.from(music.artists);
           if (_sort == _ArtistSort.aToZ) {
             artists.sort((a, b) => a.name.compareTo(b.name));
@@ -69,8 +70,8 @@ class _ArtistsPageState extends State<ArtistsPage> {
               title: "No artists found",
             ),
             child: GridView.builder(
-              padding: const EdgeInsets.only(
-                bottom: 120,
+              padding: EdgeInsets.only(
+                bottom: NixBottomSpacer.calculateHeight(context),
                 left: 16,
                 right: 16,
                 top: 8,
@@ -258,7 +259,7 @@ class ArtistTracksPage extends StatelessWidget {
                 }
 
                 if (index == tracks.length + 1) {
-                  return const SizedBox(height: 120);
+                  return const NixBottomSpacer();
                 }
 
                 final track = tracks[index - 1];

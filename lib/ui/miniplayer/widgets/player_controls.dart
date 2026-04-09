@@ -260,6 +260,7 @@ class PlayerControls extends StatelessWidget {
                                           .primary
                                           .withValues(alpha: .3),
                                       amplitude: amplitude,
+
                                       frequency: 15,
                                       strokeWidth: 2.8,
                                       thumbShape: WaveSliderThumbShape.bar,

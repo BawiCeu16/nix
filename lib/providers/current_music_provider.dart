@@ -64,6 +64,9 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   AudioLoadingState get audioLoading => _audioLoadingState;
   Color? get dynamicSeedColor => _dynamicSeedColor;
 
+  /// Returns true if a track is loaded and the MiniPlayer should be visible.
+  bool get showMiniPlayer => _currentTrack != null;
+
   // Legacy API compatibility
   Track? get playing => _currentTrack;
   bool get isPlaying => _audioPlayer.playing;

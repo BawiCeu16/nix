@@ -4,6 +4,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../widgets/list_item/card_list_tile.dart';
 import '../../../widgets/common/nix_section_header.dart';
+import '../../../widgets/common/nix_bottom_spacer.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -146,7 +147,7 @@ class AboutPage extends StatelessWidget {
                 isLast: true,
                 onTap: () => _showResetDialog(context),
               ),
-              const SizedBox(height: 14),
+              const NixBottomSpacer(),
             ],
           );
         },

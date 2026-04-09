@@ -6,6 +6,7 @@ import 'package:nix/ui/widgets/common/nix_empty_state.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/ui/widgets/common/nix_refreshable_list.dart';
+import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 
 enum _TrackSort { defaultOrder, aToZ, zToA, duration }
 
@@ -74,9 +75,12 @@ class _TracksPageState extends State<TracksPage> {
             physics: const AlwaysScrollableScrollPhysics(
               parent: BouncingScrollPhysics(),
             ),
-            padding: const EdgeInsets.only(bottom: 120, top: 8),
-            itemCount: tracksList.length,
+            padding: const EdgeInsets.only(top: 8),
+            itemCount: tracksList.length + 1,
             itemBuilder: (context, index) {
+              if (index == tracksList.length) {
+                return const NixBottomSpacer();
+              }
               final track = tracksList[index];
               return TrackTile(
                 track: track,
