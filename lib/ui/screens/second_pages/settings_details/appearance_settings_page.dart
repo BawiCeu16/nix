@@ -5,6 +5,7 @@ import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/settings_provider.dart';
 import 'package:nix/models/settings/artwork_quality.dart';
+import 'package:nix/models/settings/timer_gesture.dart';
 import 'package:nix/ui/widgets/list_item/nix_choice_chip.dart';
 import 'package:nix/ui/widgets/common/nix_section_header.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
@@ -99,11 +100,20 @@ class AppearanceSettingsPage extends StatelessWidget {
           ),
           const SizedBox(height: 2.5),
           CardListTile(
-            title: 'Artwork Fidelity',
+            title: 'Artwork Quality',
             subtitle: settingsParams.artworkQuality.name.toUpperCase(),
             icon: FlutterRemix.image_line,
-            isLast: true,
             onTap: () => _showQualityDialog(context, settingsParams),
+          ),
+          const SizedBox(height: 2.5),
+          CardListTile(
+            title: 'Timer Interaction',
+            subtitle: settingsParams.timerGesture == TimerGesture.longPress
+                ? 'LONG PRESS'
+                : 'TAP',
+            icon: FlutterRemix.fingerprint_line,
+            isLast: true,
+            onTap: () => _showTimerGestureDialog(context, settingsParams),
           ),
           const NixBottomSpacer(),
         ],
@@ -216,6 +226,51 @@ class AppearanceSettingsPage extends StatelessWidget {
             ),
             isFirst: index == 0,
             isLast: index == AccentColorMode.values.length - 1,
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  void _showTimerGestureDialog(
+    BuildContext context,
+    SettingsProvider settings,
+  ) {
+    NixDialog.show(
+      context: context,
+      title: 'Timer Interaction',
+      children: TimerGesture.values.map((gesture) {
+        final index = TimerGesture.values.indexOf(gesture);
+        String description = '';
+        switch (gesture) {
+          case TimerGesture.tap:
+            description = 'Single tap to open timer';
+            break;
+          case TimerGesture.longPress:
+            description = 'Long press to avoid accidental touches';
+            break;
+        }
+
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: index == TimerGesture.values.length - 1 ? 0.0 : 2.5,
+          ),
+          child: CardListTile(
+            title: gesture.name.toUpperCase(),
+            subtitle: description,
+            onTap: () {
+              settings.setTimerGesture(gesture);
+              Navigator.of(context, rootNavigator: true).pop();
+            },
+            trailing: IgnorePointer(
+              child: Radio<TimerGesture>(
+                value: gesture,
+                groupValue: settings.timerGesture,
+                onChanged: (_) {},
+              ),
+            ),
+            isFirst: index == 0,
+            isLast: index == TimerGesture.values.length - 1,
           ),
         );
       }).toList(),

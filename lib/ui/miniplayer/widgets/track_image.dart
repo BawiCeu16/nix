@@ -4,6 +4,9 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/sleep_timer_provider.dart';
+import 'package:nix/providers/settings_provider.dart';
+import 'package:nix/models/settings/timer_gesture.dart';
+import 'package:nix/ui/widgets/dialogs/sleep_timer_dialog.dart';
 import 'package:nix/ui/widgets/common/nix_artwork.dart';
 import '../../../core/format.dart';
 import '../../../core/math_utils.dart';
@@ -135,38 +138,46 @@ class TrackImage extends StatelessWidget {
                                 left: 12,
                                 child: Opacity(
                                   opacity: opacity,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.5,
+                                  child: GestureDetector(
+                                    onTap: context.read<SettingsProvider>().timerGesture == TimerGesture.tap 
+                                        ? () => SleepTimerDialog.show(context) 
+                                        : null,
+                                    onLongPress: context.read<SettingsProvider>().timerGesture == TimerGesture.longPress 
+                                        ? () => SleepTimerDialog.show(context) 
+                                        : null,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
                                       ),
-                                      borderRadius: BorderRadius.circular(
-                                        100,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Icon(
-                                          FlutterRemix.timer_2_line,
-                                          size: 14,
-                                          color: Colors.white,
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withValues(
+                                          alpha: 0.5,
                                         ),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          timer.remainingTime?.shortFormat() ??
-                                              "00:00",
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
+                                        borderRadius: BorderRadius.circular(
+                                          100,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(
+                                            FlutterRemix.timer_2_line,
+                                            size: 14,
                                             color: Colors.white,
                                           ),
-                                        ),
-                                      ],
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            timer.remainingTime?.shortFormat() ??
+                                                "00:00",
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),

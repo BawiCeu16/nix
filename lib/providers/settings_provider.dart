@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:nix/core/hive_keys.dart';
 import 'package:nix/models/settings/artwork_quality.dart';
+import 'package:nix/models/settings/timer_gesture.dart';
 
 enum AccentColorMode { dynamic, device, custom }
 
@@ -175,6 +176,24 @@ class SettingsProvider with ChangeNotifier {
 
   void setArtworkQuality(NixArtworkQuality quality) {
     _box.put(HiveKeys.artworkQuality, quality.name);
+    notifyListeners();
+  }
+
+  // Appearance - Timer Gesture
+  /// The interaction type for the floating sleep timer indicator.
+  TimerGesture get timerGesture {
+    final String gesture = _box.get(
+      HiveKeys.timerGesture,
+      defaultValue: 'longPress',
+    );
+    return TimerGesture.values.firstWhere(
+      (e) => e.name == gesture,
+      orElse: () => TimerGesture.longPress,
+    );
+  }
+
+  void setTimerGesture(TimerGesture gesture) {
+    _box.put(HiveKeys.timerGesture, gesture.name);
     notifyListeners();
   }
 

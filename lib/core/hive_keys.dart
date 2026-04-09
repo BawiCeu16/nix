@@ -25,6 +25,7 @@ abstract final class HiveKeys {
   static const String useAmoledMode = 'useAmoledMode';
   static const String artworkShape = 'artworkShape';
   static const String artworkQuality = 'artworkQuality';
+  static const String timerGesture = 'timerGesture';
   static const String onboarding = 'hasCompletedOnboarding';
 
   // ── User keys ──────────────────────────────────────────────────────────────
