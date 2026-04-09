@@ -7,6 +7,7 @@ import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 import 'package:nix/ui/widgets/buttons/expressive_button.dart';
 import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
+import 'package:nix/core/utils/nix_icons.dart';
 
 class PlaylistDialogs {
   /// Handles both creating a new playlist and renaming an existing one.
@@ -73,18 +74,18 @@ class PlaylistDialogs {
                         (icon) => setDialogState(() => selectedIcon = icon),
                       ),
                       ...[
-                        FlutterRemix.play_list_2_line,
-                        FlutterRemix.heart_3_line,
-                        FlutterRemix.star_line,
-                        FlutterRemix.fire_line,
-                        FlutterRemix.music_2_line,
-                        FlutterRemix.mic_2_line,
-                        FlutterRemix.headphone_line,
-                        FlutterRemix.disc_line,
+                        FlutterRemix.play_list_2_line.codePoint,
+                        FlutterRemix.heart_3_line.codePoint,
+                        FlutterRemix.star_line.codePoint,
+                        FlutterRemix.fire_line.codePoint,
+                        FlutterRemix.music_2_line.codePoint,
+                        FlutterRemix.mic_2_line.codePoint,
+                        FlutterRemix.headphone_line.codePoint,
+                        FlutterRemix.disc_line.codePoint,
                       ].map(
-                        (iconData) => _buildIconOption(
+                        (codePoint) => _buildIconOption(
                           context,
-                          iconData.codePoint,
+                          codePoint,
                           selectedIcon,
                           (icon) => setDialogState(() => selectedIcon = icon),
                         ),
@@ -194,11 +195,7 @@ class PlaylistDialogs {
         ),
         child: Icon(
           codePoint != null
-              ? IconData(
-                  codePoint,
-                  fontFamily: 'FlutterRemix',
-                  fontPackage: 'flutter_remix',
-                )
+              ? NixIcons.getPlaylistIcon(codePoint)
               : FlutterRemix.image_line,
           color: isSelected ? colorScheme.onPrimary : colorScheme.onSurface,
           size: 20,

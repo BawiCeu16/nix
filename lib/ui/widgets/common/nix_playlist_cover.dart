@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
+import 'package:nix/core/utils/nix_icons.dart';
 import 'package:nix/models/music/playlist.dart';
 import 'package:nix/models/music/track.dart';
 import 'package:nix/ui/widgets/common/nix_artwork.dart';
@@ -32,7 +33,7 @@ class NixPlaylistCover extends StatelessWidget {
               : colorScheme.secondaryContainer,
         ),
         child: Icon(
-          IconData(playlist.iconCodePoint!, fontFamily: 'FlutterRemix', fontPackage: 'flutter_remix'),
+          NixIcons.getPlaylistIcon(playlist.iconCodePoint),
           color: playlist.colorValue != null
               ? Color(playlist.colorValue!)
               : colorScheme.onSecondaryContainer,
