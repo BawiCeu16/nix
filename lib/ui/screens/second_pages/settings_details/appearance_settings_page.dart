@@ -112,8 +112,20 @@ class AppearanceSettingsPage extends StatelessWidget {
                 ? 'LONG PRESS'
                 : 'TAP',
             icon: FlutterRemix.fingerprint_line,
-            isLast: true,
             onTap: () => _showTimerGestureDialog(context, settingsParams),
+          ),
+          const SizedBox(height: 2.5),
+          CardListTile(
+            title: 'Swipe to Change Track',
+            subtitle: 'Swipe artwork left/right to skip',
+            icon: FlutterRemix.arrow_left_right_line,
+            trailing: Switch(
+              value: settingsParams.swipeToChangeTrack,
+              onChanged: (v) => settingsParams.setSwipeToChangeTrack(v),
+            ),
+            isLast: true,
+            onTap: () =>
+                settingsParams.setSwipeToChangeTrack(!settingsParams.swipeToChangeTrack),
           ),
           const NixBottomSpacer(),
         ],

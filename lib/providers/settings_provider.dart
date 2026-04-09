@@ -197,6 +197,16 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Appearance - Swipe to Change Track
+  /// Whether horizontal swipes on artwork change the track.
+  bool get swipeToChangeTrack =>
+      _box.get(HiveKeys.swipeToChangeTrack, defaultValue: true);
+
+  void setSwipeToChangeTrack(bool value) {
+    _box.put(HiveKeys.swipeToChangeTrack, value);
+    notifyListeners();
+  }
+
   // Search History
   /// List of recent search queries.
   List<String> get searchHistory {

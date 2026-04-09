@@ -15,6 +15,8 @@ import 'widgets/player_controls.dart';
 import 'widgets/queue_view.dart';
 import 'models/animation_data.dart';
 
+enum _ActiveGesture { none, vertical, horizontal }
+
 class NowPlaying extends StatefulWidget {
   final AnimationController animation;
   const NowPlaying({super.key, required this.animation});
@@ -55,6 +57,9 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
 
   // Playback Animation
   late AnimationController playPauseAnim;
+
+  // Gesture Locking
+  _ActiveGesture _activeGesture = _ActiveGesture.none;
 
   @override
   void initState() {
@@ -319,6 +324,9 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
         .then((_) {
           sOffset = 0;
           sAnim.animateTo(0.0, duration: Duration.zero);
+          if (mounted) {
+            context.read<CurrentMusicProvider>().playPrevious();
+          }
         });
   }
 
@@ -348,6 +356,9 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
         .then((_) {
           sOffset = 0;
           sAnim.animateTo(0.0, duration: Duration.zero);
+          if (mounted) {
+            context.read<CurrentMusicProvider>().playNext();
+          }
         });
   }
 
@@ -379,6 +390,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
       child: Listener(
         onPointerDown: (event) {
           if (event.position.dy > screenSize.height - deadSpace) return;
+          _activeGesture = _ActiveGesture.none;
           velocity.addPosition(event.timeStamp, event.position);
           prevOffset = offset;
           bounceUp = false;
@@ -386,9 +398,24 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
         },
         onPointerMove: (event) {
           if (event.position.dy > screenSize.height - deadSpace) return;
+          if (_activeGesture == _ActiveGesture.horizontal) return;
+
           velocity.addPosition(event.timeStamp, event.position);
 
           final settings = context.read<SettingsProvider>();
+          final dy = event.delta.dy.abs();
+          final dx = event.delta.dx.abs();
+
+          if (_activeGesture == _ActiveGesture.none) {
+            if (dy > dx && dy > 2) {
+              _activeGesture = _ActiveGesture.vertical;
+            } else if (dx > dy && dx > 2) {
+              _activeGesture = _ActiveGesture.horizontal;
+              return;
+            } else {
+              return;
+            }
+          }
           offset -= event.delta.dy;
           offset = _applyStagedClamping(offset, settings);
           widget.animation.animateTo(
@@ -396,7 +423,10 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
             duration: Duration.zero,
           );
         },
-        onPointerUp: (event) => verticalSnapping(),
+        onPointerUp: (event) {
+          _activeGesture = _ActiveGesture.none;
+          verticalSnapping();
+        },
         child: GestureDetector(
           onTap: () {
             if (widget.animation.value < (actuationOffset / maxOffset)) {
@@ -404,8 +434,12 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
             }
           },
           onVerticalDragUpdate: (details) {
+            if (_activeGesture == _ActiveGesture.horizontal) return;
             if (details.globalPosition.dy > screenSize.height - deadSpace) {
               return;
+            }
+            if (_activeGesture == _ActiveGesture.none) {
+              _activeGesture = _ActiveGesture.vertical;
             }
             final settings = context.read<SettingsProvider>();
             offset -= details.primaryDelta ?? 0;
@@ -415,13 +449,21 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
               duration: Duration.zero,
             );
           },
-          onVerticalDragEnd: (_) => verticalSnapping(),
+          onVerticalDragEnd: (_) {
+            _activeGesture = _ActiveGesture.none;
+            verticalSnapping();
+          },
           onHorizontalDragStart: (details) {
             if (offset > maxOffset) return;
+            if (_activeGesture == _ActiveGesture.vertical) return;
+            if (!context.read<SettingsProvider>().swipeToChangeTrack) return;
+            _activeGesture = _ActiveGesture.horizontal;
             sPrevOffset = sOffset;
           },
           onHorizontalDragUpdate: (details) {
             if (offset > maxOffset) return;
+            if (_activeGesture == _ActiveGesture.vertical) return;
+            if (!context.read<SettingsProvider>().swipeToChangeTrack) return;
             if (details.globalPosition.dy > screenSize.height - deadSpace) {
               return;
             }
@@ -431,6 +473,8 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
           },
           onHorizontalDragEnd: (details) {
             if (offset > maxOffset) return;
+            _activeGesture = _ActiveGesture.none;
+            if (!context.read<SettingsProvider>().swipeToChangeTrack) return;
             final distance = sPrevOffset - sOffset;
             final speed = velocity.getVelocity().pixelsPerSecond.dx;
             const threshold = 1000.0;
