@@ -63,7 +63,11 @@ class _NavigationScreenState extends State<NavigationScreen>
   void _onPlaybackChanged() {
     final provider = context.read<CurrentMusicProvider>();
     if (provider.currentTrack != null && animation.value < 0.0) {
-      animation.value = 0.0;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && animation.value < 0.0) {
+          animation.value = 0.0;
+        }
+      });
     }
   }
 

@@ -161,7 +161,8 @@ class _QueueViewState extends State<QueueView> {
                                     trackId: track.id,
                                     itemIndex: index,
                                     isPlaying:
-                                        currentMusic.currentTrack?.id == track.id,
+                                        currentMusic.currentTrack?.id ==
+                                        track.id,
                                     onTap: () {
                                       currentMusic.playTrack(
                                         track,
@@ -191,7 +192,7 @@ class _QueueViewState extends State<QueueView> {
                                 },
                               ),
                               const SliverPadding(
-                                padding: EdgeInsets.only(bottom: 120),
+                                padding: EdgeInsets.only(bottom: 30),
                               ),
                             ],
                           ),

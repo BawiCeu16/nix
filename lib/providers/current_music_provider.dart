@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:math' as math;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
@@ -45,7 +44,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   Playlist? _currentPlaylist;
   bool _isShuffleEnabled = false;
   bool _isRepeatEnabled = false;
-  
+
   // Stream for signaling when a track starts playing
   final StreamController<Track> _onTrackPlayedController =
       StreamController<Track>.broadcast();
@@ -55,6 +54,10 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
 
   AudioLoadingState _audioLoadingState = AudioLoadingState.idle;
   Color? _dynamicSeedColor;
+
+  /// Token used to synchronize background tasks like artwork extraction.
+  /// Incremented every time a new track is selected to start playing.
+  int _playbackSelectionToken = 0;
 
   // Getters
   Track? get currentTrack => _currentTrack;
@@ -133,11 +136,10 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       final settings = _settingsProvider;
       if (settings != null) {
         final duration = _audioPlayer.duration;
-        if (duration != null && 
-            _audioPlayer.playing && 
+        if (duration != null &&
+            _audioPlayer.playing &&
             !_isTransitioning &&
             _audioPlayer.processingState == ProcessingState.ready) {
-          
           final remaining = duration.inMilliseconds - pos.inMilliseconds;
           // Threshold set to 3 seconds (3000ms)
           if (remaining > 0 && remaining < 3000) {
@@ -148,100 +150,171 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
     });
 
     // Native High-Fidelity Skip Silence (Android only)
-    await _audioPlayer.setSkipSilenceEnabled(_settingsProvider?.skipSilence ?? false);
+    await _audioPlayer.setSkipSilenceEnabled(
+      _settingsProvider?.skipSilence ?? false,
+    );
   }
 
   Future<void> playTrack(Track track, {Playlist? playlist}) async {
+    // 1. PHASE 1: Immediate State Update (Synchronous-like)
+    _playbackSelectionToken++;
+    final int currentToken = _playbackSelectionToken;
+
     try {
       _audioLoadingState = AudioLoadingState.loading;
-      notifyListeners();
-
       _currentTrack = track;
       _currentPlaylist = playlist ?? _getDefaultPlaylistForTrack(track);
-
-      // Update MediaItem for system notification
-      final artworkBytes = await OnAudioQuery().queryArtwork(
-        track.id,
-        ArtworkType.AUDIO,
-      );
-
-      String? artPath;
-      if (artworkBytes != null) {
-        final tempDir = await getTemporaryDirectory();
-        final file = File(
-          '${tempDir.path}/${track.id}_${artworkBytes.length}.png',
-        );
-        if (!await file.exists()) {
-          await file.writeAsBytes(artworkBytes);
-        }
-        artPath = file.path;
-      }
-
-      final mediaItem = MediaItem(
-        id: track.uri,
-        album: track.album,
-        title: track.title,
-        artist: track.artist,
-        duration: Duration(milliseconds: track.duration),
-        artUri: artPath != null ? Uri.file(artPath) : null,
-      );
-      this.mediaItem.add(mediaItem);
-
-      // Record play history and count
-      try {
-        final historyBox = await Hive.openBox<int>(HiveKeys.playHistoryBox);
-        await historyBox.put(track.id, DateTime.now().millisecondsSinceEpoch);
-
-        final countsBox = await Hive.openBox<int>(HiveKeys.playCountsBox);
-        final currentCount = countsBox.get(track.id, defaultValue: 0) ?? 0;
-        await countsBox.put(track.id, currentCount + 1);
-      } catch (e) {
-        debugPrint('Error recording play history: $e');
-      }
-
-      await _audioPlayer.setAudioSource(AudioSource.file(track.uri));
-      await _audioPlayer.play();
-      _onTrackPlayedController.add(track);
-
-      // Extract colors from artwork for dynamic theming
-      if (artworkBytes != null) {
-        _updateDynamicSeedColor(artworkBytes);
-      } else {
-        _dynamicSeedColor = null;
-        notifyListeners();
-      }
-
-      _audioLoadingState = AudioLoadingState.loaded;
       notifyListeners();
 
-      // Apply saved playback speed
+      // 2. PHASE 2: Parallel Execution Branches
+      // We don't await the background tasks to ensure the audio starts ASAP.
+
+      // Branch A: Audio Engine (Highest Priority)
+      unawaited(() async {
+        try {
+          await _audioPlayer.setAudioSource(AudioSource.file(track.uri));
+          if (currentToken == _playbackSelectionToken) {
+            await _audioPlayer.play();
+            _audioLoadingState = AudioLoadingState.loaded;
+            notifyListeners();
+          }
+        } catch (e) {
+          if (currentToken == _playbackSelectionToken) {
+            _audioLoadingState = AudioLoadingState.error;
+            notifyListeners();
+          }
+          debugPrint('Audio branch error: $e');
+        }
+      }());
+
+      // Branch B: Theming & Visuals (Parallel)
+      _updateDynamicSeedColorForTrack(track, currentToken);
+
+      // Branch C: Metadata & System Integration (Parallel)
+      unawaited(() async {
+        try {
+          final artworkBytes = await OnAudioQuery().queryArtwork(
+            track.id,
+            ArtworkType.AUDIO,
+          );
+
+          if (currentToken != _playbackSelectionToken) return;
+
+          String? artPath;
+          if (artworkBytes != null) {
+            final tempDir = await getTemporaryDirectory();
+            final file = File(
+              '${tempDir.path}/${track.id}_${artworkBytes.length}.png',
+            );
+            if (!await file.exists()) {
+              await file.writeAsBytes(artworkBytes);
+            }
+            artPath = file.path;
+          }
+
+          if (currentToken == _playbackSelectionToken) {
+            final mediaItem = MediaItem(
+              id: track.uri,
+              album: track.album,
+              title: track.title,
+              artist: track.artist,
+              duration: Duration(milliseconds: track.duration),
+              artUri: artPath != null ? Uri.file(artPath) : null,
+            );
+            this.mediaItem.add(mediaItem);
+          }
+        } catch (e) {
+          debugPrint('Metadata branch error: $e');
+        }
+      }());
+
+      // Branch D: History & Persistence (Fire-and-forget)
+      unawaited(() async {
+        try {
+          final historyBox = await Hive.openBox<int>(HiveKeys.playHistoryBox);
+          await historyBox.put(track.id, DateTime.now().millisecondsSinceEpoch);
+
+          final countsBox = await Hive.openBox<int>(HiveKeys.playCountsBox);
+          final currentCount = countsBox.get(track.id, defaultValue: 0) ?? 0;
+          await countsBox.put(track.id, currentCount + 1);
+
+          if (currentToken == _playbackSelectionToken) {
+            _onTrackPlayedController.add(track);
+          }
+        } catch (e) {
+          debugPrint('History branch error: $e');
+        }
+      }());
+
+      // 3. PHASE 3: Post-playback adjustments
+      // Apply speed from settings AFTER the player has started
       if (_settingsProvider?.resetSpeedOnNewTrack == true) {
         _settingsProvider?.setPlaybackSpeed(1.0);
       }
-      await _audioPlayer.setSpeed(_settingsProvider?.playbackSpeed ?? 1.0);
+      _audioPlayer.setSpeed(_settingsProvider?.playbackSpeed ?? 1.0);
     } catch (e) {
+      debugPrint('Global playTrack error: $e');
       _audioLoadingState = AudioLoadingState.error;
-      debugPrint('Error playing track: $e');
       notifyListeners();
     } finally {
-      // Small delay before clearing transition guard to ensure the new track's
-      // position has stabilized and won't re-trigger the skip logic immediately.
       Future.delayed(const Duration(milliseconds: 500), () {
-        _isTransitioning = false;
+        if (currentToken == _playbackSelectionToken) {
+          _isTransitioning = false;
+        }
       });
     }
   }
 
-  Future<void> _updateDynamicSeedColor(Uint8List artworkBytes) async {
+  /// Optimized color extraction for dynamic theming.
+  /// Checks persistent cache first, falls back to low-quality artwork query.
+  Future<void> _updateDynamicSeedColorForTrack(
+    Track track,
+    int? requestToken,
+  ) async {
+    final cache = Hive.box<int>(HiveKeys.colorCacheBox);
+    final cachedColor = cache.get(track.id);
+
+    if (cachedColor != null) {
+      // Guard: Only apply if this is still the current request
+      if (requestToken != null && requestToken != _playbackSelectionToken)
+        return;
+
+      _dynamicSeedColor = Color(cachedColor);
+      notifyListeners();
+      return;
+    }
+
     try {
-      final scheme = await ColorScheme.fromImageProvider(
-        provider: MemoryImage(artworkBytes),
+      final extractBytes = await OnAudioQuery().queryArtwork(
+        track.id,
+        ArtworkType.AUDIO,
+        size: 100,
       );
 
-      _dynamicSeedColor = scheme.primary;
-      notifyListeners();
+      // Guard: Check token after async boundary
+      if (requestToken != null && requestToken != _playbackSelectionToken)
+        return;
+
+      if (extractBytes != null) {
+        final scheme = await ColorScheme.fromImageProvider(
+          provider: MemoryImage(extractBytes),
+        );
+
+        // Final guard before updating state
+        if (requestToken != null && requestToken != _playbackSelectionToken)
+          return;
+
+        _dynamicSeedColor = scheme.primary;
+        await cache.put(track.id, _dynamicSeedColor!.value);
+        notifyListeners();
+      } else {
+        if (requestToken == null || requestToken == _playbackSelectionToken) {
+          _dynamicSeedColor = null;
+          notifyListeners();
+        }
+      }
     } catch (e) {
-      debugPrint('Error extracting palette: $e');
+      debugPrint('Error extracting palette for ${track.id}: $e');
     }
   }
 
@@ -315,7 +388,9 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
     } else if (_settingsProvider?.autoPlay == true) {
       // Auto-play: pick a random track from the current playlist
       if (_currentPlaylist!.tracks.isNotEmpty) {
-        final randomIdx = math.Random().nextInt(_currentPlaylist!.tracks.length);
+        final randomIdx = math.Random().nextInt(
+          _currentPlaylist!.tracks.length,
+        );
         await playTrack(
           _currentPlaylist!.tracks[randomIdx],
           playlist: _currentPlaylist,
@@ -336,7 +411,10 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
         playlist: _currentPlaylist,
       );
     } else if (_isRepeatEnabled) {
-      await playTrack(_currentPlaylist!.tracks.last, playlist: _currentPlaylist);
+      await playTrack(
+        _currentPlaylist!.tracks.last,
+        playlist: _currentPlaylist,
+      );
     }
   }
 

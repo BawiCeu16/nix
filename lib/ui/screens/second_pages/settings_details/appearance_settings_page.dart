@@ -143,11 +143,12 @@ class AppearanceSettingsPage extends StatelessWidget {
   }
 
   void _showQualityDialog(BuildContext context, SettingsProvider settings) {
+    final qualities = NixArtworkQuality.values.reversed.toList();
     NixDialog.show(
       context: context,
-      title: 'Artwork Fidelity',
-      children: NixArtworkQuality.values.map((quality) {
-        final index = NixArtworkQuality.values.indexOf(quality);
+      title: 'Artwork Quality',
+      children: qualities.map((quality) {
+        final index = qualities.indexOf(quality);
         String description = '';
         switch (quality) {
           case NixArtworkQuality.high:
@@ -163,7 +164,7 @@ class AppearanceSettingsPage extends StatelessWidget {
 
         return Padding(
           padding: EdgeInsets.only(
-            bottom: index == NixArtworkQuality.values.length - 1 ? 0.0 : 2.5,
+            bottom: index == qualities.length - 1 ? 0.0 : 2.5,
           ),
           child: CardListTile(
             title: quality.name.toUpperCase(),
@@ -180,7 +181,7 @@ class AppearanceSettingsPage extends StatelessWidget {
               ),
             ),
             isFirst: index == 0,
-            isLast: index == NixArtworkQuality.values.length - 1,
+            isLast: index == qualities.length - 1,
           ),
         );
       }).toList(),

@@ -9,6 +9,7 @@ abstract final class HiveKeys {
   static const String favoritesBox = 'favorites';
   static const String playHistoryBox = 'play_history';
   static const String playCountsBox = 'play_counts';
+  static const String colorCacheBox = 'color_cache';
 
   // ── Settings keys ──────────────────────────────────────────────────────────
   static const String themeMode = 'themeMode';
