@@ -40,10 +40,17 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
     _audioPlayer.setSkipSilenceEnabled(settings.skipSilence);
   }
 
+  /// Synchronize the playback engine with the full library for Auto-Play capabilities.
+  void updateLibrary(List<Track> tracks) {
+    _libraryTracks = List.from(tracks);
+    notifyListeners();
+  }
+
   Track? _currentTrack;
   Playlist? _currentPlaylist;
   bool _isShuffleEnabled = false;
   bool _isRepeatEnabled = false;
+  List<Track> _libraryTracks = [];
 
   // Stream for signaling when a track starts playing
   final StreamController<Track> _onTrackPlayedController =
@@ -386,15 +393,20 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
     } else if (_isRepeatEnabled) {
       await playTrack(_currentPlaylist!.tracks[0], playlist: _currentPlaylist);
     } else if (_settingsProvider?.autoPlay == true) {
-      // Auto-play: pick a random track from the current playlist
-      if (_currentPlaylist!.tracks.isNotEmpty) {
-        final randomIdx = math.Random().nextInt(
-          _currentPlaylist!.tracks.length,
-        );
-        await playTrack(
-          _currentPlaylist!.tracks[randomIdx],
-          playlist: _currentPlaylist,
-        );
+      // Auto-play: pick a random track from the ENTIRE library that isn't the current one
+      if (_libraryTracks.isNotEmpty) {
+        Track nextTrack;
+        if (_libraryTracks.length > 1) {
+          do {
+            nextTrack = _libraryTracks[math.Random().nextInt(_libraryTracks.length)];
+          } while (nextTrack.id == _currentTrack?.id);
+        } else {
+          nextTrack = _libraryTracks[0];
+        }
+
+        await playTrack(nextTrack);
+      } else {
+        _isTransitioning = false;
       }
     } else {
       _isTransitioning = false; // Reset if nothing to play

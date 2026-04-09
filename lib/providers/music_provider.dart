@@ -91,6 +91,7 @@ class MusicProvider extends ChangeNotifier {
   Playlist? _topPlayedCache;
   Playlist? _favoritesCache;
   StreamSubscription<Track>? _playbackSubscription;
+  CurrentMusicProvider? _currentMusic;
 
   // Getters
   List<Track> get tracks => _tracks;
@@ -240,6 +241,7 @@ class MusicProvider extends ChangeNotifier {
     await Hive.openBox<int>(HiveKeys.playCountsBox);
 
     if (currentMusic != null) {
+      _currentMusic = currentMusic;
       _playbackSubscription?.cancel();
       _playbackSubscription = currentMusic.onTrackPlayedStream.listen((_) {
         refreshCaches();
@@ -247,6 +249,9 @@ class MusicProvider extends ChangeNotifier {
     }
 
     await scanDevice(customFolders: customFolders);
+    if (_currentMusic != null) {
+      _currentMusic!.updateLibrary(_tracks);
+    }
   }
 
   /// Completely resets the music library by clearing Hive boxes and re-scanning.
@@ -357,6 +362,9 @@ class MusicProvider extends ChangeNotifier {
     }
 
     _isLoading = false;
+    if (_currentMusic != null) {
+      _currentMusic!.updateLibrary(_tracks);
+    }
     notifyListeners();
   }
 

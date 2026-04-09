@@ -462,28 +462,74 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
           },
           onHorizontalDragUpdate: (details) {
             if (offset > maxOffset) return;
+            final settings = context.read<SettingsProvider>();
+            if (!settings.swipeToChangeTrack) return;
             if (_activeGesture == _ActiveGesture.vertical) return;
-            if (!context.read<SettingsProvider>().swipeToChangeTrack) return;
             if (details.globalPosition.dy > screenSize.height - deadSpace) {
               return;
             }
-            sOffset -= details.primaryDelta ?? 0.0;
-            sOffset = sOffset.clamp(-sMaxOffset, sMaxOffset);
+
+            final currentMusic = context.read<CurrentMusicProvider>();
+            final playlist = currentMusic.currentPlaylist;
+            final track = currentMusic.currentTrack;
+
+            bool canNext = false;
+            bool canPrev = false;
+
+            if (playlist != null && track != null) {
+              final index = playlist.tracks.indexOf(track);
+              canNext =
+                  index < playlist.tracks.length - 1 ||
+                  currentMusic.isRepeatEnabled ||
+                  settings.autoPlay;
+              canPrev = index > 0 || currentMusic.isRepeatEnabled;
+            }
+
+            double delta = details.primaryDelta ?? 0.0;
+            sOffset -= delta;
+
+            // Clamping logic:
+            // sOffset > 0 is Swipe Left (Next)
+            // sOffset < 0 is Swipe Right (Prev)
+            double minClamp = canPrev ? -sMaxOffset : 0.0;
+            double maxClamp = canNext ? sMaxOffset : 0.0;
+
+            sOffset = sOffset.clamp(minClamp, maxClamp);
             sAnim.animateTo(sOffset / sMaxOffset, duration: Duration.zero);
           },
           onHorizontalDragEnd: (details) {
             if (offset > maxOffset) return;
             _activeGesture = _ActiveGesture.none;
-            if (!context.read<SettingsProvider>().swipeToChangeTrack) return;
+            final settings = context.read<SettingsProvider>();
+            if (!settings.swipeToChangeTrack) return;
+
+            final currentMusic = context.read<CurrentMusicProvider>();
+            final playlist = currentMusic.currentPlaylist;
+            final track = currentMusic.currentTrack;
+
+            bool canNext = false;
+            bool canPrev = false;
+
+            if (playlist != null && track != null) {
+              final index = playlist.tracks.indexOf(track);
+              canNext =
+                  index < playlist.tracks.length - 1 ||
+                  currentMusic.isRepeatEnabled ||
+                  settings.autoPlay;
+              canPrev = index > 0 || currentMusic.isRepeatEnabled;
+            }
+
             final distance = sPrevOffset - sOffset;
             final speed = velocity.getVelocity().pixelsPerSecond.dx;
             const threshold = 1000.0;
 
-            if (speed > threshold ||
-                distance > actuationOffset * sActuationMulti) {
+            if (canPrev &&
+                (speed > threshold ||
+                    distance > actuationOffset * sActuationMulti)) {
               snapToPrev();
-            } else if (-speed > threshold ||
-                -distance > actuationOffset * sActuationMulti) {
+            } else if (canNext &&
+                (-speed > threshold ||
+                    -distance > actuationOffset * sActuationMulti)) {
               snapToNext();
             } else {
               snapToCurrent();
