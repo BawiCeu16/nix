@@ -5,7 +5,7 @@ import 'package:nix/providers/music_provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/ui/widgets/list_item/track_tile.dart';
 import 'package:nix/models/music/playlist.dart';
-import 'package:nix/models/music/song.dart';
+import 'package:nix/models/music/track.dart';
 import 'package:nix/ui/widgets/common/nix_empty_state.dart';
 import 'package:nix/ui/widgets/common/nix_action_row.dart';
 import 'package:nix/ui/widgets/common/nix_page_header.dart';
@@ -63,10 +63,10 @@ class PlaylistViewPage extends StatelessWidget {
                 .firstOrNull;
           }
 
-          final songs = List<Song>.from(pl?.songs ?? []);
-          final firstSongId = songs.isNotEmpty ? songs.first.id : null;
+          final tracks = List<Track>.from(pl?.tracks ?? []);
+          final firstTrackId = tracks.isNotEmpty ? tracks.first.id : null;
 
-          if (songs.isEmpty) {
+          if (tracks.isEmpty) {
             return NixEmptyState(
               icon: FlutterRemix.music_2_line,
               title: "No tracks here yet",
@@ -77,19 +77,19 @@ class PlaylistViewPage extends StatelessWidget {
             buildDefaultDragHandles: !isSystemPlaylist,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             physics: const BouncingScrollPhysics(),
-            itemCount: songs.length + 2, // Header + Songs + Bottom Padding
+            itemCount: tracks.length + 2, // Header + Tracks + Bottom Padding
             onReorder: (oldIndex, newIndex) {
               if (isSystemPlaylist) return;
               // Adjust for header at index 0
-              if (oldIndex < 1 || oldIndex > songs.length) return;
+              if (oldIndex < 1 || oldIndex > tracks.length) return;
 
               int adjustedOld = oldIndex - 1;
               int adjustedNew = newIndex - 1;
 
               if (adjustedNew < 0) adjustedNew = 0;
-              if (adjustedNew >= songs.length) adjustedNew = songs.length - 1;
+              if (adjustedNew >= tracks.length) adjustedNew = tracks.length - 1;
 
-              music.reorderPlaylistSongs(
+              music.reorderPlaylistTracks(
                 pl!.id,
                 adjustedOld,
                 adjustedNew + (oldIndex < newIndex ? 1 : 0),
@@ -102,18 +102,18 @@ class PlaylistViewPage extends StatelessWidget {
                 return NixPageHeader(
                   key: const ValueKey('header'),
                   title: playlistName,
-                  subtitle: "${songs.length} Tracks",
-                  songId: firstSongId,
+                  subtitle: "${tracks.length} Tracks",
+                  trackId: firstTrackId,
                   actionRow: NixActionRow(
                     onShuffle: () {
                       final audio = context.read<CurrentMusicProvider>();
-                      final shuffled = List<Song>.from(songs)..shuffle();
+                      final shuffled = List<Track>.from(tracks)..shuffle();
                       if (!audio.isShuffleEnabled) audio.toggleShuffle();
-                      audio.playSong(shuffled.first, playlist: pl);
+                      audio.playTrack(shuffled.first, playlist: pl);
                     },
                     onPlay: () {
-                      context.read<CurrentMusicProvider>().playSong(
-                        songs.first,
+                      context.read<CurrentMusicProvider>().playTrack(
+                        tracks.first,
                         playlist: pl,
                       );
                     },
@@ -121,24 +121,24 @@ class PlaylistViewPage extends StatelessWidget {
                 );
               }
 
-              if (index == songs.length + 1) {
+              if (index == tracks.length + 1) {
                 return const SizedBox(key: ValueKey('padding'), height: 120);
               }
 
-              final songIndex = index - 1;
-              final song = songs[songIndex];
+              final trackIndex = index - 1;
+              final track = tracks[trackIndex];
 
               Widget tile = TrackTile(
-                track: song,
-                playlistContext: songs,
-                isFirst: songIndex == 0,
-                isLast: songIndex == songs.length - 1,
+                track: track,
+                playlistContext: tracks,
+                isFirst: trackIndex == 0,
+                isLast: trackIndex == tracks.length - 1,
               );
 
               // Add swipe-to-remove for user playlists
               if (!isSystemPlaylist) {
                 return Dismissible(
-                  key: ValueKey('${pl!.id}_${song.id}'),
+                  key: ValueKey('${pl!.id}_${track.id}'),
                   direction: DismissDirection.endToStart,
                   background: Container(
                     margin: const EdgeInsets.symmetric(vertical: 2),
@@ -154,10 +154,10 @@ class PlaylistViewPage extends StatelessWidget {
                     ),
                   ),
                   onDismissed: (_) {
-                    music.removeSongFromPlaylist(pl!.id, song);
+                    music.removeTrackFromPlaylist(pl!.id, track);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Removed "${song.title}"'),
+                        content: Text('Removed "${track.title}"'),
                         behavior: SnackBarBehavior.floating,
                       ),
                     );
@@ -166,7 +166,7 @@ class PlaylistViewPage extends StatelessWidget {
                 );
               }
 
-              return Container(key: ValueKey('song_${song.id}'), child: tile);
+              return Container(key: ValueKey('track_${track.id}'), child: tile);
             },
           );
         },

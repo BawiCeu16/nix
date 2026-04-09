@@ -9,20 +9,20 @@ import 'package:audio_service/audio_service.dart';
 import 'package:hive/hive.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
-import '../models/music/song.dart';
-import '../models/music/playlist.dart';
-import '../core/hive_keys.dart';
-import '../providers/settings_provider.dart';
+import 'package:nix/models/music/track.dart';
+import 'package:nix/models/music/playlist.dart';
+import 'package:nix/core/hive_keys.dart';
+import 'package:nix/providers/settings_provider.dart';
 
 /// Loading states for the audio player.
 enum AudioLoadingState { idle, loading, loaded, error }
 
 /// Result of a queue operation, used by the UI to show appropriate feedback.
 enum QueueResult {
-  /// Song was successfully added.
+  /// Track was successfully added.
   success,
 
-  /// The song is already in the queue.
+  /// The track is already in the queue.
   duplicate,
 
   /// The operation failed for an unexpected reason.
@@ -37,16 +37,19 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
 
   void updateSettings(SettingsProvider settings) {
     _settingsProvider = settings;
+    // Keep native skip silence in sync
+    _audioPlayer.setSkipSilenceEnabled(settings.skipSilence);
   }
 
-  Song? _currentSong;
+  Track? _currentTrack;
   Playlist? _currentPlaylist;
   bool _isShuffleEnabled = false;
   bool _isRepeatEnabled = false;
-  // Stream for signaling when a song starts playing
-  final StreamController<Song> _onSongPlayedController =
-      StreamController<Song>.broadcast();
-  Stream<Song> get onSongPlayedStream => _onSongPlayedController.stream;
+  
+  // Stream for signaling when a track starts playing
+  final StreamController<Track> _onTrackPlayedController =
+      StreamController<Track>.broadcast();
+  Stream<Track> get onTrackPlayedStream => _onTrackPlayedController.stream;
 
   bool _isTransitioning = false;
 
@@ -54,7 +57,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   Color? _dynamicSeedColor;
 
   // Getters
-  Song? get currentSong => _currentSong;
+  Track? get currentTrack => _currentTrack;
   Playlist? get currentPlaylist => _currentPlaylist;
   bool get isShuffleEnabled => _isShuffleEnabled;
   bool get isRepeatEnabled => _isRepeatEnabled;
@@ -62,7 +65,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   Color? get dynamicSeedColor => _dynamicSeedColor;
 
   // Legacy API compatibility
-  Song? get playing => _currentSong;
+  Track? get playing => _currentTrack;
   bool get isPlaying => _audioPlayer.playing;
   Duration get position => _audioPlayer.position;
   Duration? get duration => _audioPlayer.duration;
@@ -111,52 +114,59 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
           updatePosition: _audioPlayer.position,
           bufferedPosition: _audioPlayer.bufferedPosition,
           speed: _audioPlayer.speed,
-          queueIndex: _currentPlaylist?.songs.indexOf(_currentSong!),
+          queueIndex: _currentPlaylist?.tracks.indexOf(_currentTrack!),
         ),
       );
     });
 
-    // Smart Skip Silence (Trim Ending Air)
+    // Platform-Agnostic 'Smart Skip' Logic
+    // Trims the last 3 seconds of a track ONLY if skipSilence is enabled.
+    // This provides a "dynamic" transition where the native engine fails.
     _audioPlayer.positionStream.listen((pos) {
-      final duration = _audioPlayer.duration;
+      // Opt. #6: Early exit — skip all computation when feature is disabled.
+      // This fires ~5 times/second so every avoided comparison matters.
+      if (_settingsProvider?.skipSilence != true) return;
+
       final settings = _settingsProvider;
-      if (settings != null &&
-          settings.skipSilence &&
-          duration != null &&
-          _audioPlayer.playing &&
-          _audioPlayer.processingState == ProcessingState.ready &&
-          !_isTransitioning) {
-        final remaining = duration - pos;
-        // If less than 3.0s remains, skip to next song
-        if (remaining.inMilliseconds > 0 && remaining.inMilliseconds < 3000) {
-          playNext();
+      if (settings != null) {
+        final duration = _audioPlayer.duration;
+        if (duration != null && 
+            _audioPlayer.playing && 
+            !_isTransitioning &&
+            _audioPlayer.processingState == ProcessingState.ready) {
+          
+          final remaining = duration.inMilliseconds - pos.inMilliseconds;
+          // Threshold set to 3 seconds (3000ms)
+          if (remaining > 0 && remaining < 3000) {
+            playNext();
+          }
         }
       }
     });
+
+    // Native High-Fidelity Skip Silence (Android only)
+    await _audioPlayer.setSkipSilenceEnabled(_settingsProvider?.skipSilence ?? false);
   }
 
-  Future<void> playSong(Song song, {Playlist? playlist}) async {
+  Future<void> playTrack(Track track, {Playlist? playlist}) async {
     try {
       _audioLoadingState = AudioLoadingState.loading;
       notifyListeners();
 
-      _currentSong = song;
-      _currentPlaylist = playlist ?? _getDefaultPlaylistForSong(song);
+      _currentTrack = track;
+      _currentPlaylist = playlist ?? _getDefaultPlaylistForTrack(track);
 
       // Update MediaItem for system notification
       final artworkBytes = await OnAudioQuery().queryArtwork(
-        song.id,
+        track.id,
         ArtworkType.AUDIO,
       );
 
       String? artPath;
       if (artworkBytes != null) {
         final tempDir = await getTemporaryDirectory();
-        // Use a hash of the artwork bytes in the filename to ensure
-        // the system media notification doesn't cache a stale or wrong image
-        // for the same song ID.
         final file = File(
-          '${tempDir.path}/${song.id}_${artworkBytes.length}.png',
+          '${tempDir.path}/${track.id}_${artworkBytes.length}.png',
         );
         if (!await file.exists()) {
           await file.writeAsBytes(artworkBytes);
@@ -165,11 +175,11 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       }
 
       final mediaItem = MediaItem(
-        id: song.uri,
-        album: song.album,
-        title: song.title,
-        artist: song.artist,
-        duration: Duration(milliseconds: song.duration),
+        id: track.uri,
+        album: track.album,
+        title: track.title,
+        artist: track.artist,
+        duration: Duration(milliseconds: track.duration),
         artUri: artPath != null ? Uri.file(artPath) : null,
       );
       this.mediaItem.add(mediaItem);
@@ -177,18 +187,18 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       // Record play history and count
       try {
         final historyBox = await Hive.openBox<int>(HiveKeys.playHistoryBox);
-        await historyBox.put(song.id, DateTime.now().millisecondsSinceEpoch);
+        await historyBox.put(track.id, DateTime.now().millisecondsSinceEpoch);
 
         final countsBox = await Hive.openBox<int>(HiveKeys.playCountsBox);
-        final currentCount = countsBox.get(song.id, defaultValue: 0) ?? 0;
-        await countsBox.put(song.id, currentCount + 1);
+        final currentCount = countsBox.get(track.id, defaultValue: 0) ?? 0;
+        await countsBox.put(track.id, currentCount + 1);
       } catch (e) {
         debugPrint('Error recording play history: $e');
       }
 
-      await _audioPlayer.setAudioSource(AudioSource.file(song.uri));
+      await _audioPlayer.setAudioSource(AudioSource.file(track.uri));
       await _audioPlayer.play();
-      _onSongPlayedController.add(song);
+      _onTrackPlayedController.add(track);
 
       // Extract colors from artwork for dynamic theming
       if (artworkBytes != null) {
@@ -208,10 +218,14 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       await _audioPlayer.setSpeed(_settingsProvider?.playbackSpeed ?? 1.0);
     } catch (e) {
       _audioLoadingState = AudioLoadingState.error;
-      debugPrint('Error playing song: $e');
+      debugPrint('Error playing track: $e');
       notifyListeners();
     } finally {
-      _isTransitioning = false; // Always allow next transition
+      // Small delay before clearing transition guard to ensure the new track's
+      // position has stabilized and won't re-trigger the skip logic immediately.
+      Future.delayed(const Duration(milliseconds: 500), () {
+        _isTransitioning = false;
+      });
     }
   }
 
@@ -230,7 +244,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
 
   @override
   Future<void> play() async {
-    if (_currentSong != null) {
+    if (_currentTrack != null) {
       await _audioPlayer.play();
     }
   }
@@ -243,7 +257,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   @override
   Future<void> stop() async {
     await _audioPlayer.stop();
-    _currentSong = null;
+    _currentTrack = null;
     _currentPlaylist = null;
     _audioLoadingState = AudioLoadingState.idle;
     _isTransitioning = false;
@@ -269,80 +283,78 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   Future<void> skipToPrevious() async => playPrevious();
 
   Future<void> playNext() async {
-    if (_currentPlaylist == null || _currentSong == null || _isTransitioning) {
+    if (_currentPlaylist == null || _currentTrack == null || _isTransitioning) {
       return;
     }
 
     _isTransitioning = true; // Set guard
 
-    if (_isShuffleEnabled && _currentPlaylist!.songs.length > 1) {
+    if (_isShuffleEnabled && _currentPlaylist!.tracks.length > 1) {
       int nextIndex;
       do {
-        nextIndex = math.Random().nextInt(_currentPlaylist!.songs.length);
-      } while (nextIndex == _currentPlaylist!.songs.indexOf(_currentSong!));
-      await playSong(
-        _currentPlaylist!.songs[nextIndex],
+        nextIndex = math.Random().nextInt(_currentPlaylist!.tracks.length);
+      } while (nextIndex == _currentPlaylist!.tracks.indexOf(_currentTrack!));
+      await playTrack(
+        _currentPlaylist!.tracks[nextIndex],
         playlist: _currentPlaylist,
       );
       return;
     }
 
-    final currentIndex = _currentPlaylist!.songs.indexOf(_currentSong!);
-    if (currentIndex < _currentPlaylist!.songs.length - 1) {
-      await playSong(
-        _currentPlaylist!.songs[currentIndex + 1],
+    final currentIndex = _currentPlaylist!.tracks.indexOf(_currentTrack!);
+    if (currentIndex < _currentPlaylist!.tracks.length - 1) {
+      await playTrack(
+        _currentPlaylist!.tracks[currentIndex + 1],
         playlist: _currentPlaylist,
       );
     } else if (_isRepeatEnabled) {
-      await playSong(_currentPlaylist!.songs[0], playlist: _currentPlaylist);
+      await playTrack(_currentPlaylist!.tracks[0], playlist: _currentPlaylist);
     } else if (_settingsProvider?.autoPlay == true) {
       // Auto-play: pick a random track from the current playlist
-      if (_currentPlaylist!.songs.isNotEmpty) {
-        final randomIdx = math.Random().nextInt(_currentPlaylist!.songs.length);
-        await playSong(
-          _currentPlaylist!.songs[randomIdx],
+      if (_currentPlaylist!.tracks.isNotEmpty) {
+        final randomIdx = math.Random().nextInt(_currentPlaylist!.tracks.length);
+        await playTrack(
+          _currentPlaylist!.tracks[randomIdx],
           playlist: _currentPlaylist,
         );
       }
+    } else {
+      _isTransitioning = false; // Reset if nothing to play
     }
   }
 
   Future<void> playPrevious() async {
-    if (_currentPlaylist == null || _currentSong == null) return;
+    if (_currentPlaylist == null || _currentTrack == null) return;
 
-    final currentIndex = _currentPlaylist!.songs.indexOf(_currentSong!);
+    final currentIndex = _currentPlaylist!.tracks.indexOf(_currentTrack!);
     if (currentIndex > 0) {
-      await playSong(
-        _currentPlaylist!.songs[currentIndex - 1],
+      await playTrack(
+        _currentPlaylist!.tracks[currentIndex - 1],
         playlist: _currentPlaylist,
       );
     } else if (_isRepeatEnabled) {
-      await playSong(_currentPlaylist!.songs.last, playlist: _currentPlaylist);
+      await playTrack(_currentPlaylist!.tracks.last, playlist: _currentPlaylist);
     }
   }
 
-  /// Inserts [song] immediately after the currently playing track.
-  ///
-  /// Returns a [QueueResult] so the UI can show contextual feedback.
-  QueueResult queueNext(Song song) {
+  QueueResult queueNext(Track track) {
     try {
       if (_currentPlaylist == null) {
-        _currentPlaylist = _getDefaultPlaylistForSong(song);
+        _currentPlaylist = _getDefaultPlaylistForTrack(track);
         notifyListeners();
         return QueueResult.success;
       }
 
-      // Check for duplicate – skip if already queued right after current
-      final currentIndex = _currentSong != null
-          ? _currentPlaylist!.songs.indexOf(_currentSong!)
+      final currentIndex = _currentTrack != null
+          ? _currentPlaylist!.tracks.indexOf(_currentTrack!)
           : -1;
       final nextIndex = currentIndex + 1;
-      if (nextIndex < _currentPlaylist!.songs.length &&
-          _currentPlaylist!.songs[nextIndex].id == song.id) {
+      if (nextIndex < _currentPlaylist!.tracks.length &&
+          _currentPlaylist!.tracks[nextIndex].id == track.id) {
         return QueueResult.duplicate;
       }
 
-      _currentPlaylist!.songs.insert(nextIndex, song);
+      _currentPlaylist!.tracks.insert(nextIndex, track);
       notifyListeners();
       return QueueResult.success;
     } catch (e) {
@@ -351,24 +363,20 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
     }
   }
 
-  /// Appends [song] to the end of the current queue.
-  ///
-  /// Returns a [QueueResult] so the UI can show contextual feedback.
-  QueueResult appendToQueue(Song song) {
+  QueueResult appendToQueue(Track track) {
     try {
       if (_currentPlaylist == null) {
-        _currentPlaylist = _getDefaultPlaylistForSong(song);
+        _currentPlaylist = _getDefaultPlaylistForTrack(track);
         notifyListeners();
         return QueueResult.success;
       }
 
-      // Check for duplicate at the end of the queue
-      if (_currentPlaylist!.songs.isNotEmpty &&
-          _currentPlaylist!.songs.last.id == song.id) {
+      if (_currentPlaylist!.tracks.isNotEmpty &&
+          _currentPlaylist!.tracks.last.id == track.id) {
         return QueueResult.duplicate;
       }
 
-      _currentPlaylist!.songs.add(song);
+      _currentPlaylist!.tracks.add(track);
       notifyListeners();
       return QueueResult.success;
     } catch (e) {
@@ -380,10 +388,10 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   void removeFromQueue(int index) {
     if (_currentPlaylist != null &&
         index >= 0 &&
-        index < _currentPlaylist!.songs.length) {
-      final removedSong = _currentPlaylist!.songs.removeAt(index);
-      if (removedSong == _currentSong) {
-        if (_currentPlaylist!.songs.isNotEmpty) {
+        index < _currentPlaylist!.tracks.length) {
+      final removedTrack = _currentPlaylist!.tracks.removeAt(index);
+      if (removedTrack == _currentTrack) {
+        if (_currentPlaylist!.tracks.isNotEmpty) {
           playNext();
         } else {
           stop();
@@ -395,17 +403,17 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
 
   void reorderQueue(int oldIndex, int newIndex) {
     if (_currentPlaylist == null) return;
-    final songs = _currentPlaylist!.songs;
-    if (oldIndex < 0 || oldIndex >= songs.length) return;
-    if (newIndex < 0 || newIndex >= songs.length) return;
-    final song = songs.removeAt(oldIndex);
-    songs.insert(newIndex, song);
+    final tracks = _currentPlaylist!.tracks;
+    if (oldIndex < 0 || oldIndex >= tracks.length) return;
+    if (newIndex < 0 || newIndex >= tracks.length) return;
+    final track = tracks.removeAt(oldIndex);
+    tracks.insert(newIndex, track);
     notifyListeners();
   }
 
   void clearQueue() {
     if (_currentPlaylist != null) {
-      _currentPlaylist!.songs.clear();
+      _currentPlaylist!.tracks.clear();
       stop();
     }
   }
@@ -415,11 +423,11 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
     notifyListeners();
   }
 
-  Playlist _getDefaultPlaylistForSong(Song song) {
+  Playlist _getDefaultPlaylistForTrack(Track track) {
     return Playlist(
-      id: 'single_${song.id}',
-      name: song.title,
-      songs: [song],
+      id: 'single_${track.id}',
+      name: track.title,
+      tracks: [track],
       createdAt: DateTime.now(),
     );
   }
@@ -437,7 +445,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
 
   @override
   void dispose() {
-    _onSongPlayedController.close();
+    _onTrackPlayedController.close();
     _audioPlayer.dispose();
     super.dispose();
   }

@@ -8,7 +8,7 @@ class QueueTile extends StatelessWidget {
     super.key,
     this.title = "Queue Track",
     this.subtitle = "Queue Artist",
-    this.songId,
+    this.trackId,
     this.itemIndex = 0,
     this.isPlaying = false,
     this.onTap,
@@ -18,7 +18,7 @@ class QueueTile extends StatelessWidget {
 
   final String title;
   final String subtitle;
-  final int? songId;
+  final int? trackId;
   final int itemIndex;
   final bool isPlaying;
   final VoidCallback? onTap;
@@ -29,96 +29,55 @@ class QueueTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       type: MaterialType.transparency,
-      child: Dismissible(
+      child: ListTile(
         key: ValueKey('queue_${itemIndex}_$title'),
-        confirmDismiss: (direction) async {
-          if (direction == DismissDirection.endToStart) {
-            onRemove?.call();
-            return true;
-          }
-          return false;
-        },
-        direction: DismissDirection.endToStart,
-        background: Container(
-          color: Theme.of(context).colorScheme.errorContainer,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Remove',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onErrorContainer,
-                      fontWeight: FontWeight.w600,
-                    ),
+        leading: SizedBox(
+          width: 48,
+          height: 48,
+          child: trackId != null
+              ? NixArtwork(
+                  id: trackId!,
+                  type: ArtworkType.AUDIO,
+                  width: 48,
+                  height: 48,
+                )
+              : Container(
+                  decoration: BoxDecoration(
+                    color: isPlaying
+                        ? Theme.of(context).colorScheme.primaryContainer
+                        : Theme.of(context).colorScheme.secondaryContainer,
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    FlutterRemix.delete_bin_line,
-                    color: Theme.of(context).colorScheme.onErrorContainer,
-                  ),
-                ],
-              ),
-            ),
-          ),
+                  child: isPlaying
+                      ? Icon(
+                          FlutterRemix.play_fill,
+                          color: Theme.of(context).colorScheme.primary,
+                        )
+                      : const Icon(FlutterRemix.music_2_line),
+                ),
         ),
-        movementDuration: const Duration(milliseconds: 50),
-        resizeDuration: const Duration(milliseconds: 50),
-        child: ListTile(
-          leading: SizedBox(
-            width: 48,
-            height: 48,
-            child: songId != null
-                ? NixArtwork(
-                    id: songId!,
-                    type: ArtworkType.AUDIO,
-                    width: 48,
-                    height: 48,
-                  )
-                : Container(
-                    decoration: BoxDecoration(
-                      color: isPlaying
-                          ? Theme.of(context).colorScheme.primaryContainer
-                          : Theme.of(context).colorScheme.secondaryContainer,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: isPlaying
-                        ? Icon(
-                            FlutterRemix.play_fill,
-                            color: Theme.of(context).colorScheme.primary,
-                          )
-                        : const Icon(FlutterRemix.music_2_line),
-                  ),
-          ),
-          title: Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: isPlaying
-                ? TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  )
-                : null,
-          ),
-          subtitle: Text(
-            subtitle,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          visualDensity: VisualDensity.compact,
-          onTap: onTap,
-          trailing:
-              trailing ??
-              Icon(
-                FlutterRemix.menu_line,
+        title: Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: isPlaying
+              ? TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                )
+              : null,
+        ),
+        subtitle: Text(
+          subtitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
-                size: 20,
               ),
         ),
+        visualDensity: VisualDensity.compact,
+        onTap: onTap,
+        trailing: trailing,
       ),
     );
   }

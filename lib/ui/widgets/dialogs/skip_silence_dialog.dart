@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'nix_dialog.dart';
 import '../list_item/card_list_tile.dart';
 import '../buttons/expressive_tone_button.dart';
-import '../../../providers/settings_provider.dart';
+import 'package:nix/providers/settings_provider.dart';
 
 class SkipSilenceDialog extends StatelessWidget {
   const SkipSilenceDialog({super.key});

@@ -4,8 +4,8 @@ import 'package:nix/ui/widgets/buttons/expressive_button.dart';
 import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 
-class SongInfoDialog extends StatelessWidget {
-  const SongInfoDialog({
+class TrackInfoDialog extends StatelessWidget {
+  const TrackInfoDialog({
     super.key,
     this.title = "Unknown Title",
     this.artist = "Unknown Artist",
@@ -13,7 +13,7 @@ class SongInfoDialog extends StatelessWidget {
     this.duration = "0:00",
     this.size = "0.0 MB",
     this.filePath = "/storage/emulated/0/Music/dummy.mp3",
-    this.songId,
+    this.trackId,
   });
 
   final String title;
@@ -22,7 +22,7 @@ class SongInfoDialog extends StatelessWidget {
   final String duration;
   final String size;
   final String filePath;
-  final int? songId;
+  final int? trackId;
 
   static void show(
     BuildContext context, {
@@ -32,13 +32,13 @@ class SongInfoDialog extends StatelessWidget {
     String duration = "0:00",
     String size = "0.0 MB",
     String filePath = "/storage/emulated/0/Music/music.flac",
-    int? songId,
+    int? trackId,
   }) {
     NixDialog.show(
       context: context,
       title: title,
       subtitle: artist,
-      songId: songId,
+      trackId: trackId,
       children: [
         CardListTile(
           title: "Album",

@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import '../../core/math_utils.dart';
 import '../../providers/will_pop_provider.dart';
 import '../../providers/current_music_provider.dart';
-import '../../providers/settings_provider.dart';
+import 'package:nix/providers/settings_provider.dart';
 import 'widgets/top_bar.dart';
 import 'widgets/track_image.dart';
 import 'widgets/track_info.dart';

@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:on_audio_query/on_audio_query.dart';
-import '../common/nix_artwork.dart';
+import 'package:nix/ui/widgets/common/nix_artwork.dart';
+import 'package:nix/models/settings/artwork_quality.dart';
 
 class NixDialog extends StatelessWidget {
   final String? title;
   final String? subtitle;
-  final int? songId;
+  final int? trackId;
   final List<Widget> children;
 
   const NixDialog({
     super.key,
     this.title,
     this.subtitle,
-    this.songId,
+    this.trackId,
     required this.children,
   });
 
@@ -20,7 +21,7 @@ class NixDialog extends StatelessWidget {
     required BuildContext context,
     String? title,
     String? subtitle,
-    int? songId,
+    int? trackId,
     bool useRootNavigator = true,
     required List<Widget> children,
   }) {
@@ -35,7 +36,7 @@ class NixDialog extends StatelessWidget {
         return NixDialog(
           title: title,
           subtitle: subtitle,
-          songId: songId,
+          trackId: trackId,
           children: children,
         );
       },
@@ -59,13 +60,6 @@ class NixDialog extends StatelessWidget {
           decoration: BoxDecoration(
             color: colorScheme.surfaceContainer,
             borderRadius: BorderRadius.circular(28),
-            // boxShadow: [
-            //   BoxShadow(
-            //     color: Colors.black.withValues(alpha: 0.2),
-            //     blurRadius: 20,
-            //     offset: const Offset(0, 10),
-            //   ),
-            // ],
           ),
           clipBehavior: Clip.antiAlias,
           child: Material(
@@ -78,17 +72,18 @@ class NixDialog extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
                     child: Row(
                       children: [
-                        if (songId != null) ...[
+                        if (trackId != null) ...[
                           SizedBox(
                             width: 68,
                             height: 68,
                             child: NixArtwork(
-                              id: songId!,
+                              id: trackId!,
                               type: ArtworkType.AUDIO,
                               borderRadius: BorderRadius.circular(16),
                               width: 68,
                               height: 68,
-                              quality: NixArtworkQuality.medium, // Dialog headers need crisp art
+                              quality: NixArtworkQuality
+                                  .medium, // Dialog headers need crisp art
                             ),
                           ),
                           const SizedBox(width: 16),

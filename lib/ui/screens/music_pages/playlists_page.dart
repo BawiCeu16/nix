@@ -146,7 +146,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
                       isFirst: index == 0,
                       isLast: index == playlists.length - 1,
                       title: playlist.name,
-                      subtitle: '${playlist.songs.length} tracks',
+                      subtitle: '${playlist.tracks.length} tracks',
                       leading: Container(
                         width: 48,
                         height: 48,

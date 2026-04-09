@@ -44,6 +44,8 @@ class _ProfilePageState extends State<ProfilePage> {
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('Profile'),
+        centerTitle: true,
+        scrolledUnderElevation: 0,
         backgroundColor: colorScheme.surfaceContainer,
         actions: [
           IconButton(
@@ -155,7 +157,7 @@ class _ProfilePageState extends State<ProfilePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _StatItem(label: 'Songs', value: music.songs.length.toString()),
+              _StatItem(label: 'Tracks', value: music.tracks.length.toString()),
               _StatItem(label: 'Albums', value: music.albums.length.toString()),
               _StatItem(
                 label: 'Artists',
@@ -166,21 +168,21 @@ class _ProfilePageState extends State<ProfilePage> {
 
           const SizedBox(height: 32),
 
-          if (music.topPlayed.songs.isNotEmpty) ...[
+          if (music.topPlayed.tracks.isNotEmpty) ...[
             const NixSectionHeader(title: 'Top Listened', topPadding: 32),
-            ...List.generate(music.topPlayed.songs.take(5).length, (index) {
-              final song = music.topPlayed.songs[index];
+            ...List.generate(music.topPlayed.tracks.take(5).length, (index) {
+              final track = music.topPlayed.tracks[index];
               return Padding(
                 padding: const EdgeInsets.only(bottom: 2.5),
                 child: CardListTile(
-                  title: song.title,
-                  subtitle: song.artist,
+                  title: track.title,
+                  subtitle: track.artist,
                   icon: FlutterRemix.music_2_line,
                   isFirst: index == 0,
-                  isLast: index == music.topPlayed.songs.take(5).length - 1,
+                  isLast: index == music.topPlayed.tracks.take(5).length - 1,
                   onTap: () {
-                    context.read<CurrentMusicProvider>().playSong(
-                      song,
+                    context.read<CurrentMusicProvider>().playTrack(
+                      track,
                       playlist: music.topPlayed,
                     );
                   },
@@ -190,21 +192,21 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 24),
           ],
 
-          if (music.recentlyPlayed.songs.isNotEmpty) ...[
+          if (music.recentlyPlayed.tracks.isNotEmpty) ...[
             const NixSectionHeader(title: 'Recently Listened', topPadding: 32),
-            ...List.generate(music.recentlyPlayed.songs.take(5).length, (
+            ...List.generate(music.recentlyPlayed.tracks.take(5).length, (
               index,
             ) {
-              final song = music.recentlyPlayed.songs[index];
+              final track = music.recentlyPlayed.tracks[index];
               return Padding(
                 padding: const EdgeInsets.only(bottom: 2.5),
                 child: CardListTile(
-                  title: song.title,
-                  subtitle: song.artist,
+                  title: track.title,
+                  subtitle: track.artist,
                   icon: FlutterRemix.time_line,
                   onTap: () {
-                    context.read<CurrentMusicProvider>().playSong(
-                      song,
+                    context.read<CurrentMusicProvider>().playTrack(
+                      track,
                       playlist: music.recentlyPlayed,
                     );
                   },

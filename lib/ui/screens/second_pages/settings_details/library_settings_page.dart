@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
-import '../../../../providers/settings_provider.dart';
+import 'package:nix/providers/settings_provider.dart';
 import '../../../../providers/music_provider.dart';
 import '../../../widgets/list_item/card_list_tile.dart';
 import '../../../widgets/common/nix_section_header.dart';
 import '../../../widgets/dialogs/nix_dialog.dart';
+import '../../../widgets/buttons/expressive_button.dart';
+import '../../../widgets/buttons/expressive_tone_button.dart';
 
 class LibrarySettingsPage extends StatelessWidget {
   const LibrarySettingsPage({super.key});
@@ -20,9 +22,10 @@ class LibrarySettingsPage extends StatelessWidget {
       backgroundColor: colorScheme.surfaceContainer,
       appBar: AppBar(
         title: const Text('Library Settings'),
+        centerTitle: true,
+        scrolledUnderElevation: 0,
         backgroundColor: colorScheme.surfaceContainer,
         elevation: 0,
-        scrolledUnderElevation: 0,
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -56,6 +59,16 @@ class LibrarySettingsPage extends StatelessWidget {
             },
           ),
 
+          const NixSectionHeader(title: 'Search & History', topPadding: 32),
+          CardListTile(
+            title: 'Clear Search History',
+            subtitle: 'Delete all previous search queries',
+            icon: FlutterRemix.history_line,
+            isFirst: true,
+            isLast: true,
+            onTap: () => _showClearSearchConfirmation(context, settings),
+          ),
+
           const NixSectionHeader(title: 'Danger Zone', topPadding: 32),
           CardListTile(
             title: 'Reset Library Database',
@@ -69,7 +82,7 @@ class LibrarySettingsPage extends StatelessWidget {
           const Padding(
             padding: EdgeInsets.only(left: 12, top: 24, right: 12),
             child: Text(
-              'Use Filter Short Audio to hide ringtones, voice notes, or app sounds. Higher values ensure only your real music shows up.',
+              'Use Filter Short Audio to hide ringtones, voice notes, or app sounds. Higher values ensure only your real tracks appear in your library.',
               style: TextStyle(fontSize: 13, height: 1.5),
             ),
           ),
@@ -92,7 +105,7 @@ class LibrarySettingsPage extends StatelessWidget {
     final options = [0, 30, 60, 120];
     NixDialog.show(
       context: context,
-      title: 'Minimum Duration',
+      title: 'Filter Tracks',
       children: options.map((sec) {
         final index = options.indexOf(sec);
         return Padding(
@@ -123,6 +136,44 @@ class LibrarySettingsPage extends StatelessWidget {
     );
   }
 
+  void _showClearSearchConfirmation(
+    BuildContext context,
+    SettingsProvider settings,
+  ) {
+    NixDialog.show(
+      context: context,
+      title: 'Clear Search History?',
+      subtitle: 'Remove all search history?',
+      children: [
+        Builder(
+          builder: (dialogContext) {
+            return Row(
+              children: [
+                Expanded(
+                  child: ExpressiveToneButton(
+                    onPressed: () =>
+                        Navigator.of(dialogContext, rootNavigator: true).pop(),
+                    child: const Text("Cancel"),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ExpressiveButton(
+                    onPressed: () {
+                      settings.clearSearchHistory();
+                      Navigator.of(dialogContext, rootNavigator: true).pop();
+                    },
+                    child: const Text("Clear"),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
   void _showResetConfirmation(BuildContext context, MusicProvider music) {
     NixDialog.show(
       context: context,
@@ -131,7 +182,7 @@ class LibrarySettingsPage extends StatelessWidget {
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Text(
-            'This will permanently clear your favorites, play counts, and history. The app will then re-scan your device for music.',
+            'This will permanently clear your favorites, play counts, and history. Your device will then be re-scanned for tracks.',
             style: TextStyle(fontSize: 14),
           ),
         ),

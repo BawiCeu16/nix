@@ -8,7 +8,7 @@ import 'package:nix/providers/music_provider.dart';
 import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 import 'package:nix/ui/widgets/dialogs/playlist_dialogs.dart';
-import 'package:nix/ui/widgets/dialogs/song_info_dialog.dart';
+import 'package:nix/ui/widgets/dialogs/track_info_dialog.dart';
 import 'package:nix/core/format.dart';
 import '../../widgets/dialogs/playback_speed_dialog.dart';
 import '../../widgets/dialogs/skip_silence_dialog.dart';
@@ -30,7 +30,7 @@ class TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentMusic = context.watch<CurrentMusicProvider>();
-    final playlistName = currentMusic.currentSong?.album ?? '';
+    final playlistName = currentMusic.currentTrack?.album ?? '';
 
     return Material(
       type: MaterialType.transparency,
@@ -80,17 +80,17 @@ class TopBar extends StatelessWidget {
                   IconButton.filledTonal(
                     padding: EdgeInsets.symmetric(horizontal: 15),
                     onPressed: () {
-                      final song = currentMusic.currentSong;
-                      if (song == null) return;
+                      final track = currentMusic.currentTrack;
+                      if (track == null) return;
 
                       final music = context.read<MusicProvider>();
-                      final isFav = music.isFavorite(song);
+                      final isFav = music.isFavorite(track);
 
                       NixDialog.show(
                         context: context,
-                        title: song.title,
-                        subtitle: song.artist,
-                        songId: song.id,
+                        title: track.title,
+                        subtitle: track.artist,
+                        trackId: track.id,
                         children: [
                           CardListTile(
                             title: isFav
@@ -101,7 +101,7 @@ class TopBar extends StatelessWidget {
                                 : FlutterRemix.heart_3_line,
                             isFirst: true,
                             onTap: () {
-                              music.toggleFavorite(song);
+                              music.toggleFavorite(track);
                               Navigator.of(context, rootNavigator: true).pop();
                             },
                           ),
@@ -111,7 +111,7 @@ class TopBar extends StatelessWidget {
                             icon: FlutterRemix.add_box_line,
                             onTap: () {
                               Navigator.of(context, rootNavigator: true).pop();
-                              PlaylistDialogs.showPlaylistPicker(context, song);
+                              PlaylistDialogs.showPlaylistPicker(context, track);
                             },
                           ),
                           const SizedBox(height: 2.5),
@@ -144,22 +144,22 @@ class TopBar extends StatelessWidget {
                           ),
                           const SizedBox(height: 2.5),
                           CardListTile(
-                            title: "Song Info",
+                            title: "Track Info",
                             icon: FlutterRemix.information_line,
                             isLast: true,
                             onTap: () {
                               Navigator.of(context, rootNavigator: true).pop();
-                              SongInfoDialog.show(
+                              TrackInfoDialog.show(
                                 context,
-                                title: song.title,
-                                artist: song.artist,
-                                album: song.album,
+                                title: track.title,
+                                artist: track.artist,
+                                album: track.album,
                                 duration: Duration(
-                                  milliseconds: song.duration,
+                                  milliseconds: track.duration,
                                 ).shortFormat(),
-                                size: song.size.formatBytes(),
-                                filePath: song.uri,
-                                songId: song.id,
+                                size: track.size.formatBytes(),
+                                filePath: track.uri,
+                                trackId: track.id,
                               );
                             },
                           ),

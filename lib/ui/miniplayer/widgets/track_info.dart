@@ -34,10 +34,10 @@ class TrackInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     final currentMusic = context.watch<CurrentMusicProvider>();
     final music = context.watch<MusicProvider>();
-    final song = currentMusic.currentSong;
-    final title = song?.title ?? 'No track';
-    final artist = song?.artist ?? '';
-    final isFav = song != null ? music.isFavorite(song) : false;
+    final track = currentMusic.currentTrack;
+    final title = track?.title ?? 'No track';
+    final artist = track?.artist ?? '';
+    final isFav = track != null ? music.isFavorite(track) : false;
 
     return Material(
       type: MaterialType.transparency,
@@ -209,8 +209,8 @@ class TrackInfo extends StatelessWidget {
                                   0.0,
                                 ),
                                 child: GestureDetector(
-                                  onTap: song != null
-                                      ? () => music.toggleFavorite(song)
+                                  onTap: track != null
+                                      ? () => music.toggleFavorite(track)
                                       : null,
                                   child: Icon(
                                     isFav

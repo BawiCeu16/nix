@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
-import 'package:nix/models/music/song.dart';
+import 'package:nix/models/music/track.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
@@ -14,7 +14,7 @@ class PlaylistDialogs {
     BuildContext context, {
     String? initialName,
     String? playlistId,
-    List<Song> songs = const [],
+    List<Track> tracks = const [],
   }) {
     final controller = TextEditingController(text: initialName);
     final isEditing = playlistId != null;
@@ -62,7 +62,7 @@ class PlaylistDialogs {
                           if (isEditing) {
                             music.renamePlaylist(playlistId, name);
                           } else {
-                            music.createPlaylist(name, songs);
+                            music.createPlaylist(name, tracks);
                           }
                         }
                         Navigator.of(context, rootNavigator: true).pop();
@@ -112,15 +112,15 @@ class PlaylistDialogs {
     );
   }
 
-  /// Shows the playlist picker for adding a song to a playlist.
-  static void showPlaylistPicker(BuildContext context, Song song) {
+  /// Shows the playlist picker for adding a track to a playlist.
+  static void showPlaylistPicker(BuildContext context, Track track) {
     final music = context.read<MusicProvider>();
     final playlists = music.playlists;
 
     NixDialog.show(
       context: context,
       title: "Add to Playlist",
-      subtitle: song.title,
+      subtitle: track.title,
       children: [
         if (playlists.isEmpty)
           const Padding(
@@ -140,7 +140,7 @@ class PlaylistDialogs {
                   isFirst: isFirst,
                   isLast: isLast,
                   onTap: () {
-                    music.addSongToPlaylist(playlist.id, song);
+                    music.addTrackToPlaylist(playlist.id, track);
                     Navigator.of(context, rootNavigator: true).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Added to ${playlist.name}')),
@@ -157,7 +157,7 @@ class PlaylistDialogs {
           child: ExpressiveButton(
             onPressed: () {
               Navigator.of(context, rootNavigator: true).pop();
-              showPlaylistActionDialog(context, songs: [song]);
+              showPlaylistActionDialog(context, tracks: [track]);
             },
             child: const Text("CREATE NEW PLAYLIST"),
           ),

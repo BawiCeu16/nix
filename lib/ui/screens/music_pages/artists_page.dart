@@ -5,13 +5,13 @@ import 'package:provider/provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/models/music/artist.dart';
-import 'package:nix/models/music/song.dart';
+import 'package:nix/models/music/track.dart';
 import 'package:nix/ui/widgets/list_item/track_tile.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:nix/ui/widgets/common/nix_refreshable_list.dart';
 import 'package:nix/ui/widgets/common/nix_empty_state.dart';
 import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
-import '../../widgets/common/nix_artwork.dart';
+import 'package:nix/ui/widgets/common/nix_artwork.dart';
 
 enum _ArtistSort { defaultOrder, aToZ, zToA }
 
@@ -87,15 +87,17 @@ class _ArtistsPageState extends State<ArtistsPage> {
               itemCount: artists.length,
               itemBuilder: (context, index) {
                 final artist = artists[index];
-                final artistSongs = music.getSongsByArtist(artist.name);
-                final firstSongId =
-                    artistSongs.isNotEmpty ? artistSongs.first.id : null;
+                final artistTracks = music.getTracksByArtist(artist.name);
+                final firstTrackId = artistTracks.isNotEmpty
+                    ? artistTracks.first.id
+                    : null;
 
                 return GestureDetector(
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => ArtistSongsPage(artistName: artist.name),
+                        builder: (_) =>
+                            ArtistTracksPage(artistName: artist.name),
                       ),
                     );
                   },
@@ -103,11 +105,10 @@ class _ArtistsPageState extends State<ArtistsPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       NixArtwork(
-                        id: firstSongId ?? 0,
+                        id: firstTrackId ?? 0,
                         type: ArtworkType.AUDIO,
                         width: 130,
                         height: 130,
-                        quality: NixArtworkQuality.medium, // Optimized high fidelity
                       ),
                       const SizedBox(height: 10),
                       Text(
@@ -115,18 +116,18 @@ class _ArtistsPageState extends State<ArtistsPage> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: colorScheme.onSurface,
-                            ),
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        "${artist.numberOfTracks} Songs",
+                        "${artist.numberOfTracks} Tracks",
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -140,11 +141,11 @@ class _ArtistsPageState extends State<ArtistsPage> {
   }
 }
 
-// ── Artist Songs Page ──
-class ArtistSongsPage extends StatelessWidget {
+// ── Artist Tracks Page ──
+class ArtistTracksPage extends StatelessWidget {
   final String artistName;
 
-  const ArtistSongsPage({super.key, required this.artistName});
+  const ArtistTracksPage({super.key, required this.artistName});
 
   @override
   Widget build(BuildContext context) {
@@ -154,30 +155,29 @@ class ArtistSongsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainer,
       appBar: AppBar(
-        title: Text(artistName),
+        title: const Text('Artist'),
         backgroundColor: colorScheme.surfaceContainer,
         scrolledUnderElevation: 0,
-        centerTitle: true,
       ),
       body: Consumer<MusicProvider>(
         builder: (context, music, child) {
-          final songs = music.getSongsByArtist(artistName);
+          final tracks = music.getTracksByArtist(artistName);
           final albums = music.getAlbumsByArtist(artistName);
-          final firstSongId = songs.isNotEmpty ? songs.first.id : null;
+          final firstTrackId = tracks.isNotEmpty ? tracks.first.id : null;
 
           return NixRefreshableList(
-            isEmpty: songs.isEmpty,
+            isEmpty: tracks.isEmpty,
             onRefresh: () async => await music.scanDevice(),
             emptyState: const NixEmptyState(
               icon: FlutterRemix.user_4_line,
-              title: "No songs found for this artist",
+              title: "No tracks found for this artist",
             ),
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               physics: const AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics(),
               ),
-              itemCount: songs.length + 2, // Header + Songs + Bottom Padding
+              itemCount: tracks.length + 2, // Header + Tracks + Bottom Padding
               itemBuilder: (context, index) {
                 if (index == 0) {
                   // Header section with artwork and info
@@ -186,11 +186,10 @@ class ArtistSongsPage extends StatelessWidget {
                     child: Column(
                       children: [
                         NixArtwork(
-                          id: firstSongId ?? 0,
+                          id: firstTrackId ?? 0,
                           type: ArtworkType.AUDIO,
                           width: 300,
                           height: 300,
-                          quality: NixArtworkQuality.high, // Profile picture needs high res
                         ),
                         const SizedBox(height: 20),
                         Text(
@@ -202,7 +201,7 @@ class ArtistSongsPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          "${songs.length} Songs • ${albums.length} Albums",
+                          "${tracks.length} Tracks • ${albums.length} Albums",
                           style: textTheme.bodySmall?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                           ),
@@ -216,12 +215,12 @@ class ArtistSongsPage extends StatelessWidget {
                                 onPressed: () {
                                   final audio = context
                                       .read<CurrentMusicProvider>();
-                                  final shuffled = List<Song>.from(songs)
+                                  final shuffled = List<Track>.from(tracks)
                                     ..shuffle();
                                   if (!audio.isShuffleEnabled) {
                                     audio.toggleShuffle();
                                   }
-                                  audio.playSong(shuffled.first);
+                                  audio.playTrack(shuffled.first);
                                 },
                                 child: const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -237,9 +236,9 @@ class ArtistSongsPage extends StatelessWidget {
                             Expanded(
                               child: ExpressiveButton(
                                 onPressed: () {
-                                  context.read<CurrentMusicProvider>().playSong(
-                                        songs.first,
-                                      );
+                                  context
+                                      .read<CurrentMusicProvider>()
+                                      .playTrack(tracks.first);
                                 },
                                 child: const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -258,16 +257,16 @@ class ArtistSongsPage extends StatelessWidget {
                   );
                 }
 
-                if (index == songs.length + 1) {
+                if (index == tracks.length + 1) {
                   return const SizedBox(height: 120);
                 }
 
-                final song = songs[index - 1];
+                final track = tracks[index - 1];
                 return TrackTile(
-                  track: song,
-                  playlistContext: songs,
+                  track: track,
+                  playlistContext: tracks,
                   isFirst: index == 1,
-                  isLast: index == songs.length,
+                  isLast: index == tracks.length,
                 );
               },
             ),

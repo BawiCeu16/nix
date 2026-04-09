@@ -8,7 +8,7 @@ import 'package:nix/ui/widgets/common/nix_section_header.dart';
 import '../../music_pages/albums_page.dart';
 import '../../music_pages/artists_page.dart';
 import '../../music_pages/playlists_page.dart';
-import '../../music_pages/songs_page.dart';
+import '../../music_pages/tracks_page.dart';
 import '../../second_pages/profile_page.dart';
 import '../../second_pages/settings_page.dart';
 import 'package:nix/ui/widgets/common/nix_refreshable_list.dart';
@@ -28,6 +28,8 @@ class LibraryPage extends StatelessWidget {
       backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
       appBar: AppBar(
         title: const Text('Library'),
+        centerTitle: true,
+        scrolledUnderElevation: 0,
         backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
         elevation: 0,
         actions: [
@@ -81,14 +83,14 @@ class LibraryPage extends StatelessWidget {
                   CardListTile(
                     title: 'Top Listened',
                     icon: FlutterRemix.fire_fill,
-                    subtitle: '${music.topPlayed.songs.length} tracks',
+                    subtitle: '${music.topPlayed.tracks.length} tracks',
                     isFirst: true,
                     onTap: () => _push(
                       context,
-                      SongsPage(
+                      TracksPage(
                         title: 'Top Listened',
-                        songsSource: () =>
-                            context.read<MusicProvider>().topPlayed.songs,
+                        tracksSource: () =>
+                            context.read<MusicProvider>().topPlayed.tracks,
                       ),
                     ),
                   ),
@@ -96,13 +98,13 @@ class LibraryPage extends StatelessWidget {
                   CardListTile(
                     title: 'Recently Listened',
                     icon: FlutterRemix.time_line,
-                    subtitle: '${music.recentlyPlayed.songs.length} tracks',
+                    subtitle: '${music.recentlyPlayed.tracks.length} tracks',
                     onTap: () => _push(
                       context,
-                      SongsPage(
+                      TracksPage(
                         title: 'Recently Listened',
-                        songsSource: () =>
-                            context.read<MusicProvider>().recentlyPlayed.songs,
+                        tracksSource: () =>
+                            context.read<MusicProvider>().recentlyPlayed.tracks,
                       ),
                     ),
                   ),
@@ -110,14 +112,14 @@ class LibraryPage extends StatelessWidget {
                   CardListTile(
                     title: 'Favorites',
                     icon: FlutterRemix.heart_3_fill,
-                    subtitle: '${music.favorites.songs.length} tracks',
+                    subtitle: '${music.favorites.tracks.length} tracks',
                     isLast: true,
                     onTap: () => _push(
                       context,
-                      SongsPage(
+                      TracksPage(
                         title: 'Favorites',
-                        songsSource: () =>
-                            context.read<MusicProvider>().favorites.songs,
+                        tracksSource: () =>
+                            context.read<MusicProvider>().favorites.tracks,
                       ),
                     ),
                   ),
@@ -148,15 +150,16 @@ class LibraryPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 2.5),
                   CardListTile(
-                    title: 'All Songs',
+                    title: 'All Tracks',
                     icon: FlutterRemix.music_2_line,
-                    subtitle: '${music.songs.length} tracks',
+                    subtitle: '${music.tracks.length} tracks',
                     isLast: true,
                     onTap: () => _push(
                       context,
-                      SongsPage(
-                        title: 'All Songs',
-                        songsSource: () => context.read<MusicProvider>().songs,
+                      TracksPage(
+                        title: 'All Tracks',
+                        tracksSource: () =>
+                            context.read<MusicProvider>().tracks,
                       ),
                     ),
                   ),

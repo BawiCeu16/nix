@@ -5,11 +5,9 @@ import 'nix_dialog.dart';
 import '../common/nix_slider.dart';
 import '../list_item/card_list_tile.dart';
 import '../buttons/expressive_tone_button.dart';
-import '../../../providers/settings_provider.dart';
+import 'package:nix/providers/settings_provider.dart';
 import '../../../providers/current_music_provider.dart';
 import '../../../providers/sleep_timer_provider.dart';
-import 'sleep_timer_dialog.dart';
-import '../../../core/format.dart';
 
 class PlaybackSpeedDialog extends StatelessWidget {
   const PlaybackSpeedDialog({super.key});

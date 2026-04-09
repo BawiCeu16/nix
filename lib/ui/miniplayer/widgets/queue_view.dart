@@ -30,19 +30,19 @@ class _QueueViewState extends State<QueueView> {
     super.didUpdateWidget(oldWidget);
     if (widget.queueProgressValue == 1.0 &&
         oldWidget.queueProgressValue < 1.0) {
-      _scrollToCurrentSong();
+      _scrollToCurrentTrack();
     }
   }
 
-  void _scrollToCurrentSong() {
+  void _scrollToCurrentTrack() {
     if (widget.queueProgressValue < 1.0) return;
 
     final currentMusic = context.read<CurrentMusicProvider>();
-    final playing = currentMusic.playing;
+    final playing = currentMusic.currentTrack;
     if (playing == null) return;
 
-    final songs = currentMusic.currentPlaylist?.songs ?? [];
-    final currentIndex = songs.indexWhere((s) => s.id == playing.id);
+    final tracks = currentMusic.currentPlaylist?.tracks ?? [];
+    final currentIndex = tracks.indexWhere((s) => s.id == playing.id);
 
     if (currentIndex >= 0 && widget.controller?.hasClients == true) {
       widget.controller?.animateTo(
@@ -67,10 +67,10 @@ class _QueueViewState extends State<QueueView> {
   Widget build(BuildContext context) {
     final currentMusic = context.watch<CurrentMusicProvider>();
     final playlist = currentMusic.currentPlaylist;
-    final songs = playlist?.songs ?? [];
+    final tracks = playlist?.tracks ?? [];
 
     //show the whole queue.
-    final queueSongs = songs;
+    final queueTracks = tracks;
 
     return Transform.translate(
       offset: Offset(0, (1 - widget.queueProgressValue) * widget.maxOffset),
@@ -102,7 +102,7 @@ class _QueueViewState extends State<QueueView> {
                     ),
                   ),
                   Expanded(
-                    child: queueSongs.isEmpty
+                    child: queueTracks.isEmpty
                         ? const Center(child: Text("Nothing in the queue."))
                         : CustomScrollView(
                             controller: widget.queueProgressValue == 1.0
@@ -134,7 +134,7 @@ class _QueueViewState extends State<QueueView> {
                                 ),
                               ),
                               SliverReorderableList(
-                                itemCount: queueSongs.length,
+                                itemCount: queueTracks.length,
                                 onReorder: _reorderCallback,
                                 proxyDecorator: (child, index, animation) {
                                   return AnimatedBuilder(
@@ -153,23 +153,23 @@ class _QueueViewState extends State<QueueView> {
                                   );
                                 },
                                 itemBuilder: (context, index) {
-                                  final song = queueSongs[index];
+                                  final track = queueTracks[index];
                                   return QueueTile(
-                                    key: ValueKey('queue_${song.id}_$index'),
-                                    title: song.title,
-                                    subtitle: song.artist,
-                                    songId: song.id,
+                                    key: ValueKey('queue_${track.id}_$index'),
+                                    title: track.title,
+                                    subtitle: track.artist,
+                                    trackId: track.id,
                                     itemIndex: index,
                                     isPlaying:
-                                        currentMusic.playing?.id == song.id,
+                                        currentMusic.currentTrack?.id == track.id,
                                     onTap: () {
-                                      currentMusic.playSong(
-                                        song,
+                                      currentMusic.playTrack(
+                                        track,
                                         playlist: playlist,
                                       );
                                     },
                                     onRemove: () {
-                                      final realIndex = songs.indexOf(song);
+                                      final realIndex = tracks.indexOf(track);
                                       if (realIndex >= 0) {
                                         currentMusic.removeFromQueue(realIndex);
                                       }

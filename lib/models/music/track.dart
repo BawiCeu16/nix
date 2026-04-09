@@ -1,4 +1,4 @@
-class Song {
+class Track {
   final int id;
   final String title;
   final String artist;
@@ -8,7 +8,7 @@ class Song {
   final int size;
   final int dateAdded;
 
-  Song({
+  Track({
     required this.id,
     required this.title,
     required this.artist,
@@ -19,7 +19,7 @@ class Song {
     required this.dateAdded,
   });
 
-  Song copyWith({
+  Track copyWith({
     int? id,
     String? title,
     String? artist,
@@ -29,7 +29,7 @@ class Song {
     int? size,
     int? dateAdded,
   }) {
-    return Song(
+    return Track(
       id: id ?? this.id,
       title: title ?? this.title,
       artist: artist ?? this.artist,
@@ -43,7 +43,7 @@ class Song {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) || other is Song && id == other.id;
+      identical(this, other) || other is Track && id == other.id;
 
   @override
   int get hashCode => id.hashCode;

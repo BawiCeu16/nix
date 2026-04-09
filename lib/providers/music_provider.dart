@@ -5,15 +5,78 @@ import 'package:flutter/foundation.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:hive/hive.dart';
-import '../models/music/song.dart';
-import '../models/music/album.dart';
-import '../models/music/artist.dart';
-import '../models/music/playlist.dart';
-import '../core/hive_keys.dart';
-import 'current_music_provider.dart';
+import 'package:nix/models/music/track.dart';
+import 'package:nix/models/music/album.dart';
+import 'package:nix/models/music/artist.dart';
+import 'package:nix/models/music/playlist.dart';
+import 'package:nix/core/hive_keys.dart';
+import 'package:nix/providers/current_music_provider.dart';
+
+// ── Isolate data types ──
+
+class _ParseInput {
+  final List<Map<String, dynamic>> rawSongs;
+  const _ParseInput(this.rawSongs);
+}
+
+class _ParseOutput {
+  final List<Track> tracks;
+  final List<Album> albums;
+  final List<Artist> artists;
+  const _ParseOutput(this.tracks, this.albums, this.artists);
+}
+
+/// Top-level function required by [compute] to run on a background isolate.
+_ParseOutput _parseLibraryInIsolate(_ParseInput input) {
+  final rawSongs = input.rawSongs;
+
+  final tracks = rawSongs.map((raw) {
+    return Track(
+      dateAdded: raw['dateAdded'] as int? ?? 0,
+      id: raw['id'] as int,
+      title: raw['title'] as String,
+      artist: raw['artist'] as String? ?? '<Unknown>',
+      album: raw['album'] as String? ?? '<Unknown>',
+      uri: raw['uri'] as String,
+      duration: raw['duration'] as int? ?? 0,
+      size: raw['size'] as int? ?? 0,
+    );
+  }).toList();
+
+  final albumMap = <String, List<Track>>{};
+  final artistMap = <String, List<Track>>{};
+  for (final track in tracks) {
+    albumMap.putIfAbsent(track.album, () => []).add(track);
+    artistMap.putIfAbsent(track.artist, () => []).add(track);
+  }
+
+  var albumIdx = 0;
+  final albums = albumMap.entries.map((entry) {
+    return Album(
+      id: albumIdx++,
+      title: entry.key,
+      artist: entry.value.first.artist,
+      numOfSongs: entry.value.length,
+    );
+  }).toList();
+
+  var artistIdx = 0;
+  final artists = artistMap.entries.map((entry) {
+    return Artist(
+      id: artistIdx++,
+      name: entry.key,
+      numberOfAlbums: albumMap.values
+          .where((tracks) => tracks.first.artist == entry.key)
+          .length,
+      numberOfTracks: entry.value.length,
+    );
+  }).toList();
+
+  return _ParseOutput(tracks, albums, artists);
+}
 
 class MusicProvider extends ChangeNotifier {
-  List<Song> _songs = [];
+  List<Track> _tracks = [];
   final OnAudioQuery _audioQuery = OnAudioQuery();
   List<Album> _albums = [];
   List<Artist> _artists = [];
@@ -27,10 +90,10 @@ class MusicProvider extends ChangeNotifier {
   Playlist? _recentlyPlayedCache;
   Playlist? _topPlayedCache;
   Playlist? _favoritesCache;
-  StreamSubscription<Song>? _playbackSubscription;
+  StreamSubscription<Track>? _playbackSubscription;
 
   // Getters
-  List<Song> get songs => _songs;
+  List<Track> get tracks => _tracks;
   List<Album> get albums => _albums;
   List<Artist> get artists => _artists;
   List<Playlist> get playlists => _playlists;
@@ -49,7 +112,7 @@ class MusicProvider extends ChangeNotifier {
       Playlist(
         id: 'recently_played',
         name: 'Recently Listened',
-        songs: [],
+        tracks: [],
         createdAt: DateTime.now(),
       );
 
@@ -58,7 +121,7 @@ class MusicProvider extends ChangeNotifier {
       Playlist(
         id: 'top_played',
         name: 'Top Listened',
-        songs: [],
+        tracks: [],
         createdAt: DateTime.now(),
       );
 
@@ -67,7 +130,7 @@ class MusicProvider extends ChangeNotifier {
       Playlist(
         id: 'favorites',
         name: 'Favorites',
-        songs: [],
+        tracks: [],
         createdAt: DateTime.now(),
       );
 
@@ -76,7 +139,7 @@ class MusicProvider extends ChangeNotifier {
       return Playlist(
         id: 'recently_played',
         name: 'Recently Listened',
-        songs: [],
+        tracks: [],
         createdAt: DateTime.now(),
       );
     }
@@ -85,12 +148,12 @@ class MusicProvider extends ChangeNotifier {
     final sortedEntries = history.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
-    final recentSongIds = sortedEntries.take(50).map((e) => e.key).toSet();
-    final recentSongs = _songs
-        .where((s) => recentSongIds.contains(s.id))
+    final recentTrackIds = sortedEntries.take(50).map((e) => e.key).toSet();
+    final recentTracks = _tracks
+        .where((s) => recentTrackIds.contains(s.id))
         .toList();
 
-    recentSongs.sort((a, b) {
+    recentTracks.sort((a, b) {
       final timeA = historyBox.get(a.id) ?? 0;
       final timeB = historyBox.get(b.id) ?? 0;
       return timeB.compareTo(timeA);
@@ -99,7 +162,7 @@ class MusicProvider extends ChangeNotifier {
     return Playlist(
       id: 'recently_played',
       name: 'Recently Listened',
-      songs: recentSongs,
+      tracks: recentTracks,
       createdAt: DateTime.now(),
     );
   }
@@ -109,7 +172,7 @@ class MusicProvider extends ChangeNotifier {
       return Playlist(
         id: 'top_played',
         name: 'Top Listened',
-        songs: [],
+        tracks: [],
         createdAt: DateTime.now(),
       );
     }
@@ -118,10 +181,10 @@ class MusicProvider extends ChangeNotifier {
     final sortedEntries = counts.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
-    final topSongIds = sortedEntries.take(50).map((e) => e.key).toSet();
-    final topSongs = _songs.where((s) => topSongIds.contains(s.id)).toList();
+    final topTrackIds = sortedEntries.take(50).map((e) => e.key).toSet();
+    final topTracks = _tracks.where((s) => topTrackIds.contains(s.id)).toList();
 
-    topSongs.sort((a, b) {
+    topTracks.sort((a, b) {
       final countA = countsBox.get(a.id) ?? 0;
       final countB = countsBox.get(b.id) ?? 0;
       return countB.compareTo(countA);
@@ -130,7 +193,7 @@ class MusicProvider extends ChangeNotifier {
     return Playlist(
       id: 'top_played',
       name: 'Top Listened',
-      songs: topSongs,
+      tracks: topTracks,
       createdAt: DateTime.now(),
     );
   }
@@ -140,7 +203,7 @@ class MusicProvider extends ChangeNotifier {
       return Playlist(
         id: 'favorites',
         name: 'Favorites',
-        songs: [],
+        tracks: [],
         createdAt: DateTime.now(),
       );
     }
@@ -148,16 +211,16 @@ class MusicProvider extends ChangeNotifier {
     final entries = favoritesBox.toMap().entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
     final orderedIds = entries.map((e) => e.key as int).toList();
-    final songMap = {for (final s in _songs) s.id: s};
-    final favoriteSongs = orderedIds
-        .where((id) => songMap.containsKey(id))
-        .map((id) => songMap[id]!)
+    final trackMap = {for (final s in _tracks) s.id: s};
+    final favoriteTracks = orderedIds
+        .where((id) => trackMap.containsKey(id))
+        .map((id) => trackMap[id]!)
         .toList();
 
     return Playlist(
       id: 'favorites',
       name: 'Favorites',
-      songs: favoriteSongs,
+      tracks: favoriteTracks,
       createdAt: DateTime.now(),
     );
   }
@@ -178,7 +241,7 @@ class MusicProvider extends ChangeNotifier {
 
     if (currentMusic != null) {
       _playbackSubscription?.cancel();
-      _playbackSubscription = currentMusic.onSongPlayedStream.listen((_) {
+      _playbackSubscription = currentMusic.onTrackPlayedStream.listen((_) {
         refreshCaches();
       });
     }
@@ -263,22 +326,29 @@ class MusicProvider extends ChangeNotifier {
         return isAcceptedType && isLongEnough;
       }).toList();
 
-      _songs = validAudio.map((audio) {
-        return Song(
-          dateAdded: audio.dateAdded ?? 0,
-          id: audio.id,
-          title: audio.title,
-          artist: audio.artist ?? '<Unknown>',
-          album: audio.album ?? '<Unknown>',
-          uri: audio.data,
-          duration: audio.duration ?? 0,
-          size: audio.size,
-        );
+      // Opt. #7: Run the CPU-intensive parsing on a background isolate via
+      // compute(), preventing UI-thread jank on startup with large libraries.
+      final rawSongs = validAudio.map((audio) => <String, dynamic>{
+        'dateAdded': audio.dateAdded ?? 0,
+        'id': audio.id,
+        'title': audio.title,
+        'artist': audio.artist,
+        'album': audio.album,
+        'uri': audio.data,
+        'duration': audio.duration ?? 0,
+        'size': audio.size,
       }).toList();
 
-      _createAlbumsAndArtists();
-      _loadPlaylists();
+      final parsed = await compute(
+        _parseLibraryInIsolate,
+        _ParseInput(rawSongs),
+      );
 
+      _tracks = parsed.tracks;
+      _albums = parsed.albums;
+      _artists = parsed.artists;
+
+      _loadPlaylists();
       _rebuildCaches();
       _lastScanned = DateTime.now();
     } catch (e) {
@@ -296,52 +366,7 @@ class MusicProvider extends ChangeNotifier {
     _favoritesCache = _calculateFavorites();
   }
 
-  void _createAlbumsAndArtists() {
-    final albumMap = <String, List<Song>>{};
-    final artistMap = <String, List<Song>>{};
-
-    for (final song in _songs) {
-      // Group by album
-      if (!albumMap.containsKey(song.album)) {
-        albumMap[song.album] = [];
-      }
-      albumMap[song.album]!.add(song);
-
-      // Group by artist
-      if (!artistMap.containsKey(song.artist)) {
-        artistMap[song.artist] = [];
-      }
-      artistMap[song.artist]!.add(song);
-    }
-
-    final Map<String, Album> createdAlbums = {};
-    albumMap.forEach((albumTitle, songsInAlbum) {
-      final album = Album(
-        id: createdAlbums.length,
-        title: albumTitle,
-        artist: songsInAlbum.first.artist,
-        numOfSongs: songsInAlbum.length,
-      );
-      createdAlbums[albumTitle] = album;
-    });
-    _albums = createdAlbums.values.toList();
-
-    final Map<String, Artist> createdArtists = {};
-    artistMap.forEach((artistName, songsByArtist) {
-      final artist = Artist(
-        id: createdArtists.length,
-        name: artistName,
-        numberOfAlbums: albumMap.values
-            .where((songs) => songs.first.artist == artistName)
-            .length,
-        numberOfTracks: songsByArtist.length,
-      );
-      createdArtists[artistName] = artist;
-    });
-    _artists = createdArtists.values.toList();
-
-    // Note: Song.albumObj and Song.artistObj were removed as they were not read by any UI component.
-  }
+  // _createAlbumsAndArtists() is now handled in the background isolate.
 
   void _loadPlaylists() {
     _playlists.clear();
@@ -356,18 +381,18 @@ class MusicProvider extends ChangeNotifier {
           final createdAt = DateTime.fromMillisecondsSinceEpoch(
             data['createdAt'] as int,
           );
-          final songIdsList = data['songIds'] as List<dynamic>;
-          final songIdsSet = songIdsList.map((e) => e as int).toSet();
+          final trackIdsList = data['trackIds'] as List<dynamic>;
+          final trackIdsSet = trackIdsList.map((e) => e as int).toSet();
 
-          final playlistSongs = _songs
-              .where((s) => songIdsSet.contains(s.id))
+          final playlistTracks = _tracks
+              .where((s) => trackIdsSet.contains(s.id))
               .toList();
 
           _playlists.add(
             Playlist(
               id: id,
               name: name,
-              songs: playlistSongs,
+              tracks: playlistTracks,
               createdAt: createdAt,
             ),
           );
@@ -382,19 +407,19 @@ class MusicProvider extends ChangeNotifier {
   }
 
   // Favorites management
-  /// Checks if a [song] is marked as favorite.
-  bool isFavorite(Song song) {
-    return Hive.box<int>(HiveKeys.favoritesBox).containsKey(song.id);
+  bool isFavorite(Track track) {
+    if (!Hive.isBoxOpen(HiveKeys.favoritesBox)) return false;
+    return Hive.box<int>(HiveKeys.favoritesBox).containsKey(track.id);
   }
 
-  /// Toggles the favorite status for a [song].
-  Future<void> toggleFavorite(Song song) async {
+  /// Toggles the favorite status for a [track].
+  Future<void> toggleFavorite(Track track) async {
     final box = Hive.box<int>(HiveKeys.favoritesBox);
 
-    if (box.containsKey(song.id)) {
-      await box.delete(song.id);
+    if (box.containsKey(track.id)) {
+      await box.delete(track.id);
     } else {
-      await box.put(song.id, DateTime.now().millisecondsSinceEpoch);
+      await box.put(track.id, DateTime.now().millisecondsSinceEpoch);
     }
     _favoritesCache = _calculateFavorites();
     notifyListeners();
@@ -406,17 +431,17 @@ class MusicProvider extends ChangeNotifier {
       'id': p.id,
       'name': p.name,
       'createdAt': p.createdAt.millisecondsSinceEpoch,
-      'songIds': p.songs.map((s) => s.id).toList(),
+      'trackIds': p.tracks.map((s) => s.id).toList(),
     };
     await box.put(p.id, jsonEncode(data));
   }
 
   // Playlist management
-  Future<void> createPlaylist(String name, List<Song> songs) async {
+  Future<void> createPlaylist(String name, List<Track> tracks) async {
     final playlist = Playlist(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: name,
-      songs: songs,
+      tracks: tracks,
       createdAt: DateTime.now(),
     );
 
@@ -428,18 +453,18 @@ class MusicProvider extends ChangeNotifier {
     await _savePlaylist(playlist);
   }
 
-  Future<void> addSongToPlaylist(String playlistId, Song song) async {
+  Future<void> addTrackToPlaylist(String playlistId, Track track) async {
     final playlist = _playlists.firstWhere((p) => p.id == playlistId);
-    if (!playlist.songs.contains(song)) {
-      playlist.songs.add(song);
+    if (!playlist.tracks.contains(track)) {
+      playlist.tracks.add(track);
       notifyListeners();
       await _savePlaylist(playlist);
     }
   }
 
-  Future<void> removeSongFromPlaylist(String playlistId, Song song) async {
+  Future<void> removeTrackFromPlaylist(String playlistId, Track track) async {
     final playlist = _playlists.firstWhere((p) => p.id == playlistId);
-    playlist.songs.remove(song);
+    playlist.tracks.remove(track);
     notifyListeners();
     await _savePlaylist(playlist);
   }
@@ -460,7 +485,7 @@ class MusicProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> reorderPlaylistSongs(
+  Future<void> reorderPlaylistTracks(
     String playlistId,
     int oldIndex,
     int newIndex,
@@ -469,22 +494,22 @@ class MusicProvider extends ChangeNotifier {
     if (oldIndex < newIndex) {
       newIndex -= 1;
     }
-    final song = playlist.songs.removeAt(oldIndex);
-    playlist.songs.insert(newIndex, song);
+    final track = playlist.tracks.removeAt(oldIndex);
+    playlist.tracks.insert(newIndex, track);
     notifyListeners();
     await _savePlaylist(playlist);
   }
 
   // Search functionality
-  List<Song> searchSongs(String query) {
-    if (query.isEmpty) return _songs;
+  List<Track> searchTracks(String query) {
+    if (query.isEmpty) return _tracks;
 
-    return _songs
+    return _tracks
         .where(
-          (song) =>
-              song.title.toLowerCase().contains(query.toLowerCase()) ||
-              song.artist.toLowerCase().contains(query.toLowerCase()) ||
-              song.album.toLowerCase().contains(query.toLowerCase()),
+          (track) =>
+              track.title.toLowerCase().contains(query.toLowerCase()) ||
+              track.artist.toLowerCase().contains(query.toLowerCase()) ||
+              track.album.toLowerCase().contains(query.toLowerCase()),
         )
         .toList();
   }
@@ -511,14 +536,14 @@ class MusicProvider extends ChangeNotifier {
         .toList();
   }
 
-  // Get songs by album
-  List<Song> getSongsByAlbum(String albumTitle) {
-    return _songs.where((song) => song.album == albumTitle).toList();
+  // Get tracks by album
+  List<Track> getTracksByAlbum(String albumTitle) {
+    return _tracks.where((track) => track.album == albumTitle).toList();
   }
 
-  // Get songs by artist
-  List<Song> getSongsByArtist(String artistName) {
-    return _songs.where((song) => song.artist == artistName).toList();
+  // Get tracks by artist
+  List<Track> getTracksByArtist(String artistName) {
+    return _tracks.where((track) => track.artist == artistName).toList();
   }
 
   // Get albums by artist

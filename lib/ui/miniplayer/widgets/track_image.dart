@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:provider/provider.dart';
-import '../../widgets/common/nix_artwork.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/sleep_timer_provider.dart';
-import '../../widgets/dialogs/sleep_timer_dialog.dart';
+import 'package:nix/ui/widgets/common/nix_artwork.dart';
 import '../../../core/format.dart';
 import '../../../core/math_utils.dart';
 import '../models/animation_data.dart';
@@ -36,7 +35,7 @@ class TrackImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentSong = context.watch<CurrentMusicProvider>().currentSong;
+    final currentSong = context.watch<CurrentMusicProvider>().currentTrack;
 
     return AnimatedBuilder(
       animation: sAnim,
@@ -96,13 +95,12 @@ class TrackImage extends StatelessWidget {
                                   fit: BoxFit.cover,
                                   width: double.infinity,
                                   height: double.infinity,
-                                  quality: NixArtworkQuality.high,
                                 )
                               : Container(
                                   decoration: BoxDecoration(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .primaryContainer,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primaryContainer,
                                     borderRadius: BorderRadius.circular(
                                       rangeProgress(
                                         a: 100.0,
@@ -126,9 +124,10 @@ class TrackImage extends StatelessWidget {
                           Consumer<SleepTimerProvider>(
                             builder: (context, timer, _) {
                               if (!timer.isActive) return const SizedBox();
-                              final opacity = (data.bounceClampedProgress -
-                                      data.queueClampedProgress)
-                                  .clamp(0.0, 1.0);
+                              final opacity =
+                                  (data.bounceClampedProgress -
+                                          data.queueClampedProgress)
+                                      .clamp(0.0, 1.0);
                               if (opacity == 0) return const SizedBox();
 
                               return Positioned(
@@ -136,28 +135,26 @@ class TrackImage extends StatelessWidget {
                                 left: 12,
                                 child: Opacity(
                                   opacity: opacity,
-                                  child: GestureDetector(
-                                    onLongPress: () {
-                                      SleepTimerDialog.show(context);
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 6,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.5,
                                       ),
-                                      decoration: BoxDecoration(
-                                        color:
-                                            Colors.black.withValues(alpha: 0.5),
-                                        borderRadius:
-                                            BorderRadius.circular(100),
+                                      borderRadius: BorderRadius.circular(
+                                        100,
                                       ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(
-                                            FlutterRemix.timer_2_line,
-                                            size: 14,
-                                            color: Colors.white,
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                          FlutterRemix.timer_2_line,
+                                          size: 14,
+                                          color: Colors.white,
                                         ),
                                         const SizedBox(width: 6),
                                         Text(
@@ -173,9 +170,8 @@ class TrackImage extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                              ),
-                            );
-                          },
+                              );
+                            },
                           ),
                         ],
                       ),

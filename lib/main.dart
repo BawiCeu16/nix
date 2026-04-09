@@ -3,16 +3,17 @@ import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:dynamic_color/dynamic_color.dart';
-import 'core/hive_keys.dart';
-import 'providers/will_pop_provider.dart';
-import 'providers/current_music_provider.dart';
-import 'providers/music_provider.dart';
-import 'providers/settings_provider.dart';
-import 'providers/user_provider.dart';
-import 'providers/sleep_timer_provider.dart';
-import 'ui/screens/navigation_screen.dart';
-import 'ui/screens/onboarding_page.dart';
-import 'ui/theme/nix_theme.dart';
+import 'package:nix/core/hive_keys.dart';
+import 'package:nix/providers/will_pop_provider.dart';
+import 'package:nix/providers/current_music_provider.dart';
+import 'package:nix/providers/music_provider.dart';
+import 'package:nix/providers/settings_provider.dart';
+import 'package:nix/providers/user_provider.dart';
+import 'package:nix/providers/sleep_timer_provider.dart';
+import 'package:nix/providers/artwork_provider.dart';
+import 'package:nix/ui/screens/navigation_screen.dart';
+import 'package:nix/ui/screens/onboarding_page.dart';
+import 'package:nix/ui/theme/nix_theme.dart';
 
 CurrentMusicProvider? _audioHandler;
 
@@ -20,6 +21,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   await Hive.openBox(HiveKeys.settingsBox);
+  // Opt. #1: Read onboarding flag ONCE here — not on every build() call.
+  final bool hasCompletedOnboarding = Hive.box(
+    HiveKeys.settingsBox,
+  ).get(HiveKeys.onboarding, defaultValue: false);
 
   _audioHandler = await AudioService.init(
     builder: () => CurrentMusicProvider(),
@@ -30,7 +35,6 @@ void main() async {
     ),
   );
 
-  /// Initialize audio handler before running app
   await _audioHandler!.init();
 
   runApp(
@@ -45,15 +49,17 @@ void main() async {
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => SleepTimerProvider()),
+        ChangeNotifierProvider(create: (_) => ArtworkProvider()),
         Provider(create: (_) => WillPopProvider()),
       ],
-      child: const NixApp(),
+      child: NixApp(hasCompletedOnboarding: hasCompletedOnboarding),
     ),
   );
 }
 
 class NixApp extends StatefulWidget {
-  const NixApp({super.key});
+  final bool hasCompletedOnboarding;
+  const NixApp({super.key, required this.hasCompletedOnboarding});
 
   @override
   State<NixApp> createState() => _NixAppState();
@@ -63,7 +69,7 @@ class _NixAppState extends State<NixApp> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Inject SettingsProvider into CurrentMusicProvider safely
+    // Inject SettingsProvider into CurrentMusicProvider safely and reactively.
     final settings = context.watch<SettingsProvider>();
     context.read<CurrentMusicProvider>().updateSettings(settings);
   }
@@ -72,30 +78,34 @@ class _NixAppState extends State<NixApp> {
   Widget build(BuildContext context) {
     return DynamicColorBuilder(
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
-        return Consumer2<SettingsProvider, CurrentMusicProvider>(
-          builder: (context, settings, music, child) {
+        // Opt. #2: Use Selector2 to rebuild MaterialApp ONLY when theme-relevant
+        // values change. This prevents skipSilence, playbackSpeed, etc. from
+        // triggering a full app-level re-layout.
+        return Selector2<SettingsProvider, CurrentMusicProvider, _ThemeConfig>(
+          selector: (_, settings, music) => _ThemeConfig(
+            accentColorMode: settings.accentColorMode,
+            customAccentColor: settings.customAccentColor,
+            useAmoledMode: settings.useAmoledMode,
+            themeMode: settings.themeMode,
+            dynamicSeedColor: music.dynamicSeedColor,
+            lightDynamic: lightDynamic,
+          ),
+          builder: (context, config, child) {
             Color seedColor = Colors.blue;
 
-            // Determine seed color based on mode
-            if (settings.accentColorMode == AccentColorMode.device &&
-                lightDynamic != null) {
-              seedColor = lightDynamic.primary;
-            } else if (settings.accentColorMode == AccentColorMode.dynamic) {
-              seedColor = music.dynamicSeedColor ?? Colors.blue;
-            } else if (settings.accentColorMode == AccentColorMode.custom) {
-              seedColor = settings.customAccentColor;
+            if (config.accentColorMode == AccentColorMode.device &&
+                config.lightDynamic != null) {
+              seedColor = config.lightDynamic!.primary;
+            } else if (config.accentColorMode == AccentColorMode.dynamic) {
+              seedColor = config.dynamicSeedColor ?? Colors.blue;
+            } else if (config.accentColorMode == AccentColorMode.custom) {
+              seedColor = config.customAccentColor;
             }
 
             final theme = NixTheme.buildLightTheme(seedColor);
             final darkTheme = NixTheme.buildDarkTheme(
               seedColor,
-              amoled: settings.useAmoledMode,
-            );
-
-            final settingsBox = Hive.box(HiveKeys.settingsBox);
-            final bool hasCompletedOnboarding = settingsBox.get(
-              HiveKeys.onboarding,
-              defaultValue: false,
+              amoled: config.useAmoledMode,
             );
 
             return MaterialApp(
@@ -103,8 +113,8 @@ class _NixAppState extends State<NixApp> {
               debugShowCheckedModeBanner: false,
               theme: theme,
               darkTheme: darkTheme,
-              themeMode: settings.themeMode,
-              home: hasCompletedOnboarding
+              themeMode: config.themeMode,
+              home: widget.hasCompletedOnboarding
                   ? const NavigationScreen()
                   : const OnboardingPage(),
             );
@@ -113,4 +123,43 @@ class _NixAppState extends State<NixApp> {
       },
     );
   }
+}
+
+/// Immutable data class that holds theme-relevant settings.
+/// Selector2 compares this object to decide if a rebuild is needed.
+class _ThemeConfig {
+  final AccentColorMode accentColorMode;
+  final Color customAccentColor;
+  final bool useAmoledMode;
+  final ThemeMode themeMode;
+  final Color? dynamicSeedColor;
+  final ColorScheme? lightDynamic;
+
+  const _ThemeConfig({
+    required this.accentColorMode,
+    required this.customAccentColor,
+    required this.useAmoledMode,
+    required this.themeMode,
+    required this.dynamicSeedColor,
+    required this.lightDynamic,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is _ThemeConfig &&
+          accentColorMode == other.accentColorMode &&
+          customAccentColor == other.customAccentColor &&
+          useAmoledMode == other.useAmoledMode &&
+          themeMode == other.themeMode &&
+          dynamicSeedColor == other.dynamicSeedColor;
+
+  @override
+  int get hashCode => Object.hash(
+    accentColorMode,
+    customAccentColor,
+    useAmoledMode,
+    themeMode,
+    dynamicSeedColor,
+  );
 }

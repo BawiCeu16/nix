@@ -4,14 +4,14 @@ import 'package:provider/provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/models/music/album.dart';
-import 'package:nix/models/music/song.dart';
+import 'package:nix/models/music/track.dart';
 import 'package:nix/ui/widgets/list_item/track_tile.dart';
 import 'package:nix/ui/widgets/common/nix_empty_state.dart';
 import 'package:nix/ui/widgets/common/nix_action_row.dart';
 import 'package:nix/ui/widgets/common/nix_page_header.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:nix/ui/widgets/common/nix_refreshable_list.dart';
-import '../../widgets/common/nix_artwork.dart';
+import 'package:nix/ui/widgets/common/nix_artwork.dart';
 
 enum _AlbumSort { defaultOrder, aToZ, zToA }
 
@@ -87,15 +87,15 @@ class _AlbumsPageState extends State<AlbumsPage> {
               itemCount: albums.length,
               itemBuilder: (context, index) {
                 final album = albums[index];
-                final albumSongs = music.getSongsByAlbum(album.title);
-                final firstSongId =
-                    albumSongs.isNotEmpty ? albumSongs.first.id : null;
+                final albumTracks = music.getTracksByAlbum(album.title);
+                final firstTrackId =
+                    albumTracks.isNotEmpty ? albumTracks.first.id : null;
 
                 return GestureDetector(
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => AlbumSongsPage(
+                        builder: (_) => AlbumTracksPage(
                           albumTitle: album.title,
                           albumArtist: album.artist,
                         ),
@@ -114,14 +114,13 @@ class _AlbumsPageState extends State<AlbumsPage> {
                       children: [
                         Expanded(
                         child: NixArtwork(
-                          id: firstSongId ?? 0,
+                          id: firstTrackId ?? 0,
                           type: ArtworkType.AUDIO,
                           fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
-                          quality: NixArtworkQuality.medium, // Optimized high fidelity
+                          width: 140,
+                          height: 140,
                         ),
-                        ),
+                      ),
                         Padding(
                           padding: const EdgeInsets.all(12.0),
                           child: Column(
@@ -164,11 +163,11 @@ class _AlbumsPageState extends State<AlbumsPage> {
   }
 }
 
-class AlbumSongsPage extends StatelessWidget {
+class AlbumTracksPage extends StatelessWidget {
   final String albumTitle;
   final String albumArtist;
 
-  const AlbumSongsPage({
+  const AlbumTracksPage({
     super.key,
     required this.albumTitle,
     required this.albumArtist,
@@ -188,39 +187,39 @@ class AlbumSongsPage extends StatelessWidget {
       ),
       body: Consumer<MusicProvider>(
         builder: (context, music, child) {
-          final songs = music.getSongsByAlbum(albumTitle);
-          final firstSongId = songs.isNotEmpty ? songs.first.id : null;
+          final tracks = music.getTracksByAlbum(albumTitle);
+          final firstTrackId = tracks.isNotEmpty ? tracks.first.id : null;
 
           return NixRefreshableList(
-            isEmpty: songs.isEmpty,
+            isEmpty: tracks.isEmpty,
             onRefresh: () async => await music.scanDevice(),
             emptyState: const NixEmptyState(
               icon: FlutterRemix.music_2_line,
-              title: "No songs found in this album",
+              title: "No tracks found in this album",
             ),
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               physics: const AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics(),
               ),
-              itemCount: songs.length + 2, // Header + Songs + Bottom Padding
+              itemCount: tracks.length + 2, // Header + Tracks + Bottom Padding
               itemBuilder: (context, index) {
                 if (index == 0) {
                   return NixPageHeader(
                     title: albumTitle,
-                    subtitle: "$albumArtist • ${songs.length} Songs",
-                    songId: firstSongId,
+                    subtitle: "$albumArtist • ${tracks.length} Tracks",
+                    trackId: firstTrackId,
                     fallbackIcon: FlutterRemix.disc_line,
                     actionRow: NixActionRow(
                       onShuffle: () {
                         final audio = context.read<CurrentMusicProvider>();
-                        final shuffled = List<Song>.from(songs)..shuffle();
+                        final shuffled = List<Track>.from(tracks)..shuffle();
                         if (!audio.isShuffleEnabled) audio.toggleShuffle();
-                        audio.playSong(shuffled.first);
+                        audio.playTrack(shuffled.first);
                       },
                       onPlay: () {
-                        context.read<CurrentMusicProvider>().playSong(
-                              songs.first,
+                        context.read<CurrentMusicProvider>().playTrack(
+                              tracks.first,
                             );
                       },
                       playLabel: "Play All",
@@ -228,16 +227,16 @@ class AlbumSongsPage extends StatelessWidget {
                   );
                 }
 
-                if (index == songs.length + 1) {
+                if (index == tracks.length + 1) {
                   return const SizedBox(height: 120);
                 }
 
-                final song = songs[index - 1];
+                final track = tracks[index - 1];
                 return TrackTile(
-                  track: song,
-                  playlistContext: songs,
+                  track: track,
+                  playlistContext: tracks,
                   isFirst: index == 1,
-                  isLast: index == songs.length,
+                  isLast: index == tracks.length,
                 );
               },
             ),

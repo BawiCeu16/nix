@@ -16,9 +16,10 @@ class AboutPage extends StatelessWidget {
       backgroundColor: colorScheme.surfaceContainer,
       appBar: AppBar(
         title: const Text('About'),
+        centerTitle: true,
+        scrolledUnderElevation: 0,
         backgroundColor: colorScheme.surfaceContainer,
         elevation: 0,
-        scrolledUnderElevation: 0,
       ),
       body: FutureBuilder<PackageInfo>(
         future: PackageInfo.fromPlatform(),
@@ -140,7 +141,7 @@ class AboutPage extends StatelessWidget {
               const SizedBox(height: 2.5),
               CardListTile(
                 title: 'Reset to Defaults',
-                subtitle: 'Clear all settings and preferences',
+                subtitle: 'Clear all preferences and global settings',
                 icon: FlutterRemix.refresh_line,
                 isLast: true,
                 onTap: () => _showResetDialog(context),

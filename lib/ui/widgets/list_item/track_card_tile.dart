@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:on_audio_query/on_audio_query.dart';
-import 'package:nix/models/music/song.dart';
-import '../common/nix_artwork.dart';
+import 'package:nix/models/music/track.dart';
+import 'package:nix/ui/widgets/common/nix_artwork.dart';
 
-/// A card tile that shows a song's artwork from the Hive cached_images box,
+/// A card tile that shows a track's artwork,
 /// with title and subtitle text below.
-class SongCardTile extends StatelessWidget {
-  final Song song;
+class TrackCardTile extends StatelessWidget {
+  final Track track;
 
-  const SongCardTile({super.key, required this.song});
+  const TrackCardTile({super.key, required this.track});
 
   @override
   Widget build(BuildContext context) {
@@ -27,16 +27,12 @@ class SongCardTile extends StatelessWidget {
           // ── Artwork area ──
           AspectRatio(
             aspectRatio: 1.0,
-            child: SizedBox(
-              width: double.infinity,
-              child: NixArtwork(
-                id: song.id,
-                type: ArtworkType.AUDIO,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                quality: NixArtworkQuality.medium,
-              ),
+            child: NixArtwork(
+              id: track.id,
+              type: ArtworkType.AUDIO,
+              fit: BoxFit.cover,
+              width: 160.0,
+              height: 160.0,
             ),
           ),
           // ── Text area ──
@@ -47,7 +43,7 @@ class SongCardTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  song.title,
+                  track.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: textTheme.bodyMedium?.copyWith(
@@ -57,7 +53,7 @@ class SongCardTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 1),
                 Text(
-                  song.artist,
+                  track.artist,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: textTheme.bodySmall?.copyWith(

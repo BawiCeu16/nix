@@ -62,7 +62,7 @@ class _NavigationScreenState extends State<NavigationScreen>
 
   void _onPlaybackChanged() {
     final provider = context.read<CurrentMusicProvider>();
-    if (provider.currentSong != null && animation.value < 0.0) {
+    if (provider.currentTrack != null && animation.value < 0.0) {
       animation.value = 0.0;
     }
   }
@@ -224,11 +224,11 @@ class _NavigationScreenState extends State<NavigationScreen>
                 ),
               ),
 
-              // The Morphing Player Layer — hidden when no song selected
+              // The Morphing Player Layer — hidden when no track selected
               Selector<CurrentMusicProvider, bool>(
-                selector: (_, p) => p.currentSong != null,
-                builder: (context, hasSong, child) {
-                  if (!hasSong) return const SizedBox.shrink();
+                selector: (_, p) => p.currentTrack != null,
+                builder: (context, hasTrack, child) {
+                  if (!hasTrack) return const SizedBox.shrink();
                   return child!;
                 },
                 child: NowPlaying(animation: animation),

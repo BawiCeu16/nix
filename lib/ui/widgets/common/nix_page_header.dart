@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:on_audio_query/on_audio_query.dart';
-import 'nix_artwork.dart';
+import 'package:nix/ui/widgets/common/nix_artwork.dart';
+import 'package:nix/models/settings/artwork_quality.dart';
 
 class NixPageHeader extends StatelessWidget {
   final String title;
   final String subtitle;
-  final int? songId;
+  final int? trackId;
   final IconData fallbackIcon;
   final Widget? actionRow;
 
@@ -14,7 +15,7 @@ class NixPageHeader extends StatelessWidget {
     super.key,
     required this.title,
     required this.subtitle,
-    this.songId,
+    this.trackId,
     this.fallbackIcon = FlutterRemix.play_list_fill,
     this.actionRow,
   });
@@ -32,9 +33,9 @@ class NixPageHeader extends StatelessWidget {
           SizedBox(
             width: 300,
             height: 300,
-            child: songId != null
+            child: trackId != null
                 ? NixArtwork(
-                    id: songId!,
+                    id: trackId!,
                     type: ArtworkType.AUDIO,
                     fit: BoxFit.cover,
                     width: 300,

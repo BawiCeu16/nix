@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// A premium, bespoke slider widget for Nix music player.
 /// Used for both Sleep Timer and Playback Speed to ensure visual consistency.
@@ -43,7 +44,12 @@ class NixSlider extends StatelessWidget {
         min: min,
         max: max,
         divisions: divisions,
-        onChanged: onChanged,
+        onChanged: (val) {
+          if ((val - value).abs() > (max - min) / 100) {
+            HapticFeedback.selectionClick();
+          }
+          onChanged(val);
+        },
       ),
     );
   }
@@ -82,12 +88,16 @@ class _NixThumbShape extends SliderComponentShape {
   }) {
     final Canvas canvas = context.canvas;
 
+    // Use curved animation for smoother scaling effect
+    final scaleAnimation = CurvedAnimation(
+      parent: activationAnimation,
+      curve: Curves.easeOutBack,
+    );
+
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.fill;
 
-    // Draw a pill-shaped thumb
-    // Adjusted width to fit the text better
     final textPainter = TextPainter(
       text: TextSpan(
         text: label,
@@ -104,16 +114,25 @@ class _NixThumbShape extends SliderComponentShape {
     final thumbWidth = textPainter.width + 24;
     final thumbHeight = 22.0;
 
+    // Apply scale transformation based on activation (touch)
+    final scale = 1.0 + (scaleAnimation.value * 0.15);
+    final width = thumbWidth * scale;
+    final height = thumbHeight * scale;
+
     final rrect = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: center, width: thumbWidth, height: thumbHeight),
+      Rect.fromCenter(center: center, width: width, height: height),
       const Radius.circular(100),
     );
     canvas.drawRRect(rrect, paint);
 
-    // Draw the text inside the thumb
+    // Draw the text inside the thumb, also scaled
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.scale(scale);
     textPainter.paint(
       canvas,
-      center - Offset(textPainter.width / 2, textPainter.height / 2),
+      Offset(-textPainter.width / 2, -textPainter.height / 2),
     );
+    canvas.restore();
   }
 }

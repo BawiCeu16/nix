@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
-import 'artwork_shape_settings_page.dart';
 import 'package:provider/provider.dart';
-import '../../../../providers/settings_provider.dart';
-import '../../../widgets/list_item/nix_choice_chip.dart';
-import '../../../widgets/common/nix_section_header.dart';
+import 'package:nix/providers/settings_provider.dart';
+import 'package:nix/models/settings/artwork_quality.dart';
+import 'package:nix/ui/widgets/list_item/nix_choice_chip.dart';
+import 'package:nix/ui/widgets/common/nix_section_header.dart';
 
 class AppearanceSettingsPage extends StatelessWidget {
   const AppearanceSettingsPage({super.key});
@@ -20,15 +20,16 @@ class AppearanceSettingsPage extends StatelessWidget {
       backgroundColor: colorScheme.surfaceContainer,
       appBar: AppBar(
         title: const Text('Appearance'),
+        centerTitle: true,
+        scrolledUnderElevation: 0,
         backgroundColor: colorScheme.surfaceContainer,
         elevation: 0,
-        scrolledUnderElevation: 0,
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         physics: const BouncingScrollPhysics(),
         children: [
-          const NixSectionHeader(title: 'Theme', topPadding: 16),
+          const NixSectionHeader(title: 'Theme Mode', topPadding: 16),
           Card(
             elevation: 0,
             margin: EdgeInsets.zero,
@@ -60,7 +61,7 @@ class AppearanceSettingsPage extends StatelessWidget {
             ),
           ),
 
-          const NixSectionHeader(title: 'Colors', topPadding: 24),
+          const NixSectionHeader(title: 'Color System', topPadding: 24),
           CardListTile(
             title: 'Accent Color Mode',
             subtitle: settingsParams.accentColorMode.name.toUpperCase(),
@@ -75,7 +76,7 @@ class AppearanceSettingsPage extends StatelessWidget {
             _CustomColorPicker(settings: settingsParams),
           ],
 
-          const NixSectionHeader(title: 'Experience', topPadding: 24),
+          const NixSectionHeader(title: 'Artwork & Visuals', topPadding: 24),
           CardListTile(
             title: 'AMOLED Mode',
             subtitle: 'Pure black for OLED screens',
@@ -93,16 +94,95 @@ class AppearanceSettingsPage extends StatelessWidget {
             title: 'Artwork Shape',
             subtitle: settingsParams.artworkShape.name.toUpperCase(),
             icon: FlutterRemix.shape_2_line,
+            onTap: () => _showShapeDialog(context, settingsParams),
+          ),
+          const SizedBox(height: 2.5),
+          CardListTile(
+            title: 'Artwork Fidelity',
+            subtitle: settingsParams.artworkQuality.name.toUpperCase(),
+            icon: FlutterRemix.image_line,
             isLast: true,
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const ArtworkShapeSettingsPage(),
-              ),
-            ),
+            onTap: () => _showQualityDialog(context, settingsParams),
           ),
           const SizedBox(height: 120),
         ],
       ),
+    );
+  }
+
+  void _showShapeDialog(BuildContext context, SettingsProvider settings) {
+    NixDialog.show(
+      context: context,
+      title: 'Artwork Shape',
+      children: ArtworkShape.values.map((shape) {
+        final index = ArtworkShape.values.indexOf(shape);
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: index == ArtworkShape.values.length - 1 ? 0.0 : 2.5,
+          ),
+          child: CardListTile(
+            title: shape.name.toUpperCase(),
+            onTap: () {
+              settings.setArtworkShape(shape);
+              Navigator.of(context, rootNavigator: true).pop();
+            },
+            trailing: IgnorePointer(
+              child: Radio<ArtworkShape>(
+                value: shape,
+                groupValue: settings.artworkShape,
+                onChanged: (_) {},
+              ),
+            ),
+            isFirst: index == 0,
+            isLast: index == ArtworkShape.values.length - 1,
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  void _showQualityDialog(BuildContext context, SettingsProvider settings) {
+    NixDialog.show(
+      context: context,
+      title: 'Artwork Fidelity',
+      children: NixArtworkQuality.values.map((quality) {
+        final index = NixArtworkQuality.values.indexOf(quality);
+        String description = '';
+        switch (quality) {
+          case NixArtworkQuality.high:
+            description = 'Full-high quality - Best visuals';
+            break;
+          case NixArtworkQuality.medium:
+            description = 'Balanced quality';
+            break;
+          case NixArtworkQuality.low:
+            description = 'Standard quality - Saves memory';
+            break;
+        }
+
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: index == NixArtworkQuality.values.length - 1 ? 0.0 : 2.5,
+          ),
+          child: CardListTile(
+            title: quality.name.toUpperCase(),
+            subtitle: description,
+            onTap: () {
+              settings.setArtworkQuality(quality);
+              Navigator.of(context, rootNavigator: true).pop();
+            },
+            trailing: IgnorePointer(
+              child: Radio<NixArtworkQuality>(
+                value: quality,
+                groupValue: settings.artworkQuality,
+                onChanged: (_) {},
+              ),
+            ),
+            isFirst: index == 0,
+            isLast: index == NixArtworkQuality.values.length - 1,
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -117,7 +197,7 @@ class AppearanceSettingsPage extends StatelessWidget {
 
         return Padding(
           padding: EdgeInsets.only(
-            bottom: index == ThemeMode.values.length - 1 ? 0.0 : 2.5,
+            bottom: index == AccentColorMode.values.length - 1 ? 0.0 : 2.5,
           ),
           child: CardListTile(
             title: label,

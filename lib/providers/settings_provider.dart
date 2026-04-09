@@ -1,25 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import '../core/hive_keys.dart';
+import 'package:nix/core/hive_keys.dart';
+import 'package:nix/models/settings/artwork_quality.dart';
 
 enum AccentColorMode { dynamic, device, custom }
 
 enum ArtworkShape {
   rounded,
   circle,
-  pixelCircle,
-  arch,
-  oval,
-  pill,
-  diamond,
-  gem,
-  verySunny,
-  sunny,
-  cookie4,
-  cookie6,
-  cookie9,
-  cookie12,
-  bun,
 }
 
 enum NavbarStyle { floating, standard }
@@ -169,6 +157,24 @@ class SettingsProvider with ChangeNotifier {
 
   void setArtworkShape(ArtworkShape shape) {
     _box.put(HiveKeys.artworkShape, shape.name);
+    notifyListeners();
+  }
+
+  // Appearance - Artwork Quality
+  /// The global resolution for all artwork.
+  NixArtworkQuality get artworkQuality {
+    final String quality = _box.get(
+      HiveKeys.artworkQuality,
+      defaultValue: 'high',
+    );
+    return NixArtworkQuality.values.firstWhere(
+      (e) => e.name == quality,
+      orElse: () => NixArtworkQuality.high,
+    );
+  }
+
+  void setArtworkQuality(NixArtworkQuality quality) {
+    _box.put(HiveKeys.artworkQuality, quality.name);
     notifyListeners();
   }
 

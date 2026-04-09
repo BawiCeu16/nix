@@ -4,7 +4,6 @@ import 'package:nix/ui/screens/second_pages/settings_details/about_page.dart';
 import 'package:nix/ui/screens/second_pages/settings_details/library_settings_page.dart';
 import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 import 'package:nix/ui/widgets/common/nix_section_header.dart';
-import 'profile_page.dart';
 import './settings_details/appearance_settings_page.dart';
 import './settings_details/playback_settings_page.dart';
 
@@ -19,9 +18,10 @@ class SettingsPage extends StatelessWidget {
       backgroundColor: colorScheme.surfaceContainer,
       appBar: AppBar(
         title: const Text('Settings'),
+        centerTitle: true,
+        scrolledUnderElevation: 0,
         backgroundColor: colorScheme.surfaceContainer,
         elevation: 0,
-        scrolledUnderElevation: 0,
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -52,7 +52,7 @@ class SettingsPage extends StatelessWidget {
           const SizedBox(height: 2.5),
           CardListTile(
             title: 'Library',
-            subtitle: 'Gestures, auto-play, and audio settings',
+            subtitle: 'Organize your collection and filter audio',
             icon: FlutterRemix.music_line,
             isLast: true,
             onTap: () => Navigator.of(context).push(

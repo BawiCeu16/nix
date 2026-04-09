@@ -9,7 +9,7 @@ import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:nix/ui/widgets/buttons/expressive_button.dart';
 import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
-import 'package:nix/models/music/song.dart';
+import 'package:nix/models/music/track.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -20,7 +20,7 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   final TextEditingController _searchController = TextEditingController();
-  List<Song> _searchResults = [];
+  List<Track> _searchResults = [];
 
   void _onSearchChanged(String query, MusicProvider music) {
     if (query.isEmpty) {
@@ -28,7 +28,7 @@ class _SearchPageState extends State<SearchPage> {
       return;
     }
     setState(() {
-      _searchResults = music.searchSongs(query);
+      _searchResults = music.searchTracks(query);
     });
   }
 
@@ -62,7 +62,9 @@ class _SearchPageState extends State<SearchPage> {
         body: SafeArea(
           bottom: false,
           child: CustomScrollView(
-            physics: const BouncingScrollPhysics(),
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
             slivers: [
               SliverAppBar(
                 systemOverlayStyle: brightness == Brightness.dark
@@ -88,7 +90,7 @@ class _SearchPageState extends State<SearchPage> {
                       ),
                       elevation: const WidgetStatePropertyAll(0),
                       controller: _searchController,
-                      hintText: "Search songs, artists, albums...",
+                      hintText: "Search tracks, artists, albums...",
                       textInputAction: TextInputAction.search,
                       leading: Padding(
                         padding: const EdgeInsets.only(left: 8.0),
@@ -263,6 +265,10 @@ class _SearchPageState extends State<SearchPage> {
                               ),
                             );
                           }),
+                          SizedBox(
+                            height:
+                                110 + MediaQuery.of(context).viewInsets.bottom,
+                          ),
                         ]),
                       ),
                     );
@@ -290,9 +296,9 @@ class _SearchPageState extends State<SearchPage> {
                               120 + MediaQuery.of(context).viewInsets.bottom,
                         );
                       }
-                      final song = _searchResults[index];
+                      final track = _searchResults[index];
                       return TrackTile(
-                        track: song,
+                        track: track,
                         playlistContext: _searchResults,
                         isFirst: index == 0,
                         isLast: index == _searchResults.length - 1,

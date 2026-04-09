@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
-import 'package:nix/models/music/song.dart';
+import 'package:nix/models/music/track.dart';
 import 'package:nix/models/music/playlist.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/music_provider.dart';
@@ -10,7 +10,7 @@ import 'package:nix/providers/settings_provider.dart';
 import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 import 'package:nix/ui/widgets/dialogs/playlist_dialogs.dart';
-import 'package:nix/ui/widgets/dialogs/song_info_dialog.dart';
+import 'package:nix/ui/widgets/dialogs/track_info_dialog.dart';
 import 'package:nix/core/format.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import '../common/nix_artwork.dart';
@@ -18,8 +18,8 @@ import '../../screens/music_pages/artists_page.dart';
 import '../../screens/music_pages/albums_page.dart';
 
 class TrackTile extends StatefulWidget {
-  final Song track;
-  final List<Song>? playlistContext;
+  final Track track;
+  final List<Track>? playlistContext;
   final bool isFirst;
   final bool isLast;
   final VoidCallback? onPressed;
@@ -89,7 +89,7 @@ class _TrackTileState extends State<TrackTile> {
       context: context,
       title: widget.track.title,
       subtitle: widget.track.artist,
-      songId: widget.track.id,
+      trackId: widget.track.id,
       children: [
         CardListTile(
           title: isFav ? "Remove from Favorites" : "Add to Favorites",
@@ -138,7 +138,7 @@ class _TrackTileState extends State<TrackTile> {
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) =>
-                    ArtistSongsPage(artistName: widget.track.artist),
+                    ArtistTracksPage(artistName: widget.track.artist),
               ),
             );
           },
@@ -151,7 +151,7 @@ class _TrackTileState extends State<TrackTile> {
             Navigator.of(context, rootNavigator: true).pop();
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (_) => AlbumSongsPage(
+                builder: (_) => AlbumTracksPage(
                   albumTitle: widget.track.album,
                   albumArtist: widget.track.artist,
                 ),
@@ -161,12 +161,12 @@ class _TrackTileState extends State<TrackTile> {
         ),
         const SizedBox(height: 2.5),
         CardListTile(
-          title: "Song Info",
+          title: "Track Info",
           icon: FlutterRemix.information_line,
           isLast: true,
           onTap: () {
             Navigator.of(context, rootNavigator: true).pop();
-            SongInfoDialog.show(
+            TrackInfoDialog.show(
               context,
               title: widget.track.title,
               artist: widget.track.artist,
@@ -174,7 +174,7 @@ class _TrackTileState extends State<TrackTile> {
               duration: _formattedDuration,
               size: widget.track.size.formatBytes(),
               filePath: widget.track.uri,
-              songId: widget.track.id,
+              trackId: widget.track.id,
             );
           },
         ),
@@ -240,8 +240,8 @@ class _TrackTileState extends State<TrackTile> {
           DismissDirection.endToStart: 0.45,
         },
         resizeDuration: const Duration(milliseconds: 50),
-        child: Selector<CurrentMusicProvider, Song?>(
-          selector: (_, p) => p.playing,
+        child: Selector<CurrentMusicProvider, Track?>(
+          selector: (_, p) => p.currentTrack,
           builder: (context, currentlyPlaying, child) {
             final isNowPlaying =
                 currentlyPlaying != null &&
@@ -261,17 +261,17 @@ class _TrackTileState extends State<TrackTile> {
                       pl = Playlist(
                         id: 'queue_${DateTime.now().millisecondsSinceEpoch}',
                         name: 'Queue',
-                        songs: widget.playlistContext!,
+                        tracks: widget.playlistContext!,
                         createdAt: DateTime.now(),
                       );
                     }
-                    currentMusic.playSong(widget.track, playlist: pl);
+                    currentMusic.playTrack(widget.track, playlist: pl);
                   },
               onLongPress: () {
                 if (context.read<SettingsProvider>().enableHaptics) {
                   HapticFeedback.mediumImpact();
                 }
-                SongInfoDialog.show(
+                TrackInfoDialog.show(
                   context,
                   title: widget.track.title,
                   artist: widget.track.artist,
@@ -279,7 +279,7 @@ class _TrackTileState extends State<TrackTile> {
                   duration: _formattedDuration,
                   size: widget.track.size.formatBytes(),
                   filePath: widget.track.uri,
-                  songId: widget.track.id,
+                  trackId: widget.track.id,
                 );
               },
               child: AnimatedScale(
@@ -299,7 +299,7 @@ class _TrackTileState extends State<TrackTile> {
                       padding: const EdgeInsets.symmetric(vertical: 4.0),
                       child: ListTile(
                         leading: _ArtworkLeading(
-                          songId: widget.track.id,
+                          trackId: widget.track.id,
                           isPlaying: isNowPlaying,
                         ),
                         title: Text(
@@ -344,19 +344,23 @@ class _TrackTileState extends State<TrackTile> {
 
 /// Shows artwork from MediaStore via on_audio_query
 class _ArtworkLeading extends StatelessWidget {
-  final int songId;
+  final int trackId;
   final bool isPlaying;
 
-  const _ArtworkLeading({required this.songId, required this.isPlaying});
+  const _ArtworkLeading({required this.trackId, required this.isPlaying});
 
   @override
   Widget build(BuildContext context) {
 
-    return NixArtwork(
-      id: songId,
-      type: ArtworkType.AUDIO,
+    return SizedBox(
       width: 48,
       height: 48,
+      child: NixArtwork(
+        id: trackId,
+        type: ArtworkType.AUDIO,
+        width: 48,
+        height: 48,
+      ),
     );
   }
 }
