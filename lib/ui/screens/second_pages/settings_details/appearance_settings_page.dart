@@ -143,13 +143,70 @@ class AppearanceSettingsPage extends StatelessWidget {
               value: settingsParams.swipeToChangeTrack,
               onChanged: (v) => settingsParams.setSwipeToChangeTrack(v),
             ),
+            onTap: () => settingsParams.setSwipeToChangeTrack(
+              !settingsParams.swipeToChangeTrack,
+            ),
+          ),
+          const SizedBox(height: 2.5),
+          CardListTile(
+            title: 'Track Swipe Action',
+            subtitle: settingsParams.trackSwipeAction == TrackSwipeAction.none
+                ? 'OFF'
+                : 'PLAY / PLAY NEXT',
+            icon: FlutterRemix.swap_line,
+            onTap: () => _showTrackSwipeActionDialog(context, settingsParams),
             isLast: true,
-            onTap: () =>
-                settingsParams.setSwipeToChangeTrack(!settingsParams.swipeToChangeTrack),
           ),
           const NixBottomSpacer(),
         ],
       ),
+    );
+  }
+
+  void _showTrackSwipeActionDialog(
+    BuildContext context,
+    SettingsProvider settings,
+  ) {
+    NixDialog.show(
+      context: context,
+      title: 'Track Swipe Action',
+      children: TrackSwipeAction.values.map((action) {
+        final index = TrackSwipeAction.values.indexOf(action);
+        String description = '';
+        switch (action) {
+          case TrackSwipeAction.none:
+            description = 'Disable swipe actions on library tracks';
+            break;
+          case TrackSwipeAction.playPlayback:
+            description = 'Swipe to Play (Idle) or Play Next (Playing)';
+            break;
+        }
+
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: index == TrackSwipeAction.values.length - 1 ? 0.0 : 2.5,
+          ),
+          child: CardListTile(
+            title: action == TrackSwipeAction.none
+                ? 'NONE'
+                : 'PLAY / PLAY NEXT',
+            subtitle: description,
+            onTap: () {
+              settings.setTrackSwipeAction(action);
+              Navigator.of(context, rootNavigator: true).pop();
+            },
+            trailing: IgnorePointer(
+              child: Radio<TrackSwipeAction>(
+                value: action,
+                groupValue: settings.trackSwipeAction,
+                onChanged: (_) {},
+              ),
+            ),
+            isFirst: index == 0,
+            isLast: index == TrackSwipeAction.values.length - 1,
+          ),
+        );
+      }).toList(),
     );
   }
 

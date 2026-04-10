@@ -12,6 +12,8 @@ enum NavbarStyle { floating, standard }
 
 enum SnackBarPosition { top, bottom }
 
+enum TrackSwipeAction { none, playPlayback }
+
 /// Manages app-wide settings like theme, accent color, and playback behaviors.
 /// Settings are persisted to the Hive.
 class SettingsProvider with ChangeNotifier {
@@ -203,6 +205,24 @@ class SettingsProvider with ChangeNotifier {
 
   void setSwipeToChangeTrack(bool value) {
     _box.put(HiveKeys.swipeToChangeTrack, value);
+    notifyListeners();
+  }
+
+  // Appearance - Track Swipe Action
+  /// The global action for track tile swipes.
+  TrackSwipeAction get trackSwipeAction {
+    final String action = _box.get(
+      HiveKeys.trackSwipeAction,
+      defaultValue: 'playPlayback',
+    );
+    return TrackSwipeAction.values.firstWhere(
+      (e) => e.name == action,
+      orElse: () => TrackSwipeAction.playPlayback,
+    );
+  }
+
+  void setTrackSwipeAction(TrackSwipeAction action) {
+    _box.put(HiveKeys.trackSwipeAction, action.name);
     notifyListeners();
   }
 

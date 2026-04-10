@@ -195,147 +195,174 @@ class _TrackTileState extends State<TrackTile> {
         : defaultRadius;
     final targetScale = _isPressed ? 0.98 : 1.0;
 
-    return Padding(
-      padding: EdgeInsets.only(bottom: widget.isLast ? 0.0 : 2.5),
-      child: Dismissible(
-        key: ValueKey(widget.track.id),
-        confirmDismiss: (direction) async {
-          final result = context.read<CurrentMusicProvider>().queueNext(
-            widget.track,
-          );
-          _handleQueueAction(context, result, 'next');
-          return false;
-        },
-        direction: DismissDirection.startToEnd,
-        background: Container(
-          color: Theme.of(context).colorScheme.primaryContainer,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    FlutterRemix.skip_forward_fill,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Play Next',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                      fontWeight: FontWeight.w600,
+    final settings = context.watch<SettingsProvider>();
+    final showSwipe = settings.trackSwipeAction != TrackSwipeAction.none;
+
+    Widget tileContent = Selector<CurrentMusicProvider, Track?>(
+      selector: (_, p) => p.currentTrack,
+      builder: (context, currentlyPlaying, child) {
+        final isNowPlaying =
+            currentlyPlaying != null && currentlyPlaying.id == widget.track.id;
+
+        return GestureDetector(
+          onTapDown: (_) => _setPressed(true),
+          onTapUp: (_) => _setPressed(false),
+          onTapCancel: () => _setPressed(false),
+          onTap:
+              widget.onPressed ??
+              () {
+                FocusScope.of(context).requestFocus(FocusNode());
+                final currentMusic = context.read<CurrentMusicProvider>();
+                Playlist? pl;
+                if (widget.playlistContext != null) {
+                  pl = Playlist(
+                    id: 'queue_${DateTime.now().millisecondsSinceEpoch}',
+                    name: 'Queue',
+                    tracks: widget.playlistContext!,
+                    createdAt: DateTime.now(),
+                  );
+                }
+                currentMusic.playTrack(widget.track, playlist: pl);
+              },
+          onLongPress: () {
+            if (context.read<SettingsProvider>().enableHaptics) {
+              HapticFeedback.mediumImpact();
+            }
+            TrackInfoDialog.show(
+              context,
+              title: widget.track.title,
+              artist: widget.track.artist,
+              album: widget.track.album,
+              duration: _formattedDuration,
+              size: widget.track.size.formatBytes(),
+              filePath: widget.track.uri,
+              trackId: widget.track.id,
+            );
+          },
+          child: AnimatedScale(
+            scale: targetScale,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutQuad,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 100),
+              curve: Curves.easeOutQuad,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: targetRadius,
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: ListTile(
+                    leading: _ArtworkLeading(
+                      trackId: widget.track.id,
+                      isPlaying: isNowPlaying,
                     ),
+                    title: Text(
+                      widget.track.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: isNowPlaying
+                          ? TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
+                            )
+                          : null,
+                    ),
+                    subtitle: Text(
+                      '${widget.track.artist} · $_formattedDuration',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: IconButton(
+                      icon: Icon(
+                        FlutterRemix.more_2_fill,
+                        color:
+                            Theme.of(context).colorScheme.onSurfaceVariant,
+                        size: 20,
+                      ),
+                      onPressed: () => _showTrackMenu(context),
+                    ),
+                    visualDensity: VisualDensity.compact,
                   ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
-        movementDuration: const Duration(milliseconds: 50),
-        dismissThresholds: const {
-          DismissDirection.startToEnd: 0.45,
-          DismissDirection.endToStart: 0.45,
-        },
-        resizeDuration: const Duration(milliseconds: 50),
-        child: Selector<CurrentMusicProvider, Track?>(
-          selector: (_, p) => p.currentTrack,
-          builder: (context, currentlyPlaying, child) {
-            final isNowPlaying =
-                currentlyPlaying != null &&
-                currentlyPlaying.id == widget.track.id;
+        );
+      },
+    );
 
-            return GestureDetector(
-              onTapDown: (_) => _setPressed(true),
-              onTapUp: (_) => _setPressed(false),
-              onTapCancel: () => _setPressed(false),
-              onTap:
-                  widget.onPressed ??
-                  () {
-                    FocusScope.of(context).requestFocus(FocusNode());
-                    final currentMusic = context.read<CurrentMusicProvider>();
-                    Playlist? pl;
-                    if (widget.playlistContext != null) {
-                      pl = Playlist(
-                        id: 'queue_${DateTime.now().millisecondsSinceEpoch}',
-                        name: 'Queue',
-                        tracks: widget.playlistContext!,
-                        createdAt: DateTime.now(),
-                      );
-                    }
-                    currentMusic.playTrack(widget.track, playlist: pl);
-                  },
-              onLongPress: () {
-                if (context.read<SettingsProvider>().enableHaptics) {
-                  HapticFeedback.mediumImpact();
-                }
-                TrackInfoDialog.show(
-                  context,
-                  title: widget.track.title,
-                  artist: widget.track.artist,
-                  album: widget.track.album,
-                  duration: _formattedDuration,
-                  size: widget.track.size.formatBytes(),
-                  filePath: widget.track.uri,
-                  trackId: widget.track.id,
-                );
-              },
-              child: AnimatedScale(
-                scale: targetScale,
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOutQuad,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 100),
-                  curve: Curves.easeOutQuad,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    borderRadius: targetRadius,
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: ListTile(
-                        leading: _ArtworkLeading(
-                          trackId: widget.track.id,
-                          isPlaying: isNowPlaying,
-                        ),
-                        title: Text(
-                          widget.track.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: isNowPlaying
-                              ? TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.primary,
-                                )
-                              : null,
-                        ),
-                        subtitle: Text(
-                          '${widget.track.artist} · $_formattedDuration',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        trailing: IconButton(
-                          icon: Icon(
-                            FlutterRemix.more_2_fill,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
-                            size: 20,
-                          ),
-                          onPressed: () => _showTrackMenu(context),
-                        ),
-                        visualDensity: VisualDensity.compact,
+    if (!showSwipe) {
+      return Padding(
+        padding: EdgeInsets.only(bottom: widget.isLast ? 0.0 : 2.5),
+        child: tileContent,
+      );
+    }
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: widget.isLast ? 0.0 : 2.5),
+      child: Dismissible(
+        key: ValueKey('swipe_${widget.track.id}'),
+        confirmDismiss: (direction) async {
+          final currentMusic = context.read<CurrentMusicProvider>();
+          final bool isPlaying = currentMusic.showMiniPlayer;
+
+          if (isPlaying) {
+            final result = currentMusic.queueNext(widget.track);
+            _handleQueueAction(context, result, 'next');
+          } else {
+            currentMusic.playTrack(widget.track);
+          }
+          return false;
+        },
+        direction: DismissDirection.startToEnd,
+        background: Consumer<CurrentMusicProvider>(
+          builder: (context, music, _) {
+            final bool isPlaying = music.showMiniPlayer;
+            final colorScheme = Theme.of(context).colorScheme;
+
+            return Container(
+              color: isPlaying
+                  ? colorScheme.primaryContainer
+                  : colorScheme.tertiaryContainer,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isPlaying
+                            ? FlutterRemix.skip_forward_fill
+                            : FlutterRemix.play_fill,
+                        color: isPlaying
+                            ? colorScheme.onPrimaryContainer
+                            : colorScheme.onTertiaryContainer,
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      Text(
+                        isPlaying ? 'Play Next' : 'Play Now',
+                        style: TextStyle(
+                          color: isPlaying
+                              ? colorScheme.onPrimaryContainer
+                              : colorScheme.onTertiaryContainer,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             );
           },
         ),
+        movementDuration: const Duration(milliseconds: 50),
+        dismissThresholds: const {DismissDirection.startToEnd: 0.45},
+        resizeDuration: const Duration(milliseconds: 50),
+        child: tileContent,
       ),
     );
   }

@@ -27,6 +27,7 @@ abstract final class HiveKeys {
   static const String artworkQuality = 'artworkQuality';
   static const String timerGesture = 'timerGesture';
   static const String swipeToChangeTrack = 'swipeToChangeTrack';
+  static const String trackSwipeAction = 'trackSwipeAction';
   static const String snackbarPosition = 'snackbarPosition';
   static const String snackbarSwipeToDismiss = 'snackbarSwipeToDismiss';
   static const String onboarding = 'hasCompletedOnboarding';
