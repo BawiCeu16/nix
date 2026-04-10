@@ -8,6 +8,7 @@ import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 import 'package:nix/ui/widgets/buttons/expressive_button.dart';
 import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
 import 'package:nix/core/utils/nix_icons.dart';
+import '../../../../services/snackbar_service.dart';
 
 class PlaylistDialogs {
   /// Handles both creating a new playlist and renaming an existing one.
@@ -297,19 +298,11 @@ class PlaylistDialogs {
                         await music.addTrackToPlaylist(playlist.id, track);
                     if (context.mounted) {
                       Navigator.of(context, rootNavigator: true).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            success
-                                ? 'Added to ${playlist.name}'
-                                : 'Already in ${playlist.name}',
-                          ),
-                          backgroundColor: success
-                              ? null
-                              : Theme.of(context).colorScheme.error,
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
+                      if (success) {
+                        context.showSuccessSnackBar('Added to ${playlist.name}');
+                      } else {
+                        context.showErrorSnackBar('Already in ${playlist.name}');
+                      }
                     }
                   },
                 ),

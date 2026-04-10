@@ -11,6 +11,7 @@ import 'package:nix/ui/widgets/common/nix_action_row.dart';
 import 'package:nix/ui/widgets/common/nix_page_header.dart';
 import 'package:nix/ui/widgets/dialogs/playlist_dialogs.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
+import '../../../../services/snackbar_service.dart';
 
 import 'package:nix/ui/widgets/common/nix_playlist_cover.dart';
 
@@ -166,12 +167,7 @@ class PlaylistViewPage extends StatelessWidget {
                   ),
                   onDismissed: (_) {
                     music.removeTrackFromPlaylist(pl!.id, track);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Removed "${track.title}"'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
+                    context.showSuccessSnackBar('Removed "${track.title}"');
                   },
                   child: tile,
                 );

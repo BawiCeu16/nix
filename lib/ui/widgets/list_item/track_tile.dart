@@ -16,6 +16,7 @@ import 'package:on_audio_query/on_audio_query.dart';
 import '../common/nix_artwork.dart';
 import '../../screens/music_pages/artists_page.dart';
 import '../../screens/music_pages/albums_page.dart';
+import '../../../../services/snackbar_service.dart';
 
 class TrackTile extends StatefulWidget {
   final Track track;
@@ -71,13 +72,11 @@ class _TrackTileState extends State<TrackTile> {
         break;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    if (result == QueueResult.success) {
+      context.showSuccessSnackBar(message);
+    } else {
+      context.showErrorSnackBar(message);
+    }
   }
 
   void _showTrackMenu(BuildContext context) {

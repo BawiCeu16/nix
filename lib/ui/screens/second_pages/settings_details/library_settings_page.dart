@@ -9,6 +9,7 @@ import '../../../widgets/dialogs/nix_dialog.dart';
 import '../../../widgets/buttons/expressive_button.dart';
 import '../../../widgets/buttons/expressive_tone_button.dart';
 import '../../../widgets/common/nix_bottom_spacer.dart';
+import '../../../../services/snackbar_service.dart';
 
 class LibrarySettingsPage extends StatelessWidget {
   const LibrarySettingsPage({super.key});
@@ -47,15 +48,10 @@ class LibrarySettingsPage extends StatelessWidget {
             icon: FlutterRemix.refresh_line,
             isLast: true,
             onTap: () async {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Scanning library...')),
-              );
+              context.showInfoSnackBar('Scanning library...');
               await music.scanDevice();
               if (context.mounted) {
-                ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Library scan complete!')),
-                );
+                context.showSuccessSnackBar('Library scan complete!');
               }
             },
           ),
@@ -195,15 +191,10 @@ class LibrarySettingsPage extends StatelessWidget {
           isFirst: true,
           onTap: () async {
             Navigator.of(context, rootNavigator: true).pop();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Resetting library...')),
-            );
+            context.showInfoSnackBar('Resetting library...');
             await music.resetLibrary();
             if (context.mounted) {
-              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Library has been reset.')),
-              );
+              context.showSuccessSnackBar('Library has been reset.');
             }
           },
         ),

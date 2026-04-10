@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../widgets/list_item/card_list_tile.dart';
 import '../../../widgets/common/nix_section_header.dart';
 import '../../../widgets/common/nix_bottom_spacer.dart';
+import '../../../../services/snackbar_service.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -171,9 +172,7 @@ class AboutPage extends StatelessWidget {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Settings have been reset.')),
-              );
+              context.showSuccessSnackBar('Settings have been reset.');
             },
             child: const Text('RESET'),
           ),
@@ -190,9 +189,7 @@ class AboutPage extends StatelessWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error opening link: $url')));
+        context.showErrorSnackBar('Error opening link: $url');
       }
     }
   }

@@ -6,12 +6,11 @@ import 'package:nix/models/settings/timer_gesture.dart';
 
 enum AccentColorMode { dynamic, device, custom }
 
-enum ArtworkShape {
-  rounded,
-  circle,
-}
+enum ArtworkShape { rounded, circle }
 
 enum NavbarStyle { floating, standard }
+
+enum SnackBarPosition { top, bottom }
 
 /// Manages app-wide settings like theme, accent color, and playback behaviors.
 /// Settings are persisted to the Hive.
@@ -204,6 +203,34 @@ class SettingsProvider with ChangeNotifier {
 
   void setSwipeToChangeTrack(bool value) {
     _box.put(HiveKeys.swipeToChangeTrack, value);
+    notifyListeners();
+  }
+
+  // Appearance - SnackBar Position
+  /// The global position for all snackbars.
+  SnackBarPosition get snackbarPosition {
+    final String position = _box.get(
+      HiveKeys.snackbarPosition,
+      defaultValue: 'bottom',
+    );
+    return SnackBarPosition.values.firstWhere(
+      (e) => e.name == position,
+      orElse: () => SnackBarPosition.bottom,
+    );
+  }
+
+  void setSnackbarPosition(SnackBarPosition position) {
+    _box.put(HiveKeys.snackbarPosition, position.name);
+    notifyListeners();
+  }
+
+  // Appearance - SnackBar Dismissible
+  /// Whether snackbars can be swiped away by the user.
+  bool get snackbarSwipeToDismiss =>
+      _box.get(HiveKeys.snackbarSwipeToDismiss, defaultValue: true);
+
+  void setSnackbarSwipeToDismiss(bool value) {
+    _box.put(HiveKeys.snackbarSwipeToDismiss, value);
     notifyListeners();
   }
 
