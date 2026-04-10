@@ -438,14 +438,15 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
         return QueueResult.success;
       }
 
+      // GLOBAL Duplicate check
+      if (_currentPlaylist!.tracks.any((t) => t.id == track.id)) {
+        return QueueResult.duplicate;
+      }
+
       final currentIndex = _currentTrack != null
           ? _currentPlaylist!.tracks.indexOf(_currentTrack!)
           : -1;
       final nextIndex = currentIndex + 1;
-      if (nextIndex < _currentPlaylist!.tracks.length &&
-          _currentPlaylist!.tracks[nextIndex].id == track.id) {
-        return QueueResult.duplicate;
-      }
 
       _currentPlaylist!.tracks.insert(nextIndex, track);
       notifyListeners();
@@ -464,8 +465,8 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
         return QueueResult.success;
       }
 
-      if (_currentPlaylist!.tracks.isNotEmpty &&
-          _currentPlaylist!.tracks.last.id == track.id) {
+      // GLOBAL Duplicate check
+      if (_currentPlaylist!.tracks.any((t) => t.id == track.id)) {
         return QueueResult.duplicate;
       }
 
@@ -475,6 +476,21 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
     } catch (e) {
       debugPrint('Error in appendToQueue: $e');
       return QueueResult.error;
+    }
+  }
+
+  /// Moves an existing track in the queue to the 'Play Next' position.
+  void moveTrackToPlayNext(Track track) {
+    if (_currentPlaylist == null) return;
+    
+    final index = _currentPlaylist!.tracks.indexWhere((t) => t.id == track.id);
+    if (index != -1) {
+      final t = _currentPlaylist!.tracks.removeAt(index);
+      final currentIndex = _currentTrack != null
+          ? _currentPlaylist!.tracks.indexOf(_currentTrack!)
+          : -1;
+      _currentPlaylist!.tracks.insert(currentIndex + 1, t);
+      notifyListeners();
     }
   }
 

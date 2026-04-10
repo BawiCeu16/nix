@@ -31,13 +31,18 @@ class AppearanceSettingsPage extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         physics: const BouncingScrollPhysics(),
         children: [
-          const NixSectionHeader(title: 'Theme Mode', topPadding: 16),
+          const NixSectionHeader(title: 'Theme & Colors', topPadding: 16),
           Card(
             elevation: 0,
             margin: EdgeInsets.zero,
             color: colorScheme.surface,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(100),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(10),
+                topRight: Radius.circular(10),
+                bottomLeft: Radius.circular(5),
+                bottomRight: Radius.circular(5),
+              ),
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
@@ -62,13 +67,23 @@ class AppearanceSettingsPage extends StatelessWidget {
               ),
             ),
           ),
-
-          const NixSectionHeader(title: 'Color System', topPadding: 24),
+          const SizedBox(height: 2.5),
+          CardListTile(
+            title: 'AMOLED Mode',
+            subtitle: 'Pure black for OLED screens',
+            icon: FlutterRemix.moon_clear_line,
+            trailing: Switch(
+              value: settingsParams.useAmoledMode,
+              onChanged: (v) => settingsParams.setUseAmoledMode(v),
+            ),
+            onTap: () =>
+                settingsParams.setUseAmoledMode(!settingsParams.useAmoledMode),
+          ),
+          const SizedBox(height: 2.5),
           CardListTile(
             title: 'Accent Color Mode',
             subtitle: settingsParams.accentColorMode.name.toUpperCase(),
             icon: FlutterRemix.palette_line,
-            isFirst: true,
             isLast: settingsParams.accentColorMode != AccentColorMode.custom,
             onTap: () => _showAccentModeDialog(context, settingsParams),
           ),
@@ -79,23 +94,12 @@ class AppearanceSettingsPage extends StatelessWidget {
           ],
 
           const NixSectionHeader(title: 'Artwork & Visuals', topPadding: 24),
-          CardListTile(
-            title: 'AMOLED Mode',
-            subtitle: 'Pure black for OLED screens',
-            icon: FlutterRemix.moon_clear_line,
-            trailing: Switch(
-              value: settingsParams.useAmoledMode,
-              onChanged: (v) => settingsParams.setUseAmoledMode(v),
-            ),
-            isFirst: true,
-            onTap: () =>
-                settingsParams.setUseAmoledMode(!settingsParams.useAmoledMode),
-          ),
-          const SizedBox(height: 2.5),
+
           CardListTile(
             title: 'Artwork Shape',
             subtitle: settingsParams.artworkShape.name.toUpperCase(),
             icon: FlutterRemix.shape_2_line,
+            isFirst: true,
             onTap: () => _showShapeDialog(context, settingsParams),
           ),
           const SizedBox(height: 2.5),

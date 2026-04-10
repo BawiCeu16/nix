@@ -28,10 +28,7 @@ class SettingsPage extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         physics: const BouncingScrollPhysics(),
         children: [
-          const NixSectionHeader(
-            title: 'Personalization Settings',
-            topPadding: 12,
-          ),
+          const NixSectionHeader(title: 'General Settings', topPadding: 12),
           CardListTile(
             title: 'Appearance',
             subtitle: 'Theme, accent colors, and styling',

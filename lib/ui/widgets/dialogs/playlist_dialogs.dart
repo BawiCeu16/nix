@@ -100,6 +100,7 @@ class PlaylistDialogs {
                   height: 40,
                   child: ListView(
                     scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
                     children: [
                       _buildColorOption(
                         context,
@@ -120,7 +121,8 @@ class PlaylistDialogs {
                           context,
                           colorVal,
                           selectedColor,
-                          (color) => setDialogState(() => selectedColor = color),
+                          (color) =>
+                              setDialogState(() => selectedColor = color),
                         ),
                       ),
                     ],
@@ -191,7 +193,9 @@ class PlaylistDialogs {
         height: 44,
         margin: const EdgeInsets.only(right: 8),
         decoration: BoxDecoration(
-          color: isSelected ? colorScheme.primary : colorScheme.surfaceContainer,
+          color: isSelected
+              ? colorScheme.primary
+              : colorScheme.surfaceContainer,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(
@@ -294,14 +298,20 @@ class PlaylistDialogs {
                   isFirst: isFirst,
                   isLast: isLast,
                   onTap: () async {
-                    final success =
-                        await music.addTrackToPlaylist(playlist.id, track);
+                    final success = await music.addTrackToPlaylist(
+                      playlist.id,
+                      track,
+                    );
                     if (context.mounted) {
                       Navigator.of(context, rootNavigator: true).pop();
                       if (success) {
-                        context.showSuccessSnackBar('Added to ${playlist.name}');
+                        context.showSuccessSnackBar(
+                          'Added to ${playlist.name}',
+                        );
                       } else {
-                        context.showErrorSnackBar('Already in ${playlist.name}');
+                        context.showErrorSnackBar(
+                          'Already in ${playlist.name}',
+                        );
                       }
                     }
                   },

@@ -57,25 +57,43 @@ class _TrackTileState extends State<TrackTile> {
     String actionType,
   ) {
     if (!context.mounted) return;
+    final currentMusic = context.read<CurrentMusicProvider>();
     String message = '';
+
     switch (result) {
       case QueueResult.success:
         message = actionType == 'next'
             ? '"${widget.track.title}" will play next'
             : 'Added "${widget.track.title}" to queue';
+        context.showSuccessSnackBar(message);
         break;
       case QueueResult.duplicate:
-        message = '"${widget.track.title}" is already in the queue';
+        message =
+            '"${widget.track.title}" is already in queue. Want to move it after this track?';
+        context.showInfoSnackBar(
+          message,
+          trailing: TextButton(
+            onPressed: () {
+              currentMusic.moveTrackToPlayNext(widget.track);
+              context.showSuccessSnackBar(
+                'Moved "${widget.track.title}" to Play Next',
+              );
+            },
+            child: Text(
+              'MOVE',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        );
         break;
       case QueueResult.error:
         message = 'Failed to update queue';
+        context.showErrorSnackBar(message);
         break;
-    }
-
-    if (result == QueueResult.success) {
-      context.showSuccessSnackBar(message);
-    } else {
-      context.showErrorSnackBar(message);
     }
   }
 
@@ -83,6 +101,7 @@ class _TrackTileState extends State<TrackTile> {
     final music = context.read<MusicProvider>();
     final currentMusic = context.read<CurrentMusicProvider>();
     final isFav = music.isFavorite(widget.track);
+    final bool isPlaying = currentMusic.showMiniPlayer;
 
     NixDialog.show(
       context: context,
@@ -100,13 +119,21 @@ class _TrackTileState extends State<TrackTile> {
           },
         ),
         const SizedBox(height: 2.5),
+        // Dynamic Play Now / Play Next Action
         CardListTile(
-          title: "Play Next",
-          icon: FlutterRemix.skip_forward_fill,
+          title: isPlaying ? "Play Next" : "Play Now",
+          icon: isPlaying
+              ? FlutterRemix.skip_forward_fill
+              : FlutterRemix.play_fill,
           onTap: () {
-            final result = currentMusic.queueNext(widget.track);
-            Navigator.of(context, rootNavigator: true).pop();
-            _handleQueueAction(context, result, 'next');
+            if (isPlaying) {
+              final result = currentMusic.queueNext(widget.track);
+              Navigator.of(context, rootNavigator: true).pop();
+              _handleQueueAction(context, result, 'next');
+            } else {
+              currentMusic.playTrack(widget.track);
+              Navigator.of(context, rootNavigator: true).pop();
+            }
           },
         ),
         const SizedBox(height: 2.5),
@@ -278,8 +305,7 @@ class _TrackTileState extends State<TrackTile> {
                     trailing: IconButton(
                       icon: Icon(
                         FlutterRemix.more_2_fill,
-                        color:
-                            Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         size: 20,
                       ),
                       onPressed: () => _showTrackMenu(context),
@@ -377,7 +403,6 @@ class _ArtworkLeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return SizedBox(
       width: 48,
       height: 48,
