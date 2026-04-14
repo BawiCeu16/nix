@@ -8,6 +8,7 @@ import 'package:nix/providers/settings_provider.dart';
 import 'package:nix/models/settings/timer_gesture.dart';
 import 'package:nix/ui/widgets/dialogs/sleep_timer_dialog.dart';
 import 'package:nix/ui/widgets/common/nix_artwork.dart';
+import 'package:nix/ui/widgets/common/nix_up_next_indicator.dart';
 import '../../../core/format.dart';
 import '../../../core/math_utils.dart';
 import '../models/animation_data.dart';
@@ -128,7 +129,7 @@ class TrackImage extends StatelessWidget {
                             builder: (context, timer, _) {
                               if (!timer.isActive) return const SizedBox();
                               final opacity =
-                                  (data.bounceClampedProgress -
+                                  (data.opacity -
                                           data.queueClampedProgress)
                                       .clamp(0.0, 1.0);
                               if (opacity == 0) return const SizedBox();
@@ -184,6 +185,8 @@ class TrackImage extends StatelessWidget {
                               );
                             },
                           ),
+                          // Up Next Indicator
+                          NixUpNextIndicator(data: data),
                         ],
                       ),
                     ),

@@ -134,6 +134,26 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Up Next Indicator
+  /// Whether to show the Up Next indicator near the end of a track.
+  bool get upNextIndicator =>
+      _box.get(HiveKeys.upNextIndicator, defaultValue: true);
+
+  void setUpNextIndicator(bool value) {
+    _box.put(HiveKeys.upNextIndicator, value);
+    notifyListeners();
+  }
+
+  // Up Next Indicator Time
+  /// Time in seconds before track end to show the indicator.
+  int get upNextIndicatorTime =>
+      _box.get(HiveKeys.upNextIndicatorTime, defaultValue: 20);
+
+  void setUpNextIndicatorTime(int seconds) {
+    _box.put(HiveKeys.upNextIndicatorTime, seconds);
+    notifyListeners();
+  }
+
   // Appearance - AMOLED Mode
   /// Whether to use pure black (#000000) for dark mode.
   bool get useAmoledMode =>
@@ -323,6 +343,13 @@ class SettingsProvider with ChangeNotifier {
 
   void clearSearchHistory() {
     _box.put(HiveKeys.searchHistory, []);
+    notifyListeners();
+  }
+
+  /// Resets ALL settings to their factory defaults by clearing the Hive box.
+  /// Each getter's `defaultValue` will take effect on the next read.
+  void resetToDefaults() {
+    _box.clear();
     notifyListeners();
   }
 }

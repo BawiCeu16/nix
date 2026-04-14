@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
+import 'package:nix/providers/settings_provider.dart';
+import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../widgets/list_item/card_list_tile.dart';
 import '../../../widgets/common/nix_section_header.dart';
@@ -102,10 +105,7 @@ class _AboutPageState extends State<AboutPage> {
           CardListTile(
             title: 'Bawiceu',
             subtitle: 'Developer & Designer',
-            leading: const CircleAvatar(
-              radius: 20,
-              backgroundImage: AssetImage('assets/logo.png'),
-            ),
+            leading: Icon(FlutterRemix.user_4_line),
             isFirst: true,
             isLast: true,
             onTap: () =>
@@ -164,27 +164,25 @@ class _AboutPageState extends State<AboutPage> {
   }
 
   void _showResetDialog(BuildContext context) {
-    showDialog(
+    final settings = context.read<SettingsProvider>();
+    NixDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Reset Settings?'),
-        content: const Text(
-          'This will revert all settings to their default values. This action cannot be undone.',
+      title: 'Reset to Defaults',
+      subtitle: 'This will restore all settings.',
+      children: [
+        CardListTile(
+          title: 'Reset Everything',
+          subtitle:
+              'All appearance, playback, and library settings will return to their defaults.',
+          icon: FlutterRemix.restart_line,
+          isFirst: true,
+          isLast: true,
+          onTap: () {
+            settings.resetToDefaults();
+            Navigator.of(context, rootNavigator: true).pop();
+          },
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('CANCEL'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              context.showSuccessSnackBar('Settings have been reset.');
-            },
-            child: const Text('RESET'),
-          ),
-        ],
-      ),
+      ],
     );
   }
 

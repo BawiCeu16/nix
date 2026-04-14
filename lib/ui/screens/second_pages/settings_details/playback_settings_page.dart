@@ -5,6 +5,7 @@ import 'package:nix/providers/settings_provider.dart';
 import '../../../widgets/list_item/card_list_tile.dart';
 import '../../../widgets/common/nix_section_header.dart';
 import '../../../widgets/common/nix_bottom_spacer.dart';
+import '../../../widgets/common/nix_slider.dart';
 
 class PlaybackSettingsPage extends StatelessWidget {
   const PlaybackSettingsPage({super.key});
@@ -67,6 +68,81 @@ class PlaybackSettingsPage extends StatelessWidget {
           ),
 
           const NixSectionHeader(title: 'Player Experience', topPadding: 32),
+          NixCardExpansionTile(
+            title: 'Up Next Indicator',
+            subtitle: 'Show the upcoming track before the current one ends',
+            icon: FlutterRemix.skip_forward_mini_line,
+            isFirst: true,
+            initiallyExpanded: settings.upNextIndicator,
+            showExpansionIcon: settings.upNextIndicator,
+            trailing: Switch(
+              value: settings.upNextIndicator,
+              onChanged: (value) => settings.setUpNextIndicator(value),
+            ),
+            children: [
+              if (settings.upNextIndicator) ...[
+                const SizedBox(height: 2.5),
+                Card(
+                  elevation: 0,
+                  margin: EdgeInsets.zero,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(5),
+                      topRight: Radius.circular(5),
+                      bottomLeft: Radius.circular(5),
+                      bottomRight: Radius.circular(5),
+                    ),
+                  ),
+                  color: Theme.of(context).colorScheme.surface,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'UPNext Show Time',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 13,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                FlutterRemix.refresh_line,
+                                size: 18,
+                              ),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              tooltip: 'Reset to default',
+                              onPressed: () =>
+                                  settings.setUpNextIndicatorTime(20),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        NixSlider(
+                          value: settings.upNextIndicatorTime.toDouble(),
+                          min: 5,
+                          max: 60,
+                          divisions: 11,
+                          label: '${settings.upNextIndicatorTime}s',
+                          onChanged: (val) =>
+                              settings.setUpNextIndicatorTime(val.toInt()),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 2.5),
           CardListTile(
             title: 'Swipe Down to Dismiss',
             subtitle: 'Allow closing the player by swiping down fully',
@@ -75,7 +151,7 @@ class PlaybackSettingsPage extends StatelessWidget {
               value: settings.swipeToDismiss,
               onChanged: (value) => settings.setSwipeToDismiss(value),
             ),
-            isFirst: true,
+            isFirst: false,
             onTap: () => settings.setSwipeToDismiss(!settings.swipeToDismiss),
           ),
           const SizedBox(height: 2.5),

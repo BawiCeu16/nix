@@ -74,6 +74,29 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   AudioLoadingState get audioLoading => _audioLoadingState;
   Color? get dynamicSeedColor => _dynamicSeedColor;
 
+  /// Returns the track that is scheduled to play next.
+  Track? get nextTrack {
+    if (_currentPlaylist == null || _currentTrack == null) return null;
+
+    final tracks = _currentPlaylist!.tracks;
+    final currentIndex = tracks.indexWhere((t) => t.id == _currentTrack!.id);
+
+    // 1. Check for next track in playlist
+    if (currentIndex != -1 && currentIndex < tracks.length - 1) {
+      return tracks[currentIndex + 1];
+    }
+
+    // 2. Check for Repeat
+    if (_isRepeatEnabled && tracks.isNotEmpty) {
+      return tracks[0];
+    }
+
+    // 3. Auto-play logic (simplified, as we don't want to trigger Random repeatedly in a getter)
+    // For now, we return null if no explicit next track or repeat, or we could return a placeholder.
+    // However, if autoPlay is on, we know SOME track will play.
+    return null;
+  }
+
   /// Returns true if a track is loaded and the MiniPlayer should be visible.
   bool get showMiniPlayer => _currentTrack != null;
 

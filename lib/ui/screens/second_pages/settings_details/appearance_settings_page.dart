@@ -97,7 +97,7 @@ class AppearanceSettingsPage extends StatelessWidget {
           const NixSectionHeader(title: 'Artwork & Visuals', topPadding: 24),
           NixCardExpansionTile(
             title: 'Y2k(cd) style album art',
-            icon: FlutterRemix.disc_line,
+            icon: FlutterRemix.album_line,
             isFirst: true,
             showExpansionIcon: settingsParams.useCdArtworkStyle,
             initiallyExpanded: settingsParams.useCdArtworkStyle,
@@ -138,6 +138,8 @@ class AppearanceSettingsPage extends StatelessWidget {
                     margin: EdgeInsets.zero,
                     shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(5),
+                        topRight: Radius.circular(5),
                         bottomLeft: Radius.circular(5),
                         bottomRight: Radius.circular(5),
                       ),
@@ -146,7 +148,7 @@ class AppearanceSettingsPage extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
-                        vertical: 12,
+                        vertical: 8,
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
