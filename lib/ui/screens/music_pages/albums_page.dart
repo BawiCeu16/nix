@@ -13,6 +13,9 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:nix/ui/widgets/common/nix_refreshable_list.dart';
 import 'package:nix/ui/widgets/common/nix_artwork.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
+import 'package:nix/ui/widgets/styles/cd_widget.dart';
+import 'package:nix/models/settings/artwork_quality.dart';
+import 'package:nix/providers/settings_provider.dart';
 
 enum _AlbumSort { defaultOrder, aToZ, zToA }
 
@@ -29,6 +32,7 @@ class _AlbumsPageState extends State<AlbumsPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final settings = context.watch<SettingsProvider>();
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainer,
@@ -115,12 +119,47 @@ class _AlbumsPageState extends State<AlbumsPage> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Expanded(
-                          child: NixArtwork(
-                            id: firstTrackId ?? 0,
-                            type: ArtworkType.AUDIO,
-                            fit: BoxFit.cover,
-                            width: 140,
-                            height: 140,
+                          child: LayoutBuilder(
+                            builder: (context, constraints) => Hero(
+                              tag: 'album_cd_${album.title}',
+                              child: settings.useCdArtworkStyle
+                                  ? NixCustomizableCDWidget(
+                                      size: constraints.maxWidth,
+                                      state: CDCoverState.closed,
+                                      splitWhenHalfOpen:
+                                          settings.splitCdWhenHalfOpen,
+                                      seedId: album.title,
+                                      coverImage: Stack(
+                                        fit: StackFit.expand,
+                                        children: [
+                                          NixArtwork(
+                                            id: firstTrackId ?? 0,
+                                            type: ArtworkType.AUDIO,
+                                            fit: BoxFit.cover,
+                                          ),
+                                          Transform.scale(
+                                            scale: 1.15,
+                                            child: Image.asset(
+                                              'assets/cd_effects/cd_cover.png',
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      discImage: NixArtwork(
+                                        id: firstTrackId ?? 0,
+                                        type: ArtworkType.AUDIO,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    )
+                                  : NixArtwork(
+                                      id: firstTrackId ?? 0,
+                                      type: ArtworkType.AUDIO,
+                                      fit: BoxFit.cover,
+                                      width: constraints.maxWidth,
+                                      height: constraints.maxWidth,
+                                    ),
+                            ),
                           ),
                         ),
                         Padding(
@@ -161,7 +200,7 @@ class _AlbumsPageState extends State<AlbumsPage> {
   }
 }
 
-class AlbumTracksPage extends StatelessWidget {
+class AlbumTracksPage extends StatefulWidget {
   final String albumTitle;
   final String albumArtist;
 
@@ -172,20 +211,45 @@ class AlbumTracksPage extends StatelessWidget {
   });
 
   @override
+  State<AlbumTracksPage> createState() => _AlbumTracksPageState();
+}
+
+class _AlbumTracksPageState extends State<AlbumTracksPage> {
+  CDCoverState _cdState = CDCoverState.closed;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (mounted) {
+        setState(() {
+          _cdState = CDCoverState.halfOpen;
+        });
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final settings = context.watch<SettingsProvider>();
+    final currentMusic = context.watch<CurrentMusicProvider>();
+    final isSpinning =
+        settings.rotateCdWhenPlaying &&
+        currentMusic.isPlaying &&
+        currentMusic.currentTrack?.album == widget.albumTitle;
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainer,
       appBar: AppBar(
-        title: Text(albumTitle),
+        title: Text(widget.albumTitle),
         backgroundColor: colorScheme.surfaceContainer,
         scrolledUnderElevation: 0,
         centerTitle: true,
       ),
       body: Consumer<MusicProvider>(
         builder: (context, music, child) {
-          final tracks = music.getTracksByAlbum(albumTitle);
+          final tracks = music.getTracksByAlbum(widget.albumTitle);
           final firstTrackId = tracks.isNotEmpty ? tracks.first.id : null;
 
           return NixRefreshableList(
@@ -204,9 +268,54 @@ class AlbumTracksPage extends StatelessWidget {
               itemBuilder: (context, index) {
                 if (index == 0) {
                   return NixPageHeader(
-                    title: albumTitle,
-                    subtitle: "$albumArtist • ${tracks.length} Tracks",
+                    title: widget.albumTitle,
+                    subtitle: "${widget.albumArtist} • ${tracks.length} Tracks",
                     trackId: firstTrackId,
+                    customArtwork: Hero(
+                      tag: 'album_cd_${widget.albumTitle}',
+                      child: settings.useCdArtworkStyle
+                          ? NixCustomizableCDWidget(
+                              size: 250,
+                              splitWhenHalfOpen: settings.splitCdWhenHalfOpen,
+                              isSpinning: isSpinning,
+                              resetRotation: currentMusic.currentTrack == null,
+                              rotateSpeed: settings.cdRotationSpeed,
+                              state: _cdState,
+                              seedId: widget.albumTitle,
+                              coverImage: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  NixArtwork(
+                                    id: firstTrackId ?? 0,
+                                    type: ArtworkType.AUDIO,
+                                    fit: BoxFit.cover,
+                                    quality: NixArtworkQuality.high,
+                                  ),
+                                  Transform.scale(
+                                    scale: 1.15,
+                                    child: Image.asset(
+                                      'assets/cd_effects/cd_cover.png',
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              discImage: NixArtwork(
+                                id: firstTrackId ?? 0,
+                                type: ArtworkType.AUDIO,
+                                fit: BoxFit.cover,
+                                quality: NixArtworkQuality.high,
+                              ),
+                            )
+                          : NixArtwork(
+                              id: firstTrackId ?? 0,
+                              type: ArtworkType.AUDIO,
+                              fit: BoxFit.cover,
+                              width: 300,
+                              height: 300,
+                              quality: NixArtworkQuality.high,
+                            ),
+                    ),
                     fallbackIcon: FlutterRemix.disc_line,
                     actionRow: NixActionRow(
                       onShuffle: () {

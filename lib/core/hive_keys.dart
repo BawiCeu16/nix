@@ -25,6 +25,10 @@ abstract final class HiveKeys {
   static const String useAmoledMode = 'useAmoledMode';
   static const String artworkShape = 'artworkShape';
   static const String artworkQuality = 'artworkQuality';
+  static const String useCdArtworkStyle = 'useCdArtworkStyle';
+  static const String splitCdWhenHalfOpen = 'splitCdWhenHalfOpen';
+  static const String rotateCdWhenPlaying = 'rotateCdWhenPlaying';
+  static const String cdRotationSpeed = 'cdRotationSpeed';
   static const String timerGesture = 'timerGesture';
   static const String swipeToChangeTrack = 'swipeToChangeTrack';
   static const String trackSwipeAction = 'trackSwipeAction';

@@ -180,6 +180,46 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Appearance - CD Artwork Style
+  /// Whether to display albums using a realistic CD jewel case widget
+  bool get useCdArtworkStyle =>
+      _box.get(HiveKeys.useCdArtworkStyle, defaultValue: true);
+
+  void setUseCdArtworkStyle(bool value) {
+    _box.put(HiveKeys.useCdArtworkStyle, value);
+    notifyListeners();
+  }
+
+  // Appearance - Split CD when Half Open
+  /// Whether the CD cover and disc split evenly from the center horizontally
+  bool get splitCdWhenHalfOpen =>
+      _box.get(HiveKeys.splitCdWhenHalfOpen, defaultValue: true);
+
+  void setSplitCdWhenHalfOpen(bool value) {
+    _box.put(HiveKeys.splitCdWhenHalfOpen, value);
+    notifyListeners();
+  }
+
+  // Appearance - Rotate CD when Playing
+  /// Whether the CD disc rotates physically when a track from the album is playing
+  bool get rotateCdWhenPlaying =>
+      _box.get(HiveKeys.rotateCdWhenPlaying, defaultValue: true);
+
+  void setRotateCdWhenPlaying(bool value) {
+    _box.put(HiveKeys.rotateCdWhenPlaying, value);
+    notifyListeners();
+  }
+
+  // Appearance - CD Rotation Speed
+  /// The local multiplier for the continuous rotation of active CD artworks
+  double get cdRotationSpeed =>
+      (_box.get(HiveKeys.cdRotationSpeed) as num?)?.toDouble() ?? 20.0;
+
+  void setCdRotationSpeed(double speed) {
+    _box.put(HiveKeys.cdRotationSpeed, speed);
+    notifyListeners();
+  }
+
   // Appearance - Timer Gesture
   /// The interaction type for the floating sleep timer indicator.
   TimerGesture get timerGesture {

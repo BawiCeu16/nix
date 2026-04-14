@@ -9,6 +9,7 @@ import 'package:nix/models/settings/timer_gesture.dart';
 import 'package:nix/ui/widgets/list_item/nix_choice_chip.dart';
 import 'package:nix/ui/widgets/common/nix_section_header.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
+import 'package:nix/ui/widgets/common/nix_slider.dart';
 
 class AppearanceSettingsPage extends StatelessWidget {
   const AppearanceSettingsPage({super.key});
@@ -94,12 +95,131 @@ class AppearanceSettingsPage extends StatelessWidget {
           ],
 
           const NixSectionHeader(title: 'Artwork & Visuals', topPadding: 24),
+          NixCardExpansionTile(
+            title: 'Y2k(cd) style album art',
+            icon: FlutterRemix.disc_line,
+            isFirst: true,
+            showExpansionIcon: settingsParams.useCdArtworkStyle,
+            initiallyExpanded: settingsParams.useCdArtworkStyle,
+            trailing: Switch(
+              value: settingsParams.useCdArtworkStyle,
+              onChanged: (v) => settingsParams.setUseCdArtworkStyle(v),
+            ),
+            children: [
+              if (settingsParams.useCdArtworkStyle) ...[
+                const SizedBox(height: 2.5),
+                CardListTile(
+                  title: 'Split CD Horizontally',
+                  icon: FlutterRemix.split_cells_horizontal,
+                  trailing: Switch(
+                    value: settingsParams.splitCdWhenHalfOpen,
+                    onChanged: (v) => settingsParams.setSplitCdWhenHalfOpen(v),
+                  ),
+                  onTap: () => settingsParams.setSplitCdWhenHalfOpen(
+                    !settingsParams.splitCdWhenHalfOpen,
+                  ),
+                ),
+                const SizedBox(height: 2.5),
+                CardListTile(
+                  title: 'Revolving CD Disc',
+                  icon: FlutterRemix.disc_line,
+                  trailing: Switch(
+                    value: settingsParams.rotateCdWhenPlaying,
+                    onChanged: (v) => settingsParams.setRotateCdWhenPlaying(v),
+                  ),
+                  onTap: () => settingsParams.setRotateCdWhenPlaying(
+                    !settingsParams.rotateCdWhenPlaying,
+                  ),
+                ),
+                if (settingsParams.rotateCdWhenPlaying) ...[
+                  const SizedBox(height: 2.5),
+                  Card(
+                    elevation: 0,
+                    margin: EdgeInsets.zero,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(5),
+                        bottomRight: Radius.circular(5),
+                      ),
+                    ),
+                    color: Theme.of(context).colorScheme.surface,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Rotation Speed',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(
+                                  FlutterRemix.refresh_line,
+                                  size: 18,
+                                ),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                tooltip: 'Reset to default',
+                                onPressed: () {
+                                  NixDialog.show(
+                                    context: context,
+                                    title: 'Reset Speed',
+                                    subtitle:
+                                        'Reset CD rotation speed to default 20%?',
+                                    children: [
+                                      CardListTile(
+                                        title: 'Reset',
+                                        icon: FlutterRemix.check_line,
+                                        isFirst: true,
+                                        isLast: true,
+                                        onTap: () {
+                                          settingsParams.setCdRotationSpeed(
+                                            20.0,
+                                          );
+                                          Navigator.of(
+                                            context,
+                                            rootNavigator: true,
+                                          ).pop();
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          NixSlider(
+                            value: settingsParams.cdRotationSpeed,
+                            min: 0,
+                            max: 100,
+                            label: '${settingsParams.cdRotationSpeed.toInt()}%',
+                            onChanged: (v) =>
+                                settingsParams.setCdRotationSpeed(v),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ],
+          ),
 
+          const SizedBox(height: 2.5),
           CardListTile(
-            title: 'Artwork Shape',
+            title: 'Artwork Shape(Default)',
             subtitle: settingsParams.artworkShape.name.toUpperCase(),
             icon: FlutterRemix.shape_2_line,
-            isFirst: true,
             onTap: () => _showShapeDialog(context, settingsParams),
           ),
           const SizedBox(height: 2.5),
