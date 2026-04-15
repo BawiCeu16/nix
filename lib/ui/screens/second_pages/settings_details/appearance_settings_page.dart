@@ -262,6 +262,21 @@ class AppearanceSettingsPage extends StatelessWidget {
           ),
           const SizedBox(height: 2.5),
           CardListTile(
+            title: 'Miniplayer Shadow',
+            subtitle: 'Dynamic depth effect for player',
+            icon: FlutterRemix.magic_line,
+
+            trailing: Switch(
+              value: settingsParams.showMiniplayerShadow,
+              onChanged: (v) => settingsParams.setShowMiniplayerShadow(v),
+            ),
+            onTap: () => settingsParams.setShowMiniplayerShadow(
+              !settingsParams.showMiniplayerShadow,
+            ),
+          ),
+          const SizedBox(height: 2.5),
+          CardListTile(
+
             title: 'Swipe to Change Track',
             subtitle: 'Swipe artwork left/right to skip',
             icon: FlutterRemix.arrow_left_right_line,

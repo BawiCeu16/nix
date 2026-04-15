@@ -364,6 +364,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
     final Color onSecondary = Theme.of(
       context,
     ).colorScheme.onSecondaryContainer;
@@ -564,6 +565,33 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                           decoration: BoxDecoration(
                             borderRadius: data.borderRadius,
                             color: Theme.of(context).colorScheme.surface,
+                            boxShadow: settings.showMiniplayerShadow
+                                ? [
+                                    BoxShadow(
+                                      color:
+                                          (Theme.of(context).brightness ==
+                                                      Brightness.dark
+                                                  ? Colors.black.withOpacity(
+                                                      0.2,
+                                                    )
+                                                  : Colors.black.withOpacity(
+                                                      0.08,
+                                                    ))
+                                              .withValues(
+                                                alpha:
+                                                    (Theme.of(
+                                                              context,
+                                                            ).brightness ==
+                                                            Brightness.dark
+                                                        ? 0.2
+                                                        : 0.08) *
+                                                    data.inverseClampedProgress,
+                                              ),
+                                      blurRadius: 15,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ]
+                                : null,
                           ),
                         ),
                       ),

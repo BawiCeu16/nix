@@ -23,8 +23,15 @@ class _ParseOutput {
   final List<Track> tracks;
   final List<Album> albums;
   final List<Artist> artists;
-  const _ParseOutput(this.tracks, this.albums, this.artists);
+  final Map<String, int> albumFirstTrackId;
+  const _ParseOutput(
+    this.tracks,
+    this.albums,
+    this.artists,
+    this.albumFirstTrackId,
+  );
 }
+
 
 /// Top-level function required by [compute] to run on a background isolate.
 _ParseOutput _parseLibraryInIsolate(_ParseInput input) {
@@ -72,15 +79,23 @@ _ParseOutput _parseLibraryInIsolate(_ParseInput input) {
     );
   }).toList();
 
-  return _ParseOutput(tracks, albums, artists);
+  final albumFirstTrackId = <String, int>{};
+  for (final track in tracks) {
+    albumFirstTrackId.putIfAbsent(track.album, () => track.id);
+  }
+
+  return _ParseOutput(tracks, albums, artists, albumFirstTrackId);
 }
+
 
 class MusicProvider extends ChangeNotifier {
   List<Track> _tracks = [];
   final OnAudioQuery _audioQuery = OnAudioQuery();
   List<Album> _albums = [];
   List<Artist> _artists = [];
+  Map<String, int> _albumFirstTrackId = {};
   final List<Playlist> _playlists = [];
+
 
   bool _isLoading = false;
   final bool _hasScanned = false;
@@ -97,16 +112,17 @@ class MusicProvider extends ChangeNotifier {
   List<Track> get tracks => _tracks;
   List<Album> get albums => _albums;
   List<Artist> get artists => _artists;
+  Map<String, int> get albumFirstTrackId => _albumFirstTrackId;
   List<Playlist> get playlists => _playlists;
   DateTime? get lastScanned => _lastScanned;
 
+
   /// Refreshes all cached playlists (recently played, top played, favorites).
-  void refreshCaches() {
-    _recentlyPlayedCache = _calculateRecentlyPlayed();
-    _topPlayedCache = _calculateTopPlayed();
-    _favoritesCache = _calculateFavorites();
+  Future<void> refreshCaches() async {
+    await _rebuildCaches();
     notifyListeners();
   }
+
 
   Playlist get recentlyPlayed =>
       _recentlyPlayedCache ??
@@ -235,10 +251,14 @@ class MusicProvider extends ChangeNotifier {
     List<String>? customFolders,
     CurrentMusicProvider? currentMusic,
   }) async {
-    await Hive.openBox<int>(HiveKeys.favoritesBox);
-    await Hive.openBox<String>(HiveKeys.playlistsBox);
-    await Hive.openBox<int>(HiveKeys.playHistoryBox);
-    await Hive.openBox<int>(HiveKeys.playCountsBox);
+    // Parallelize Hive box openings
+    await Future.wait([
+      Hive.openBox<int>(HiveKeys.favoritesBox),
+      Hive.openBox<String>(HiveKeys.playlistsBox),
+      Hive.openBox<int>(HiveKeys.playHistoryBox),
+      Hive.openBox<int>(HiveKeys.playCountsBox),
+    ]);
+
 
     if (currentMusic != null) {
       _currentMusic = currentMusic;
@@ -246,6 +266,7 @@ class MusicProvider extends ChangeNotifier {
       _playbackSubscription = currentMusic.onTrackPlayedStream.listen((_) {
         refreshCaches();
       });
+
     }
 
     await scanDevice(customFolders: customFolders);
@@ -299,10 +320,14 @@ class MusicProvider extends ChangeNotifier {
           permissionStatus = await _audioQuery.permissionsRequest();
         }
       } else {
-        final audioStatus = await Permission.audio.request();
-        final storageStatus = await Permission.storage.request();
-        permissionStatus = audioStatus.isGranted || storageStatus.isGranted;
+        // Parallelize permission requests
+        final results = await Future.wait([
+          Permission.audio.request(),
+          Permission.storage.request(),
+        ]);
+        permissionStatus = results.any((status) => status.isGranted);
       }
+
 
       if (!permissionStatus) {
         _error = 'Storage permission not granted. Cannot scan music.';
@@ -352,10 +377,16 @@ class MusicProvider extends ChangeNotifier {
       _tracks = parsed.tracks;
       _albums = parsed.albums;
       _artists = parsed.artists;
+      _albumFirstTrackId = parsed.albumFirstTrackId;
 
-      _loadPlaylists();
-      _rebuildCaches();
+
+      // Parallelize playlist loading and cache rebuilding
+      await Future.wait([
+        Future(() => _loadPlaylists()),
+        _rebuildCaches(),
+      ]);
       _lastScanned = DateTime.now();
+
     } catch (e) {
       _error = 'Failed to scan device: $e';
       debugPrint('Error querying MediaStore: $e');
@@ -368,11 +399,17 @@ class MusicProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _rebuildCaches() {
-    _recentlyPlayedCache = _calculateRecentlyPlayed();
-    _topPlayedCache = _calculateTopPlayed();
-    _favoritesCache = _calculateFavorites();
+  Future<void> _rebuildCaches() async {
+    final results = await Future.wait([
+      Future(() => _calculateRecentlyPlayed()),
+      Future(() => _calculateTopPlayed()),
+      Future(() => _calculateFavorites()),
+    ]);
+    _recentlyPlayedCache = results[0];
+    _topPlayedCache = results[1];
+    _favoritesCache = results[2];
   }
+
 
   // _createAlbumsAndArtists() is now handled in the background isolate.
 
@@ -418,6 +455,7 @@ class MusicProvider extends ChangeNotifier {
     );
   }
 
+
   // Favorites management
   bool isFavorite(Track track) {
     if (!Hive.isBoxOpen(HiveKeys.favoritesBox)) return false;
@@ -436,6 +474,7 @@ class MusicProvider extends ChangeNotifier {
     _favoritesCache = _calculateFavorites();
     notifyListeners();
   }
+
 
   Future<void> _savePlaylist(Playlist p) async {
     final box = Hive.box<String>(HiveKeys.playlistsBox);

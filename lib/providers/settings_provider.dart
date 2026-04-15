@@ -286,6 +286,17 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Appearance - Miniplayer Shadow
+  /// Whether to show the dynamic shadow on the miniplayer.
+  bool get showMiniplayerShadow =>
+      _box.get(HiveKeys.showMiniplayerShadow, defaultValue: true);
+
+  void setShowMiniplayerShadow(bool value) {
+    _box.put(HiveKeys.showMiniplayerShadow, value);
+    notifyListeners();
+  }
+
+
   // Appearance - SnackBar Position
   /// The global position for all snackbars.
   SnackBarPosition get snackbarPosition {

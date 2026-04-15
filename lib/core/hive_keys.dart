@@ -36,7 +36,9 @@ abstract final class HiveKeys {
   static const String snackbarSwipeToDismiss = 'snackbarSwipeToDismiss';
   static const String upNextIndicator = 'upNextIndicator';
   static const String upNextIndicatorTime = 'upNextIndicatorTime';
+  static const String showMiniplayerShadow = 'showMiniplayerShadow';
   static const String onboarding = 'hasCompletedOnboarding';
+
 
   // ── User keys ──────────────────────────────────────────────────────────────
   static const String username = 'username';
