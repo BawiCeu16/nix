@@ -14,6 +14,7 @@ import 'widgets/track_info.dart';
 import 'widgets/player_controls.dart';
 import 'widgets/queue_view.dart';
 import 'models/animation_data.dart';
+import '../../core/haptic_utils.dart';
 
 enum _ActiveGesture { none, vertical, horizontal }
 
@@ -60,6 +61,9 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
 
   // Gesture Locking
   _ActiveGesture _activeGesture = _ActiveGesture.none;
+  bool _isReordering = false;
+  double _startY = 0.0;
+  double _startX = 0.0;
 
   @override
   void initState() {
@@ -211,12 +215,14 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
   }
 
   void togglePlay() {
+    final settings = context.read<SettingsProvider>();
     final currentMusic = context.read<CurrentMusicProvider>();
     if (currentMusic.isPlaying) {
       currentMusic.pause();
     } else {
       currentMusic.play();
     }
+    HapticUtils.trigger(settings);
   }
 
   // --- Vertical Snapping ---
@@ -228,7 +234,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
     // Staged Snapping: Lock animations in each section
     if (prevOffset > maxOffset + 100.0) {
       // Started in Queue section [1, 2], can only snap back to Expanded or stay in Queue
-      if (speed > threshold || distance > actuationOffset) {
+      if ((speed > threshold && distance > 10) || distance > actuationOffset) {
         snapToExpanded();
       } else {
         snapToQueue();
@@ -278,9 +284,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
 
   void snapToDismissed({bool haptic = true}) {
     offset = -0.1 * maxOffset;
-    if (haptic && context.read<SettingsProvider>().enableHaptics) {
-      HapticFeedback.heavyImpact();
-    }
+    final settings = context.read<SettingsProvider>();
     widget.animation
         .animateTo(
           -0.1,
@@ -289,15 +293,16 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
         )
         .then((_) {
           if (mounted) {
+            if (haptic) {
+              HapticUtils.trigger(settings, force: HapticForce.heavy);
+            }
             context.read<CurrentMusicProvider>().stop();
           }
         });
   }
 
   void snap({bool haptic = true}) {
-    if (haptic && context.read<SettingsProvider>().enableHaptics) {
-      HapticFeedback.mediumImpact();
-    }
+    final settings = context.read<SettingsProvider>();
     widget.animation
         .animateTo(
           offset / maxOffset,
@@ -305,16 +310,19 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
           duration: const Duration(milliseconds: 300),
         )
         .then((_) {
-          bounceUp = false;
+          if (mounted) {
+            if (haptic) {
+              HapticUtils.trigger(settings);
+            }
+            bounceUp = false;
+          }
         });
   }
 
   // --- Horizontal Snapping ---
   void snapToPrev() {
-    if (context.read<SettingsProvider>().enableHaptics) {
-      HapticFeedback.mediumImpact();
-    }
     sOffset = -sMaxOffset;
+    final settings = context.read<SettingsProvider>();
     sAnim
         .animateTo(
           -1.0,
@@ -322,18 +330,23 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
           duration: const Duration(milliseconds: 300),
         )
         .then((_) {
-          sOffset = 0;
-          sAnim.animateTo(0.0, duration: Duration.zero);
           if (mounted) {
-            context.read<CurrentMusicProvider>().playPrevious();
+            final currentMusic = context.read<CurrentMusicProvider>();
+            final oldTrackId = currentMusic.currentTrack?.id;
+
+            sOffset = 0;
+            sAnim.animateTo(0.0, duration: Duration.zero);
+            currentMusic.playPrevious();
+
+            // Only vibrate if track changed
+            if (currentMusic.currentTrack?.id != oldTrackId) {
+              HapticUtils.trigger(settings);
+            }
           }
         });
   }
 
   void snapToCurrent() {
-    if (context.read<SettingsProvider>().enableHaptics) {
-      HapticFeedback.mediumImpact();
-    }
     sOffset = 0;
     sAnim.animateTo(
       0.0,
@@ -343,10 +356,8 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
   }
 
   void snapToNext() {
-    if (context.read<SettingsProvider>().enableHaptics) {
-      HapticFeedback.mediumImpact();
-    }
     sOffset = sMaxOffset;
+    final settings = context.read<SettingsProvider>();
     sAnim
         .animateTo(
           1.0,
@@ -354,10 +365,18 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
           duration: const Duration(milliseconds: 300),
         )
         .then((_) {
-          sOffset = 0;
-          sAnim.animateTo(0.0, duration: Duration.zero);
           if (mounted) {
-            context.read<CurrentMusicProvider>().playNext();
+            final currentMusic = context.read<CurrentMusicProvider>();
+            final oldTrackId = currentMusic.currentTrack?.id;
+
+            sOffset = 0;
+            sAnim.animateTo(0.0, duration: Duration.zero);
+            currentMusic.playNext();
+
+            // Only vibrate if track changed
+            if (currentMusic.currentTrack?.id != oldTrackId) {
+              HapticUtils.trigger(settings);
+            }
           }
         });
   }
@@ -390,7 +409,10 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
       },
       child: Listener(
         onPointerDown: (event) {
+          if (_isReordering) return;
           if (event.position.dy > screenSize.height - deadSpace) return;
+          _startY = event.position.dy;
+          _startX = event.position.dx;
           _activeGesture = _ActiveGesture.none;
           velocity.addPosition(event.timeStamp, event.position);
           prevOffset = offset;
@@ -399,7 +421,9 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
         },
         onPointerMove: (event) {
           if (event.position.dy > screenSize.height - deadSpace) return;
-          if (_activeGesture == _ActiveGesture.horizontal) return;
+          if (_activeGesture == _ActiveGesture.horizontal || _isReordering) {
+            return;
+          }
 
           velocity.addPosition(event.timeStamp, event.position);
 
@@ -409,6 +433,11 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
 
           if (_activeGesture == _ActiveGesture.none) {
             if (dy > dx && dy > 2) {
+              // If Queue is open, ONLY become vertical if touch is on the handle
+              if (offset >= maxOffset - 10.0) {
+                final bool isHandle = event.position.dy < topInset + 160.0;
+                if (!isHandle) return;
+              }
               _activeGesture = _ActiveGesture.vertical;
             } else if (dx > dy && dx > 2) {
               _activeGesture = _ActiveGesture.horizontal;
@@ -417,7 +446,36 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
               return;
             }
           }
-          offset -= event.delta.dy;
+          final deltaY = event.delta.dy;
+          final isUp = deltaY < 0;
+          final isDown = deltaY > 0;
+
+          // --- Gesture Priority Logic ---
+          if (offset >= maxOffset - 10.0) {
+            // In Queue State
+            final bool isAtTop =
+                !queueScrollController.hasClients ||
+                queueScrollController.offset <= 0;
+            final bool isHandle = event.position.dy < topInset + 160.0;
+
+            if (!isHandle) {
+              if (isUp && offset >= maxOffset * 2 - 1) {
+                // Fully open and dragging up: Let list scroll
+                return;
+              }
+              if (isDown) {
+                if (!isAtTop) return;
+
+                // Threshold: Must have pulled down at least 20px since gesture start
+                // to trigger drawer closure from the list area.
+                final totalDy = event.position.dy - _startY;
+                if (totalDy < 20.0) return;
+              }
+            }
+          }
+          // ------------------------------
+
+          offset -= deltaY;
           offset = _applyStagedClamping(offset, settings);
           widget.animation.animateTo(
             offset / maxOffset,
@@ -425,8 +483,11 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
           );
         },
         onPointerUp: (event) {
+          if (_isReordering) return;
+          if (_activeGesture == _ActiveGesture.vertical) {
+            verticalSnapping();
+          }
           _activeGesture = _ActiveGesture.none;
-          verticalSnapping();
         },
         child: GestureDetector(
           onTap: () {
@@ -435,7 +496,9 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
             }
           },
           onVerticalDragUpdate: (details) {
-            if (_activeGesture == _ActiveGesture.horizontal) return;
+            if (_activeGesture == _ActiveGesture.horizontal || _isReordering) {
+              return;
+            }
             if (details.globalPosition.dy > screenSize.height - deadSpace) {
               return;
             }
@@ -443,7 +506,26 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
               _activeGesture = _ActiveGesture.vertical;
             }
             final settings = context.read<SettingsProvider>();
-            offset -= details.primaryDelta ?? 0;
+            final deltaY = details.primaryDelta ?? 0;
+            final isUp = deltaY < 0;
+            final isDown = deltaY > 0;
+
+            // --- Gesture Priority Logic ---
+            if (offset >= maxOffset - 10.0) {
+              final bool isAtTop =
+                  !queueScrollController.hasClients ||
+                  queueScrollController.offset <= 0;
+              final bool isHandle =
+                  details.globalPosition.dy < topInset + 160.0;
+
+              if (!isHandle) {
+                if (isUp && offset >= maxOffset * 2 - 1) return;
+                if (isDown && !isAtTop) return;
+              }
+            }
+            // ------------------------------
+
+            offset -= deltaY;
             offset = _applyStagedClamping(offset, settings);
             widget.animation.animateTo(
               offset / maxOffset,
@@ -704,6 +786,16 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                     maxOffset: maxOffset,
                     topInset: topInset,
                     controller: queueScrollController,
+                    onReorderBegin: () {
+                      if (!_isReordering) {
+                        setState(() => _isReordering = true);
+                      }
+                    },
+                    onReorderEnd: () {
+                      if (_isReordering) {
+                        setState(() => _isReordering = false);
+                      }
+                    },
                   ),
                 ],
               );

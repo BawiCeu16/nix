@@ -72,11 +72,12 @@ class QueueTile extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         visualDensity: VisualDensity.compact,
         onTap: onTap,
+        enableFeedback: false, // Disable system haptics
         trailing: trailing,
       ),
     );

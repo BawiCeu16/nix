@@ -46,6 +46,7 @@ class _ExpressiveToneButtonState extends State<ExpressiveToneButton> {
           color: Colors.transparent,
           child: InkWell(
             onTap: widget.onPressed,
+            enableFeedback: false,
             onHighlightChanged: (isHighlighted) {
               if (enabled) {
                 setState(() {

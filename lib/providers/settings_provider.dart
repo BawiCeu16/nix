@@ -14,6 +14,8 @@ enum SnackBarPosition { top, bottom }
 
 enum TrackSwipeAction { none, playPlayback }
 
+enum HapticForce { light, medium, heavy }
+
 /// Manages app-wide settings like theme, accent color, and playback behaviors.
 /// Settings are persisted to the Hive.
 class SettingsProvider with ChangeNotifier {
@@ -102,6 +104,21 @@ class SettingsProvider with ChangeNotifier {
 
   void setEnableHaptics(bool value) {
     _box.put(HiveKeys.enableHaptics, value);
+    notifyListeners();
+  }
+
+  // Haptic Force
+  /// The intensity of the haptic feedback.
+  HapticForce get hapticForce {
+    final String force = _box.get(HiveKeys.hapticForce, defaultValue: 'medium');
+    return HapticForce.values.firstWhere(
+      (e) => e.name == force,
+      orElse: () => HapticForce.medium,
+    );
+  }
+
+  void setHapticForce(HapticForce force) {
+    _box.put(HiveKeys.hapticForce, force.name);
     notifyListeners();
   }
 
@@ -293,6 +310,16 @@ class SettingsProvider with ChangeNotifier {
 
   void setShowMiniplayerShadow(bool value) {
     _box.put(HiveKeys.showMiniplayerShadow, value);
+    notifyListeners();
+  }
+  
+  // Appearance - Auto Scroll Queue
+  /// Whether to automatically scroll the queue to the currently playing track.
+  bool get autoScrollQueue =>
+      _box.get(HiveKeys.autoScrollQueue, defaultValue: true);
+  
+  void setAutoScrollQueue(bool value) {
+    _box.put(HiveKeys.autoScrollQueue, value);
     notifyListeners();
   }
 

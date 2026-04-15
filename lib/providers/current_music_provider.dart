@@ -543,6 +543,13 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
     notifyListeners();
   }
 
+  void shuffleQueue() {
+    if (_currentPlaylist != null && _currentPlaylist!.tracks.isNotEmpty) {
+      _currentPlaylist!.tracks.shuffle();
+      notifyListeners();
+    }
+  }
+
   void clearQueue() {
     if (_currentPlaylist != null) {
       _currentPlaylist!.tracks.clear();

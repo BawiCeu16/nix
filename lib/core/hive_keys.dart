@@ -38,6 +38,8 @@ abstract final class HiveKeys {
   static const String upNextIndicatorTime = 'upNextIndicatorTime';
   static const String showMiniplayerShadow = 'showMiniplayerShadow';
   static const String onboarding = 'hasCompletedOnboarding';
+  static const String autoScrollQueue = 'autoScrollQueue';
+  static const String hapticForce = 'hapticForce';
 
 
   // ── User keys ──────────────────────────────────────────────────────────────
