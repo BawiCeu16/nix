@@ -74,47 +74,39 @@ class HomePage extends StatelessWidget {
                 pinned: false,
                 floating: false,
                 snap: false,
-                expandedHeight: 180,
+                expandedHeight: 200,
                 flexibleSpace: FlexibleSpaceBar(
-                  titlePadding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                  titlePadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                   title: Selector<UserProvider, String>(
                     selector: (_, p) => p.userName,
                     builder: (context, userName, _) {
-                      return Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _greeting(),
-                                  style: GoogleFonts.getFont(
-                                    'Special Gothic Expanded One',
-                                    textStyle: Theme.of(context)
-                                        .textTheme
-                                        .labelMedium
-                                        ?.copyWith(
-                                          color: colorScheme.onSurfaceVariant,
-                                          fontWeight: FontWeight.w300,
-                                        ),
+                          Text(
+                            _greeting(),
+                            style: GoogleFonts.getFont(
+                              'Special Gothic Expanded One',
+                              textStyle: Theme.of(context).textTheme.labelMedium
+                                  ?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                    fontWeight: FontWeight.w300,
                                   ),
-                                ),
-                                Text(
-                                  userName,
-                                  style: GoogleFonts.getFont(
-                                    'Special Gothic Expanded One',
-                                    textStyle: Theme.of(context)
-                                        .textTheme
-                                        .headlineSmall
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.w500,
-                                          color: colorScheme.onSurface,
-                                        ),
+                            ),
+                          ),
+                          const SizedBox(height: 0),
+                          Text(
+                            userName,
+                            style: GoogleFonts.getFont(
+                              'Special Gothic Expanded One',
+                              textStyle: Theme.of(context)
+                                  .textTheme
+                                  .headlineSmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                    color: colorScheme.onSurface,
                                   ),
-                                ),
-                              ],
                             ),
                           ),
                         ],
@@ -124,16 +116,15 @@ class HomePage extends StatelessWidget {
                 ),
               ),
 
-              // Pre-compute album→firstTrackId map ONCE here.
-              // Logic moved into sliver list builder
               SliverMainAxisGroup(
                 slivers: [
                   // ── Recently Listened ──
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
                       child: NixSectionHeader(
                         title: 'Recently Listened',
+                        topPadding: 20,
                         onShowAll: () => Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (_) => TracksPage(
@@ -166,7 +157,7 @@ class HomePage extends StatelessWidget {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12.0),
                           child: SizedBox(
-                            height: 212,
+                            height: 215,
                             child: ListView.builder(
                               scrollDirection: Axis.horizontal,
                               physics: const BouncingScrollPhysics(),
@@ -178,7 +169,7 @@ class HomePage extends StatelessWidget {
                                     horizontal: 5.0,
                                   ),
                                   child: SizedBox(
-                                    width: 160.0,
+                                    width: 161.0,
                                     child: GestureDetector(
                                       onTap: () {
                                         final currentMusic = context
@@ -209,9 +200,10 @@ class HomePage extends StatelessWidget {
                   // ── Albums ──
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
                       child: NixSectionHeader(
                         title: 'Albums',
+                        topPadding: 32,
                         onShowAll: () => Navigator.of(context).push(
                           MaterialPageRoute(builder: (_) => const AlbumsPage()),
                         ),
@@ -239,7 +231,7 @@ class HomePage extends StatelessWidget {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12.0),
                           child: SizedBox(
-                            height: 212,
+                            height: 213,
                             child: ListView.builder(
                               scrollDirection: Axis.horizontal,
                               physics: const BouncingScrollPhysics(),
@@ -282,9 +274,10 @@ class HomePage extends StatelessWidget {
                   // ── All Tracks ──
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
                       child: NixSectionHeader(
                         title: 'All Tracks',
+                        topPadding: 32,
                         onShowAll: () => Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (_) => TracksPage(
@@ -437,8 +430,8 @@ class _AlbumCard extends StatelessWidget {
                     title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
                       color: colorScheme.onSurface,
                     ),
                   ),
