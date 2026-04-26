@@ -13,6 +13,7 @@ import 'widgets/track_image.dart';
 import 'widgets/track_info.dart';
 import 'widgets/player_controls.dart';
 import 'widgets/queue_view.dart';
+import 'widgets/lyrics_section.dart';
 import 'models/animation_data.dart';
 import '../../core/haptic_utils.dart';
 
@@ -59,6 +60,9 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
   // Playback Animation
   late AnimationController playPauseAnim;
 
+  // Lyrics Animation
+  late AnimationController lyricsAnim;
+
   // Gesture Locking
   _ActiveGesture _activeGesture = _ActiveGesture.none;
   bool _isReordering = false;
@@ -78,6 +82,10 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
     playPauseAnim = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
+    );
+    lyricsAnim = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
     );
 
     // Listen to actual player state in next frame
@@ -119,6 +127,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
     sAnim.dispose();
     queueScrollController.dispose();
     playPauseAnim.dispose();
+    lyricsAnim.dispose();
     super.dispose();
   }
 
@@ -223,6 +232,14 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
       currentMusic.play();
     }
     HapticUtils.trigger(settings);
+  }
+
+  void toggleLyrics() {
+    if (lyricsAnim.isCompleted) {
+      lyricsAnim.reverse();
+    } else {
+      lyricsAnim.forward();
+    }
   }
 
   // --- Vertical Snapping ---
@@ -688,65 +705,86 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                       onSnapToMini: snapToMini,
                     ),
                   // Lyrics button
-                  if (data.opacity > 0.0)
-                    Material(
-                      type: MaterialType.transparency,
-                      child: Opacity(
-                        opacity: data.opacity,
-                        child: Transform.translate(
-                          offset: Offset(-50, -100 * data.inverseProgress),
-                          child: Align(
-                            alignment: Alignment.bottomRight,
-                            child: SafeArea(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24.0,
-                                  vertical: 12.0,
-                                ),
-                                child: IconButton(
-                                  onPressed: null, // TODO: lyrics
-                                  icon: const Icon(
-                                    FlutterRemix.chat_quote_line,
-                                  ),
-                                  color: colorScheme.onSurface,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                  // if (data.opacity > 0.0)
+                  //   Material(
+                  //     type: MaterialType.transparency,
+                  //     child: Opacity(
+                  //       opacity: data.opacity,
+                  //       child: Transform.translate(
+                  //         offset: Offset(-50, -100 * data.inverseProgress),
+                  //         child: Align(
+                  //           alignment: Alignment.bottomRight,
+                  //           child: SafeArea(
+                  //             child: Padding(
+                  //               padding: const EdgeInsets.symmetric(
+                  //                 horizontal: 24.0,
+                  //                 vertical: 12.0,
+                  //               ),
+                  //               child: IconButton(
+                  //                 onPressed: null, // TODO: lyrics
+                  //                 icon: const Icon(
+                  //                   FlutterRemix.chat_quote_line,
+                  //                 ),
+                  //                 color: colorScheme.onSurface,
+                  //               ),
+                  //             ),
+                  //           ),
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   ),
                   // Queue access button
-                  Offstage(
-                    offstage: data.opacity == 0.0,
-                    child: Material(
-                      type: MaterialType.transparency,
-                      child: Opacity(
-                        opacity: data.opacity,
-                        child: Transform.translate(
-                          offset: Offset(0, -100 * data.inverseProgress),
-                          child: Align(
-                            alignment: Alignment.bottomRight,
-                            child: SafeArea(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24.0,
-                                  vertical: 14.0,
-                                ),
-                                child: IconButton(
-                                  onPressed: snapToQueue,
-                                  icon: const Icon(
-                                    FlutterRemix.play_list_line,
-                                    size: 24.0,
+                  AnimatedBuilder(
+                    animation: lyricsAnim,
+                    builder: (context, child) {
+                      return Offstage(
+                        offstage: data.opacity == 0.0,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: Opacity(
+                            opacity: (data.opacity * (1 - lyricsAnim.value))
+                                .clamp(0.0, 1.0),
+                            child: Transform.translate(
+                              offset: Offset(
+                                0,
+                                -100 * data.inverseProgress +
+                                    (100 * lyricsAnim.value),
+                              ),
+                              child: Align(
+                                alignment: Alignment.bottomRight,
+                                child: SafeArea(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24.0,
+                                      vertical: 14.0,
+                                    ),
+                                    child: IconButton(
+                                      onPressed: snapToQueue,
+                                      icon: const Icon(
+                                        FlutterRemix.play_list_line,
+                                        size: 24.0,
+                                      ),
+                                      color: onSecondary,
+                                    ),
                                   ),
-                                  color: onSecondary,
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
+                  ),
+                  AnimatedBuilder(
+                    animation: lyricsAnim,
+                    builder: (context, child) {
+                      return LyricsSection(
+                        lyricsAnim: lyricsAnim,
+                        data: data,
+                        maxOffset: maxOffset,
+                        topInset: topInset,
+                      );
+                    },
                   ),
                   TrackInfo(
                     sAnim: sAnim,
@@ -758,6 +796,8 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                     bounceDown: bounceDown,
                     screenSize: screenSize,
                     data: data,
+                    lyricsAnim: lyricsAnim,
+                    onToggleLyrics: toggleLyrics,
                   ),
                   TrackImage(
                     sAnim: sAnim,
@@ -769,6 +809,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                     bounceDown: bounceDown,
                     screenSize: screenSize,
                     data: data,
+                    lyricsAnim: lyricsAnim,
                   ),
                   PlayerControls(
                     maxOffset: maxOffset,
@@ -780,6 +821,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                     onTogglePlay: togglePlay,
                     playPauseAnim: playPauseAnim,
                     data: data,
+                    lyricsAnim: lyricsAnim,
                   ),
                   QueueView(
                     queueProgressValue: data.queueProgress,

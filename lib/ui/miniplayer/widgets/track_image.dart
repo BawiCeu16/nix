@@ -23,6 +23,7 @@ class TrackImage extends StatelessWidget {
   final bool bounceDown;
   final Size screenSize;
   final PlayerAnimationData data;
+  final Animation<double> lyricsAnim;
 
   const TrackImage({
     super.key,
@@ -35,6 +36,7 @@ class TrackImage extends StatelessWidget {
     required this.bounceDown,
     required this.screenSize,
     required this.data,
+    required this.lyricsAnim,
   });
 
   @override
@@ -42,7 +44,7 @@ class TrackImage extends StatelessWidget {
     final currentSong = context.watch<CurrentMusicProvider>().currentTrack;
 
     return AnimatedBuilder(
-      animation: sAnim,
+      animation: Listenable.merge([sAnim, lyricsAnim]),
       builder: (context, child) {
         return Opacity(
           opacity: 1 - sAnim.value.abs(),
@@ -60,23 +62,43 @@ class TrackImage extends StatelessWidget {
               offset: Offset(
                 0,
                 data.bottomOffset +
-                    (-maxOffset / 2.30 * data.bounceProgress.clamp(0, 2)),
+                    rangeProgress(
+                      a: -maxOffset / 2.30 * data.bounceProgress.clamp(0, 2),
+                      b: -maxOffset / 3.6 * data.bounceProgress.clamp(0, 2),
+                      c: lyricsAnim.value,
+                    ) +
+                    (90.0 * lyricsAnim.value * data.bounceClampedProgress),
               ),
               child: Padding(
-                padding: EdgeInsets.all(
-                  12.0 * (1 - data.bounceClampedProgress),
-                ).add(EdgeInsets.only(left: 22.0 * data.bounceClampedProgress)),
+                padding: EdgeInsets.all(12.0 * (1 - data.bounceClampedProgress))
+                    .add(
+                      EdgeInsets.only(
+                        left: rangeProgress(
+                          a: 22.0 * data.bounceClampedProgress,
+                          b: 20.0 * data.bounceClampedProgress,
+                          c: lyricsAnim.value,
+                        ),
+                      ),
+                    ),
                 child: Align(
                   alignment: Alignment.bottomLeft,
                   child: SizedBox(
                     height: rangeProgress(
                       a: 82.0,
-                      b: screenSize.width - 46.0,
+                      b: rangeProgress(
+                        a: screenSize.width - 46.0,
+                        b: 60.0,
+                        c: lyricsAnim.value,
+                      ),
                       c: data.bounceClampedProgress,
                     ),
                     width: rangeProgress(
                       a: 82.0,
-                      b: screenSize.width - 46.0,
+                      b: rangeProgress(
+                        a: screenSize.width - 46.0,
+                        b: 60.0,
+                        c: lyricsAnim.value,
+                      ),
                       c: data.bounceClampedProgress,
                     ),
                     child: Padding(
@@ -129,8 +151,8 @@ class TrackImage extends StatelessWidget {
                             builder: (context, timer, _) {
                               if (!timer.isActive) return const SizedBox();
                               final opacity =
-                                  (data.opacity -
-                                          data.queueClampedProgress)
+                                  ((data.opacity - data.queueClampedProgress) *
+                                          (1 - lyricsAnim.value))
                                       .clamp(0.0, 1.0);
                               if (opacity == 0) return const SizedBox();
 
@@ -140,11 +162,19 @@ class TrackImage extends StatelessWidget {
                                 child: Opacity(
                                   opacity: opacity,
                                   child: GestureDetector(
-                                    onTap: context.read<SettingsProvider>().timerGesture == TimerGesture.tap 
-                                        ? () => SleepTimerDialog.show(context) 
+                                    onTap:
+                                        context
+                                                .read<SettingsProvider>()
+                                                .timerGesture ==
+                                            TimerGesture.tap
+                                        ? () => SleepTimerDialog.show(context)
                                         : null,
-                                    onLongPress: context.read<SettingsProvider>().timerGesture == TimerGesture.longPress 
-                                        ? () => SleepTimerDialog.show(context) 
+                                    onLongPress:
+                                        context
+                                                .read<SettingsProvider>()
+                                                .timerGesture ==
+                                            TimerGesture.longPress
+                                        ? () => SleepTimerDialog.show(context)
                                         : null,
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(
@@ -169,7 +199,8 @@ class TrackImage extends StatelessWidget {
                                           ),
                                           const SizedBox(width: 6),
                                           Text(
-                                            timer.remainingTime?.shortFormat() ??
+                                            timer.remainingTime
+                                                    ?.shortFormat() ??
                                                 "00:00",
                                             style: const TextStyle(
                                               fontSize: 12,
@@ -186,7 +217,10 @@ class TrackImage extends StatelessWidget {
                             },
                           ),
                           // Up Next Indicator
-                          NixUpNextIndicator(data: data),
+                          Opacity(
+                            opacity: (1 - lyricsAnim.value).clamp(0.0, 1.0),
+                            child: NixUpNextIndicator(data: data),
+                          ),
                         ],
                       ),
                     ),

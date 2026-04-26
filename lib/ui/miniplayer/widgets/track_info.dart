@@ -16,6 +16,8 @@ class TrackInfo extends StatelessWidget {
   final bool bounceDown;
   final Size screenSize;
   final PlayerAnimationData data;
+  final Animation<double> lyricsAnim;
+  final VoidCallback onToggleLyrics;
 
   const TrackInfo({
     super.key,
@@ -28,6 +30,8 @@ class TrackInfo extends StatelessWidget {
     required this.bounceDown,
     required this.screenSize,
     required this.data,
+    required this.lyricsAnim,
+    required this.onToggleLyrics,
   });
 
   @override
@@ -37,12 +41,11 @@ class TrackInfo extends StatelessWidget {
     final track = currentMusic.currentTrack;
     final title = track?.title ?? 'No track';
     final artist = track?.artist ?? '';
-    final isFav = track != null ? music.isFavorite(track) : false;
 
     return Material(
       type: MaterialType.transparency,
       child: AnimatedBuilder(
-        animation: sAnim,
+        animation: Listenable.merge([sAnim, lyricsAnim]),
         builder: (context, child) {
           return Opacity(
             opacity: 1 - sAnim.value.abs(),
@@ -61,15 +64,21 @@ class TrackInfo extends StatelessWidget {
                 offset: Offset(
                   0,
                   data.bottomOffset +
-                      (-maxOffset / 3.6 * data.bounceProgress.clamp(0, 2)),
+                      (-maxOffset / 3.6 * data.bounceProgress.clamp(0, 2)) +
+                      (140.0 * lyricsAnim.value * data.bounceClampedProgress),
                 ),
                 child: Padding(
                   padding:
                       EdgeInsets.all(
                         12.0 * (1 - data.bounceClampedProgress),
                       ).add(
-                        EdgeInsets.symmetric(
-                          horizontal: 20.0 * data.bounceClampedProgress,
+                        EdgeInsets.only(
+                          left:
+                              20.0 * data.bounceClampedProgress +
+                              (72.0 *
+                                  lyricsAnim.value *
+                                  data.bounceClampedProgress),
+                          right: 20.0 * data.bounceClampedProgress,
                         ),
                       ),
                   child: Align(
@@ -139,7 +148,7 @@ class TrackInfo extends StatelessWidget {
                                         style: TextStyle(
                                           fontSize: rangeProgress(
                                             a: 18.0,
-                                            b: 24.0,
+                                            b: 24.0 - (5.0 * lyricsAnim.value),
                                             c: data.bounceProgress,
                                           ),
                                           fontWeight: FontWeight.w600,
@@ -183,7 +192,7 @@ class TrackInfo extends StatelessWidget {
                                         style: TextStyle(
                                           fontSize: rangeProgress(
                                             a: 15.0,
-                                            b: 17.0,
+                                            b: 17.0 - (3.0 * lyricsAnim.value),
                                             c: data.bounceProgress,
                                           ),
                                           color: Theme.of(context)
@@ -212,17 +221,30 @@ class TrackInfo extends StatelessWidget {
                                   onTap: track != null
                                       ? () => music.toggleFavorite(track)
                                       : null,
-                                  child: Icon(
-                                    isFav
-                                        ? FlutterRemix.heart_fill
-                                        : FlutterRemix.heart_line,
-                                    size: 32.0,
-                                    color: isFav
+                                  child: IconButton(
+                                    onPressed: onToggleLyrics,
+                                    icon: Icon(
+                                      lyricsAnim.value > 0.5
+                                          ? FlutterRemix.chat_quote_fill
+                                          : FlutterRemix.chat_quote_line,
+                                    ),
+                                    color: lyricsAnim.value > 0.5
                                         ? Theme.of(context).colorScheme.primary
                                         : Theme.of(
                                             context,
                                           ).colorScheme.onSecondaryContainer,
                                   ),
+                                  // child: Icon(
+                                  //   isFav
+                                  //       ? FlutterRemix.heart_fill
+                                  //       : FlutterRemix.heart_line,
+                                  //   size: 32.0,
+                                  //   color: isFav
+                                  //       ? Theme.of(context).colorScheme.primary
+                                  //       : Theme.of(
+                                  //           context,
+                                  //         ).colorScheme.onSecondaryContainer,
+                                  // ),
                                 ),
                               ),
                             ),
