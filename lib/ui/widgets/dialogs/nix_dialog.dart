@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:on_audio_query/on_audio_query.dart';
+import 'package:on_audio_query_forked/on_audio_query.dart';
 import 'package:nix/ui/widgets/common/nix_artwork.dart';
 import 'package:nix/models/settings/artwork_quality.dart';
 

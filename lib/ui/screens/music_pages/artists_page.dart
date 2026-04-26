@@ -7,7 +7,7 @@ import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/models/music/artist.dart';
 import 'package:nix/models/music/track.dart';
 import 'package:nix/ui/widgets/list_item/track_tile.dart';
-import 'package:on_audio_query/on_audio_query.dart';
+import 'package:on_audio_query_forked/on_audio_query.dart';
 import 'package:nix/ui/widgets/common/nix_refreshable_list.dart';
 import 'package:nix/ui/widgets/common/nix_empty_state.dart';
 import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
