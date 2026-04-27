@@ -13,6 +13,7 @@ import 'package:nix/ui/widgets/common/nix_empty_state.dart';
 import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
 import 'package:nix/ui/widgets/common/nix_artwork.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
+import 'package:nix/ui/widgets/common/nix_scrollbar.dart';
 
 enum _ArtistSort { defaultOrder, aToZ, zToA }
 
@@ -69,7 +70,8 @@ class _ArtistsPageState extends State<ArtistsPage> {
               icon: FlutterRemix.user_4_line,
               title: "No artists found",
             ),
-            child: GridView.builder(
+            child: NixScrollbar(
+              child: GridView.builder(
               padding: EdgeInsets.only(
                 bottom: NixBottomSpacer.calculateHeight(context),
                 left: 16,
@@ -134,6 +136,7 @@ class _ArtistsPageState extends State<ArtistsPage> {
                   ),
                 );
               },
+              ),
             ),
           );
         },
@@ -173,7 +176,8 @@ class ArtistTracksPage extends StatelessWidget {
               icon: FlutterRemix.user_4_line,
               title: "No tracks found for this artist",
             ),
-            child: ListView.builder(
+            child: NixScrollbar(
+              child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               physics: const AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics(),
@@ -270,6 +274,7 @@ class ArtistTracksPage extends StatelessWidget {
                   isLast: index == tracks.length,
                 );
               },
+              ),
             ),
           );
         },

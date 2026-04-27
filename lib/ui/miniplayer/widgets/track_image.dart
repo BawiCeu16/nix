@@ -108,19 +108,21 @@ class TrackImage extends StatelessWidget {
                       child: Stack(
                         children: [
                           currentSong != null
-                              ? NixArtwork(
-                                  id: currentSong.id,
-                                  type: ArtworkType.AUDIO,
-                                  borderRadius: BorderRadius.circular(
-                                    rangeProgress(
-                                      a: 100.0,
-                                      b: 15.0,
-                                      c: data.bounceClampedProgress,
+                              ? RepaintBoundary(
+                                  child: NixArtwork(
+                                    id: currentSong.id,
+                                    type: ArtworkType.AUDIO,
+                                    borderRadius: BorderRadius.circular(
+                                      rangeProgress(
+                                        a: 100.0,
+                                        b: 15.0,
+                                        c: data.bounceClampedProgress,
+                                      ),
                                     ),
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    height: double.infinity,
                                   ),
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                  height: double.infinity,
                                 )
                               : Container(
                                   decoration: BoxDecoration(
@@ -217,9 +219,14 @@ class TrackImage extends StatelessWidget {
                             },
                           ),
                           // Up Next Indicator
-                          Opacity(
-                            opacity: (1 - lyricsAnim.value).clamp(0.0, 1.0),
-                            child: NixUpNextIndicator(data: data),
+                          Positioned(
+                            bottom: 8,
+                            left: 8,
+                            right: 8,
+                            child: Opacity(
+                              opacity: (1 - lyricsAnim.value).clamp(0.0, 1.0),
+                              child: NixUpNextIndicator(data: data),
+                            ),
                           ),
                         ],
                       ),

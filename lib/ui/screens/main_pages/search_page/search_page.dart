@@ -11,6 +11,7 @@ import 'package:nix/ui/widgets/buttons/expressive_button.dart';
 import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
 import 'package:nix/models/music/track.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
+import 'package:nix/ui/widgets/common/nix_scrollbar.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -63,7 +64,8 @@ class _SearchPageState extends State<SearchPage> {
         resizeToAvoidBottomInset: false,
         body: SafeArea(
           bottom: false,
-          child: CustomScrollView(
+          child: NixScrollbar(
+            child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(
               parent: BouncingScrollPhysics(),
             ),
@@ -303,6 +305,7 @@ class _SearchPageState extends State<SearchPage> {
                   ),
                 ),
             ],
+          ),
           ),
         ),
       ),

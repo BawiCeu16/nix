@@ -16,6 +16,7 @@ import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 import 'package:nix/ui/widgets/styles/cd_widget.dart';
 import 'package:nix/models/settings/artwork_quality.dart';
 import 'package:nix/providers/settings_provider.dart';
+import 'package:nix/ui/widgets/common/nix_scrollbar.dart';
 
 enum _AlbumSort { defaultOrder, aToZ, zToA }
 
@@ -73,7 +74,8 @@ class _AlbumsPageState extends State<AlbumsPage> {
               icon: FlutterRemix.disc_line,
               title: "No albums found",
             ),
-            child: GridView.builder(
+            child: NixScrollbar(
+              child: GridView.builder(
               padding: EdgeInsets.only(
                 bottom: NixBottomSpacer.calculateHeight(context),
                 left: 16,
@@ -192,6 +194,7 @@ class _AlbumsPageState extends State<AlbumsPage> {
                   ),
                 );
               },
+              ),
             ),
           );
         },
@@ -259,7 +262,8 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> {
               icon: FlutterRemix.music_2_line,
               title: "No tracks found in this album",
             ),
-            child: ListView.builder(
+            child: NixScrollbar(
+              child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               physics: const AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics(),
@@ -346,6 +350,7 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> {
                   isLast: index == tracks.length,
                 );
               },
+            ),
             ),
           );
         },

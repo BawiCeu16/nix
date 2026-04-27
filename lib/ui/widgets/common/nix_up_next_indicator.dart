@@ -46,77 +46,72 @@ class NixUpNextIndicator extends StatelessWidget {
 
         if (finalOpacity == 0) return const SizedBox();
 
-        return Positioned(
-          bottom: 8,
-          left: 8,
-          right: 8,
-          child: Opacity(
-            opacity: finalOpacity,
-            child: Container(
-              padding: const EdgeInsets.all(8.0),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.1),
-                  width: 0.5,
-                ),
+        return Opacity(
+          opacity: finalOpacity,
+          child: Container(
+            padding: const EdgeInsets.all(8.0),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.1),
+                width: 0.5,
               ),
-              child: Row(
-                children: [
-                  SizedBox(width: 5.0),
-                  // Mini Artwork
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(5),
-                    child: NixArtwork(
-                      id: nextTrack.id,
-                      type: ArtworkType.AUDIO,
+            ),
+            child: Row(
+              children: [
+                SizedBox(width: 5.0),
+                // Mini Artwork
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(5),
+                  child: NixArtwork(
+                    id: nextTrack.id,
+                    type: ArtworkType.AUDIO,
 
-                      width: 40,
-                      height: 40,
-                      fit: BoxFit.cover,
-                    ),
+                    width: 40,
+                    height: 40,
+                    fit: BoxFit.cover,
                   ),
-                  const SizedBox(width: 12),
-                  // Info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'UP NEXT',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                ),
+                const SizedBox(width: 12),
+                // Info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'UP NEXT',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
-                        Text(
-                          nextTrack.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
+                      ),
+                      Text(
+                        nextTrack.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
                         ),
-                        Text(
-                          nextTrack.artist,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.white.withValues(alpha: 0.7),
-                          ),
+                      ),
+                      Text(
+                        nextTrack.artist,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.white.withValues(alpha: 0.7),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );

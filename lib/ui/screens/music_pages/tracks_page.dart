@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/ui/widgets/common/nix_refreshable_list.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
+import 'package:nix/ui/widgets/common/nix_scrollbar.dart';
 
 enum _TrackSort { defaultOrder, aToZ, zToA, duration }
 
@@ -71,24 +72,26 @@ class _TracksPageState extends State<TracksPage> {
             icon: FlutterRemix.music_2_line,
             title: "No tracks available",
           ),
-          child: ListView.builder(
-            physics: const AlwaysScrollableScrollPhysics(
-              parent: BouncingScrollPhysics(),
+          child: NixScrollbar(
+            child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              padding: const EdgeInsets.only(top: 8),
+              itemCount: tracksList.length + 1,
+              itemBuilder: (context, index) {
+                if (index == tracksList.length) {
+                  return const NixBottomSpacer();
+                }
+                final track = tracksList[index];
+                return TrackTile(
+                  track: track,
+                  playlistContext: tracksList,
+                  isFirst: index == 0,
+                  isLast: index == tracksList.length - 1,
+                );
+              },
             ),
-            padding: const EdgeInsets.only(top: 8),
-            itemCount: tracksList.length + 1,
-            itemBuilder: (context, index) {
-              if (index == tracksList.length) {
-                return const NixBottomSpacer();
-              }
-              final track = tracksList[index];
-              return TrackTile(
-                track: track,
-                playlistContext: tracksList,
-                isFirst: index == 0,
-                isLast: index == tracksList.length - 1,
-              );
-            },
           ),
         ),
       ),

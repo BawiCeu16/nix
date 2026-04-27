@@ -16,6 +16,7 @@ import 'package:nix/ui/screens/music_pages/views/playlist_view_page.dart';
 import 'package:nix/ui/widgets/common/nix_refreshable_list.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 import 'package:nix/ui/widgets/common/nix_playlist_cover.dart';
+import 'package:nix/ui/widgets/common/nix_scrollbar.dart';
 
 class PlaylistsPage extends StatefulWidget {
   const PlaylistsPage({super.key});
@@ -173,7 +174,8 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
                 ),
               ),
             ),
-            child: ListView.builder(
+            child: NixScrollbar(
+              child: ListView.builder(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
               physics: const AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics(),
@@ -237,6 +239,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
                   ),
                 );
               },
+              ),
             ),
           );
         },

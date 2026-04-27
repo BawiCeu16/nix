@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:on_audio_query_forked/on_audio_query.dart';
 import 'package:flutter_remix/flutter_remix.dart';
@@ -52,14 +54,10 @@ class NixArtwork extends StatelessWidget {
           (s) => s.artworkQuality,
         );
 
-    Widget artwork = Consumer<ArtworkProvider>(
-      builder: (context, artworkProv, _) {
-        final bytes = artworkProv.getCachedArtwork(
-          id,
-          type,
-          currentQuality,
-        );
-
+    Widget artwork = Selector<ArtworkProvider, Uint8List?>(
+      selector: (_, artworkProv) =>
+          artworkProv.getCachedArtwork(id, type, currentQuality),
+      builder: (context, bytes, _) {
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
           child: bytes != null
@@ -80,7 +78,7 @@ class NixArtwork extends StatelessWidget {
     );
 
     Widget artworkWidget;
-    
+
     if (shape == ArtworkShape.circle) {
       artworkWidget = ClipOval(child: artwork);
     } else {
@@ -91,11 +89,7 @@ class NixArtwork extends StatelessWidget {
     }
 
     if (width != null || height != null) {
-      return SizedBox(
-        width: width,
-        height: height,
-        child: artworkWidget,
-      );
+      return SizedBox(width: width, height: height, child: artworkWidget);
     }
     return artworkWidget;
   }
@@ -118,8 +112,8 @@ class NixArtwork extends StatelessWidget {
         type == ArtworkType.ALBUM
             ? FlutterRemix.album_line
             : type == ArtworkType.ARTIST
-                ? FlutterRemix.user_4_line
-                : FlutterRemix.music_2_line,
+            ? FlutterRemix.user_4_line
+            : FlutterRemix.music_2_line,
         color: colorScheme.onSecondaryContainer.withValues(alpha: 0.5),
         size: (width != null && width! < double.infinity) ? width! * 0.4 : 24,
       ),

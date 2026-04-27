@@ -14,6 +14,7 @@ import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 import '../../../../services/snackbar_service.dart';
 
 import 'package:nix/ui/widgets/common/nix_playlist_cover.dart';
+import 'package:nix/ui/widgets/common/nix_scrollbar.dart';
 
 class PlaylistViewPage extends StatelessWidget {
   final String playlistName;
@@ -82,7 +83,8 @@ class PlaylistViewPage extends StatelessWidget {
             );
           }
 
-          return ReorderableListView.builder(
+          return NixScrollbar(
+            child: ReorderableListView.builder(
             buildDefaultDragHandles: !isSystemPlaylist,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             physics: const BouncingScrollPhysics(),
@@ -175,6 +177,7 @@ class PlaylistViewPage extends StatelessWidget {
 
               return Container(key: ValueKey('track_${track.id}'), child: tile);
             },
+          ),
           );
         },
       ),

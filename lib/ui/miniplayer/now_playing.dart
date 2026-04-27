@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_remix/flutter_remix.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/math_utils.dart';
@@ -67,7 +66,6 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
   _ActiveGesture _activeGesture = _ActiveGesture.none;
   bool _isReordering = false;
   double _startY = 0.0;
-  double _startX = 0.0;
 
   @override
   void initState() {
@@ -85,7 +83,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
     );
     lyricsAnim = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 300),
     );
 
     // Listen to actual player state in next frame
@@ -235,7 +233,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
   }
 
   void toggleLyrics() {
-    if (lyricsAnim.isCompleted) {
+    if (lyricsAnim.value > 0.5) {
       lyricsAnim.reverse();
     } else {
       lyricsAnim.forward();
@@ -404,7 +402,6 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
     final Color onSecondary = Theme.of(
       context,
     ).colorScheme.onSecondaryContainer;
-    final ColorScheme colorScheme = Theme.of(context).colorScheme;
 
     // --- CONSUMER & POPPER REGISTRATION ADDED HERE ---
     return Consumer<WillPopProvider>(
@@ -429,7 +426,6 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
           if (_isReordering) return;
           if (event.position.dy > screenSize.height - deadSpace) return;
           _startY = event.position.dy;
-          _startX = event.position.dx;
           _activeGesture = _ActiveGesture.none;
           velocity.addPosition(event.timeStamp, event.position);
           prevOffset = offset;
@@ -670,11 +666,11 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                                       color:
                                           (Theme.of(context).brightness ==
                                                       Brightness.dark
-                                                  ? Colors.black.withOpacity(
-                                                      0.2,
+                                                  ? Colors.black.withValues(
+                                                      alpha: 0.2,
                                                     )
-                                                  : Colors.black.withOpacity(
-                                                      0.08,
+                                                  : Colors.black.withValues(
+                                                      alpha: 0.08,
                                                     ))
                                               .withValues(
                                                 alpha:
@@ -777,7 +773,11 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                   ),
                   AnimatedBuilder(
                     animation: lyricsAnim,
-                    builder: (context, child) {
+                    builder: (context, _) {
+                      if (data.bounceClampedProgress == 0 ||
+                          lyricsAnim.value == 0) {
+                        return const SizedBox.shrink();
+                      }
                       return LyricsSection(
                         lyricsAnim: lyricsAnim,
                         data: data,
