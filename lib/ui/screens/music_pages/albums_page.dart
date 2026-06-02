@@ -76,124 +76,124 @@ class _AlbumsPageState extends State<AlbumsPage> {
             ),
             child: NixScrollbar(
               child: GridView.builder(
-              padding: EdgeInsets.only(
-                bottom: NixBottomSpacer.calculateHeight(context),
-                left: 16,
-                right: 16,
-                top: 8,
-              ),
-              physics: const AlwaysScrollableScrollPhysics(
-                parent: BouncingScrollPhysics(),
-              ),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 0.78,
-              ),
-              itemCount: albums.length,
-              itemBuilder: (context, index) {
-                final album = albums[index];
-                final albumTracks = music.getTracksByAlbum(album.title);
-                final firstTrackId = albumTracks.isNotEmpty
-                    ? albumTracks.first.id
-                    : null;
+                padding: EdgeInsets.only(
+                  bottom: NixBottomSpacer.calculateHeight(context),
+                  left: 16,
+                  right: 16,
+                  top: 8,
+                ),
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 0.78,
+                ),
+                itemCount: albums.length,
+                itemBuilder: (context, index) {
+                  final album = albums[index];
+                  final albumTracks = music.getTracksByAlbum(album.title);
+                  final firstTrackId = albumTracks.isNotEmpty
+                      ? albumTracks.first.id
+                      : null;
 
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => AlbumTracksPage(
-                          albumTitle: album.title,
-                          albumArtist: album.artist,
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => AlbumTracksPage(
+                            albumTitle: album.title,
+                            albumArtist: album.artist,
+                          ),
                         ),
+                      );
+                    },
+                    child: Card(
+                      elevation: 0,
+                      clipBehavior: Clip.none,
+                      color: Colors.transparent,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero,
                       ),
-                    );
-                  },
-                  child: Card(
-                    elevation: 0,
-                    clipBehavior: Clip.none,
-                    color: Colors.transparent,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.zero,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(
-                          child: LayoutBuilder(
-                            builder: (context, constraints) => Hero(
-                              tag: 'album_cd_${album.title}',
-                              child: settings.useCdArtworkStyle
-                                  ? NixCustomizableCDWidget(
-                                      size: constraints.maxWidth,
-                                      state: CDCoverState.closed,
-                                      splitWhenHalfOpen:
-                                          settings.splitCdWhenHalfOpen,
-                                      seedId: album.title,
-                                      coverImage: Stack(
-                                        fit: StackFit.expand,
-                                        children: [
-                                          NixArtwork(
-                                            id: firstTrackId ?? 0,
-                                            type: ArtworkType.AUDIO,
-                                            fit: BoxFit.cover,
-                                          ),
-                                          Transform.scale(
-                                            scale: 1.15,
-                                            child: Image.asset(
-                                              'assets/cd_effects/cd_cover.png',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child: LayoutBuilder(
+                              builder: (context, constraints) => Hero(
+                                tag: 'album_cd_${album.title}',
+                                child: settings.useCdArtworkStyle
+                                    ? NixCustomizableCDWidget(
+                                        size: constraints.maxWidth,
+                                        state: CDCoverState.closed,
+                                        splitWhenHalfOpen:
+                                            settings.splitCdWhenHalfOpen,
+                                        seedId: album.title,
+                                        coverImage: Stack(
+                                          fit: StackFit.expand,
+                                          children: [
+                                            NixArtwork(
+                                              id: firstTrackId ?? 0,
+                                              type: ArtworkType.AUDIO,
                                               fit: BoxFit.cover,
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                      discImage: NixArtwork(
+                                            Transform.scale(
+                                              scale: 1.15,
+                                              child: Image.asset(
+                                                'assets/cd_effects/cd_cover.png',
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        discImage: NixArtwork(
+                                          id: firstTrackId ?? 0,
+                                          type: ArtworkType.AUDIO,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      )
+                                    : NixArtwork(
                                         id: firstTrackId ?? 0,
                                         type: ArtworkType.AUDIO,
                                         fit: BoxFit.cover,
+                                        width: constraints.maxWidth,
+                                        height: constraints.maxWidth,
                                       ),
-                                    )
-                                  : NixArtwork(
-                                      id: firstTrackId ?? 0,
-                                      type: ArtworkType.AUDIO,
-                                      fit: BoxFit.cover,
-                                      width: constraints.maxWidth,
-                                      height: constraints.maxWidth,
-                                    ),
+                              ),
                             ),
                           ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                album.title,
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(fontWeight: FontWeight.bold),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                album.artist,
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      color: colorScheme.onSurfaceVariant,
-                                    ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
+                          Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  album.title,
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  album.artist,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
               ),
             ),
           );
@@ -264,93 +264,96 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> {
             ),
             child: NixScrollbar(
               child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              physics: const AlwaysScrollableScrollPhysics(
-                parent: BouncingScrollPhysics(),
-              ),
-              itemCount: tracks.length + 2, // Header + Tracks + Bottom Padding
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return NixPageHeader(
-                    title: widget.albumTitle,
-                    subtitle: "${widget.albumArtist} • ${tracks.length} Tracks",
-                    trackId: firstTrackId,
-                    customArtwork: Hero(
-                      tag: 'album_cd_${widget.albumTitle}',
-                      child: settings.useCdArtworkStyle
-                          ? NixCustomizableCDWidget(
-                              size: 250,
-                              splitWhenHalfOpen: settings.splitCdWhenHalfOpen,
-                              isSpinning: isSpinning,
-                              resetRotation: currentMusic.currentTrack == null,
-                              rotateSpeed: settings.cdRotationSpeed,
-                              state: _cdState,
-                              seedId: widget.albumTitle,
-                              coverImage: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  NixArtwork(
-                                    id: firstTrackId ?? 0,
-                                    type: ArtworkType.AUDIO,
-                                    fit: BoxFit.cover,
-                                    quality: NixArtworkQuality.high,
-                                  ),
-                                  Transform.scale(
-                                    scale: 1.15,
-                                    child: Image.asset(
-                                      'assets/cd_effects/cd_cover.png',
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
+                itemCount:
+                    tracks.length + 2, // Header + Tracks + Bottom Padding
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return NixPageHeader(
+                      title: widget.albumTitle,
+                      subtitle:
+                          "${widget.albumArtist} • ${tracks.length} Tracks",
+                      trackId: firstTrackId,
+                      customArtwork: Hero(
+                        tag: 'album_cd_${widget.albumTitle}',
+                        child: settings.useCdArtworkStyle
+                            ? NixCustomizableCDWidget(
+                                size: 250,
+                                splitWhenHalfOpen: settings.splitCdWhenHalfOpen,
+                                isSpinning: isSpinning,
+                                resetRotation:
+                                    currentMusic.currentTrack == null,
+                                rotateSpeed: settings.cdRotationSpeed,
+                                state: _cdState,
+                                seedId: widget.albumTitle,
+                                coverImage: Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    NixArtwork(
+                                      id: firstTrackId ?? 0,
+                                      type: ArtworkType.AUDIO,
                                       fit: BoxFit.cover,
+                                      quality: NixArtworkQuality.high,
                                     ),
-                                  ),
-                                ],
-                              ),
-                              discImage: NixArtwork(
+                                    Transform.scale(
+                                      scale: 1.15,
+                                      child: Image.asset(
+                                        'assets/cd_effects/cd_cover.png',
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                discImage: NixArtwork(
+                                  id: firstTrackId ?? 0,
+                                  type: ArtworkType.AUDIO,
+                                  fit: BoxFit.cover,
+                                  quality: NixArtworkQuality.high,
+                                ),
+                              )
+                            : NixArtwork(
                                 id: firstTrackId ?? 0,
                                 type: ArtworkType.AUDIO,
                                 fit: BoxFit.cover,
+                                width: 300,
+                                height: 300,
                                 quality: NixArtworkQuality.high,
                               ),
-                            )
-                          : NixArtwork(
-                              id: firstTrackId ?? 0,
-                              type: ArtworkType.AUDIO,
-                              fit: BoxFit.cover,
-                              width: 300,
-                              height: 300,
-                              quality: NixArtworkQuality.high,
-                            ),
-                    ),
-                    fallbackIcon: FlutterRemix.disc_line,
-                    actionRow: NixActionRow(
-                      onShuffle: () {
-                        final audio = context.read<CurrentMusicProvider>();
-                        final shuffled = List<Track>.from(tracks)..shuffle();
-                        if (!audio.isShuffleEnabled) audio.toggleShuffle();
-                        audio.playTrack(shuffled.first);
-                      },
-                      onPlay: () {
-                        context.read<CurrentMusicProvider>().playTrack(
-                          tracks.first,
-                        );
-                      },
-                      playLabel: "Play All",
-                    ),
+                      ),
+                      fallbackIcon: FlutterRemix.disc_line,
+                      actionRow: NixActionRow(
+                        onShuffle: () {
+                          final audio = context.read<CurrentMusicProvider>();
+                          final shuffled = List<Track>.from(tracks)..shuffle();
+                          if (!audio.isShuffleEnabled) audio.toggleShuffle();
+                          audio.playTrack(shuffled.first);
+                        },
+                        onPlay: () {
+                          context.read<CurrentMusicProvider>().playTrack(
+                            tracks.first,
+                          );
+                        },
+                        playLabel: "Play All",
+                      ),
+                    );
+                  }
+
+                  if (index == tracks.length + 1) {
+                    return const NixBottomSpacer();
+                  }
+
+                  final track = tracks[index - 1];
+                  return TrackTile(
+                    track: track,
+                    playlistContext: tracks,
+                    isFirst: index == 1,
+                    isLast: index == tracks.length,
                   );
-                }
-
-                if (index == tracks.length + 1) {
-                  return const NixBottomSpacer();
-                }
-
-                final track = tracks[index - 1];
-                return TrackTile(
-                  track: track,
-                  playlistContext: tracks,
-                  isFirst: index == 1,
-                  isLast: index == tracks.length,
-                );
-              },
-            ),
+                },
+              ),
             ),
           );
         },

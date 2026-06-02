@@ -72,70 +72,70 @@ class _ArtistsPageState extends State<ArtistsPage> {
             ),
             child: NixScrollbar(
               child: GridView.builder(
-              padding: EdgeInsets.only(
-                bottom: NixBottomSpacer.calculateHeight(context),
-                left: 16,
-                right: 16,
-                top: 8,
-              ),
-              physics: const AlwaysScrollableScrollPhysics(
-                parent: BouncingScrollPhysics(),
-              ),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 0.78,
-              ),
-              itemCount: artists.length,
-              itemBuilder: (context, index) {
-                final artist = artists[index];
-                final artistTracks = music.getTracksByArtist(artist.name);
-                final firstTrackId = artistTracks.isNotEmpty
-                    ? artistTracks.first.id
-                    : null;
+                padding: EdgeInsets.only(
+                  bottom: NixBottomSpacer.calculateHeight(context),
+                  left: 16,
+                  right: 16,
+                  top: 8,
+                ),
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 0.78,
+                ),
+                itemCount: artists.length,
+                itemBuilder: (context, index) {
+                  final artist = artists[index];
+                  final artistTracks = music.getTracksByArtist(artist.name);
+                  final firstTrackId = artistTracks.isNotEmpty
+                      ? artistTracks.first.id
+                      : null;
 
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            ArtistTracksPage(artistName: artist.name),
-                      ),
-                    );
-                  },
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      NixArtwork(
-                        id: firstTrackId ?? 0,
-                        type: ArtworkType.AUDIO,
-                        width: 130,
-                        height: 130,
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        artist.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onSurface,
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              ArtistTracksPage(artistName: artist.name),
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        "${artist.numberOfTracks} Tracks",
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
+                      );
+                    },
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        NixArtwork(
+                          id: firstTrackId ?? 0,
+                          type: ArtworkType.AUDIO,
+                          width: 130,
+                          height: 130,
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+                        const SizedBox(height: 10),
+                        Text(
+                          artist.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.onSurface,
+                              ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          "${artist.numberOfTracks} Tracks",
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: colorScheme.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
           );
@@ -178,102 +178,103 @@ class ArtistTracksPage extends StatelessWidget {
             ),
             child: NixScrollbar(
               child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              physics: const AlwaysScrollableScrollPhysics(
-                parent: BouncingScrollPhysics(),
-              ),
-              itemCount: tracks.length + 2, // Header + Tracks + Bottom Padding
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  // Header section with artwork and info
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 32),
-                    child: Column(
-                      children: [
-                        NixArtwork(
-                          id: firstTrackId ?? 0,
-                          type: ArtworkType.AUDIO,
-                          width: 300,
-                          height: 300,
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          artistName,
-                          style: textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: colorScheme.onSurface,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
+                itemCount:
+                    tracks.length + 2, // Header + Tracks + Bottom Padding
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    // Header section with artwork and info
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 32),
+                      child: Column(
+                        children: [
+                          NixArtwork(
+                            id: firstTrackId ?? 0,
+                            type: ArtworkType.AUDIO,
+                            width: 300,
+                            height: 300,
                           ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          "${tracks.length} Tracks • ${albums.length} Albums",
-                          style: textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
+                          const SizedBox(height: 20),
+                          Text(
+                            artistName,
+                            style: textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: colorScheme.onSurface,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 24),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: ExpressiveToneButton(
-                                onPressed: () {
-                                  final audio = context
-                                      .read<CurrentMusicProvider>();
-                                  final shuffled = List<Track>.from(tracks)
-                                    ..shuffle();
-                                  if (!audio.isShuffleEnabled) {
-                                    audio.toggleShuffle();
-                                  }
-                                  audio.playTrack(shuffled.first);
-                                },
-                                child: const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(FlutterRemix.shuffle_fill, size: 20),
-                                    SizedBox(width: 8),
-                                    Text('Shuffle'),
-                                  ],
+                          const SizedBox(height: 6),
+                          Text(
+                            "${tracks.length} Tracks • ${albums.length} Albums",
+                            style: textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: ExpressiveToneButton(
+                                  onPressed: () {
+                                    final audio = context
+                                        .read<CurrentMusicProvider>();
+                                    final shuffled = List<Track>.from(tracks)
+                                      ..shuffle();
+                                    if (!audio.isShuffleEnabled) {
+                                      audio.toggleShuffle();
+                                    }
+                                    audio.playTrack(shuffled.first);
+                                  },
+                                  child: const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(FlutterRemix.shuffle_fill, size: 20),
+                                      SizedBox(width: 8),
+                                      Text('Shuffle'),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: ExpressiveButton(
-                                onPressed: () {
-                                  context
-                                      .read<CurrentMusicProvider>()
-                                      .playTrack(tracks.first);
-                                },
-                                child: const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(FlutterRemix.play_fill, size: 20),
-                                    SizedBox(width: 8),
-                                    Text("Play All"),
-                                  ],
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: ExpressiveButton(
+                                  onPressed: () {
+                                    context
+                                        .read<CurrentMusicProvider>()
+                                        .playTrack(tracks.first);
+                                  },
+                                  child: const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(FlutterRemix.play_fill, size: 20),
+                                      SizedBox(width: 8),
+                                      Text("Play All"),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  if (index == tracks.length + 1) {
+                    return const NixBottomSpacer();
+                  }
+
+                  final track = tracks[index - 1];
+                  return TrackTile(
+                    track: track,
+                    playlistContext: tracks,
+                    isFirst: index == 1,
+                    isLast: index == tracks.length,
                   );
-                }
-
-                if (index == tracks.length + 1) {
-                  return const NixBottomSpacer();
-                }
-
-                final track = tracks[index - 1];
-                return TrackTile(
-                  track: track,
-                  playlistContext: tracks,
-                  isFirst: index == 1,
-                  isLast: index == tracks.length,
-                );
-              },
+                },
               ),
             ),
           );

@@ -265,8 +265,21 @@ class PlaybackSettingsPage extends StatelessWidget {
               value: settings.autoScrollQueue,
               onChanged: (value) => settings.setAutoScrollQueue(value),
             ),
-            isLast: true,
+            isFirst: false,
             onTap: () => settings.setAutoScrollQueue(!settings.autoScrollQueue),
+          ),
+          const SizedBox(height: 2.5),
+          CardListTile(
+            title: 'Save Lyrics Offline',
+            subtitle: 'Store fetched lyrics locally for offline playback',
+            icon: FlutterRemix.download_cloud_2_line,
+            trailing: Switch(
+              value: settings.saveLyricsOffline,
+              onChanged: (value) => settings.setSaveLyricsOffline(value),
+            ),
+            isLast: true,
+            onTap: () =>
+                settings.setSaveLyricsOffline(!settings.saveLyricsOffline),
           ),
 
           const Padding(

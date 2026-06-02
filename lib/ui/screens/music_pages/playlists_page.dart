@@ -176,69 +176,69 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
             ),
             child: NixScrollbar(
               child: ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              physics: const AlwaysScrollableScrollPhysics(
-                parent: BouncingScrollPhysics(),
-              ),
-              itemCount: playlists.length + 1,
-              itemBuilder: (context, index) {
-                if (index == playlists.length) {
-                  return const NixBottomSpacer();
-                }
-                final playlist = playlists[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 2),
-                  child: Dismissible(
-                    key: ValueKey(playlist.id),
-                    direction: DismissDirection.endToStart,
-                    background: Container(
-                      padding: const EdgeInsets.only(right: 24),
-                      alignment: Alignment.centerRight,
-                      decoration: BoxDecoration(
-                        color: colorScheme.errorContainer,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        FlutterRemix.delete_bin_line,
-                        color: colorScheme.onErrorContainer,
-                      ),
-                    ),
-                    confirmDismiss: (direction) async {
-                      PlaylistDialogs.showDeleteConfirmation(
-                        context,
-                        playlist.id,
-                        playlist.name,
-                      );
-                      return false;
-                    },
-                    child: CardListTile(
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => PlaylistViewPage(
-                            playlistName: playlist.name,
-                            playlistId: playlist.id,
-                          ),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
+                itemCount: playlists.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == playlists.length) {
+                    return const NixBottomSpacer();
+                  }
+                  final playlist = playlists[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: Dismissible(
+                      key: ValueKey(playlist.id),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        padding: const EdgeInsets.only(right: 24),
+                        alignment: Alignment.centerRight,
+                        decoration: BoxDecoration(
+                          color: colorScheme.errorContainer,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          FlutterRemix.delete_bin_line,
+                          color: colorScheme.onErrorContainer,
                         ),
                       ),
-                      onLongPress: () {
-                        if (context.read<SettingsProvider>().enableHaptics) {
-                          HapticFeedback.mediumImpact();
-                        }
-                        _showPlaylistMenu(context, playlist);
+                      confirmDismiss: (direction) async {
+                        PlaylistDialogs.showDeleteConfirmation(
+                          context,
+                          playlist.id,
+                          playlist.name,
+                        );
+                        return false;
                       },
-                      isFirst: index == 0,
-                      isLast: index == playlists.length - 1,
-                      title: playlist.name,
-                      subtitle: '${playlist.tracks.length} tracks',
-                      leading: NixPlaylistCover(playlist: playlist, size: 48),
-                      trailing: Icon(
-                        FlutterRemix.arrow_right_s_line,
-                        color: colorScheme.onSurfaceVariant,
+                      child: CardListTile(
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => PlaylistViewPage(
+                              playlistName: playlist.name,
+                              playlistId: playlist.id,
+                            ),
+                          ),
+                        ),
+                        onLongPress: () {
+                          if (context.read<SettingsProvider>().enableHaptics) {
+                            HapticFeedback.mediumImpact();
+                          }
+                          _showPlaylistMenu(context, playlist);
+                        },
+                        isFirst: index == 0,
+                        isLast: index == playlists.length - 1,
+                        title: playlist.name,
+                        subtitle: '${playlist.tracks.length} tracks',
+                        leading: NixPlaylistCover(playlist: playlist, size: 48),
+                        trailing: Icon(
+                          FlutterRemix.arrow_right_s_line,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
               ),
             ),
           );

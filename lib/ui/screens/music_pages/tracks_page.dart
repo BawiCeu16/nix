@@ -15,7 +15,11 @@ class TracksPage extends StatefulWidget {
   final String title;
   final List<Track> Function() tracksSource;
 
-  const TracksPage({super.key, required this.title, required this.tracksSource});
+  const TracksPage({
+    super.key,
+    required this.title,
+    required this.tracksSource,
+  });
 
   @override
   State<TracksPage> createState() => _TracksPageState();
@@ -57,7 +61,10 @@ class _TracksPageState extends State<TracksPage> {
               ),
               PopupMenuItem(value: _TrackSort.aToZ, child: Text('A → Z')),
               PopupMenuItem(value: _TrackSort.zToA, child: Text('Z → A')),
-              PopupMenuItem(value: _TrackSort.duration, child: Text('Duration')),
+              PopupMenuItem(
+                value: _TrackSort.duration,
+                child: Text('Duration'),
+              ),
             ],
           ),
         ],

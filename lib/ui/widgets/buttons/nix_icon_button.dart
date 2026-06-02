@@ -45,16 +45,21 @@ class _NixIconButtonState extends State<NixIconButton> {
           width: widget.size,
           height: widget.size,
           decoration: BoxDecoration(
-            color: widget.backgroundColor ?? 
-                (enabled ? colorScheme.primaryContainer : colorScheme.onSurface.withValues(alpha: 0.12)),
+            color:
+                widget.backgroundColor ??
+                (enabled
+                    ? colorScheme.primaryContainer
+                    : colorScheme.onSurface.withValues(alpha: 0.12)),
             shape: BoxShape.circle,
-            boxShadow: _isPressed ? [] : [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            boxShadow: _isPressed
+                ? []
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
           ),
           clipBehavior: Clip.antiAlias,
           child: Material(
@@ -72,7 +77,11 @@ class _NixIconButtonState extends State<NixIconButton> {
               child: Center(
                 child: IconTheme(
                   data: IconThemeData(
-                    color: widget.iconColor ?? (enabled ? colorScheme.onPrimaryContainer : colorScheme.onSurface.withValues(alpha: 0.38)),
+                    color:
+                        widget.iconColor ??
+                        (enabled
+                            ? colorScheme.onPrimaryContainer
+                            : colorScheme.onSurface.withValues(alpha: 0.38)),
                     size: widget.size * 0.5,
                   ),
                   child: widget.icon,

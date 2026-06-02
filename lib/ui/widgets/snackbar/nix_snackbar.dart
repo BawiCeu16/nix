@@ -59,8 +59,9 @@ class NixSnackBar extends StatelessWidget {
         // Calculate the available width for text
         // padding(16*2) + icon(24) + spacing(12) + optional trailing
         double availableWidth = constraints.maxWidth - 32 - 24 - 12;
-        if (trailing != null)
+        if (trailing != null) {
           availableWidth -= 16; // rough estimate for trailing
+        }
 
         final textStyle = textTheme.bodyMedium?.copyWith(
           color: colorScheme.onSurface,

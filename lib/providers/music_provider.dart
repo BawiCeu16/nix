@@ -32,7 +32,6 @@ class _ParseOutput {
   );
 }
 
-
 /// Top-level function required by [compute] to run on a background isolate.
 _ParseOutput _parseLibraryInIsolate(_ParseInput input) {
   final rawSongs = input.rawSongs;
@@ -87,7 +86,6 @@ _ParseOutput _parseLibraryInIsolate(_ParseInput input) {
   return _ParseOutput(tracks, albums, artists, albumFirstTrackId);
 }
 
-
 class MusicProvider extends ChangeNotifier {
   List<Track> _tracks = [];
   final OnAudioQuery _audioQuery = OnAudioQuery();
@@ -95,7 +93,6 @@ class MusicProvider extends ChangeNotifier {
   List<Artist> _artists = [];
   Map<String, int> _albumFirstTrackId = {};
   final List<Playlist> _playlists = [];
-
 
   bool _isLoading = false;
   final bool _hasScanned = false;
@@ -116,13 +113,11 @@ class MusicProvider extends ChangeNotifier {
   List<Playlist> get playlists => _playlists;
   DateTime? get lastScanned => _lastScanned;
 
-
   /// Refreshes all cached playlists (recently played, top played, favorites).
   Future<void> refreshCaches() async {
     await _rebuildCaches();
     notifyListeners();
   }
-
 
   Playlist get recentlyPlayed =>
       _recentlyPlayedCache ??
@@ -259,14 +254,12 @@ class MusicProvider extends ChangeNotifier {
       Hive.openBox<int>(HiveKeys.playCountsBox),
     ]);
 
-
     if (currentMusic != null) {
       _currentMusic = currentMusic;
       _playbackSubscription?.cancel();
       _playbackSubscription = currentMusic.onTrackPlayedStream.listen((_) {
         refreshCaches();
       });
-
     }
 
     await scanDevice(customFolders: customFolders);
@@ -328,7 +321,6 @@ class MusicProvider extends ChangeNotifier {
         permissionStatus = results.any((status) => status.isGranted);
       }
 
-
       if (!permissionStatus) {
         _error = 'Storage permission not granted. Cannot scan music.';
         _isLoading = false;
@@ -358,16 +350,20 @@ class MusicProvider extends ChangeNotifier {
 
       // Opt. #7: Run the CPU-intensive parsing on a background isolate via
       // compute(), preventing UI-thread jank on startup with large libraries.
-      final rawSongs = validAudio.map((audio) => <String, dynamic>{
-        'dateAdded': audio.dateAdded ?? 0,
-        'id': audio.id,
-        'title': audio.title,
-        'artist': audio.artist,
-        'album': audio.album,
-        'uri': audio.data,
-        'duration': audio.duration ?? 0,
-        'size': audio.size,
-      }).toList();
+      final rawSongs = validAudio
+          .map(
+            (audio) => <String, dynamic>{
+              'dateAdded': audio.dateAdded ?? 0,
+              'id': audio.id,
+              'title': audio.title,
+              'artist': audio.artist,
+              'album': audio.album,
+              'uri': audio.data,
+              'duration': audio.duration ?? 0,
+              'size': audio.size,
+            },
+          )
+          .toList();
 
       final parsed = await compute(
         _parseLibraryInIsolate,
@@ -379,14 +375,9 @@ class MusicProvider extends ChangeNotifier {
       _artists = parsed.artists;
       _albumFirstTrackId = parsed.albumFirstTrackId;
 
-
       // Parallelize playlist loading and cache rebuilding
-      await Future.wait([
-        Future(() => _loadPlaylists()),
-        _rebuildCaches(),
-      ]);
+      await Future.wait([Future(() => _loadPlaylists()), _rebuildCaches()]);
       _lastScanned = DateTime.now();
-
     } catch (e) {
       _error = 'Failed to scan device: $e';
       debugPrint('Error querying MediaStore: $e');
@@ -409,7 +400,6 @@ class MusicProvider extends ChangeNotifier {
     _topPlayedCache = results[1];
     _favoritesCache = results[2];
   }
-
 
   // _createAlbumsAndArtists() is now handled in the background isolate.
 
@@ -455,7 +445,6 @@ class MusicProvider extends ChangeNotifier {
     );
   }
 
-
   // Favorites management
   bool isFavorite(Track track) {
     if (!Hive.isBoxOpen(HiveKeys.favoritesBox)) return false;
@@ -474,7 +463,6 @@ class MusicProvider extends ChangeNotifier {
     _favoritesCache = _calculateFavorites();
     notifyListeners();
   }
-
 
   Future<void> _savePlaylist(Playlist p) async {
     final box = Hive.box<String>(HiveKeys.playlistsBox);

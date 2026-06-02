@@ -3,12 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:http/http.dart' as http;
 import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
+import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../models/animation_data.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import '../../widgets/buttons/nix_icon_button.dart';
+import '../../widgets/buttons/expressive_button.dart';
+import 'package:hive/hive.dart';
+import 'package:nix/core/hive_keys.dart';
+import 'package:nix/providers/settings_provider.dart';
 
 class LyricLine {
   final Duration time;
@@ -75,6 +80,159 @@ class _LyricsSectionState extends State<LyricsSection> {
     });
   }
 
+  void _showManualSearchDialog(BuildContext context, dynamic track) {
+    if (track == null) return;
+
+    final titleController = TextEditingController(text: track.title);
+    final artistController = TextEditingController(text: track.artist ?? '');
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Find Lyrics Manually'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(labelText: 'Title'),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: artistController,
+                decoration: const InputDecoration(labelText: 'Artist'),
+              ),
+            ],
+          ),
+          actions: [
+            ExpressiveToneButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ExpressiveButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _performManualSearch(
+                  titleController.text.trim(),
+                  artistController.text.trim(),
+                  track.album,
+                  (track.duration) ~/ 1000,
+                );
+              },
+              child: const Text('Search'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _performManualSearch(
+    String title,
+    String artist,
+    String? album,
+    int durationSecs,
+  ) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final query = '$title $artist'.trim();
+      final queryParams = {'q': query};
+
+      final searchUri = Uri.parse(
+        'https://lrclib.net/api/search',
+      ).replace(queryParameters: queryParams);
+      final searchResponse = await http.get(searchUri);
+
+      if (searchResponse.statusCode == 200) {
+        final List searchData = json.decode(searchResponse.body);
+        if (searchData.isNotEmpty) {
+          if (mounted) {
+            _showSearchResultsDialog(context, searchData, "${title}_$artist");
+          }
+        } else {
+          setState(() {
+            _plainLyrics = "Lyrics not found.";
+            _syncedLyrics = null;
+          });
+        }
+      } else {
+        setState(() {
+          _plainLyrics = "Error fetching lyrics.";
+          _syncedLyrics = null;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _plainLyrics = "Error fetching lyrics.";
+        _syncedLyrics = null;
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _showSearchResultsDialog(
+    BuildContext context,
+    List results,
+    String cacheKey,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Select Lyrics'),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 400,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: results.length,
+              itemBuilder: (context, index) {
+                final result = results[index];
+                final trackName = result['trackName'] ?? 'Unknown Track';
+                final artistName = result['artistName'] ?? 'Unknown Artist';
+                final albumName = result['albumName'] ?? 'Unknown Album';
+                final hasSynced =
+                    result['syncedLyrics'] != null &&
+                    result['syncedLyrics'].toString().isNotEmpty;
+
+                return ListTile(
+                  title: Text(trackName),
+                  subtitle: Text('$artistName • $albumName'),
+                  trailing: hasSynced
+                      ? const Icon(FlutterRemix.timer_line, size: 16)
+                      : null,
+                  onTap: () {
+                    Navigator.pop(context);
+                    final settings = context.read<SettingsProvider>();
+                    _handleLyricsData(result);
+                    if (settings.saveLyricsOffline) {
+                      Hive.box(HiveKeys.lyricsBox).put(cacheKey, result);
+                    }
+                  },
+                );
+              },
+            ),
+          ),
+          actions: [
+            ExpressiveButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _scrollToCurrentTrack() {
     setState(() => _userScrolled = false);
     if (_scrollController.isAttached && _currentIndex != -1) {
@@ -137,8 +295,38 @@ class _LyricsSectionState extends State<LyricsSection> {
     return parsedLines;
   }
 
+  String _cleanTitle(String title, String? artist) {
+    if (artist == null || artist.isEmpty) return title;
+    String cleaned = title;
+
+    final lowerTitle = title.toLowerCase();
+    final lowerArtist = artist.toLowerCase();
+
+    if (lowerTitle.contains(lowerArtist)) {
+      final regex = RegExp(
+        r'\s*[-\u2010-\u2015]\s*' +
+            RegExp.escape(artist) +
+            r'|\s*' +
+            RegExp.escape(artist) +
+            r'\s*[-\u2010-\u2015]\s*',
+        caseSensitive: false,
+      );
+      if (regex.hasMatch(cleaned)) {
+        cleaned = cleaned.replaceAll(regex, '');
+      } else {
+        final regex2 = RegExp(RegExp.escape(artist), caseSensitive: false);
+        cleaned = cleaned.replaceAll(regex2, '').trim();
+      }
+    }
+
+    cleaned = cleaned.replaceAll(RegExp(r'\(\s*\)'), '').trim();
+    cleaned = cleaned.replaceAll(RegExp(r'\[\s*\]'), '').trim();
+
+    return cleaned.isNotEmpty ? cleaned : title;
+  }
+
   Future<void> _fetchLyrics(
-    String title,
+    String rawTitle,
     String? artist,
     String? album,
     int durationSecs,
@@ -149,6 +337,26 @@ class _LyricsSectionState extends State<LyricsSection> {
       _syncedLyrics = null;
       _currentIndex = -1;
     });
+
+    final title = _cleanTitle(rawTitle, artist);
+    final cacheKey = "${rawTitle}_$artist";
+    final box = Hive.box(HiveKeys.lyricsBox);
+    final settings = context.read<SettingsProvider>();
+
+    if (box.containsKey(cacheKey)) {
+      try {
+        final data = box.get(cacheKey);
+        // Ensure data is parsed back to Map<String, dynamic> properly
+        final Map<String, dynamic> mapData = Map<String, dynamic>.from(data);
+        _handleLyricsData(mapData);
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      } catch (e) {
+        // Fallback to fetch if corrupted
+      }
+    }
 
     try {
       final queryParams = {
@@ -166,6 +374,9 @@ class _LyricsSectionState extends State<LyricsSection> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         _handleLyricsData(data);
+        if (settings.saveLyricsOffline) {
+          box.put(cacheKey, data);
+        }
       } else {
         final searchUri = Uri.parse(
           'https://lrclib.net/api/search',
@@ -176,6 +387,9 @@ class _LyricsSectionState extends State<LyricsSection> {
           final List searchData = json.decode(searchResponse.body);
           if (searchData.isNotEmpty) {
             _handleLyricsData(searchData.first);
+            if (settings.saveLyricsOffline) {
+              box.put(cacheKey, searchData.first);
+            }
           } else {
             setState(() {
               _plainLyrics = "Lyrics not found.";
@@ -312,8 +526,9 @@ class _LyricsSectionState extends State<LyricsSection> {
                                         is UserScrollNotification) {
                                       if (notification.direction !=
                                           ScrollDirection.idle) {
-                                        if (!_userScrolled)
+                                        if (!_userScrolled) {
                                           setState(() => _userScrolled = true);
+                                        }
                                       }
                                     }
                                     return false;
@@ -378,17 +593,30 @@ class _LyricsSectionState extends State<LyricsSection> {
                               padding: const EdgeInsets.symmetric(
                                 vertical: 50.0,
                               ),
-                              child: Text(
-                                _plainLyrics ??
-                                    "Lyrics not found for\n${track?.title ?? 'this track'}",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 18.0,
-                                  height: 1.8,
-                                  fontWeight: FontWeight.w500,
-                                  color: Theme.of(context).colorScheme.onSurface
-                                      .withValues(alpha: 0.8),
-                                ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _plainLyrics ??
+                                        "Lyrics not found for\n${track?.title ?? 'this track'}",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 18.0,
+                                      height: 1.8,
+                                      fontWeight: FontWeight.w500,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: 0.8),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
+                                  ExpressiveButton(
+                                    onPressed: () =>
+                                        _showManualSearchDialog(context, track),
+                                    child: const Text('Find Manually'),
+                                  ),
+                                ],
                               ),
                             ),
                     ),

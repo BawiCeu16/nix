@@ -50,7 +50,6 @@ class TrackCardTile extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                     color: colorScheme.onSurface,
                   ),
-
                 ),
                 const SizedBox(height: 1),
                 Text(

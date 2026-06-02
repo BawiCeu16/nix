@@ -66,170 +66,96 @@ class _SearchPageState extends State<SearchPage> {
           bottom: false,
           child: NixScrollbar(
             child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(
-              parent: BouncingScrollPhysics(),
-            ),
-            slivers: [
-              SliverAppBar(
-                systemOverlayStyle: brightness == Brightness.dark
-                    ? SystemUiOverlayStyle.light.copyWith(
-                        statusBarColor: Colors.transparent,
-                      )
-                    : SystemUiOverlayStyle.dark.copyWith(
-                        statusBarColor: Colors.transparent,
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              slivers: [
+                SliverAppBar(
+                  systemOverlayStyle: brightness == Brightness.dark
+                      ? SystemUiOverlayStyle.light.copyWith(
+                          statusBarColor: Colors.transparent,
+                        )
+                      : SystemUiOverlayStyle.dark.copyWith(
+                          statusBarColor: Colors.transparent,
+                        ),
+                  floating: false,
+                  snap: false,
+                  scrolledUnderElevation: 0,
+                  elevation: 0,
+                  backgroundColor: Colors.transparent,
+                  expandedHeight: 30,
+                  bottom: PreferredSize(
+                    preferredSize: const Size.fromHeight(60),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                      child: SearchBar(
+                        backgroundColor: WidgetStatePropertyAll(
+                          colorScheme.surface,
+                        ),
+                        elevation: const WidgetStatePropertyAll(0),
+                        controller: _searchController,
+                        hintText: "Search tracks, artists, albums...",
+                        textInputAction: TextInputAction.search,
+                        leading: Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: const Icon(FlutterRemix.search_line),
+                        ),
+                        trailing: [
+                          if (_searchController.text.isNotEmpty)
+                            IconButton(
+                              icon: const Icon(FlutterRemix.close_line),
+                              onPressed: () {
+                                _searchController.clear();
+                                _onSearchChanged('', music);
+                              },
+                            ),
+                        ],
+                        onChanged: (val) => _onSearchChanged(val, music),
+                        onSubmitted: (val) => _submitSearch(
+                          val,
+                          context.read<SettingsProvider>(),
+                        ),
                       ),
-                floating: false,
-                snap: false,
-                scrolledUnderElevation: 0,
-                elevation: 0,
-                backgroundColor: Colors.transparent,
-                expandedHeight: 30,
-                bottom: PreferredSize(
-                  preferredSize: const Size.fromHeight(60),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-                    child: SearchBar(
-                      backgroundColor: WidgetStatePropertyAll(
-                        colorScheme.surface,
-                      ),
-                      elevation: const WidgetStatePropertyAll(0),
-                      controller: _searchController,
-                      hintText: "Search tracks, artists, albums...",
-                      textInputAction: TextInputAction.search,
-                      leading: Padding(
-                        padding: const EdgeInsets.only(left: 8.0),
-                        child: const Icon(FlutterRemix.search_line),
-                      ),
-                      trailing: [
-                        if (_searchController.text.isNotEmpty)
-                          IconButton(
-                            icon: const Icon(FlutterRemix.close_line),
-                            onPressed: () {
-                              _searchController.clear();
-                              _onSearchChanged('', music);
-                            },
-                          ),
-                      ],
-                      onChanged: (val) => _onSearchChanged(val, music),
-                      onSubmitted: (val) =>
-                          _submitSearch(val, context.read<SettingsProvider>()),
                     ),
                   ),
                 ),
-              ),
 
-              // Results or placeholder
-              if (_searchResults.isEmpty && _searchController.text.isEmpty)
-                settings.searchHistory.isEmpty
-                    ? SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: Center(
-                          child: Text(
-                            "Type something to search...",
-                            style: TextStyle(
-                              color: colorScheme.onSurfaceVariant,
+                // Results or placeholder
+                if (_searchResults.isEmpty && _searchController.text.isEmpty)
+                  settings.searchHistory.isEmpty
+                      ? SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: Center(
+                            child: Text(
+                              "Type something to search...",
+                              style: TextStyle(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
                             ),
                           ),
-                        ),
-                      )
-                    : SliverPadding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        sliver: SliverList(
-                          delegate: SliverChildListDelegate([
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "Recent",
-                                  style: Theme.of(context).textTheme.titleSmall
-                                      ?.copyWith(
-                                        color: colorScheme.onSurfaceVariant,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                ),
-                                TextButton(
-                                  onPressed: () => NixDialog.show(
-                                    title: "Clear Search History?",
-                                    subtitle: "Remove all search history?",
-                                    children: [
-                                      Builder(
-                                        builder: (dialogContext) {
-                                          return Row(
-                                            children: [
-                                              Expanded(
-                                                child: ExpressiveToneButton(
-                                                  onPressed: () => Navigator.of(
-                                                    dialogContext,
-                                                    rootNavigator: true,
-                                                  ).pop(),
-                                                  child: const Text("Cancel"),
-                                                ),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Expanded(
-                                                child: ExpressiveButton(
-                                                  onPressed: () {
-                                                    settings
-                                                        .clearSearchHistory();
-                                                    Navigator.of(
-                                                      dialogContext,
-                                                      rootNavigator: true,
-                                                    ).pop();
-                                                  },
-                                                  child: const Text("Clear"),
-                                                ),
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                    context: context,
+                        )
+                      : SliverPadding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          sliver: SliverList(
+                            delegate: SliverChildListDelegate([
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "Recent",
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleSmall
+                                        ?.copyWith(
+                                          color: colorScheme.onSurfaceVariant,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                   ),
-                                  child: const Text("Clear All"),
-                                ),
-                              ],
-                            ),
-                            ...settings.searchHistory.asMap().entries.map((
-                              entry,
-                            ) {
-                              final index = entry.key;
-                              final query = entry.value;
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 1.5,
-                                ),
-                                child: CardListTile(
-                                  title: query,
-                                  icon: FlutterRemix.history_line,
-                                  isFirst: index == 0,
-                                  isLast:
-                                      index ==
-                                      settings.searchHistory.length - 1,
-                                  trailing: IconButton(
-                                    icon: const Icon(
-                                      FlutterRemix.arrow_left_up_line,
-                                      size: 18,
-                                    ),
-                                    onPressed: () {
-                                      _searchController.text = query;
-                                      _searchController.selection =
-                                          TextSelection.fromPosition(
-                                            TextPosition(offset: query.length),
-                                          );
-                                      _onSearchChanged(query, music);
-                                    },
-                                  ),
-                                  onTap: () {
-                                    _searchController.text = query;
-                                    _onSearchChanged(query, music);
-                                    _submitSearch(query, settings);
-                                  },
-                                  onLongPress: () {
-                                    NixDialog.show(
-                                      context: context,
-                                      title: "Delete Search?",
-                                      subtitle: "Remove '$query' from history?",
+                                  TextButton(
+                                    onPressed: () => NixDialog.show(
+                                      title: "Clear Search History?",
+                                      subtitle: "Remove all search history?",
                                       children: [
                                         Builder(
                                           builder: (dialogContext) {
@@ -250,15 +176,13 @@ class _SearchPageState extends State<SearchPage> {
                                                   child: ExpressiveButton(
                                                     onPressed: () {
                                                       settings
-                                                          .removeSearchQuery(
-                                                            query,
-                                                          );
+                                                          .clearSearchHistory();
                                                       Navigator.of(
                                                         dialogContext,
                                                         rootNavigator: true,
                                                       ).pop();
                                                     },
-                                                    child: const Text("Delete"),
+                                                    child: const Text("Clear"),
                                                   ),
                                                 ),
                                               ],
@@ -266,46 +190,135 @@ class _SearchPageState extends State<SearchPage> {
                                           },
                                         ),
                                       ],
-                                    );
-                                  },
-                                ),
-                              );
-                            }),
-                            const NixBottomSpacer(),
-                          ]),
-                        ),
-                      )
-              else if (_searchResults.isEmpty)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(
-                    child: Text(
-                      "No results found.",
-                      style: TextStyle(color: colorScheme.onSurfaceVariant),
+                                      context: context,
+                                    ),
+                                    child: const Text("Clear All"),
+                                  ),
+                                ],
+                              ),
+                              ...settings.searchHistory.asMap().entries.map((
+                                entry,
+                              ) {
+                                final index = entry.key;
+                                final query = entry.value;
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 1.5,
+                                  ),
+                                  child: CardListTile(
+                                    title: query,
+                                    icon: FlutterRemix.history_line,
+                                    isFirst: index == 0,
+                                    isLast:
+                                        index ==
+                                        settings.searchHistory.length - 1,
+                                    trailing: IconButton(
+                                      icon: const Icon(
+                                        FlutterRemix.arrow_left_up_line,
+                                        size: 18,
+                                      ),
+                                      onPressed: () {
+                                        _searchController.text = query;
+                                        _searchController.selection =
+                                            TextSelection.fromPosition(
+                                              TextPosition(
+                                                offset: query.length,
+                                              ),
+                                            );
+                                        _onSearchChanged(query, music);
+                                      },
+                                    ),
+                                    onTap: () {
+                                      _searchController.text = query;
+                                      _onSearchChanged(query, music);
+                                      _submitSearch(query, settings);
+                                    },
+                                    onLongPress: () {
+                                      NixDialog.show(
+                                        context: context,
+                                        title: "Delete Search?",
+                                        subtitle:
+                                            "Remove '$query' from history?",
+                                        children: [
+                                          Builder(
+                                            builder: (dialogContext) {
+                                              return Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: ExpressiveToneButton(
+                                                      onPressed: () =>
+                                                          Navigator.of(
+                                                            dialogContext,
+                                                            rootNavigator: true,
+                                                          ).pop(),
+                                                      child: const Text(
+                                                        "Cancel",
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Expanded(
+                                                    child: ExpressiveButton(
+                                                      onPressed: () {
+                                                        settings
+                                                            .removeSearchQuery(
+                                                              query,
+                                                            );
+                                                        Navigator.of(
+                                                          dialogContext,
+                                                          rootNavigator: true,
+                                                        ).pop();
+                                                      },
+                                                      child: const Text(
+                                                        "Delete",
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                );
+                              }),
+                              const NixBottomSpacer(),
+                            ]),
+                          ),
+                        )
+                else if (_searchResults.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Text(
+                        "No results found.",
+                        style: TextStyle(color: colorScheme.onSurfaceVariant),
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    sliver: SliverList.builder(
+                      itemCount: _searchResults.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == _searchResults.length) {
+                          return const NixBottomSpacer();
+                        }
+                        final track = _searchResults[index];
+                        return TrackTile(
+                          track: track,
+                          playlistContext: _searchResults,
+                          isFirst: index == 0,
+                          isLast: index == _searchResults.length - 1,
+                        );
+                      },
                     ),
                   ),
-                )
-              else
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  sliver: SliverList.builder(
-                    itemCount: _searchResults.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index == _searchResults.length) {
-                        return const NixBottomSpacer();
-                      }
-                      final track = _searchResults[index];
-                      return TrackTile(
-                        track: track,
-                        playlistContext: _searchResults,
-                        isFirst: index == 0,
-                        isLast: index == _searchResults.length - 1,
-                      );
-                    },
-                  ),
-                ),
-            ],
-          ),
+              ],
+            ),
           ),
         ),
       ),

@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:nix/providers/settings_provider.dart';
 import 'package:nix/models/settings/artwork_quality.dart';
 import 'package:nix/models/settings/timer_gesture.dart';
-import 'package:nix/ui/widgets/list_item/nix_choice_chip.dart';
+import 'package:m3e_buttons/m3e_buttons.dart';
 import 'package:nix/ui/widgets/common/nix_section_header.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 import 'package:nix/ui/widgets/common/nix_slider.dart';
@@ -37,7 +37,7 @@ class AppearanceSettingsPage extends StatelessWidget {
             elevation: 0,
             margin: EdgeInsets.zero,
             color: colorScheme.surface,
-            shape: RoundedRectangleBorder(
+            shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(10),
                 topRight: Radius.circular(10),
@@ -47,24 +47,29 @@ class AppearanceSettingsPage extends StatelessWidget {
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-              child: Row(
-                children: ThemeMode.values.map((mode) {
-                  final isFirst = mode == ThemeMode.values.first;
-                  final isLast = mode == ThemeMode.values.last;
-                  return Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: NixChoiceChip<ThemeMode>(
-                        label: mode.name.toUpperCase(),
-                        value: mode,
-                        groupValue: settingsParams.themeMode,
-                        onChanged: (v) => settingsParams.setThemeMode(v),
-                        isFirst: isFirst,
-                        isLast: isLast,
-                      ),
-                    ),
-                  );
-                }).toList(),
+              child: M3EToggleButtonGroup(
+                type: M3EButtonGroupType.connected,
+                selectedIndex: settingsParams.themeMode.index,
+                onSelectedIndexChanged: (index) {
+                  if (index != null) {
+                    settingsParams.setThemeMode(ThemeMode.values[index]);
+                  }
+                },
+
+                actions: const [
+                  M3EToggleButtonGroupAction(
+                    label: Text('SYSTEM'),
+                    icon: Icon(FlutterRemix.smartphone_line),
+                  ),
+                  M3EToggleButtonGroupAction(
+                    label: Text('LIGHT'),
+                    icon: Icon(FlutterRemix.sun_line),
+                  ),
+                  M3EToggleButtonGroupAction(
+                    label: Text('DARK'),
+                    icon: Icon(FlutterRemix.moon_line),
+                  ),
+                ],
               ),
             ),
           ),
@@ -276,7 +281,6 @@ class AppearanceSettingsPage extends StatelessWidget {
           ),
           const SizedBox(height: 2.5),
           CardListTile(
-
             title: 'Swipe to Change Track',
             subtitle: 'Swipe artwork left/right to skip',
             icon: FlutterRemix.arrow_left_right_line,

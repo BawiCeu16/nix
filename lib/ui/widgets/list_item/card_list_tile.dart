@@ -141,10 +141,13 @@ class _NixCardExpansionTileState extends State<NixCardExpansionTile>
   void initState() {
     super.initState();
     _controller = AnimationController(
-        duration: const Duration(milliseconds: 200), vsync: this);
-    _iconTurns = Tween<double>(begin: 0.0, end: 0.5).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
     );
+    _iconTurns = Tween<double>(
+      begin: 0.0,
+      end: 0.5,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
 
     _isExpanded = widget.initiallyExpanded;
     if (_isExpanded) _controller.value = 1.0;
@@ -182,8 +185,9 @@ class _NixCardExpansionTileState extends State<NixCardExpansionTile>
       bottomRight: Radius.circular(widget.isLast && !_isExpanded ? 12 : 5),
     );
 
-    final targetRadius =
-        _isPressed ? BorderRadius.circular(100.0) : defaultRadius;
+    final targetRadius = _isPressed
+        ? BorderRadius.circular(100.0)
+        : defaultRadius;
     final targetScale = _isPressed ? 0.98 : 1.0;
 
     return Column(
@@ -210,7 +214,8 @@ class _NixCardExpansionTileState extends State<NixCardExpansionTile>
               child: Material(
                 color: Colors.transparent,
                 child: ListTile(
-                  leading: widget.leading ??
+                  leading:
+                      widget.leading ??
                       (widget.icon != null ? Icon(widget.icon) : null),
                   title: Text(
                     widget.title,
@@ -220,7 +225,9 @@ class _NixCardExpansionTileState extends State<NixCardExpansionTile>
                       ? Text(
                           widget.subtitle!,
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                             fontSize: 12,
                           ),
                         )

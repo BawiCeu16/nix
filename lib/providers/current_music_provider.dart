@@ -306,8 +306,9 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
 
     if (cachedColor != null) {
       // Guard: Only apply if this is still the current request
-      if (requestToken != null && requestToken != _playbackSelectionToken)
+      if (requestToken != null && requestToken != _playbackSelectionToken) {
         return;
+      }
 
       _dynamicSeedColor = Color(cachedColor);
       notifyListeners();
@@ -322,8 +323,9 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       );
 
       // Guard: Check token after async boundary
-      if (requestToken != null && requestToken != _playbackSelectionToken)
+      if (requestToken != null && requestToken != _playbackSelectionToken) {
         return;
+      }
 
       if (extractBytes != null) {
         final scheme = await ColorScheme.fromImageProvider(
@@ -331,8 +333,9 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
         );
 
         // Final guard before updating state
-        if (requestToken != null && requestToken != _playbackSelectionToken)
+        if (requestToken != null && requestToken != _playbackSelectionToken) {
           return;
+        }
 
         _dynamicSeedColor = scheme.primary;
         await cache.put(track.id, _dynamicSeedColor!.value);
@@ -421,7 +424,8 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
         Track nextTrack;
         if (_libraryTracks.length > 1) {
           do {
-            nextTrack = _libraryTracks[math.Random().nextInt(_libraryTracks.length)];
+            nextTrack =
+                _libraryTracks[math.Random().nextInt(_libraryTracks.length)];
           } while (nextTrack.id == _currentTrack?.id);
         } else {
           nextTrack = _libraryTracks[0];
@@ -505,7 +509,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   /// Moves an existing track in the queue to the 'Play Next' position.
   void moveTrackToPlayNext(Track track) {
     if (_currentPlaylist == null) return;
-    
+
     final index = _currentPlaylist!.tracks.indexWhere((t) => t.id == track.id);
     if (index != -1) {
       final t = _currentPlaylist!.tracks.removeAt(index);

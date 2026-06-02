@@ -234,9 +234,9 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
 
   void toggleLyrics() {
     if (lyricsAnim.value > 0.5) {
-      lyricsAnim.reverse();
+      lyricsAnim.animateBack(0.0, curve: bouncingCurve);
     } else {
-      lyricsAnim.forward();
+      lyricsAnim.animateTo(1.0, curve: bouncingCurve);
     }
   }
 

@@ -111,7 +111,10 @@ class TopBar extends StatelessWidget {
                             icon: FlutterRemix.add_box_line,
                             onTap: () {
                               Navigator.of(context, rootNavigator: true).pop();
-                              PlaylistDialogs.showPlaylistPicker(context, track);
+                              PlaylistDialogs.showPlaylistPicker(
+                                context,
+                                track,
+                              );
                             },
                           ),
                           const SizedBox(height: 2.5),

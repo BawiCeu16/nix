@@ -1,14 +1,17 @@
 import 'package:flutter/services.dart';
 import 'package:nix/providers/settings_provider.dart';
 
-/// Utility class for triggering haptic feedback with consistent intensity 
+/// Utility class for triggering haptic feedback with consistent intensity
 /// based on user settings.
 class HapticUtils {
   /// Triggers a vibration based on the user's preferred intensity.
-  /// 
-  /// [force] allows overriding the intensity for specific actions, 
+  ///
+  /// [force] allows overriding the intensity for specific actions,
   /// but typically it uses the global setting from [settings].
-  static Future<void> trigger(SettingsProvider settings, {HapticForce? force}) async {
+  static Future<void> trigger(
+    SettingsProvider settings, {
+    HapticForce? force,
+  }) async {
     if (!settings.enableHaptics) return;
 
     final actualForce = force ?? settings.hapticForce;

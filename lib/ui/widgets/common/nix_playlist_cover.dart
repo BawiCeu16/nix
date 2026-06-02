@@ -60,10 +60,9 @@ class NixPlaylistCover extends StatelessWidget {
 
       // Layout for 2 Tracks: 50/50 Vertical Split (Side-by-Side)
       if (trackCount == 2) {
-        final displayTracks =
-            uniqueAlbumTracks.length >= 2
-                ? uniqueAlbumTracks.take(2).toList()
-                : playlist.tracks.take(2).toList();
+        final displayTracks = uniqueAlbumTracks.length >= 2
+            ? uniqueAlbumTracks.take(2).toList()
+            : playlist.tracks.take(2).toList();
 
         return Container(
           width: size,

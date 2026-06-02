@@ -10,6 +10,7 @@ abstract final class HiveKeys {
   static const String playHistoryBox = 'play_history';
   static const String playCountsBox = 'play_counts';
   static const String colorCacheBox = 'color_cache';
+  static const String lyricsBox = 'lyrics_cache';
 
   // ── Settings keys ──────────────────────────────────────────────────────────
   static const String themeMode = 'themeMode';
@@ -40,7 +41,7 @@ abstract final class HiveKeys {
   static const String onboarding = 'hasCompletedOnboarding';
   static const String autoScrollQueue = 'autoScrollQueue';
   static const String hapticForce = 'hapticForce';
-
+  static const String saveLyricsOffline = 'saveLyricsOffline';
 
   // ── User keys ──────────────────────────────────────────────────────────────
   static const String username = 'username';

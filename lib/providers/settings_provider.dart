@@ -312,17 +312,26 @@ class SettingsProvider with ChangeNotifier {
     _box.put(HiveKeys.showMiniplayerShadow, value);
     notifyListeners();
   }
-  
+
   // Appearance - Auto Scroll Queue
   /// Whether to automatically scroll the queue to the currently playing track.
   bool get autoScrollQueue =>
       _box.get(HiveKeys.autoScrollQueue, defaultValue: true);
-  
+
   void setAutoScrollQueue(bool value) {
     _box.put(HiveKeys.autoScrollQueue, value);
     notifyListeners();
   }
 
+  // Lyrics - Save Offline
+  /// Whether to save lyrics for offline use.
+  bool get saveLyricsOffline =>
+      _box.get(HiveKeys.saveLyricsOffline, defaultValue: true);
+
+  void setSaveLyricsOffline(bool value) {
+    _box.put(HiveKeys.saveLyricsOffline, value);
+    notifyListeners();
+  }
 
   // Appearance - SnackBar Position
   /// The global position for all snackbars.

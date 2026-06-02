@@ -22,6 +22,7 @@ void main() async {
   await Hive.initFlutter();
   await Hive.openBox(HiveKeys.settingsBox);
   await Hive.openBox<int>(HiveKeys.colorCacheBox);
+  await Hive.openBox(HiveKeys.lyricsBox);
   // Opt. #1: Read onboarding flag ONCE here — not on every build() call.
   final bool hasCompletedOnboarding = Hive.box(
     HiveKeys.settingsBox,

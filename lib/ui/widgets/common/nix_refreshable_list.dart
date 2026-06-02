@@ -42,9 +42,6 @@ class NixRefreshableList extends StatelessWidget {
       );
     }
 
-    return ExpressiveRefreshIndicator(
-      onRefresh: onRefresh,
-      child: child,
-    );
+    return ExpressiveRefreshIndicator(onRefresh: onRefresh, child: child);
   }
 }

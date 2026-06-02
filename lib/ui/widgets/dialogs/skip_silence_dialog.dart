@@ -45,8 +45,8 @@ class SkipSilenceDialog extends StatelessWidget {
           child: Text(
             "When enabled, we'll automatically skip transitions if the last few seconds of a song are silent air.",
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
         const SizedBox(height: 24),

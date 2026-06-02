@@ -85,99 +85,104 @@ class PlaylistViewPage extends StatelessWidget {
 
           return NixScrollbar(
             child: ReorderableListView.builder(
-            buildDefaultDragHandles: !isSystemPlaylist,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            physics: const BouncingScrollPhysics(),
-            itemCount: tracks.length + 2, // Header + Tracks + Bottom Padding
-            onReorder: (oldIndex, newIndex) {
-              if (isSystemPlaylist) return;
-              if (oldIndex < 1 || oldIndex > tracks.length) return;
+              buildDefaultDragHandles: !isSystemPlaylist,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              physics: const BouncingScrollPhysics(),
+              itemCount: tracks.length + 2, // Header + Tracks + Bottom Padding
+              onReorder: (oldIndex, newIndex) {
+                if (isSystemPlaylist) return;
+                if (oldIndex < 1 || oldIndex > tracks.length) return;
 
-              int adjustedOld = oldIndex - 1;
-              int adjustedNew = newIndex - 1;
+                int adjustedOld = oldIndex - 1;
+                int adjustedNew = newIndex - 1;
 
-              if (adjustedNew < 0) adjustedNew = 0;
-              if (adjustedNew >= tracks.length) adjustedNew = tracks.length - 1;
+                if (adjustedNew < 0) adjustedNew = 0;
+                if (adjustedNew >= tracks.length)
+                  adjustedNew = tracks.length - 1;
 
-              music.reorderPlaylistTracks(pl!.id, adjustedOld, adjustedNew);
-            },
-            proxyDecorator: (child, index, animation) =>
-                Material(color: Colors.transparent, child: child),
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                return Column(
-                  key: const ValueKey('header'),
-                  children: [
-                    NixPageHeader(
-                      title: pl!.name,
-                      subtitle: "${tracks.length} Tracks",
-                      customArtwork: NixPlaylistCover(
-                        playlist: pl,
-                        size: 300,
-                        radius: 24,
+                music.reorderPlaylistTracks(pl!.id, adjustedOld, adjustedNew);
+              },
+              proxyDecorator: (child, index, animation) =>
+                  Material(color: Colors.transparent, child: child),
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return Column(
+                    key: const ValueKey('header'),
+                    children: [
+                      NixPageHeader(
+                        title: pl!.name,
+                        subtitle: "${tracks.length} Tracks",
+                        customArtwork: NixPlaylistCover(
+                          playlist: pl,
+                          size: 300,
+                          radius: 24,
+                        ),
+                        actionRow: NixActionRow(
+                          onShuffle: () {
+                            final audio = context.read<CurrentMusicProvider>();
+                            final shuffled = List<Track>.from(tracks)
+                              ..shuffle();
+                            if (!audio.isShuffleEnabled) audio.toggleShuffle();
+                            audio.playTrack(shuffled.first, playlist: pl);
+                          },
+                          onPlay: () {
+                            context.read<CurrentMusicProvider>().playTrack(
+                              tracks.first,
+                              playlist: pl,
+                            );
+                          },
+                        ),
                       ),
-                      actionRow: NixActionRow(
-                        onShuffle: () {
-                          final audio = context.read<CurrentMusicProvider>();
-                          final shuffled = List<Track>.from(tracks)..shuffle();
-                          if (!audio.isShuffleEnabled) audio.toggleShuffle();
-                          audio.playTrack(shuffled.first, playlist: pl);
-                        },
-                        onPlay: () {
-                          context.read<CurrentMusicProvider>().playTrack(
-                            tracks.first,
-                            playlist: pl,
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+                    ],
+                  );
+                }
+
+                if (index == tracks.length + 1) {
+                  return const NixBottomSpacer(key: ValueKey('padding'));
+                }
+
+                final trackIndex = index - 1;
+                final track = tracks[trackIndex];
+
+                Widget tile = TrackTile(
+                  track: track,
+                  playlistContext: tracks,
+                  isFirst: trackIndex == 0,
+                  isLast: trackIndex == tracks.length - 1,
                 );
-              }
 
-              if (index == tracks.length + 1) {
-                return const NixBottomSpacer(key: ValueKey('padding'));
-              }
-
-              final trackIndex = index - 1;
-              final track = tracks[trackIndex];
-
-              Widget tile = TrackTile(
-                track: track,
-                playlistContext: tracks,
-                isFirst: trackIndex == 0,
-                isLast: trackIndex == tracks.length - 1,
-              );
-
-              // Add swipe-to-remove for user playlists
-              if (!isSystemPlaylist) {
-                return Dismissible(
-                  key: ValueKey('${pl!.id}_${track.id}'),
-                  direction: DismissDirection.endToStart,
-                  background: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 2),
-                    padding: const EdgeInsets.only(right: 24),
-                    alignment: Alignment.centerRight,
-                    decoration: BoxDecoration(
-                      color: colorScheme.errorContainer,
-                      borderRadius: BorderRadius.circular(12),
+                // Add swipe-to-remove for user playlists
+                if (!isSystemPlaylist) {
+                  return Dismissible(
+                    key: ValueKey('${pl!.id}_${track.id}'),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      margin: const EdgeInsets.symmetric(vertical: 2),
+                      padding: const EdgeInsets.only(right: 24),
+                      alignment: Alignment.centerRight,
+                      decoration: BoxDecoration(
+                        color: colorScheme.errorContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        FlutterRemix.delete_bin_line,
+                        color: colorScheme.onErrorContainer,
+                      ),
                     ),
-                    child: Icon(
-                      FlutterRemix.delete_bin_line,
-                      color: colorScheme.onErrorContainer,
-                    ),
-                  ),
-                  onDismissed: (_) {
-                    music.removeTrackFromPlaylist(pl!.id, track);
-                    context.showSuccessSnackBar('Removed "${track.title}"');
-                  },
+                    onDismissed: (_) {
+                      music.removeTrackFromPlaylist(pl!.id, track);
+                      context.showSuccessSnackBar('Removed "${track.title}"');
+                    },
+                    child: tile,
+                  );
+                }
+
+                return Container(
+                  key: ValueKey('track_${track.id}'),
                   child: tile,
                 );
-              }
-
-              return Container(key: ValueKey('track_${track.id}'), child: tile);
-            },
-          ),
+              },
+            ),
           );
         },
       ),

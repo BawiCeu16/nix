@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/settings_provider.dart';
-import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
 import 'package:nix/ui/widgets/buttons/nix_icon_button.dart';
 import 'package:nix/ui/widgets/list_item/queue_tile.dart';
 import 'package:nix/core/haptic_utils.dart';
