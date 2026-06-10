@@ -7,7 +7,6 @@ import '../list_item/card_list_tile.dart';
 import '../buttons/expressive_tone_button.dart';
 import 'package:nix/providers/settings_provider.dart';
 import '../../../providers/current_music_provider.dart';
-import '../../../providers/sleep_timer_provider.dart';
 
 class PlaybackSpeedDialog extends StatelessWidget {
   const PlaybackSpeedDialog({super.key});
@@ -25,7 +24,6 @@ class PlaybackSpeedDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
     final music = context.watch<CurrentMusicProvider>();
-    final timer = context.watch<SleepTimerProvider>();
     final colorScheme = Theme.of(context).colorScheme;
 
     return Column(

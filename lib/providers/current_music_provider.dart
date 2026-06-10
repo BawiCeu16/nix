@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
@@ -202,7 +203,9 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       // Branch A: Audio Engine (Highest Priority)
       unawaited(() async {
         try {
-          await _audioPlayer.setAudioSource(AudioSource.file(track.uri));
+          final isNetworkUrl = track.uri.startsWith('http://') || track.uri.startsWith('https://');
+          final source = isNetworkUrl ? AudioSource.uri(Uri.parse(track.uri)) : AudioSource.file(track.uri);
+          await _audioPlayer.setAudioSource(source);
           if (currentToken == _playbackSelectionToken) {
             await _audioPlayer.play();
             _audioLoadingState = AudioLoadingState.loaded;
@@ -223,10 +226,14 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       // Branch C: Metadata & System Integration (Parallel)
       unawaited(() async {
         try {
-          final artworkBytes = await OnAudioQuery().queryArtwork(
-            track.id,
-            ArtworkType.AUDIO,
-          );
+          final isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+          Uint8List? artworkBytes;
+          if (isMobile) {
+            artworkBytes = await OnAudioQuery().queryArtwork(
+              track.id,
+              ArtworkType.AUDIO,
+            );
+          }
 
           if (currentToken != _playbackSelectionToken) return;
 
@@ -316,11 +323,15 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
     }
 
     try {
-      final extractBytes = await OnAudioQuery().queryArtwork(
-        track.id,
-        ArtworkType.AUDIO,
-        size: 100,
-      );
+      final isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+      Uint8List? extractBytes;
+      if (isMobile) {
+        extractBytes = await OnAudioQuery().queryArtwork(
+          track.id,
+          ArtworkType.AUDIO,
+          size: 100,
+        );
+      }
 
       // Guard: Check token after async boundary
       if (requestToken != null && requestToken != _playbackSelectionToken) {

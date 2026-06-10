@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:on_audio_query_forked/on_audio_query.dart';
 import 'package:nix/models/settings/artwork_quality.dart';
@@ -39,6 +40,11 @@ class ArtworkProvider extends ChangeNotifier {
     _pending.add(key);
 
     try {
+      final isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+      if (!isMobile) {
+        _cache[key] = null;
+        return;
+      }
       // Tiered logic moved to provider
       final format = quality == NixArtworkQuality.high
           ? ArtworkFormat.PNG

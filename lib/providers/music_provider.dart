@@ -306,8 +306,11 @@ class MusicProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final bool isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
       bool permissionStatus = false;
-      if (Platform.isIOS) {
+      if (!isMobile) {
+        permissionStatus = true;
+      } else if (Platform.isIOS) {
         permissionStatus = await _audioQuery.permissionsStatus();
         if (!permissionStatus) {
           permissionStatus = await _audioQuery.permissionsRequest();
@@ -328,56 +331,153 @@ class MusicProvider extends ChangeNotifier {
         return;
       }
 
-      final audioList = await _audioQuery.querySongs(
-        sortType: null,
-        orderType: OrderType.ASC_OR_SMALLER,
-        uriType: UriType.EXTERNAL,
-        ignoreCase: true,
-      );
+      if (!isMobile) {
+        // Mock tracks for desktop/web debugging
+        _tracks = [
+          Track(
+            id: 1,
+            title: 'Helix Song 1',
+            artist: 'SoundHelix',
+            album: 'Helix Odyssey',
+            uri: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+            duration: 372000,
+            dateAdded: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          ),
+          Track(
+            id: 2,
+            title: 'Helix Song 2',
+            artist: 'SoundHelix',
+            album: 'Helix Odyssey',
+            uri: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+            duration: 423000,
+            dateAdded: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          ),
+          Track(
+            id: 3,
+            title: 'Helix Song 3',
+            artist: 'SoundHelix',
+            album: 'Helix Odyssey',
+            uri: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+            duration: 344000,
+            dateAdded: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          ),
+          Track(
+            id: 4,
+            title: 'Helix Song 4',
+            artist: 'SoundHelix',
+            album: 'Helix Odyssey',
+            uri: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
+            duration: 302000,
+            dateAdded: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          ),
+          Track(
+            id: 5,
+            title: 'Acoustic Breeze',
+            artist: 'Bensound',
+            album: 'Bensound Breeze',
+            uri: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
+            duration: 280000,
+            dateAdded: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          ),
+          Track(
+            id: 6,
+            title: 'Summer Vibes',
+            artist: 'Bensound',
+            album: 'Bensound Breeze',
+            uri: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3',
+            duration: 310000,
+            dateAdded: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          ),
+        ];
 
-      // Read min duration from settings
-      final settingsBox = Hive.box(HiveKeys.settingsBox);
-      final int minDurationSeconds =
-          settingsBox.get(HiveKeys.minDuration, defaultValue: 0) ?? 0;
-      final int minDurationMs = minDurationSeconds * 1000;
+        final albumMap = <String, List<Track>>{};
+        final artistMap = <String, List<Track>>{};
+        for (final track in _tracks) {
+          albumMap.putIfAbsent(track.album, () => []).add(track);
+          artistMap.putIfAbsent(track.artist, () => []).add(track);
+        }
 
-      final validAudio = audioList.where((item) {
-        final bool isAcceptedType =
-            item.isMusic == true || item.isPodcast == true;
-        final bool isLongEnough = (item.duration ?? 0) >= minDurationMs;
-        return isAcceptedType && isLongEnough;
-      }).toList();
+        var albumIdx = 0;
+        _albums = albumMap.entries.map((entry) {
+          return Album(
+            id: albumIdx++,
+            title: entry.key,
+            artist: entry.value.first.artist,
+            numOfSongs: entry.value.length,
+          );
+        }).toList();
 
-      // Opt. #7: Run the CPU-intensive parsing on a background isolate via
-      // compute(), preventing UI-thread jank on startup with large libraries.
-      final rawSongs = validAudio
-          .map(
-            (audio) => <String, dynamic>{
-              'dateAdded': audio.dateAdded ?? 0,
-              'id': audio.id,
-              'title': audio.title,
-              'artist': audio.artist,
-              'album': audio.album,
-              'uri': audio.data,
-              'duration': audio.duration ?? 0,
-              'size': audio.size,
-            },
-          )
-          .toList();
+        var artistIdx = 0;
+        _artists = artistMap.entries.map((entry) {
+          return Artist(
+            id: artistIdx++,
+            name: entry.key,
+            numberOfAlbums: albumMap.values
+                .where((tracks) => tracks.first.artist == entry.key)
+                .length,
+            numberOfTracks: entry.value.length,
+          );
+        }).toList();
 
-      final parsed = await compute(
-        _parseLibraryInIsolate,
-        _ParseInput(rawSongs),
-      );
+        _albumFirstTrackId = <String, int>{};
+        for (final track in _tracks) {
+          _albumFirstTrackId.putIfAbsent(track.album, () => track.id);
+        }
 
-      _tracks = parsed.tracks;
-      _albums = parsed.albums;
-      _artists = parsed.artists;
-      _albumFirstTrackId = parsed.albumFirstTrackId;
+        await Future.wait([Future(() => _loadPlaylists()), _rebuildCaches()]);
+        _lastScanned = DateTime.now();
+      } else {
+        final audioList = await _audioQuery.querySongs(
+          sortType: null,
+          orderType: OrderType.ASC_OR_SMALLER,
+          uriType: UriType.EXTERNAL,
+          ignoreCase: true,
+        );
 
-      // Parallelize playlist loading and cache rebuilding
-      await Future.wait([Future(() => _loadPlaylists()), _rebuildCaches()]);
-      _lastScanned = DateTime.now();
+        // Read min duration from settings
+        final settingsBox = Hive.box(HiveKeys.settingsBox);
+        final int minDurationSeconds =
+            settingsBox.get(HiveKeys.minDuration, defaultValue: 0) ?? 0;
+        final int minDurationMs = minDurationSeconds * 1000;
+
+        final validAudio = audioList.where((item) {
+          final bool isAcceptedType =
+              item.isMusic == true || item.isPodcast == true;
+          final bool isLongEnough = (item.duration ?? 0) >= minDurationMs;
+          return isAcceptedType && isLongEnough;
+        }).toList();
+
+        // Opt. #7: Run the CPU-intensive parsing on a background isolate via
+        // compute(), preventing UI-thread jank on startup with large libraries.
+        final rawSongs = validAudio
+            .map(
+              (audio) => <String, dynamic>{
+                'dateAdded': audio.dateAdded ?? 0,
+                'id': audio.id,
+                'title': audio.title,
+                'artist': audio.artist,
+                'album': audio.album,
+                'uri': audio.data,
+                'duration': audio.duration ?? 0,
+                'size': audio.size,
+              },
+            )
+            .toList();
+
+        final parsed = await compute(
+          _parseLibraryInIsolate,
+          _ParseInput(rawSongs),
+        );
+
+        _tracks = parsed.tracks;
+        _albums = parsed.albums;
+        _artists = parsed.artists;
+        _albumFirstTrackId = parsed.albumFirstTrackId;
+
+        // Parallelize playlist loading and cache rebuilding
+        await Future.wait([Future(() => _loadPlaylists()), _rebuildCaches()]);
+        _lastScanned = DateTime.now();
+      }
     } catch (e) {
       _error = 'Failed to scan device: $e';
       debugPrint('Error querying MediaStore: $e');

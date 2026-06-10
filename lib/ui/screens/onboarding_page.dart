@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:nix/ui/screens/navigation_screen.dart';
@@ -33,6 +35,17 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   Future<void> _checkPermissions() async {
+    final bool isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+    if (!isMobile) {
+      if (mounted) {
+        setState(() {
+          _audioGranted = true;
+          _notificationGranted = true;
+        });
+      }
+      return;
+    }
+
     final audioStatus = await Permission.audio.status;
     final storageStatus = await Permission.storage.status;
     final notificationStatus = await Permission.notification.status;
@@ -46,6 +59,16 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   Future<void> _requestAudioPermission() async {
+    final bool isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+    if (!isMobile) {
+      if (mounted) {
+        setState(() {
+          _audioGranted = true;
+        });
+      }
+      return;
+    }
+
     PermissionStatus status = await Permission.audio.status;
     if (!status.isGranted) {
       status = await Permission.audio.request();
@@ -63,6 +86,16 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   Future<void> _requestNotificationPermission() async {
+    final bool isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+    if (!isMobile) {
+      if (mounted) {
+        setState(() {
+          _notificationGranted = true;
+        });
+      }
+      return;
+    }
+
     final status = await Permission.notification.request();
     if (mounted) {
       setState(() {

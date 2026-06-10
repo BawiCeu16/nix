@@ -47,7 +47,6 @@ class NixSnackBar extends StatelessWidget {
         iconColor = Colors.yellowAccent;
         break;
       case NixSnackBarType.info:
-      default:
         backgroundColor = colorScheme.secondaryContainer;
         icon = FlutterRemix.information_fill;
         iconColor = colorScheme.secondary;

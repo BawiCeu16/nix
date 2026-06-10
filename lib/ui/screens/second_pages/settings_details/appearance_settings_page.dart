@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:nix/providers/settings_provider.dart';
 import 'package:nix/models/settings/artwork_quality.dart';
 import 'package:nix/models/settings/timer_gesture.dart';
-import 'package:m3e_buttons/m3e_buttons.dart';
+import 'package:nix_button/nix_button.dart';
 import 'package:nix/ui/widgets/common/nix_section_header.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 import 'package:nix/ui/widgets/common/nix_slider.dart';
@@ -47,8 +47,8 @@ class AppearanceSettingsPage extends StatelessWidget {
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-              child: M3EToggleButtonGroup(
-                type: M3EButtonGroupType.connected,
+              child: NixToggleButtonGroup(
+                type: NixButtonGroupType.connected,
                 selectedIndex: settingsParams.themeMode.index,
                 onSelectedIndexChanged: (index) {
                   if (index != null) {
@@ -57,15 +57,15 @@ class AppearanceSettingsPage extends StatelessWidget {
                 },
 
                 actions: const [
-                  M3EToggleButtonGroupAction(
+                  NixToggleButtonGroupAction(
                     label: Text('SYSTEM'),
                     icon: Icon(FlutterRemix.smartphone_line),
                   ),
-                  M3EToggleButtonGroupAction(
+                  NixToggleButtonGroupAction(
                     label: Text('LIGHT'),
                     icon: Icon(FlutterRemix.sun_line),
                   ),
-                  M3EToggleButtonGroupAction(
+                  NixToggleButtonGroupAction(
                     label: Text('DARK'),
                     icon: Icon(FlutterRemix.moon_line),
                   ),

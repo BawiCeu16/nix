@@ -55,7 +55,9 @@ dependencies:
   http: ^1.6.0
   scrollable_positioned_list: ^0.3.8
   loading_indicator_m3e: ^0.1.1
-  m3e_buttons: ^0.0.3
+  nix_button:
+    git:
+      url: git@github.com:BawiCeu16/nix_button.git
 
 dev_dependencies:
   flutter_test:
