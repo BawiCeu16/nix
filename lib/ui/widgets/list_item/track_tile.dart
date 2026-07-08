@@ -222,8 +222,9 @@ class _TrackTileState extends State<TrackTile> {
         : defaultRadius;
     final targetScale = _isPressed ? 0.98 : 1.0;
 
-    final settings = context.watch<SettingsProvider>();
-    final showSwipe = settings.trackSwipeAction != TrackSwipeAction.none;
+    final showSwipe = context.select<SettingsProvider, bool>(
+      (s) => s.trackSwipeAction != TrackSwipeAction.none,
+    );
 
     Widget tileContent = Selector<CurrentMusicProvider, Track?>(
       selector: (_, p) => p.currentTrack,

@@ -398,7 +398,9 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsProvider>();
+    final showMiniplayerShadow = context.select<SettingsProvider, bool>(
+      (s) => s.showMiniplayerShadow,
+    );
     final Color onSecondary = Theme.of(
       context,
     ).colorScheme.onSecondaryContainer;
@@ -660,7 +662,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                           decoration: BoxDecoration(
                             borderRadius: data.borderRadius,
                             color: Theme.of(context).colorScheme.surface,
-                            boxShadow: settings.showMiniplayerShadow
+                            boxShadow: showMiniplayerShadow
                                 ? [
                                     BoxShadow(
                                       color:

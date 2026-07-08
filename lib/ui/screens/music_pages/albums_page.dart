@@ -33,7 +33,8 @@ class _AlbumsPageState extends State<AlbumsPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final settings = context.watch<SettingsProvider>();
+    final useCdArtworkStyle = context.select<SettingsProvider, bool>((s) => s.useCdArtworkStyle);
+    final splitCdWhenHalfOpen = context.select<SettingsProvider, bool>((s) => s.splitCdWhenHalfOpen);
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainer,
@@ -124,12 +125,11 @@ class _AlbumsPageState extends State<AlbumsPage> {
                             child: LayoutBuilder(
                               builder: (context, constraints) => Hero(
                                 tag: 'album_cd_${album.title}',
-                                child: settings.useCdArtworkStyle
+                                child: useCdArtworkStyle
                                     ? NixCustomizableCDWidget(
                                         size: constraints.maxWidth,
                                         state: CDCoverState.closed,
-                                        splitWhenHalfOpen:
-                                            settings.splitCdWhenHalfOpen,
+                                        splitWhenHalfOpen: splitCdWhenHalfOpen,
                                         seedId: album.title,
                                         coverImage: Stack(
                                           fit: StackFit.expand,
@@ -235,12 +235,19 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final settings = context.watch<SettingsProvider>();
-    final currentMusic = context.watch<CurrentMusicProvider>();
+    final useCdArtworkStyle = context.select<SettingsProvider, bool>((s) => s.useCdArtworkStyle);
+    final splitCdWhenHalfOpen = context.select<SettingsProvider, bool>((s) => s.splitCdWhenHalfOpen);
+    final rotateCdWhenPlaying = context.select<SettingsProvider, bool>((s) => s.rotateCdWhenPlaying);
+    final cdRotationSpeed = context.select<SettingsProvider, double>((s) => s.cdRotationSpeed);
+
+    final isPlaying = context.select<CurrentMusicProvider, bool>((p) => p.isPlaying);
+    final currentAlbum = context.select<CurrentMusicProvider, String?>((p) => p.currentTrack?.album);
+    final hasCurrentTrack = context.select<CurrentMusicProvider, bool>((p) => p.currentTrack != null);
+
     final isSpinning =
-        settings.rotateCdWhenPlaying &&
-        currentMusic.isPlaying &&
-        currentMusic.currentTrack?.album == widget.albumTitle;
+        rotateCdWhenPlaying &&
+        isPlaying &&
+        currentAlbum == widget.albumTitle;
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainer,
@@ -279,14 +286,14 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> {
                       trackId: firstTrackId,
                       customArtwork: Hero(
                         tag: 'album_cd_${widget.albumTitle}',
-                        child: settings.useCdArtworkStyle
+                        child: useCdArtworkStyle
                             ? NixCustomizableCDWidget(
                                 size: 250,
-                                splitWhenHalfOpen: settings.splitCdWhenHalfOpen,
+                                splitWhenHalfOpen: splitCdWhenHalfOpen,
                                 isSpinning: isSpinning,
                                 resetRotation:
-                                    currentMusic.currentTrack == null,
-                                rotateSpeed: settings.cdRotationSpeed,
+                                    !hasCurrentTrack,
+                                rotateSpeed: cdRotationSpeed,
                                 state: _cdState,
                                 seedId: widget.albumTitle,
                                 coverImage: Stack(

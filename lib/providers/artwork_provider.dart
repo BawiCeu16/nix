@@ -25,7 +25,7 @@ class ArtworkProvider extends ChangeNotifier {
     }
 
     if (!_pending.contains(key)) {
-      _fetchArtwork(id, type, quality);
+      Future.microtask(() => _fetchArtwork(id, type, quality));
     }
 
     return null;

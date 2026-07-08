@@ -7,6 +7,7 @@ import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../models/animation_data.dart';
 import 'package:nix/providers/current_music_provider.dart';
+import 'package:nix/models/music/track.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import '../../widgets/buttons/nix_icon_button.dart';
@@ -248,8 +249,7 @@ class _LyricsSectionState extends State<LyricsSection> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final currentMusic = context.watch<CurrentMusicProvider>();
-    final track = currentMusic.currentTrack;
+    final track = context.select<CurrentMusicProvider, Track?>((p) => p.currentTrack);
 
     if (track != null && track.id != _currentTrackId) {
       _currentTrackId = track.id;
@@ -437,8 +437,8 @@ class _LyricsSectionState extends State<LyricsSection> {
       return const SizedBox.shrink();
     }
 
-    final currentMusic = context.watch<CurrentMusicProvider>();
-    final track = currentMusic.currentTrack;
+    final track = context.select<CurrentMusicProvider, Track?>((p) => p.currentTrack);
+    final currentMusic = context.read<CurrentMusicProvider>();
 
     final topPosition = widget.topInset + 80.0;
     final trackInfoYFromBottom =

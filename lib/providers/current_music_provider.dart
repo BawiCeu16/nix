@@ -33,6 +33,7 @@ enum QueueResult {
 /// Acts as the BaseAudioHandler for audio_service to enable background playback.
 class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final OnAudioQuery _audioQuery = OnAudioQuery();
   SettingsProvider? _settingsProvider;
 
   void updateSettings(SettingsProvider settings) {
@@ -229,7 +230,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
           final isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
           Uint8List? artworkBytes;
           if (isMobile) {
-            artworkBytes = await OnAudioQuery().queryArtwork(
+            artworkBytes = await _audioQuery.queryArtwork(
               track.id,
               ArtworkType.AUDIO,
             );
@@ -326,7 +327,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       final isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
       Uint8List? extractBytes;
       if (isMobile) {
-        extractBytes = await OnAudioQuery().queryArtwork(
+        extractBytes = await _audioQuery.queryArtwork(
           track.id,
           ArtworkType.AUDIO,
           size: 100,

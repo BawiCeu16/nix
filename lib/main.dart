@@ -41,13 +41,14 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider<CurrentMusicProvider>.value(
-          value: _audioHandler!,
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProxyProvider<SettingsProvider, CurrentMusicProvider>(
+          create: (_) => _audioHandler!,
+          update: (_, settings, player) => player!..updateSettings(settings),
         ),
         ChangeNotifierProvider(
           create: (_) => MusicProvider()..init(currentMusic: _audioHandler),
         ),
-        ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => SleepTimerProvider()),
         ChangeNotifierProvider(create: (_) => ArtworkProvider()),
@@ -58,22 +59,9 @@ void main() async {
   );
 }
 
-class NixApp extends StatefulWidget {
+class NixApp extends StatelessWidget {
   final bool hasCompletedOnboarding;
   const NixApp({super.key, required this.hasCompletedOnboarding});
-
-  @override
-  State<NixApp> createState() => _NixAppState();
-}
-
-class _NixAppState extends State<NixApp> {
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Inject SettingsProvider into CurrentMusicProvider safely and reactively.
-    final settings = context.watch<SettingsProvider>();
-    context.read<CurrentMusicProvider>().updateSettings(settings);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +103,7 @@ class _NixAppState extends State<NixApp> {
               theme: theme,
               darkTheme: darkTheme,
               themeMode: config.themeMode,
-              home: widget.hasCompletedOnboarding
+              home: hasCompletedOnboarding
                   ? const NavigationScreen()
                   : const OnboardingPage(),
             );

@@ -3,6 +3,8 @@ import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/settings_provider.dart';
+import 'package:nix/models/music/track.dart';
+import 'package:nix/models/music/playlist.dart';
 import 'package:nix/ui/widgets/buttons/nix_icon_button.dart';
 import 'package:nix/ui/widgets/list_item/queue_tile.dart';
 import 'package:nix/core/haptic_utils.dart';
@@ -177,9 +179,9 @@ class _QueueViewState extends State<QueueView> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsProvider>();
-    final currentMusic = context.watch<CurrentMusicProvider>();
-    final playlist = currentMusic.currentPlaylist;
+    final playlist = context.select<CurrentMusicProvider, Playlist?>((p) => p.currentPlaylist);
+    final currentTrack = context.select<CurrentMusicProvider, Track?>((p) => p.currentTrack);
+    final currentMusic = context.read<CurrentMusicProvider>();
     final tracks = playlist?.tracks ?? [];
 
     return Transform.translate(
@@ -341,14 +343,14 @@ class _QueueViewState extends State<QueueView> {
                                   subtitle: track.artist,
                                   trackId: track.id,
                                   itemIndex: index,
-                                  isPlaying:
-                                      currentMusic.currentTrack?.id == track.id,
+                                  isPlaying: currentTrack?.id == track.id,
                                   onTap: () {
                                     currentMusic.playTrack(
                                       track,
                                       playlist: playlist,
                                     );
-                                    HapticUtils.selection(settings);
+                                    HapticUtils.selection(
+                                        context.read<SettingsProvider>());
                                   },
                                   onRemove: () {
                                     currentMusic.removeFromQueue(index);

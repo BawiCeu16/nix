@@ -458,7 +458,8 @@ class _AlbumCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final settings = context.watch<SettingsProvider>();
+    final useCdArtworkStyle = context.select<SettingsProvider, bool>((s) => s.useCdArtworkStyle);
+    final splitCdWhenHalfOpen = context.select<SettingsProvider, bool>((s) => s.splitCdWhenHalfOpen);
 
     return Card(
       margin: EdgeInsets.zero,
@@ -474,11 +475,11 @@ class _AlbumCard extends StatelessWidget {
               aspectRatio: 1.0,
               child: Hero(
                 tag: 'album_cd_$title',
-                child: settings.useCdArtworkStyle
+                child: useCdArtworkStyle
                     ? NixCustomizableCDWidget(
                         size: 160,
                         state: CDCoverState.closed,
-                        splitWhenHalfOpen: false,
+                        splitWhenHalfOpen: splitCdWhenHalfOpen,
                         seedId: title,
                         coverImage: Stack(
                           fit: StackFit.expand,

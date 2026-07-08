@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/music_provider.dart';
+import 'package:nix/models/music/track.dart';
 import '../../../core/math_utils.dart';
 import '../models/animation_data.dart';
 
@@ -36,9 +37,8 @@ class TrackInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentMusic = context.watch<CurrentMusicProvider>();
-    final music = context.watch<MusicProvider>();
-    final track = currentMusic.currentTrack;
+    final track = context.select<CurrentMusicProvider, Track?>((p) => p.currentTrack);
+    final music = context.read<MusicProvider>();
     final title = track?.title ?? 'No track';
     final artist = track?.artist ?? '';
 

@@ -36,7 +36,10 @@ class PlayerControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentMusic = context.watch<CurrentMusicProvider>();
+    final isShuffleEnabled = context.select<CurrentMusicProvider, bool>((p) => p.isShuffleEnabled);
+    final isRepeatEnabled = context.select<CurrentMusicProvider, bool>((p) => p.isRepeatEnabled);
+    final duration = context.select<CurrentMusicProvider, Duration?>((p) => p.duration);
+    final currentMusic = context.read<CurrentMusicProvider>();
 
     return AnimatedBuilder(
       animation: lyricsAnim,
@@ -88,7 +91,7 @@ class PlayerControls extends StatelessWidget {
                                     iconSize: 28.0,
                                     icon: Icon(
                                       FlutterRemix.shuffle_line,
-                                      color: currentMusic.isShuffleEnabled
+                                      color: isShuffleEnabled
                                           ? Theme.of(
                                               context,
                                             ).colorScheme.primary
@@ -100,10 +103,10 @@ class PlayerControls extends StatelessWidget {
                                   IconButton(
                                     iconSize: 28.0,
                                     icon: Icon(
-                                      currentMusic.isRepeatEnabled
+                                      isRepeatEnabled
                                           ? FlutterRemix.repeat_one_line
                                           : FlutterRemix.repeat_2_line,
-                                      color: currentMusic.isRepeatEnabled
+                                      color: isRepeatEnabled
                                           ? Theme.of(
                                               context,
                                             ).colorScheme.primary
@@ -260,7 +263,7 @@ class PlayerControls extends StatelessWidget {
                                     builder: (context, posSnap) {
                                       final pos = posSnap.data ?? Duration.zero;
                                       final dur =
-                                          currentMusic.duration ??
+                                          duration ??
                                           Duration.zero;
                                       final sliderVal = dur.inMilliseconds > 0
                                           ? (pos.inMilliseconds /
@@ -313,7 +316,7 @@ class PlayerControls extends StatelessWidget {
                               builder: (context, posSnap) {
                                 final pos = posSnap.data ?? Duration.zero;
                                 final dur =
-                                    currentMusic.duration ?? Duration.zero;
+                                    duration ?? Duration.zero;
                                 return Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
