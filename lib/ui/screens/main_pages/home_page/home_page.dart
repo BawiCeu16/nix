@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_remix/flutter_remix.dart';
+import 'package:nix_button/nix_button.dart';
 import 'package:on_audio_query_forked/on_audio_query.dart';
 import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
 import 'package:provider/provider.dart';
@@ -20,6 +22,7 @@ import 'package:nix/ui/screens/music_pages/albums_page.dart';
 import 'package:nix/ui/screens/music_pages/tracks_page.dart';
 import 'package:nix/ui/widgets/common/nix_artwork.dart';
 import 'package:expressive_refresh/expressive_refresh.dart';
+import 'package:nix/ui/screens/second_pages/profile_page.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 import 'package:nix/ui/widgets/styles/cd_widget.dart';
 
@@ -77,47 +80,138 @@ class HomePage extends StatelessWidget {
                 expandedHeight: 200,
                 flexibleSpace: FlexibleSpaceBar(
                   titlePadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                  title: Selector<UserProvider, String>(
-                    selector: (_, p) => p.userName,
-                    builder: (context, userName, _) {
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _greeting(),
-                            style: GoogleFonts.getFont(
-                              'Special Gothic Expanded One',
-                              textStyle: Theme.of(context).textTheme.labelMedium
-                                  ?.copyWith(
-                                    color: colorScheme.onSurfaceVariant,
-                                    fontWeight: FontWeight.w300,
+                  title:
+                      Selector<
+                        UserProvider,
+                        ({String userName, int avatarIndex})
+                      >(
+                        selector: (_, p) =>
+                            (userName: p.userName, avatarIndex: p.avatarIndex),
+                        builder: (context, data, _) {
+                          final userName = data.userName;
+                          final avatarIndex = data.avatarIndex;
+                          return Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _greeting(),
+                                      style: GoogleFonts.getFont(
+                                        'Special Gothic Expanded One',
+                                        textStyle: Theme.of(context)
+                                            .textTheme
+                                            .labelMedium
+                                            ?.copyWith(
+                                              color:
+                                                  colorScheme.onSurfaceVariant,
+                                              fontWeight: FontWeight.w300,
+                                            ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 0),
+                                    Text(
+                                      userName,
+                                      style: GoogleFonts.getFont(
+                                        'Special Gothic Expanded One',
+                                        textStyle: Theme.of(context)
+                                            .textTheme
+                                            .headlineSmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w500,
+                                              color: colorScheme.onSurface,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => const ProfilePage(),
+                                    ),
+                                  );
+                                },
+                                child: CircleAvatar(
+                                  radius: 20,
+                                  backgroundColor: UserProvider
+                                      .avatarColors[avatarIndex]
+                                      .withValues(alpha: 0.2),
+                                  child: Icon(
+                                    UserProvider.avatarIcons[avatarIndex],
+                                    color:
+                                        UserProvider.avatarColors[avatarIndex],
+                                    size: 20,
                                   ),
-                            ),
-                          ),
-                          const SizedBox(height: 0),
-                          Text(
-                            userName,
-                            style: GoogleFonts.getFont(
-                              'Special Gothic Expanded One',
-                              textStyle: Theme.of(context)
-                                  .textTheme
-                                  .headlineSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                    color: colorScheme.onSurface,
-                                  ),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
                 ),
               ),
 
               SliverMainAxisGroup(
                 slivers: [
+                  // ── Recently Listened ──
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                      child: NixSectionHeader(
+                        title: 'Quick Actions',
+                        topPadding: 20,
+                      ),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                      child: Row(
+                        children: [
+                          NixButton(
+                            customBackgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.7),
+                            icon: const Icon(FlutterRemix.music_2_fill),
+                            label: const Text("All Songs"),
+                            enableAnimations: true,
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => TracksPage(
+                                    title: 'All Songs',
+                                    tracksSource: () =>
+                                        context.read<MusicProvider>().tracks,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(width: 12),
+                          NixButton(
+                            customBackgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.7),
+                            icon: const Icon(FlutterRemix.disc_fill),
+                            label: const Text("Albums"),
+                            enableAnimations: true,
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const AlbumsPage(),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                   // ── Recently Listened ──
                   SliverToBoxAdapter(
                     child: Padding(

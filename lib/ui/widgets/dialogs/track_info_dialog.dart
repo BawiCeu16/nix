@@ -39,6 +39,7 @@ class TrackInfoDialog extends StatelessWidget {
       title: title,
       subtitle: artist,
       trackId: trackId,
+      titleAlignment: CrossAxisAlignment.start,
       children: [
         CardListTile(
           title: "Album",

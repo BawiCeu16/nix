@@ -19,12 +19,12 @@ class NixSectionHeader extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: EdgeInsets.only(left: 8, top: topPadding, bottom: 8),
+      padding: EdgeInsets.only(left: 8, top: topPadding, bottom: 6),
       child: Row(
         children: [
           Expanded(
             child: Text(
-              title.toUpperCase(),
+              title,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 color: colorScheme.primary,
                 fontWeight: FontWeight.bold,

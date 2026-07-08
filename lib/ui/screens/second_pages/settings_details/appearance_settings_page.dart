@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
+import 'package:m3e_buttons/m3e_buttons.dart';
 import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 import 'package:provider/provider.dart';
@@ -47,8 +48,8 @@ class AppearanceSettingsPage extends StatelessWidget {
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-              child: NixToggleButtonGroup(
-                type: NixButtonGroupType.connected,
+              child: M3EToggleButtonGroup(
+                type: M3EButtonGroupType.connected,
                 selectedIndex: settingsParams.themeMode.index,
                 onSelectedIndexChanged: (index) {
                   if (index != null) {
@@ -57,15 +58,15 @@ class AppearanceSettingsPage extends StatelessWidget {
                 },
 
                 actions: const [
-                  NixToggleButtonGroupAction(
+                  M3EToggleButtonGroupAction(
                     label: Text('SYSTEM'),
                     icon: Icon(FlutterRemix.smartphone_line),
                   ),
-                  NixToggleButtonGroupAction(
+                  M3EToggleButtonGroupAction(
                     label: Text('LIGHT'),
                     icon: Icon(FlutterRemix.sun_line),
                   ),
-                  NixToggleButtonGroupAction(
+                  M3EToggleButtonGroupAction(
                     label: Text('DARK'),
                     icon: Icon(FlutterRemix.moon_line),
                   ),

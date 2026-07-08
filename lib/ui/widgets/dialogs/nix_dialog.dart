@@ -7,6 +7,7 @@ class NixDialog extends StatelessWidget {
   final String? title;
   final String? subtitle;
   final int? trackId;
+  final CrossAxisAlignment titleAlignment;
   final List<Widget> children;
 
   const NixDialog({
@@ -14,6 +15,7 @@ class NixDialog extends StatelessWidget {
     this.title,
     this.subtitle,
     this.trackId,
+    this.titleAlignment = CrossAxisAlignment.center,
     required this.children,
   });
 
@@ -22,6 +24,7 @@ class NixDialog extends StatelessWidget {
     String? title,
     String? subtitle,
     int? trackId,
+    CrossAxisAlignment titleAlignment = CrossAxisAlignment.center,
     bool useRootNavigator = true,
     required List<Widget> children,
   }) {
@@ -37,6 +40,7 @@ class NixDialog extends StatelessWidget {
           title: title,
           subtitle: subtitle,
           trackId: trackId,
+          titleAlignment: titleAlignment,
           children: children,
         );
       },
@@ -90,10 +94,14 @@ class NixDialog extends StatelessWidget {
                         ],
                         Expanded(
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
+                            crossAxisAlignment: titleAlignment,
                             children: [
                               Text(
                                 title!,
+                                textAlign:
+                                    titleAlignment == CrossAxisAlignment.center
+                                    ? TextAlign.center
+                                    : TextAlign.start,
                                 style: textTheme.titleLarge?.copyWith(
                                   fontWeight: FontWeight.w500,
                                   color: colorScheme.onSurface,
@@ -104,6 +112,11 @@ class NixDialog extends StatelessWidget {
                               if (subtitle != null)
                                 Text(
                                   subtitle!,
+                                  textAlign:
+                                      titleAlignment ==
+                                          CrossAxisAlignment.center
+                                      ? TextAlign.center
+                                      : TextAlign.start,
                                   style: textTheme.bodyMedium?.copyWith(
                                     color: colorScheme.onSurfaceVariant,
                                   ),
@@ -116,7 +129,6 @@ class NixDialog extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Divider(height: 1, color: colorScheme.surfaceContainerHigh),
                 ],
                 Flexible(
                   child: SingleChildScrollView(
