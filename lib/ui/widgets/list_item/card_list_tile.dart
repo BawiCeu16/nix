@@ -43,10 +43,10 @@ class _CardListTileState extends State<CardListTile> {
   @override
   Widget build(BuildContext context) {
     final defaultRadius = BorderRadius.only(
-      topLeft: Radius.circular(widget.isFirst ? 12 : 5),
-      topRight: Radius.circular(widget.isFirst ? 12 : 5),
-      bottomLeft: Radius.circular(widget.isLast ? 12 : 5),
-      bottomRight: Radius.circular(widget.isLast ? 12 : 5),
+      topLeft: Radius.circular(widget.isFirst ? 16 : 5),
+      topRight: Radius.circular(widget.isFirst ? 16 : 5),
+      bottomLeft: Radius.circular(widget.isLast ? 16 : 5),
+      bottomRight: Radius.circular(widget.isLast ? 16 : 5),
     );
 
     final targetRadius = _isPressed
@@ -179,10 +179,10 @@ class _NixCardExpansionTileState extends State<NixCardExpansionTile>
   @override
   Widget build(BuildContext context) {
     final defaultRadius = BorderRadius.only(
-      topLeft: Radius.circular(widget.isFirst ? 12 : 5),
-      topRight: Radius.circular(widget.isFirst ? 12 : 5),
-      bottomLeft: Radius.circular(widget.isLast && !_isExpanded ? 12 : 5),
-      bottomRight: Radius.circular(widget.isLast && !_isExpanded ? 12 : 5),
+      topLeft: Radius.circular(widget.isFirst ? 16 : 5),
+      topRight: Radius.circular(widget.isFirst ? 16 : 5),
+      bottomLeft: Radius.circular(widget.isLast && !_isExpanded ? 16 : 5),
+      bottomRight: Radius.circular(widget.isLast && !_isExpanded ? 16 : 5),
     );
 
     final targetRadius = _isPressed

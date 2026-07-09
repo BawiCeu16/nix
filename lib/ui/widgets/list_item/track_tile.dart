@@ -108,6 +108,7 @@ class _TrackTileState extends State<TrackTile> {
       title: widget.track.title,
       subtitle: widget.track.artist,
       trackId: widget.track.id,
+      titleAlignment: CrossAxisAlignment.start,
       children: [
         CardListTile(
           title: isFav ? "Remove from Favorites" : "Add to Favorites",
@@ -211,10 +212,10 @@ class _TrackTileState extends State<TrackTile> {
   @override
   Widget build(BuildContext context) {
     final defaultRadius = BorderRadius.only(
-      topLeft: Radius.circular(widget.isFirst ? 12 : 5),
-      topRight: Radius.circular(widget.isFirst ? 12 : 5),
-      bottomLeft: Radius.circular(widget.isLast ? 12 : 5),
-      bottomRight: Radius.circular(widget.isLast ? 12 : 5),
+      topLeft: Radius.circular(widget.isFirst ? 16 : 5),
+      topRight: Radius.circular(widget.isFirst ? 16 : 5),
+      bottomLeft: Radius.circular(widget.isLast ? 16 : 5),
+      bottomRight: Radius.circular(widget.isLast ? 16 : 5),
     );
 
     final targetRadius = _isPressed
@@ -281,7 +282,7 @@ class _TrackTileState extends State<TrackTile> {
               child: Material(
                 color: Colors.transparent,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  padding: const EdgeInsets.symmetric(vertical: 5.0),
                   child: ListTile(
                     leading: _ArtworkLeading(
                       trackId: widget.track.id,

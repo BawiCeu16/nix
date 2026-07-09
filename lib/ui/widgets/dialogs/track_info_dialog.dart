@@ -12,7 +12,7 @@ class TrackInfoDialog extends StatelessWidget {
     this.album = "Unknown Album",
     this.duration = "0:00",
     this.size = "0.0 MB",
-    this.filePath = "/storage/emulated/0/Music/dummy.mp3",
+    this.filePath = "/storage/emulated/0/Music/nix_music_player.mp3",
     this.trackId,
   });
 

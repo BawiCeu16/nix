@@ -83,7 +83,7 @@ class NixArtwork extends StatelessWidget {
       artworkWidget = ClipOval(child: artwork);
     } else {
       artworkWidget = ClipRRect(
-        borderRadius: borderRadius ?? BorderRadius.circular(8),
+        borderRadius: borderRadius ?? BorderRadius.circular(12.0),
         child: artwork,
       );
     }

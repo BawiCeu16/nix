@@ -4,6 +4,7 @@ import 'package:flutter/rendering.dart';
 import 'package:http/http.dart' as http;
 import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
 import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
+import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../models/animation_data.dart';
 import 'package:nix/providers/current_music_provider.dart';
@@ -90,38 +91,43 @@ class _LyricsSectionState extends State<LyricsSection> {
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Find Lyrics Manually'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(labelText: 'Title'),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: artistController,
-                decoration: const InputDecoration(labelText: 'Artist'),
-              ),
-            ],
-          ),
-          actions: [
-            ExpressiveToneButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+        return NixDialog(
+          title: 'Find Lyrics Manually',
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(labelText: 'Title'),
             ),
-            ExpressiveButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _performManualSearch(
-                  titleController.text.trim(),
-                  artistController.text.trim(),
-                  track.album,
-                  (track.duration) ~/ 1000,
-                );
-              },
-              child: const Text('Search'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: artistController,
+              decoration: const InputDecoration(labelText: 'Artist'),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: ExpressiveToneButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ExpressiveButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _performManualSearch(
+                        titleController.text.trim(),
+                        artistController.text.trim(),
+                        track.album,
+                        (track.duration) ~/ 1000,
+                      );
+                    },
+                    child: const Text('Search'),
+                  ),
+                ),
+              ],
             ),
           ],
         );
@@ -249,7 +255,7 @@ class _LyricsSectionState extends State<LyricsSection> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final track = context.select<CurrentMusicProvider, Track?>((p) => p.currentTrack);
+    final track = Provider.of<CurrentMusicProvider>(context).currentTrack;
 
     if (track != null && track.id != _currentTrackId) {
       _currentTrackId = track.id;
@@ -437,7 +443,9 @@ class _LyricsSectionState extends State<LyricsSection> {
       return const SizedBox.shrink();
     }
 
-    final track = context.select<CurrentMusicProvider, Track?>((p) => p.currentTrack);
+    final track = context.select<CurrentMusicProvider, Track?>(
+      (p) => p.currentTrack,
+    );
     final currentMusic = context.read<CurrentMusicProvider>();
 
     final topPosition = widget.topInset + 80.0;
