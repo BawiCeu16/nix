@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:http/http.dart' as http;
@@ -46,7 +47,8 @@ class _LyricsSectionState extends State<LyricsSection> {
   String? _plainLyrics;
   List<LyricLine>? _syncedLyrics;
   bool _isLoading = false;
-  int? _currentTrackId;
+  int? _fetchedTrackId;
+  StreamSubscription<Duration>? _positionSubscription;
 
   final ItemScrollController _scrollController = ItemScrollController();
   final ItemPositionsListener _itemPositionsListener =
@@ -122,6 +124,8 @@ class _LyricsSectionState extends State<LyricsSection> {
                         artistController.text.trim(),
                         track.album,
                         (track.duration) ~/ 1000,
+                        track.title,
+                        track.artist,
                       );
                     },
                     child: const Text('Search'),
@@ -140,6 +144,8 @@ class _LyricsSectionState extends State<LyricsSection> {
     String artist,
     String? album,
     int durationSecs,
+    String rawTitle,
+    String? rawArtist,
   ) async {
     setState(() {
       _isLoading = true;
@@ -158,7 +164,8 @@ class _LyricsSectionState extends State<LyricsSection> {
         final List searchData = json.decode(searchResponse.body);
         if (searchData.isNotEmpty) {
           if (mounted) {
-            _showSearchResultsDialog(context, searchData, "${title}_$artist");
+            final cacheKey = _getCacheKey(rawTitle, rawArtist);
+            _showSearchResultsDialog(context, searchData, cacheKey);
           }
         } else {
           setState(() {
@@ -222,7 +229,7 @@ class _LyricsSectionState extends State<LyricsSection> {
                     final settings = context.read<SettingsProvider>();
                     _handleLyricsData(result);
                     if (settings.saveLyricsOffline) {
-                      Hive.box(HiveKeys.lyricsBox).put(cacheKey, result);
+                      Hive.box(HiveKeys.lyricsBox).put(cacheKey, json.encode(result));
                     }
                   },
                 );
@@ -252,13 +259,28 @@ class _LyricsSectionState extends State<LyricsSection> {
     }
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void _checkAndFetch() {
     final track = Provider.of<CurrentMusicProvider>(context).currentTrack;
+    if (track == null) return;
 
-    if (track != null && track.id != _currentTrackId) {
-      _currentTrackId = track.id;
+    final cacheKey = _getCacheKey(track.title, track.artist);
+    final box = Hive.box(HiveKeys.lyricsBox);
+
+    if (box.containsKey(cacheKey)) {
+      if (track.id != _fetchedTrackId) {
+        _fetchedTrackId = track.id;
+        _fetchLyrics(
+          track.title,
+          track.artist,
+          track.album,
+          (track.duration) ~/ 1000,
+        );
+      }
+      return;
+    }
+
+    if (widget.lyricsAnim.value > 0 && track.id != _fetchedTrackId) {
+      _fetchedTrackId = track.id;
       _fetchLyrics(
         track.title,
         track.artist,
@@ -266,6 +288,67 @@ class _LyricsSectionState extends State<LyricsSection> {
         (track.duration) ~/ 1000,
       );
     }
+  }
+
+  void _updatePositionListener() {
+    final currentMusic = context.read<CurrentMusicProvider>();
+    final isLyricsVisible = widget.lyricsAnim.value > 0;
+
+    if (isLyricsVisible && _syncedLyrics != null) {
+      if (_positionSubscription == null) {
+        _positionSubscription = currentMusic.positionStream.listen((pos) {
+          if (!mounted || _syncedLyrics == null) return;
+
+          int newIndex = -1;
+          for (int i = 0; i < _syncedLyrics!.length; i++) {
+            if (pos >= _syncedLyrics![i].time) {
+              newIndex = i;
+            } else {
+              break;
+            }
+          }
+
+          if (newIndex != _currentIndex && newIndex != -1) {
+            setState(() {
+              _currentIndex = newIndex;
+            });
+            if (!_userScrolled && _scrollController.isAttached) {
+              _scrollController.scrollTo(
+                index: _currentIndex,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+                alignment: 0.5,
+              );
+            }
+          }
+        });
+      }
+    } else {
+      _positionSubscription?.cancel();
+      _positionSubscription = null;
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _checkAndFetch();
+    _updatePositionListener();
+  }
+
+  @override
+  void didUpdateWidget(covariant LyricsSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.lyricsAnim.value != widget.lyricsAnim.value) {
+      _checkAndFetch();
+      _updatePositionListener();
+    }
+  }
+
+  @override
+  void dispose() {
+    _positionSubscription?.cancel();
+    super.dispose();
   }
 
   List<LyricLine> _parseLrc(String lrc) {
@@ -331,38 +414,46 @@ class _LyricsSectionState extends State<LyricsSection> {
     return cleaned.isNotEmpty ? cleaned : title;
   }
 
+  String _getCacheKey(String title, String? artist) {
+    return "${title.toLowerCase().trim()}_${(artist ?? '').toLowerCase().trim()}";
+  }
+
   Future<void> _fetchLyrics(
     String rawTitle,
     String? artist,
     String? album,
     int durationSecs,
   ) async {
+    final title = _cleanTitle(rawTitle, artist);
+    final cacheKey = _getCacheKey(rawTitle, artist);
+    final box = Hive.box(HiveKeys.lyricsBox);
+    final settings = context.read<SettingsProvider>();
+
+    if (box.containsKey(cacheKey)) {
+      try {
+        final cachedValue = box.get(cacheKey);
+        if (cachedValue != null) {
+          final Map<String, dynamic> mapData = Map<String, dynamic>.from(
+            cachedValue is String ? json.decode(cachedValue) : cachedValue,
+          );
+          _plainLyrics = null;
+          _syncedLyrics = null;
+          _currentIndex = -1;
+          _isLoading = false;
+          _handleLyricsData(mapData);
+          return;
+        }
+      } catch (e) {
+        // Fallback to fetch if corrupted
+      }
+    }
+
     setState(() {
       _isLoading = true;
       _plainLyrics = null;
       _syncedLyrics = null;
       _currentIndex = -1;
     });
-
-    final title = _cleanTitle(rawTitle, artist);
-    final cacheKey = "${rawTitle}_$artist";
-    final box = Hive.box(HiveKeys.lyricsBox);
-    final settings = context.read<SettingsProvider>();
-
-    if (box.containsKey(cacheKey)) {
-      try {
-        final data = box.get(cacheKey);
-        // Ensure data is parsed back to Map<String, dynamic> properly
-        final Map<String, dynamic> mapData = Map<String, dynamic>.from(data);
-        _handleLyricsData(mapData);
-        setState(() {
-          _isLoading = false;
-        });
-        return;
-      } catch (e) {
-        // Fallback to fetch if corrupted
-      }
-    }
 
     try {
       final queryParams = {
@@ -381,7 +472,7 @@ class _LyricsSectionState extends State<LyricsSection> {
         final data = json.decode(response.body);
         _handleLyricsData(data);
         if (settings.saveLyricsOffline) {
-          box.put(cacheKey, data);
+          box.put(cacheKey, json.encode(data));
         }
       } else {
         final searchUri = Uri.parse(
@@ -394,7 +485,7 @@ class _LyricsSectionState extends State<LyricsSection> {
           if (searchData.isNotEmpty) {
             _handleLyricsData(searchData.first);
             if (settings.saveLyricsOffline) {
-              box.put(cacheKey, searchData.first);
+              box.put(cacheKey, json.encode(searchData.first));
             }
           } else {
             setState(() {
@@ -428,12 +519,14 @@ class _LyricsSectionState extends State<LyricsSection> {
         setState(() {
           _syncedLyrics = parsed;
         });
+        _updatePositionListener();
         return;
       }
     }
     setState(() {
       _plainLyrics = data['plainLyrics'] ?? "Lyrics not found.";
     });
+    _updatePositionListener();
   }
 
   @override
@@ -487,114 +580,65 @@ class _LyricsSectionState extends State<LyricsSection> {
                       child: _isLoading
                           ? const LoadingIndicatorM3E()
                           : _syncedLyrics != null
-                          ? StreamBuilder<Duration>(
-                              stream: currentMusic.positionStream,
-                              builder: (context, snapshot) {
-                                final pos =
-                                    snapshot.data ?? currentMusic.position;
-
-                                int newIndex = -1;
-                                for (
-                                  int i = 0;
-                                  i < _syncedLyrics!.length;
-                                  i++
-                                ) {
-                                  if (pos >= _syncedLyrics![i].time) {
-                                    newIndex = i;
-                                  } else {
-                                    break;
-                                  }
-                                }
-
-                                if (newIndex != _currentIndex &&
-                                    newIndex != -1) {
-                                  _currentIndex = newIndex;
-                                  if (!_userScrolled &&
-                                      _scrollController.isAttached) {
-                                    WidgetsBinding.instance
-                                        .addPostFrameCallback((_) {
-                                          if (_scrollController.isAttached &&
-                                              !_userScrolled) {
-                                            _scrollController.scrollTo(
-                                              index: _currentIndex,
-                                              duration: const Duration(
-                                                milliseconds: 300,
-                                              ),
-                                              curve: Curves.easeOut,
-                                              alignment: 0.5,
-                                            );
-                                          }
-                                        });
-                                  }
-                                }
-
-                                return NotificationListener<ScrollNotification>(
-                                  onNotification: (notification) {
-                                    if (notification
-                                        is UserScrollNotification) {
-                                      if (notification.direction !=
-                                          ScrollDirection.idle) {
-                                        if (!_userScrolled) {
-                                          setState(() => _userScrolled = true);
-                                        }
-                                      }
+                          ? NotificationListener<ScrollNotification>(
+                              onNotification: (notification) {
+                                if (notification is UserScrollNotification) {
+                                  if (notification.direction !=
+                                      ScrollDirection.idle) {
+                                    if (!_userScrolled) {
+                                      setState(() => _userScrolled = true);
                                     }
-                                    return false;
-                                  },
-                                  child: ScrollablePositionedList.builder(
-                                    itemScrollController: _scrollController,
-                                    itemPositionsListener:
-                                        _itemPositionsListener,
-                                    physics: const BouncingScrollPhysics(),
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 200.0,
-                                    ),
-                                    itemCount: _syncedLyrics!.length,
-                                    itemBuilder: (context, index) {
-                                      final isCurrent = index == _currentIndex;
-                                      return AnimatedDefaultTextStyle(
-                                        duration: const Duration(
-                                          milliseconds: 300,
-                                        ),
-                                        style: TextStyle(
-                                          fontSize: isCurrent ? 24.0 : 20.0,
-                                          height: 1.8,
-                                          fontWeight: isCurrent
-                                              ? FontWeight.bold
-                                              : FontWeight.w500,
-                                          color: isCurrent
-                                              ? Theme.of(
-                                                  context,
-                                                ).colorScheme.primary
-                                              : Theme.of(context)
-                                                    .colorScheme
-                                                    .onSurface
-                                                    .withValues(alpha: 0.6),
-                                        ),
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            currentMusic.seek(
-                                              _syncedLyrics![index].time,
-                                            );
-                                            setState(
-                                              () => _userScrolled = false,
-                                            );
-                                          },
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 4.0,
-                                            ),
-                                            child: Text(
-                                              _syncedLyrics![index].text,
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                );
+                                  }
+                                }
+                                return false;
                               },
+                              child: ScrollablePositionedList.builder(
+                                itemScrollController: _scrollController,
+                                itemPositionsListener: _itemPositionsListener,
+                                physics: const BouncingScrollPhysics(),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 200.0,
+                                ),
+                                itemCount: _syncedLyrics!.length,
+                                itemBuilder: (context, index) {
+                                  final isCurrent = index == _currentIndex;
+                                  return AnimatedDefaultTextStyle(
+                                    duration: const Duration(milliseconds: 300),
+                                    style: TextStyle(
+                                      fontSize: isCurrent ? 24.0 : 20.0,
+                                      height: 1.8,
+                                      fontWeight: isCurrent
+                                          ? FontWeight.bold
+                                          : FontWeight.w500,
+                                      color: isCurrent
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.primary
+                                          : Theme.of(context)
+                                                .colorScheme
+                                                .onSurface
+                                                .withValues(alpha: 0.6),
+                                    ),
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        currentMusic.seek(
+                                          _syncedLyrics![index].time,
+                                        );
+                                        setState(() => _userScrolled = false);
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 4.0,
+                                        ),
+                                        child: Text(
+                                          _syncedLyrics![index].text,
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
                             )
                           : SingleChildScrollView(
                               physics: const BouncingScrollPhysics(),

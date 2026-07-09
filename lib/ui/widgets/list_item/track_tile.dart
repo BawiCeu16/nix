@@ -108,7 +108,7 @@ class _TrackTileState extends State<TrackTile> {
       title: widget.track.title,
       subtitle: widget.track.artist,
       trackId: widget.track.id,
-      titleAlignment: CrossAxisAlignment.start,
+
       children: [
         CardListTile(
           title: isFav ? "Remove from Favorites" : "Add to Favorites",
