@@ -42,7 +42,16 @@ class TrackImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentSong = context.select<CurrentMusicProvider, Track?>((p) => p.currentTrack);
+    final currentSong = context.select<CurrentMusicProvider, Track?>(
+      (p) => p.currentTrack,
+    );
+
+    final double maxStandardSize = screenSize.width - 46.0;
+    final double availableHeight =
+        screenSize.height - (maxOffset / 2.30) - (topInset + 80.0) - 24.0;
+    final double expandedSize = availableHeight < maxStandardSize
+        ? availableHeight.clamp(120.0, maxStandardSize)
+        : maxStandardSize;
 
     return AnimatedBuilder(
       animation: Listenable.merge([sAnim, lyricsAnim]),
@@ -75,19 +84,28 @@ class TrackImage extends StatelessWidget {
                     .add(
                       EdgeInsets.only(
                         left: rangeProgress(
-                          a: 22.0 * data.bounceClampedProgress,
+                          a:
+                              22.0 *
+                              data.bounceClampedProgress *
+                              lyricsAnim.value,
                           b: 20.0 * data.bounceClampedProgress,
                           c: lyricsAnim.value,
                         ),
                       ),
                     ),
                 child: Align(
-                  alignment: Alignment.bottomLeft,
+                  alignment:
+                      Alignment.lerp(
+                        Alignment.bottomLeft,
+                        Alignment.bottomCenter,
+                        data.bounceClampedProgress * (1 - lyricsAnim.value),
+                      ) ??
+                      Alignment.bottomLeft,
                   child: SizedBox(
                     height: rangeProgress(
                       a: 82.0,
                       b: rangeProgress(
-                        a: screenSize.width - 46.0,
+                        a: expandedSize,
                         b: 60.0,
                         c: lyricsAnim.value,
                       ),
@@ -96,7 +114,7 @@ class TrackImage extends StatelessWidget {
                     width: rangeProgress(
                       a: 82.0,
                       b: rangeProgress(
-                        a: screenSize.width - 46.0,
+                        a: expandedSize,
                         b: 60.0,
                         c: lyricsAnim.value,
                       ),
