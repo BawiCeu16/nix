@@ -12,6 +12,18 @@ import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
 import 'package:nix/models/music/track.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 import 'package:nix/ui/widgets/common/nix_scrollbar.dart';
+import 'package:on_audio_query_forked/on_audio_query.dart';
+import 'package:nix/models/music/artist.dart';
+import 'package:nix/models/music/album.dart';
+import 'package:nix/models/music/playlist.dart';
+import 'package:nix/ui/widgets/common/nix_artwork.dart';
+import 'package:nix/ui/widgets/common/nix_playlist_cover.dart';
+import 'package:nix/ui/screens/music_pages/artists_page.dart';
+import 'package:nix/ui/screens/music_pages/albums_page.dart';
+import 'package:nix/ui/screens/music_pages/views/playlist_view_page.dart';
+import 'package:nix/ui/widgets/list_item/nix_choice_chip.dart';
+
+enum SearchFilter { tracks, artists, playlists, albums }
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -22,15 +34,42 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   final TextEditingController _searchController = TextEditingController();
+  SearchFilter _selectedFilter = SearchFilter.tracks;
   List<Track> _searchResults = [];
+  List<Artist> _searchArtists = [];
+  List<Playlist> _searchPlaylists = [];
+  List<Album> _searchAlbums = [];
+
+  bool get _isCurrentFilterEmpty {
+    switch (_selectedFilter) {
+      case SearchFilter.tracks:
+        return _searchResults.isEmpty;
+      case SearchFilter.artists:
+        return _searchArtists.isEmpty;
+      case SearchFilter.playlists:
+        return _searchPlaylists.isEmpty;
+      case SearchFilter.albums:
+        return _searchAlbums.isEmpty;
+    }
+  }
 
   void _onSearchChanged(String query, MusicProvider music) {
     if (query.isEmpty) {
-      setState(() => _searchResults = []);
+      setState(() {
+        _searchResults = [];
+        _searchArtists = [];
+        _searchPlaylists = [];
+        _searchAlbums = [];
+      });
       return;
     }
     setState(() {
       _searchResults = music.searchTracks(query);
+      _searchArtists = music.searchArtists(query);
+      _searchPlaylists = music.playlists
+          .where((p) => p.name.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+      _searchAlbums = music.searchAlbums(query);
     });
   }
 
@@ -120,8 +159,58 @@ class _SearchPageState extends State<SearchPage> {
                   ),
                 ),
 
+                // Filter chips shown when searching
+                if (_searchController.text.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          children: [
+                            NixChoiceChip<SearchFilter>(
+                              label: 'Tracks',
+                              value: SearchFilter.tracks,
+                              groupValue: _selectedFilter,
+                              onChanged: (val) =>
+                                  setState(() => _selectedFilter = val),
+                              isFirst: true,
+                            ),
+                            const SizedBox(width: 4),
+                            NixChoiceChip<SearchFilter>(
+                              label: 'Artists',
+                              value: SearchFilter.artists,
+                              groupValue: _selectedFilter,
+                              onChanged: (val) =>
+                                  setState(() => _selectedFilter = val),
+                            ),
+                            const SizedBox(width: 4),
+                            NixChoiceChip<SearchFilter>(
+                              label: 'Playlists',
+                              value: SearchFilter.playlists,
+                              groupValue: _selectedFilter,
+                              onChanged: (val) =>
+                                  setState(() => _selectedFilter = val),
+                            ),
+                            const SizedBox(width: 4),
+                            NixChoiceChip<SearchFilter>(
+                              label: 'Albums',
+                              value: SearchFilter.albums,
+                              groupValue: _selectedFilter,
+                              onChanged: (val) =>
+                                  setState(() => _selectedFilter = val),
+                              isLast: true,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
                 // Results or placeholder
-                if (_searchResults.isEmpty && _searchController.text.isEmpty)
+                if (_searchController.text.isEmpty)
                   settings.searchHistory.isEmpty
                       ? SliverFillRemaining(
                           hasScrollBody: false,
@@ -288,7 +377,7 @@ class _SearchPageState extends State<SearchPage> {
                             ]),
                           ),
                         )
-                else if (_searchResults.isEmpty)
+                else if (_isCurrentFilterEmpty)
                   SliverFillRemaining(
                     hasScrollBody: false,
                     child: Center(
@@ -298,7 +387,7 @@ class _SearchPageState extends State<SearchPage> {
                       ),
                     ),
                   )
-                else
+                else if (_selectedFilter == SearchFilter.tracks)
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     sliver: SliverList.builder(
@@ -313,6 +402,130 @@ class _SearchPageState extends State<SearchPage> {
                           playlistContext: _searchResults,
                           isFirst: index == 0,
                           isLast: index == _searchResults.length - 1,
+                        );
+                      },
+                    ),
+                  )
+                else if (_selectedFilter == SearchFilter.artists)
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    sliver: SliverList.builder(
+                      itemCount: _searchArtists.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == _searchArtists.length) {
+                          return const NixBottomSpacer();
+                        }
+                        final artist = _searchArtists[index];
+                        final artistTracks = music.getTracksByArtist(
+                          artist.name,
+                        );
+                        final firstTrackId = artistTracks.isNotEmpty
+                            ? artistTracks.first.id
+                            : 0;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 2),
+                          child: CardListTile(
+                            title: artist.name,
+                            subtitle:
+                                '${artist.numberOfTracks} tracks • ${artist.numberOfAlbums} albums',
+                            leading: NixArtwork(
+                              id: firstTrackId,
+                              type: ArtworkType.AUDIO,
+                              width: 48,
+                              height: 48,
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            isFirst: index == 0,
+                            isLast: index == _searchArtists.length - 1,
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      ArtistTracksPage(artistName: artist.name),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  )
+                else if (_selectedFilter == SearchFilter.playlists)
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    sliver: SliverList.builder(
+                      itemCount: _searchPlaylists.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == _searchPlaylists.length) {
+                          return const NixBottomSpacer();
+                        }
+                        final playlist = _searchPlaylists[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 2),
+                          child: CardListTile(
+                            title: playlist.name,
+                            subtitle: '${playlist.tracks.length} tracks',
+                            leading: NixPlaylistCover(
+                              playlist: playlist,
+                              size: 48,
+                            ),
+                            isFirst: index == 0,
+                            isLast: index == _searchPlaylists.length - 1,
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => PlaylistViewPage(
+                                    playlistName: playlist.name,
+                                    playlistId: playlist.id,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  )
+                else if (_selectedFilter == SearchFilter.albums)
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    sliver: SliverList.builder(
+                      itemCount: _searchAlbums.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == _searchAlbums.length) {
+                          return const NixBottomSpacer();
+                        }
+                        final album = _searchAlbums[index];
+                        final albumTracks = music.getTracksByAlbum(album.title);
+                        final firstTrackId = albumTracks.isNotEmpty
+                            ? albumTracks.first.id
+                            : 0;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 2),
+                          child: CardListTile(
+                            title: album.title,
+                            subtitle:
+                                '${album.artist} • ${album.numOfSongs} songs',
+                            leading: NixArtwork(
+                              id: firstTrackId,
+                              type: ArtworkType.AUDIO,
+                              width: 48,
+                              height: 48,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            isFirst: index == 0,
+                            isLast: index == _searchAlbums.length - 1,
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => AlbumTracksPage(
+                                    albumTitle: album.title,
+                                    albumArtist: album.artist,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                         );
                       },
                     ),
