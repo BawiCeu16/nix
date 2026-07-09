@@ -6,8 +6,6 @@ import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/settings_provider.dart';
 import 'package:nix/models/settings/artwork_quality.dart';
-import 'package:nix/models/settings/timer_gesture.dart';
-import 'package:nix_button/nix_button.dart';
 import 'package:nix/ui/widgets/common/nix_section_header.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 import 'package:nix/ui/widgets/common/nix_slider.dart';
@@ -239,69 +237,17 @@ class AppearanceSettingsPage extends StatelessWidget {
           ),
           const SizedBox(height: 2.5),
           CardListTile(
-            title: 'Timer Interaction',
-            subtitle: settingsParams.timerGesture == TimerGesture.longPress
-                ? 'LONG PRESS'
-                : 'TAP',
-            icon: FlutterRemix.fingerprint_line,
-            onTap: () => _showTimerGestureDialog(context, settingsParams),
-          ),
-          const SizedBox(height: 2.5),
-          CardListTile(
-            title: 'SnackBar Position',
-            subtitle: settingsParams.snackbarPosition.name.toUpperCase(),
-            icon: FlutterRemix.notification_badge_line,
-            onTap: () => _showSnackBarPositionDialog(context, settingsParams),
-          ),
-          const SizedBox(height: 2.5),
-          CardListTile(
-            title: 'Swipe to Dismiss SnackBar',
-            subtitle: 'Gesture dismissal for alerts',
-            icon: FlutterRemix.hand_coin_line,
-            trailing: Switch(
-              value: settingsParams.snackbarSwipeToDismiss,
-              onChanged: (v) => settingsParams.setSnackbarSwipeToDismiss(v),
-            ),
-            onTap: () => settingsParams.setSnackbarSwipeToDismiss(
-              !settingsParams.snackbarSwipeToDismiss,
-            ),
-          ),
-          const SizedBox(height: 2.5),
-          CardListTile(
             title: 'Miniplayer Shadow',
             subtitle: 'Dynamic depth effect for player',
             icon: FlutterRemix.magic_line,
-
             trailing: Switch(
               value: settingsParams.showMiniplayerShadow,
               onChanged: (v) => settingsParams.setShowMiniplayerShadow(v),
             ),
+            isLast: true,
             onTap: () => settingsParams.setShowMiniplayerShadow(
               !settingsParams.showMiniplayerShadow,
             ),
-          ),
-          const SizedBox(height: 2.5),
-          CardListTile(
-            title: 'Swipe to Change Track',
-            subtitle: 'Swipe artwork left/right to skip',
-            icon: FlutterRemix.arrow_left_right_line,
-            trailing: Switch(
-              value: settingsParams.swipeToChangeTrack,
-              onChanged: (v) => settingsParams.setSwipeToChangeTrack(v),
-            ),
-            onTap: () => settingsParams.setSwipeToChangeTrack(
-              !settingsParams.swipeToChangeTrack,
-            ),
-          ),
-          const SizedBox(height: 2.5),
-          CardListTile(
-            title: 'Track Swipe Action',
-            subtitle: settingsParams.trackSwipeAction == TrackSwipeAction.none
-                ? 'OFF'
-                : 'PLAY / PLAY NEXT',
-            icon: FlutterRemix.swap_line,
-            onTap: () => _showTrackSwipeActionDialog(context, settingsParams),
-            isLast: true,
           ),
           const NixBottomSpacer(),
         ],
@@ -309,97 +255,6 @@ class AppearanceSettingsPage extends StatelessWidget {
     );
   }
 
-  void _showTrackSwipeActionDialog(
-    BuildContext context,
-    SettingsProvider settings,
-  ) {
-    NixDialog.show(
-      context: context,
-      title: 'Track Swipe Action',
-      children: TrackSwipeAction.values.map((action) {
-        final index = TrackSwipeAction.values.indexOf(action);
-        String description = '';
-        switch (action) {
-          case TrackSwipeAction.none:
-            description = 'Disable swipe actions on library tracks';
-            break;
-          case TrackSwipeAction.playPlayback:
-            description = 'Swipe to Play (Idle) or Play Next (Playing)';
-            break;
-        }
-
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: index == TrackSwipeAction.values.length - 1 ? 0.0 : 2.5,
-          ),
-          child: CardListTile(
-            title: action == TrackSwipeAction.none
-                ? 'NONE'
-                : 'PLAY / PLAY NEXT',
-            subtitle: description,
-            onTap: () {
-              settings.setTrackSwipeAction(action);
-              Navigator.of(context, rootNavigator: true).pop();
-            },
-            trailing: IgnorePointer(
-              child: Radio<TrackSwipeAction>(
-                value: action,
-                groupValue: settings.trackSwipeAction,
-                onChanged: (_) {},
-              ),
-            ),
-            isFirst: index == 0,
-            isLast: index == TrackSwipeAction.values.length - 1,
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  void _showSnackBarPositionDialog(
-    BuildContext context,
-    SettingsProvider settings,
-  ) {
-    NixDialog.show(
-      context: context,
-      title: 'SnackBar Position',
-      children: SnackBarPosition.values.map((position) {
-        final index = SnackBarPosition.values.indexOf(position);
-        String description = '';
-        switch (position) {
-          case SnackBarPosition.top:
-            description = 'Show alerts at the top of the screen';
-            break;
-          case SnackBarPosition.bottom:
-            description = 'Show alerts at the bottom of the screen';
-            break;
-        }
-
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: index == SnackBarPosition.values.length - 1 ? 0.0 : 2.5,
-          ),
-          child: CardListTile(
-            title: position.name.toUpperCase(),
-            subtitle: description,
-            onTap: () {
-              settings.setSnackbarPosition(position);
-              Navigator.of(context, rootNavigator: true).pop();
-            },
-            trailing: IgnorePointer(
-              child: Radio<SnackBarPosition>(
-                value: position,
-                groupValue: settings.snackbarPosition,
-                onChanged: (_) {},
-              ),
-            ),
-            isFirst: index == 0,
-            isLast: index == SnackBarPosition.values.length - 1,
-          ),
-        );
-      }).toList(),
-    );
-  }
 
   void _showShapeDialog(BuildContext context, SettingsProvider settings) {
     NixDialog.show(
@@ -512,50 +367,7 @@ class AppearanceSettingsPage extends StatelessWidget {
     );
   }
 
-  void _showTimerGestureDialog(
-    BuildContext context,
-    SettingsProvider settings,
-  ) {
-    NixDialog.show(
-      context: context,
-      title: 'Timer Interaction',
-      children: TimerGesture.values.map((gesture) {
-        final index = TimerGesture.values.indexOf(gesture);
-        String description = '';
-        switch (gesture) {
-          case TimerGesture.tap:
-            description = 'Single tap to open timer';
-            break;
-          case TimerGesture.longPress:
-            description = 'Long press to avoid accidental touches';
-            break;
-        }
 
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: index == TimerGesture.values.length - 1 ? 0.0 : 2.5,
-          ),
-          child: CardListTile(
-            title: gesture.name.toUpperCase(),
-            subtitle: description,
-            onTap: () {
-              settings.setTimerGesture(gesture);
-              Navigator.of(context, rootNavigator: true).pop();
-            },
-            trailing: IgnorePointer(
-              child: Radio<TimerGesture>(
-                value: gesture,
-                groupValue: settings.timerGesture,
-                onChanged: (_) {},
-              ),
-            ),
-            isFirst: index == 0,
-            isLast: index == TimerGesture.values.length - 1,
-          ),
-        );
-      }).toList(),
-    );
-  }
 }
 
 class _CustomColorPicker extends StatelessWidget {

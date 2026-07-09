@@ -112,6 +112,7 @@ class _ArtistsPageState extends State<ArtistsPage> {
                           type: ArtworkType.AUDIO,
                           width: 130,
                           height: 130,
+                          borderRadius: BorderRadius.circular(100),
                         ),
                         const SizedBox(height: 10),
                         Text(
@@ -196,6 +197,7 @@ class ArtistTracksPage extends StatelessWidget {
                             type: ArtworkType.AUDIO,
                             width: 300,
                             height: 300,
+                            borderRadius: BorderRadius.circular(1000),
                           ),
                           const SizedBox(height: 20),
                           Text(
@@ -246,10 +248,16 @@ class ArtistTracksPage extends StatelessWidget {
                                         .read<CurrentMusicProvider>()
                                         .playTrack(tracks.first);
                                   },
-                                  child: const Row(
+                                  child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(FlutterRemix.play_fill, size: 20),
+                                      Icon(
+                                        FlutterRemix.play_fill,
+                                        size: 20,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primaryContainer,
+                                      ),
                                       SizedBox(width: 8),
                                       Text("Play All"),
                                     ],

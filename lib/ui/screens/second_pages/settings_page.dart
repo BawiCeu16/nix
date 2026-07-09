@@ -5,6 +5,7 @@ import 'package:nix/ui/screens/second_pages/settings_details/library_settings_pa
 import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 import 'package:nix/ui/widgets/common/nix_section_header.dart';
 import './settings_details/appearance_settings_page.dart';
+import './settings_details/gestures_settings_page.dart';
 import './settings_details/playback_settings_page.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 
@@ -41,10 +42,19 @@ class SettingsPage extends StatelessWidget {
           const SizedBox(height: 2.5),
           CardListTile(
             title: 'Playback',
-            subtitle: 'Gestures, auto-play, and audio settings',
+            subtitle: 'Auto-play, silence trimmers, and behavior',
             icon: FlutterRemix.play_circle_line,
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const PlaybackSettingsPage()),
+            ),
+          ),
+          const SizedBox(height: 2.5),
+          CardListTile(
+            title: 'Gestures & Interface',
+            subtitle: 'Swipes, haptic feedback, and notifications',
+            icon: FlutterRemix.fingerprint_line,
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const GesturesSettingsPage()),
             ),
           ),
           const SizedBox(height: 2.5),
