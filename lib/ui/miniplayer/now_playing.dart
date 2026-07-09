@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
@@ -65,6 +66,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
   // Gesture Locking
   _ActiveGesture _activeGesture = _ActiveGesture.none;
   bool _isReordering = false;
+  bool _isFingerDown = false;
   double _startY = 0.0;
 
   @override
@@ -77,6 +79,30 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
       value: 0.0,
     );
     queueScrollController = ScrollController();
+    queueScrollController.addListener(() {
+      if (!queueScrollController.hasClients) return;
+      if (!_isFingerDown) return;
+      final double scrollOffset = queueScrollController.offset;
+      if (scrollOffset < 0 &&
+          queueScrollController.position.userScrollDirection ==
+              ScrollDirection.forward) {
+        if (offset >= maxOffset * 2 - 10.0) {
+          queueScrollController.jumpTo(0.0);
+          _activeGesture = _ActiveGesture.vertical;
+          setState(() {
+            offset += scrollOffset;
+            offset = _applyStagedClamping(
+              offset,
+              context.read<SettingsProvider>(),
+            );
+          });
+          widget.animation.animateTo(
+            offset / maxOffset,
+            duration: Duration.zero,
+          );
+        }
+      }
+    });
     playPauseAnim = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
@@ -425,6 +451,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
       },
       child: Listener(
         onPointerDown: (event) {
+          _isFingerDown = true;
           if (_isReordering) return;
           if (event.position.dy > screenSize.height - deadSpace) return;
           _startY = event.position.dy;
@@ -469,6 +496,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
           if (offset >= maxOffset - 10.0) {
             // In Queue State
             final bool isAtTop =
+                offset < (maxOffset * 2 - 10.0) ||
                 !queueScrollController.hasClients ||
                 queueScrollController.offset <= 0;
             final bool isHandle = event.position.dy < topInset + 160.0;
@@ -498,6 +526,15 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
           );
         },
         onPointerUp: (event) {
+          _isFingerDown = false;
+          if (_isReordering) return;
+          if (_activeGesture == _ActiveGesture.vertical) {
+            verticalSnapping();
+          }
+          _activeGesture = _ActiveGesture.none;
+        },
+        onPointerCancel: (event) {
+          _isFingerDown = false;
           if (_isReordering) return;
           if (_activeGesture == _ActiveGesture.vertical) {
             verticalSnapping();
@@ -528,6 +565,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
             // --- Gesture Priority Logic ---
             if (offset >= maxOffset - 10.0) {
               final bool isAtTop =
+                  offset < (maxOffset * 2 - 10.0) ||
                   !queueScrollController.hasClients ||
                   queueScrollController.offset <= 0;
               final bool isHandle =

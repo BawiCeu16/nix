@@ -179,8 +179,12 @@ class _QueueViewState extends State<QueueView> {
 
   @override
   Widget build(BuildContext context) {
-    final playlist = context.select<CurrentMusicProvider, Playlist?>((p) => p.currentPlaylist);
-    final currentTrack = context.select<CurrentMusicProvider, Track?>((p) => p.currentTrack);
+    final playlist = context.select<CurrentMusicProvider, Playlist?>(
+      (p) => p.currentPlaylist,
+    );
+    final currentTrack = context.select<CurrentMusicProvider, Track?>(
+      (p) => p.currentTrack,
+    );
     final currentMusic = context.read<CurrentMusicProvider>();
     final tracks = playlist?.tracks ?? [];
 
@@ -218,9 +222,7 @@ class _QueueViewState extends State<QueueView> {
                       children: [
                         CustomScrollView(
                           cacheExtent: 1000,
-                          controller: widget.queueProgressValue == 1.0
-                              ? widget.controller
-                              : null,
+                          controller: widget.controller,
                           physics: widget.queueProgressValue == 1.0
                               ? const BouncingScrollPhysics(
                                   parent: AlwaysScrollableScrollPhysics(),
@@ -350,7 +352,8 @@ class _QueueViewState extends State<QueueView> {
                                       playlist: playlist,
                                     );
                                     HapticUtils.selection(
-                                        context.read<SettingsProvider>());
+                                      context.read<SettingsProvider>(),
+                                    );
                                   },
                                   onRemove: () {
                                     currentMusic.removeFromQueue(index);
