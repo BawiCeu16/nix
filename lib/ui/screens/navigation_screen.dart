@@ -235,7 +235,10 @@ class _NavigationScreenState extends State<NavigationScreen>
                   if (!hasTrack) return const SizedBox.shrink();
                   return child!;
                 },
-                child: NowPlaying(animation: animation),
+                child: NowPlaying(
+                  animation: animation,
+                  bottomInset: bottom ?? 0.0,
+                ),
               ),
             ],
           ),

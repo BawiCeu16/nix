@@ -21,7 +21,12 @@ enum _ActiveGesture { none, vertical, horizontal }
 
 class NowPlaying extends StatefulWidget {
   final AnimationController animation;
-  const NowPlaying({super.key, required this.animation});
+  final double bottomInset;
+  const NowPlaying({
+    super.key,
+    required this.animation,
+    required this.bottomInset,
+  });
 
   @override
   State<NowPlaying> createState() => _NowPlayingState();
@@ -135,7 +140,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
     maxOffset = screenSize.height;
     sMaxOffset = screenSize.width;
     topInset = MediaQuery.of(context).padding.top;
-    bottomInset = MediaQuery.of(context).padding.bottom;
+    bottomInset = widget.bottomInset;
 
     if (firstLoad) {
       if (widget.animation.value < 0.0) {
