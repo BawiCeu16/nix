@@ -6,6 +6,8 @@ import 'package:nix/models/settings/artwork_quality.dart';
 class ArtworkProvider extends ChangeNotifier {
   final OnAudioQuery _audioQuery = OnAudioQuery();
 
+  static const int _maxCacheSize = 150;
+
   // Cache for artwork bytes
   final Map<String, Uint8List?> _cache = {};
 
@@ -21,7 +23,11 @@ class ArtworkProvider extends ChangeNotifier {
     final key = _generateKey(id, type, quality);
 
     if (_cache.containsKey(key)) {
-      return _cache[key];
+      final bytes = _cache[key];
+      // Update LRU position by re-inserting at the end of iteration order
+      _cache.remove(key);
+      _cache[key] = bytes;
+      return bytes;
     }
 
     if (!_pending.contains(key)) {
@@ -29,6 +35,16 @@ class ArtworkProvider extends ChangeNotifier {
     }
 
     return null;
+  }
+
+  void _putInCache(String key, Uint8List? bytes) {
+    if (_cache.containsKey(key)) {
+      _cache.remove(key);
+    } else if (_cache.length >= _maxCacheSize) {
+      final oldestKey = _cache.keys.first;
+      _cache.remove(oldestKey);
+    }
+    _cache[key] = bytes;
   }
 
   Future<void> _fetchArtwork(
@@ -42,7 +58,7 @@ class ArtworkProvider extends ChangeNotifier {
     try {
       final isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
       if (!isMobile) {
-        _cache[key] = null;
+        _putInCache(key, null);
         return;
       }
       // Tiered logic moved to provider
@@ -70,11 +86,11 @@ class ArtworkProvider extends ChangeNotifier {
         size: size,
       );
 
-      _cache[key] = bytes;
+      _putInCache(key, bytes);
       notifyListeners();
     } catch (e) {
       debugPrint('Error fetching artwork $id: $e');
-      _cache[key] = null; // Mark as null to avoid re-fetching failed art
+      _putInCache(key, null); // Mark as null to avoid re-fetching failed art
     } finally {
       _pending.remove(key);
     }

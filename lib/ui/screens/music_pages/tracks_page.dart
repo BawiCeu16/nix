@@ -31,7 +31,7 @@ class _TracksPageState extends State<TracksPage> {
   @override
   Widget build(BuildContext context) {
     // Dynamically fetch the current state of tracks whenever it builds
-    List<Track> tracksList = widget.tracksSource();
+    List<Track> tracksList = List<Track>.from(widget.tracksSource());
 
     // Basic sorting stub
     if (_sort == _TrackSort.aToZ) {

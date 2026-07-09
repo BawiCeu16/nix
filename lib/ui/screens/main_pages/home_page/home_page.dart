@@ -247,6 +247,7 @@ class HomePage extends StatelessWidget {
                           ),
                         );
                       }
+                      final recentTracks = tracks.take(10).toList();
                       return SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12.0),
@@ -255,9 +256,9 @@ class HomePage extends StatelessWidget {
                             child: ListView.builder(
                               scrollDirection: Axis.horizontal,
                               physics: const BouncingScrollPhysics(),
-                              itemCount: tracks.take(10).length,
+                              itemCount: recentTracks.length,
                               itemBuilder: (context, index) {
-                                final track = tracks[index];
+                                final track = recentTracks[index];
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 5.0,
@@ -321,6 +322,7 @@ class HomePage extends StatelessWidget {
                       final albumFirstTrackId = context
                           .read<MusicProvider>()
                           .albumFirstTrackId;
+                      final recentAlbums = albums.take(10).toList();
                       return SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12.0),
@@ -329,9 +331,9 @@ class HomePage extends StatelessWidget {
                             child: ListView.builder(
                               scrollDirection: Axis.horizontal,
                               physics: const BouncingScrollPhysics(),
-                              itemCount: albums.take(10).length,
+                              itemCount: recentAlbums.length,
                               itemBuilder: (context, index) {
-                                final album = albums[index];
+                                final album = recentAlbums[index];
                                 final firstTrackId =
                                     albumFirstTrackId[album.title];
                                 return Padding(
@@ -350,18 +352,18 @@ class HomePage extends StatelessWidget {
                                             builder: (_) => AlbumTracksPage(
                                               albumTitle: album.title,
                                               albumArtist: album.artist,
+                                              ),
                                             ),
-                                          ),
-                                        );
-                                      },
+                                          );
+                                        },
+                                      ),
                                     ),
-                                  ),
-                                );
-                              },
+                                  );
+                                },
+                              ),
                             ),
                           ),
-                        ),
-                      );
+                        );
                     },
                   ),
 
@@ -409,10 +411,10 @@ class HomePage extends StatelessWidget {
                           ),
                         );
                       }
+                      final previewTracks = tracks.take(6).toList();
                       return SliverList.builder(
-                        itemCount: tracks.take(6).length,
+                        itemCount: previewTracks.length,
                         itemBuilder: (context, index) {
-                          final previewTracks = tracks.take(6).toList();
                           final track = previewTracks[index];
                           return Padding(
                             padding: const EdgeInsets.symmetric(

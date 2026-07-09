@@ -544,9 +544,7 @@ class _LyricsSectionState extends State<LyricsSection> {
 
   @override
   Widget build(BuildContext context) {
-    final track = context.select<CurrentMusicProvider, Track?>(
-      (p) => p.currentTrack,
-    );
+    final track = widget.track;
     final currentMusic = context.read<CurrentMusicProvider>();
 
     final topPosition = widget.topInset + 80.0;

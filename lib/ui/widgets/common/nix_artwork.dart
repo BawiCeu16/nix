@@ -58,6 +58,14 @@ class NixArtwork extends StatelessWidget {
       selector: (_, artworkProv) =>
           artworkProv.getCachedArtwork(id, type, currentQuality),
       builder: (context, bytes, _) {
+        final double? pixelRatio = MediaQuery.maybeOf(context)?.devicePixelRatio;
+        final int? targetCacheWidth = width != null && width! > 0 && width! < double.infinity && pixelRatio != null
+            ? (width! * pixelRatio).round()
+            : null;
+        final int? targetCacheHeight = height != null && height! > 0 && height! < double.infinity && pixelRatio != null
+            ? (height! * pixelRatio).round()
+            : null;
+
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
           child: bytes != null
@@ -67,6 +75,8 @@ class NixArtwork extends StatelessWidget {
                   fit: fit,
                   width: width,
                   height: height,
+                  cacheWidth: targetCacheWidth,
+                  cacheHeight: targetCacheHeight,
                   filterQuality: _getFilterQuality(currentQuality),
                   gaplessPlayback: true,
                   errorBuilder: (context, error, stackTrace) =>
