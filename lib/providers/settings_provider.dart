@@ -393,6 +393,16 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Playback - Resume from Played Duration
+  /// Whether to resume tracks from their last saved position.
+  bool get resumeFromPlayedDuration =>
+      _box.get(HiveKeys.resumeFromPlayedDuration, defaultValue: true);
+
+  void setResumeFromPlayedDuration(bool value) {
+    _box.put(HiveKeys.resumeFromPlayedDuration, value);
+    notifyListeners();
+  }
+
   /// Resets ALL settings to their factory defaults by clearing the Hive box.
   /// Each getter's `defaultValue` will take effect on the next read.
   void resetToDefaults() {

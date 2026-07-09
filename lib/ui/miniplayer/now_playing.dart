@@ -8,6 +8,7 @@ import '../../core/math_utils.dart';
 import '../../providers/will_pop_provider.dart';
 import '../../providers/current_music_provider.dart';
 import 'package:nix/providers/settings_provider.dart';
+import 'package:nix/models/music/track.dart';
 import 'widgets/top_bar.dart';
 import 'widgets/track_image.dart';
 import 'widgets/track_info.dart';
@@ -429,6 +430,9 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final track = context.select<CurrentMusicProvider, Track?>(
+      (p) => p.currentTrack,
+    );
     final showMiniplayerShadow = context.select<SettingsProvider, bool>(
       (s) => s.showMiniplayerShadow,
     );
@@ -819,15 +823,12 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                   AnimatedBuilder(
                     animation: lyricsAnim,
                     builder: (context, _) {
-                      if (data.bounceClampedProgress == 0 ||
-                          lyricsAnim.value == 0) {
-                        return const SizedBox.shrink();
-                      }
                       return LyricsSection(
                         lyricsAnim: lyricsAnim,
                         data: data,
                         maxOffset: maxOffset,
                         topInset: topInset,
+                        track: track,
                       );
                     },
                   ),

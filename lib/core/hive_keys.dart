@@ -42,6 +42,8 @@ abstract final class HiveKeys {
   static const String autoScrollQueue = 'autoScrollQueue';
   static const String hapticForce = 'hapticForce';
   static const String saveLyricsOffline = 'saveLyricsOffline';
+  static const String trackPositionsBox = 'track_positions';
+  static const String resumeFromPlayedDuration = 'resumeFromPlayedDuration';
 
   // ── User keys ──────────────────────────────────────────────────────────────
   static const String username = 'username';

@@ -157,6 +157,32 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       );
     });
 
+    // Resume from played duration position saving
+    _audioPlayer.positionStream.listen((pos) {
+      final currentTrack = _currentTrack;
+      if (currentTrack != null &&
+          _settingsProvider?.resumeFromPlayedDuration == true) {
+        final duration = _audioPlayer.duration;
+        if (duration != null) {
+          final posMs = pos.inMilliseconds;
+          final durMs = duration.inMilliseconds;
+          final remainingMs = durMs - posMs;
+          final positionBox = Hive.box<int>(HiveKeys.trackPositionsBox);
+
+          if (pos.inSeconds > 5 && remainingMs > 5000) {
+            final lastSaved = positionBox.get(currentTrack.id);
+            if (lastSaved == null || (lastSaved - posMs).abs() >= 1000) {
+              positionBox.put(currentTrack.id, posMs);
+            }
+          } else if (remainingMs <= 5000 || pos.inSeconds <= 5) {
+            if (positionBox.containsKey(currentTrack.id)) {
+              positionBox.delete(currentTrack.id);
+            }
+          }
+        }
+      }
+    });
+
     // Platform-Agnostic 'Smart Skip' Logic
     // Trims the last 3 seconds of a track ONLY if skipSilence is enabled.
     // This provides a "dynamic" transition where the native engine fails.
@@ -201,12 +227,21 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       // 2. PHASE 2: Parallel Execution Branches
       // We don't await the background tasks to ensure the audio starts ASAP.
 
-      // Branch A: Audio Engine (Highest Priority)
       unawaited(() async {
         try {
           final isNetworkUrl = track.uri.startsWith('http://') || track.uri.startsWith('https://');
           final source = isNetworkUrl ? AudioSource.uri(Uri.parse(track.uri)) : AudioSource.file(track.uri);
-          await _audioPlayer.setAudioSource(source);
+          
+          Duration? initialPosition;
+          if (_settingsProvider?.resumeFromPlayedDuration == true) {
+            final positionBox = Hive.box<int>(HiveKeys.trackPositionsBox);
+            final savedMs = positionBox.get(track.id);
+            if (savedMs != null) {
+              initialPosition = Duration(milliseconds: savedMs);
+            }
+          }
+
+          await _audioPlayer.setAudioSource(source, initialPosition: initialPosition);
           if (currentToken == _playbackSelectionToken) {
             await _audioPlayer.play();
             _audioLoadingState = AudioLoadingState.loaded;

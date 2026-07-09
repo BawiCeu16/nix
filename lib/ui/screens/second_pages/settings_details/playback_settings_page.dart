@@ -61,9 +61,22 @@ class PlaybackSettingsPage extends StatelessWidget {
               value: settings.resetSpeedOnNewTrack,
               onChanged: (value) => settings.setResetSpeedOnNewTrack(value),
             ),
-            isLast: true,
             onTap: () => settings.setResetSpeedOnNewTrack(
               !settings.resetSpeedOnNewTrack,
+            ),
+          ),
+          const SizedBox(height: 2.5),
+          CardListTile(
+            title: 'Remember Playback Position',
+            subtitle: 'Resume tracks from where you last left off',
+            icon: FlutterRemix.time_line,
+            trailing: Switch(
+              value: settings.resumeFromPlayedDuration,
+              onChanged: (value) => settings.setResumeFromPlayedDuration(value),
+            ),
+            isLast: true,
+            onTap: () => settings.setResumeFromPlayedDuration(
+              !settings.resumeFromPlayedDuration,
             ),
           ),
 

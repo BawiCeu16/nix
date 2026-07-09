@@ -23,6 +23,7 @@ void main() async {
   await Hive.openBox(HiveKeys.settingsBox);
   await Hive.openBox<int>(HiveKeys.colorCacheBox);
   await Hive.openBox(HiveKeys.lyricsBox);
+  await Hive.openBox<int>(HiveKeys.trackPositionsBox);
   final bool hasCompletedOnboarding = Hive.box(
     HiveKeys.settingsBox,
   ).get(HiveKeys.onboarding, defaultValue: false);

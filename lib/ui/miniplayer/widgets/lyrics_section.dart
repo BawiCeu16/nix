@@ -30,6 +30,7 @@ class LyricsSection extends StatefulWidget {
   final PlayerAnimationData data;
   final double maxOffset;
   final double topInset;
+  final Track? track;
 
   const LyricsSection({
     super.key,
@@ -37,6 +38,7 @@ class LyricsSection extends StatefulWidget {
     required this.data,
     required this.maxOffset,
     required this.topInset,
+    required this.track,
   });
 
   @override
@@ -229,7 +231,9 @@ class _LyricsSectionState extends State<LyricsSection> {
                     final settings = context.read<SettingsProvider>();
                     _handleLyricsData(result);
                     if (settings.saveLyricsOffline) {
-                      Hive.box(HiveKeys.lyricsBox).put(cacheKey, json.encode(result));
+                      Hive.box(
+                        HiveKeys.lyricsBox,
+                      ).put(cacheKey, json.encode(result));
                     }
                   },
                 );
@@ -260,7 +264,7 @@ class _LyricsSectionState extends State<LyricsSection> {
   }
 
   void _checkAndFetch() {
-    final track = Provider.of<CurrentMusicProvider>(context).currentTrack;
+    final track = widget.track;
     if (track == null) return;
 
     final cacheKey = _getCacheKey(track.title, track.artist);
@@ -292,40 +296,48 @@ class _LyricsSectionState extends State<LyricsSection> {
 
   void _updatePositionListener() {
     final currentMusic = context.read<CurrentMusicProvider>();
-    final isLyricsVisible = widget.lyricsAnim.value > 0;
+    final isLyricsVisible =
+        widget.lyricsAnim.value > 0 && widget.data.bounceClampedProgress > 0;
 
     if (isLyricsVisible && _syncedLyrics != null) {
+      final currentPos = currentMusic.position;
+      _updateIndexForPosition(currentPos);
+
       if (_positionSubscription == null) {
         _positionSubscription = currentMusic.positionStream.listen((pos) {
           if (!mounted || _syncedLyrics == null) return;
-
-          int newIndex = -1;
-          for (int i = 0; i < _syncedLyrics!.length; i++) {
-            if (pos >= _syncedLyrics![i].time) {
-              newIndex = i;
-            } else {
-              break;
-            }
-          }
-
-          if (newIndex != _currentIndex && newIndex != -1) {
-            setState(() {
-              _currentIndex = newIndex;
-            });
-            if (!_userScrolled && _scrollController.isAttached) {
-              _scrollController.scrollTo(
-                index: _currentIndex,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
-                alignment: 0.5,
-              );
-            }
-          }
+          _updateIndexForPosition(pos);
         });
       }
     } else {
       _positionSubscription?.cancel();
       _positionSubscription = null;
+    }
+  }
+
+  void _updateIndexForPosition(Duration pos) {
+    if (_syncedLyrics == null) return;
+    int newIndex = -1;
+    for (int i = 0; i < _syncedLyrics!.length; i++) {
+      if (pos >= _syncedLyrics![i].time) {
+        newIndex = i;
+      } else {
+        break;
+      }
+    }
+
+    if (newIndex != _currentIndex && newIndex != -1) {
+      setState(() {
+        _currentIndex = newIndex;
+      });
+      if (!_userScrolled && _scrollController.isAttached) {
+        _scrollController.scrollTo(
+          index: _currentIndex,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+          alignment: 0.5,
+        );
+      }
     }
   }
 
@@ -339,7 +351,8 @@ class _LyricsSectionState extends State<LyricsSection> {
   @override
   void didUpdateWidget(covariant LyricsSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.lyricsAnim.value != widget.lyricsAnim.value) {
+    if (oldWidget.track?.id != widget.track?.id ||
+        oldWidget.lyricsAnim.value != widget.lyricsAnim.value) {
       _checkAndFetch();
       _updatePositionListener();
     }
@@ -531,11 +544,6 @@ class _LyricsSectionState extends State<LyricsSection> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.data.bounceClampedProgress == 0 ||
-        widget.lyricsAnim.value == 0) {
-      return const SizedBox.shrink();
-    }
-
     final track = context.select<CurrentMusicProvider, Track?>(
       (p) => p.currentTrack,
     );
@@ -546,162 +554,178 @@ class _LyricsSectionState extends State<LyricsSection> {
         (widget.maxOffset / 3.6) - (140.0 * widget.lyricsAnim.value);
     final bottomPosition = trackInfoYFromBottom + 120.0;
 
+    final isVisible =
+        widget.data.bounceClampedProgress > 0 && widget.lyricsAnim.value > 0;
+
     return Positioned(
       top: topPosition,
       bottom: bottomPosition,
       left: 24.0,
       right: 24.0,
-      child: Opacity(
-        opacity: widget.lyricsAnim.value * widget.data.opacity,
-        child: Container(
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(24.0)),
-          child: Stack(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(24.0),
-                child: ShaderMask(
-                  shaderCallback: (Rect rect) {
-                    return const LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black,
-                        Colors.black,
-                        Colors.transparent,
-                      ],
-                      stops: [0.0, 0.15, 0.85, 1.0],
-                    ).createShader(rect);
-                  },
-                  blendMode: BlendMode.dstIn,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Center(
-                      child: _isLoading
-                          ? const LoadingIndicatorM3E()
-                          : _syncedLyrics != null
-                          ? NotificationListener<ScrollNotification>(
-                              onNotification: (notification) {
-                                if (notification is UserScrollNotification) {
-                                  if (notification.direction !=
-                                      ScrollDirection.idle) {
-                                    if (!_userScrolled) {
-                                      setState(() => _userScrolled = true);
+      child: Visibility(
+        visible: isVisible,
+        maintainState: true,
+        child: Opacity(
+          opacity: widget.lyricsAnim.value * widget.data.opacity,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24.0),
+            ),
+            child: Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(24.0),
+                  child: ShaderMask(
+                    shaderCallback: (Rect rect) {
+                      return const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black,
+                          Colors.black,
+                          Colors.transparent,
+                        ],
+                        stops: [0.0, 0.15, 0.85, 1.0],
+                      ).createShader(rect);
+                    },
+                    blendMode: BlendMode.dstIn,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: Center(
+                        child: _isLoading
+                            ? const LoadingIndicatorM3E()
+                            : _syncedLyrics != null
+                            ? NotificationListener<ScrollNotification>(
+                                onNotification: (notification) {
+                                  if (notification is UserScrollNotification) {
+                                    if (notification.direction !=
+                                        ScrollDirection.idle) {
+                                      if (!_userScrolled) {
+                                        setState(() => _userScrolled = true);
+                                      }
                                     }
                                   }
-                                }
-                                return false;
-                              },
-                              child: ScrollablePositionedList.builder(
-                                itemScrollController: _scrollController,
-                                itemPositionsListener: _itemPositionsListener,
-                                physics: const BouncingScrollPhysics(),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 200.0,
-                                ),
-                                itemCount: _syncedLyrics!.length,
-                                itemBuilder: (context, index) {
-                                  final isCurrent = index == _currentIndex;
-                                  return AnimatedDefaultTextStyle(
-                                    duration: const Duration(milliseconds: 300),
-                                    style: TextStyle(
-                                      fontSize: isCurrent ? 24.0 : 20.0,
-                                      height: 1.8,
-                                      fontWeight: isCurrent
-                                          ? FontWeight.bold
-                                          : FontWeight.w500,
-                                      color: isCurrent
-                                          ? Theme.of(
-                                              context,
-                                            ).colorScheme.primary
-                                          : Theme.of(context)
-                                                .colorScheme
-                                                .onSurface
-                                                .withValues(alpha: 0.6),
-                                    ),
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        currentMusic.seek(
-                                          _syncedLyrics![index].time,
-                                        );
-                                        setState(() => _userScrolled = false);
-                                      },
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 4.0,
-                                        ),
-                                        child: Text(
-                                          _syncedLyrics![index].text,
-                                          textAlign: TextAlign.center,
+                                  return false;
+                                },
+                                child: ScrollablePositionedList.builder(
+                                  itemScrollController: _scrollController,
+                                  itemPositionsListener: _itemPositionsListener,
+                                  physics: const BouncingScrollPhysics(),
+                                  initialScrollIndex: _currentIndex != -1
+                                      ? _currentIndex
+                                      : 0,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 200.0,
+                                  ),
+                                  itemCount: _syncedLyrics!.length,
+                                  itemBuilder: (context, index) {
+                                    final isCurrent = index == _currentIndex;
+                                    return AnimatedDefaultTextStyle(
+                                      duration: const Duration(
+                                        milliseconds: 300,
+                                      ),
+                                      style: TextStyle(
+                                        fontSize: isCurrent ? 24.0 : 20.0,
+                                        height: 1.8,
+                                        fontWeight: isCurrent
+                                            ? FontWeight.bold
+                                            : FontWeight.w500,
+                                        color: isCurrent
+                                            ? Theme.of(
+                                                context,
+                                              ).colorScheme.primary
+                                            : Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface
+                                                  .withValues(alpha: 0.6),
+                                      ),
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          currentMusic.seek(
+                                            _syncedLyrics![index].time,
+                                          );
+                                          setState(() => _userScrolled = false);
+                                        },
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 4.0,
+                                          ),
+                                          child: Text(
+                                            _syncedLyrics![index].text,
+                                            textAlign: TextAlign.center,
+                                          ),
                                         ),
                                       ),
+                                    );
+                                  },
+                                ),
+                              )
+                            : SingleChildScrollView(
+                                physics: const BouncingScrollPhysics(),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 50.0,
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      _plainLyrics ??
+                                          "Lyrics not found for\n${track?.title ?? 'this track'}",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 18.0,
+                                        height: 1.8,
+                                        fontWeight: FontWeight.w500,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withValues(alpha: 0.8),
+                                      ),
                                     ),
-                                  );
-                                },
-                              ),
-                            )
-                          : SingleChildScrollView(
-                              physics: const BouncingScrollPhysics(),
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 50.0,
-                              ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    _plainLyrics ??
-                                        "Lyrics not found for\n${track?.title ?? 'this track'}",
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 18.0,
-                                      height: 1.8,
-                                      fontWeight: FontWeight.w500,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface
-                                          .withValues(alpha: 0.8),
+                                    const SizedBox(height: 24),
+                                    ExpressiveButton(
+                                      onPressed: () => _showManualSearchDialog(
+                                        context,
+                                        track,
+                                      ),
+                                      child: const Text('Find Manually'),
                                     ),
-                                  ),
-                                  const SizedBox(height: 24),
-                                  ExpressiveButton(
-                                    onPressed: () =>
-                                        _showManualSearchDialog(context, track),
-                                    child: const Text('Find Manually'),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: 24,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: AnimatedSlide(
-                    offset: _userScrolled ? Offset.zero : const Offset(0, 1),
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOutBack,
-                    child: AnimatedOpacity(
-                      opacity: _userScrolled ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 200),
-                      child: NixIconButton(
-                        onPressed: _scrollToCurrentTrack,
-                        icon: Icon(
-                          _isPlayerAbove
-                              ? FlutterRemix.arrow_up_line
-                              : FlutterRemix.arrow_down_line,
-                        ),
-                        tooltip: 'Scroll to playing',
-                        size: 52,
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+                Positioned(
+                  bottom: 24,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: AnimatedSlide(
+                      offset: _userScrolled ? Offset.zero : const Offset(0, 1),
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutBack,
+                      child: AnimatedOpacity(
+                        opacity: _userScrolled ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 200),
+                        child: NixIconButton(
+                          onPressed: _scrollToCurrentTrack,
+                          icon: Icon(
+                            _isPlayerAbove
+                                ? FlutterRemix.arrow_up_line
+                                : FlutterRemix.arrow_down_line,
+                          ),
+                          tooltip: 'Scroll to playing',
+                          size: 52,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -458,8 +458,12 @@ class _AlbumCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final useCdArtworkStyle = context.select<SettingsProvider, bool>((s) => s.useCdArtworkStyle);
-    final splitCdWhenHalfOpen = context.select<SettingsProvider, bool>((s) => s.splitCdWhenHalfOpen);
+    final useCdArtworkStyle = context.select<SettingsProvider, bool>(
+      (s) => s.useCdArtworkStyle,
+    );
+    final splitCdWhenHalfOpen = context.select<SettingsProvider, bool>(
+      (s) => s.splitCdWhenHalfOpen,
+    );
 
     return Card(
       margin: EdgeInsets.zero,

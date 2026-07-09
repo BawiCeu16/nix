@@ -12,6 +12,8 @@ import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
 import 'package:nix/ui/widgets/dialogs/playlist_dialogs.dart';
 import 'package:nix/ui/widgets/dialogs/track_info_dialog.dart';
 import 'package:nix/core/format.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:nix/core/hive_keys.dart';
 import 'package:on_audio_query_forked/on_audio_query.dart';
 import '../common/nix_artwork.dart';
 import '../../screens/music_pages/artists_page.dart';
@@ -227,6 +229,10 @@ class _TrackTileState extends State<TrackTile> {
       (s) => s.trackSwipeAction != TrackSwipeAction.none,
     );
 
+    final showResume = context.select<SettingsProvider, bool>(
+      (s) => s.resumeFromPlayedDuration,
+    );
+
     Widget tileContent = Selector<CurrentMusicProvider, Track?>(
       selector: (_, p) => p.currentTrack,
       builder: (context, currentlyPlaying, child) {
@@ -299,10 +305,25 @@ class _TrackTileState extends State<TrackTile> {
                             )
                           : null,
                     ),
-                    subtitle: Text(
-                      '${widget.track.artist} · $_formattedDuration',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    subtitle: ValueListenableBuilder<Box<int>>(
+                      valueListenable: Hive.box<int>(
+                        HiveKeys.trackPositionsBox,
+                      ).listenable(keys: [widget.track.id]),
+                      builder: (context, box, _) {
+                        final savedMs = showResume
+                            ? box.get(widget.track.id)
+                            : null;
+                        final totalDurationStr = _formattedDuration;
+                        final durationStr = savedMs != null
+                            ? '${Duration(milliseconds: savedMs).shortFormat()} / $totalDurationStr'
+                            : totalDurationStr;
+
+                        return Text(
+                          '${widget.track.artist} · $durationStr',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        );
+                      },
                     ),
                     trailing: IconButton(
                       icon: Icon(
