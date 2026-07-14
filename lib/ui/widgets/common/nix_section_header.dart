@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_remix/flutter_remix.dart';
 
 class NixSectionHeader extends StatelessWidget {
   final String title;
@@ -33,14 +34,16 @@ class NixSectionHeader extends StatelessWidget {
             ),
           ),
           if (onShowAll != null)
-            TextButton(
-              onPressed: onShowAll,
-              child: Text(
-                showAllLabel,
-                style: TextStyle(
-                  color: colorScheme.primary,
-                  fontWeight: FontWeight.bold,
+            SizedBox(
+              height: 52,
+              width: 38,
+              child: FilledButton.tonal(
+                style: FilledButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  elevation: 0,
                 ),
+                onPressed: onShowAll,
+                child: Icon(FlutterRemix.arrow_right_line),
               ),
             ),
         ],

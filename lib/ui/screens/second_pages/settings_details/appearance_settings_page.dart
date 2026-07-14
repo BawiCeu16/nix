@@ -38,8 +38,8 @@ class AppearanceSettingsPage extends StatelessWidget {
             color: colorScheme.surface,
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(10),
-                topRight: Radius.circular(10),
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
                 bottomLeft: Radius.circular(5),
                 bottomRight: Radius.circular(5),
               ),
@@ -255,7 +255,6 @@ class AppearanceSettingsPage extends StatelessWidget {
     );
   }
 
-
   void _showShapeDialog(BuildContext context, SettingsProvider settings) {
     NixDialog.show(
       context: context,
@@ -366,8 +365,6 @@ class AppearanceSettingsPage extends StatelessWidget {
       }).toList(),
     );
   }
-
-
 }
 
 class _CustomColorPicker extends StatelessWidget {
