@@ -21,7 +21,7 @@ CurrentMusicProvider? _audioHandler;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
-  
+
   // Open all Hive boxes in parallel to speed up initialization
   await Future.wait([
     Hive.openBox(HiveKeys.settingsBox),
@@ -57,9 +57,14 @@ void main() async {
           create: (_) => _audioHandler!,
           update: (_, settings, player) => player!..updateSettings(settings),
         ),
-        ChangeNotifierProxyProvider2<SettingsProvider, CurrentMusicProvider, LyricsProvider>(
+        ChangeNotifierProxyProvider2<
+          SettingsProvider,
+          CurrentMusicProvider,
+          LyricsProvider
+        >(
           create: (_) => LyricsProvider(),
-          update: (_, settings, music, lyrics) => lyrics!..update(settings, music),
+          update: (_, settings, music, lyrics) =>
+              lyrics!..update(settings, music),
         ),
         ChangeNotifierProvider(
           create: (_) => MusicProvider()..init(currentMusic: _audioHandler),
@@ -67,7 +72,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => SleepTimerProvider()),
         ChangeNotifierProvider(create: (_) => ArtworkProvider()),
-        Provider(create: (_) => WillPopProvider()),
+        ChangeNotifierProvider(create: (_) => WillPopProvider()),
       ],
       child: NixApp(hasCompletedOnboarding: hasCompletedOnboarding),
     ),

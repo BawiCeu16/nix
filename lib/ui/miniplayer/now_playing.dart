@@ -43,7 +43,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
   late double bottomInset;
   final velocity = VelocityTracker.withKind(PointerDeviceKind.touch);
 
-  static const Cubic bouncingCurve = Cubic(0.175, 0.885, 0.50, 1.0);
+  static const Cubic bouncingCurve = Cubic(0.175, 1.185, 0.80, 1.0);
   static const headRoom = 50.0;
   static const actuationOffset = 100.0;
   static const deadSpace = 100.0;
@@ -117,6 +117,26 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
+
+    // Register back-button handler once the widget is mounted
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<WillPopProvider>().registerPopper(() {
+        debugPrint(
+          "NowPlaying Popper: Invoked. offset: $offset, maxOffset: $maxOffset",
+        );
+        if (!mounted) return true;
+        if (offset > maxOffset) {
+          snapToExpanded(haptic: false);
+          return false; // Prevent app closing
+        }
+        if (offset > maxOffset / 2) {
+          snapToMini(haptic: true);
+          return false; // Prevent app closing
+        }
+        return true; // Let app close normally
+      });
+    });
 
     // Listen to actual player state in next frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -443,93 +463,127 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
       context,
     ).colorScheme.onSecondaryContainer;
 
-    // --- CONSUMER & POPPER REGISTRATION ADDED HERE ---
-    return Consumer<WillPopProvider>(
-      builder: (context, willPop, child) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            willPop.registerPopper(() {
-              debugPrint("NowPlaying Popper: Invoked. offset: $offset, maxOffset: $maxOffset");
-              if (!mounted) return true;
-              if (offset > maxOffset) {
-                snapToExpanded(haptic: false);
-                return false; // Prevent app closing
-              }
-              if (offset > maxOffset / 2) {
-                snapToMini(haptic: true);
-                return false; // Prevent app closing
-              }
-              return true; // Let app close normally
-            });
-          }
-        });
-        return child!;
+    return Listener(
+      onPointerDown: (event) {
+        _isFingerDown = true;
+        if (_isReordering) return;
+        if (event.position.dy > screenSize.height - deadSpace) return;
+        _startY = event.position.dy;
+        _activeGesture = _ActiveGesture.none;
+        velocity.addPosition(event.timeStamp, event.position);
+        prevOffset = offset;
+        bounceUp = false;
+        bounceDown = false;
       },
-      child: Listener(
-        onPointerDown: (event) {
-          _isFingerDown = true;
-          if (_isReordering) return;
-          if (event.position.dy > screenSize.height - deadSpace) return;
-          _startY = event.position.dy;
-          _activeGesture = _ActiveGesture.none;
-          velocity.addPosition(event.timeStamp, event.position);
-          prevOffset = offset;
-          bounceUp = false;
-          bounceDown = false;
+      onPointerMove: (event) {
+        if (event.position.dy > screenSize.height - deadSpace) return;
+        if (_activeGesture == _ActiveGesture.horizontal || _isReordering) {
+          return;
+        }
+
+        velocity.addPosition(event.timeStamp, event.position);
+
+        final settings = context.read<SettingsProvider>();
+        final dy = event.delta.dy.abs();
+        final dx = event.delta.dx.abs();
+
+        if (_activeGesture == _ActiveGesture.none) {
+          if (dy > dx && dy > 2) {
+            // If Queue is open, ONLY become vertical if touch is on the handle
+            if (offset >= maxOffset - 10.0) {
+              final bool isHandle = event.position.dy < topInset + 160.0;
+              if (!isHandle) return;
+            }
+            _activeGesture = _ActiveGesture.vertical;
+          } else if (dx > dy && dx > 2) {
+            _activeGesture = _ActiveGesture.horizontal;
+            return;
+          } else {
+            return;
+          }
+        }
+        final deltaY = event.delta.dy;
+        final isUp = deltaY < 0;
+        final isDown = deltaY > 0;
+
+        // --- Gesture Priority Logic ---
+        if (offset >= maxOffset - 10.0) {
+          // In Queue State
+          final bool isAtTop =
+              offset < (maxOffset * 2 - 10.0) ||
+              !queueScrollController.hasClients ||
+              queueScrollController.offset <= 0;
+          final bool isHandle = event.position.dy < topInset + 160.0;
+
+          if (!isHandle) {
+            if (isUp && offset >= maxOffset * 2 - 1) {
+              // Fully open and dragging up: Let list scroll
+              return;
+            }
+            if (isDown) {
+              if (!isAtTop) return;
+
+              // Threshold: Must have pulled down at least 20px since gesture start
+              // to trigger drawer closure from the list area.
+              final totalDy = event.position.dy - _startY;
+              if (totalDy < 20.0) return;
+            }
+          }
+        }
+        // ------------------------------
+
+        offset -= deltaY;
+        offset = _applyStagedClamping(offset, settings);
+        widget.animation.animateTo(offset / maxOffset, duration: Duration.zero);
+      },
+      onPointerUp: (event) {
+        _isFingerDown = false;
+        if (_isReordering) return;
+        if (_activeGesture == _ActiveGesture.vertical) {
+          verticalSnapping();
+        }
+        _activeGesture = _ActiveGesture.none;
+      },
+      onPointerCancel: (event) {
+        _isFingerDown = false;
+        if (_isReordering) return;
+        if (_activeGesture == _ActiveGesture.vertical) {
+          verticalSnapping();
+        }
+        _activeGesture = _ActiveGesture.none;
+      },
+      child: GestureDetector(
+        onTap: () {
+          if (widget.animation.value < (actuationOffset / maxOffset)) {
+            snapToExpanded();
+          }
         },
-        onPointerMove: (event) {
-          if (event.position.dy > screenSize.height - deadSpace) return;
+        onVerticalDragUpdate: (details) {
           if (_activeGesture == _ActiveGesture.horizontal || _isReordering) {
             return;
           }
-
-          velocity.addPosition(event.timeStamp, event.position);
-
-          final settings = context.read<SettingsProvider>();
-          final dy = event.delta.dy.abs();
-          final dx = event.delta.dx.abs();
-
-          if (_activeGesture == _ActiveGesture.none) {
-            if (dy > dx && dy > 2) {
-              // If Queue is open, ONLY become vertical if touch is on the handle
-              if (offset >= maxOffset - 10.0) {
-                final bool isHandle = event.position.dy < topInset + 160.0;
-                if (!isHandle) return;
-              }
-              _activeGesture = _ActiveGesture.vertical;
-            } else if (dx > dy && dx > 2) {
-              _activeGesture = _ActiveGesture.horizontal;
-              return;
-            } else {
-              return;
-            }
+          if (details.globalPosition.dy > screenSize.height - deadSpace) {
+            return;
           }
-          final deltaY = event.delta.dy;
+          if (_activeGesture == _ActiveGesture.none) {
+            _activeGesture = _ActiveGesture.vertical;
+          }
+          final settings = context.read<SettingsProvider>();
+          final deltaY = details.primaryDelta ?? 0;
           final isUp = deltaY < 0;
           final isDown = deltaY > 0;
 
           // --- Gesture Priority Logic ---
           if (offset >= maxOffset - 10.0) {
-            // In Queue State
             final bool isAtTop =
                 offset < (maxOffset * 2 - 10.0) ||
                 !queueScrollController.hasClients ||
                 queueScrollController.offset <= 0;
-            final bool isHandle = event.position.dy < topInset + 160.0;
+            final bool isHandle = details.globalPosition.dy < topInset + 160.0;
 
             if (!isHandle) {
-              if (isUp && offset >= maxOffset * 2 - 1) {
-                // Fully open and dragging up: Let list scroll
-                return;
-              }
-              if (isDown) {
-                if (!isAtTop) return;
-
-                // Threshold: Must have pulled down at least 20px since gesture start
-                // to trigger drawer closure from the list area.
-                final totalDy = event.position.dy - _startY;
-                if (totalDy < 20.0) return;
-              }
+              if (isUp && offset >= maxOffset * 2 - 1) return;
+              if (isDown && !isAtTop) return;
             }
           }
           // ------------------------------
@@ -541,361 +595,300 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
             duration: Duration.zero,
           );
         },
-        onPointerUp: (event) {
-          _isFingerDown = false;
-          if (_isReordering) return;
-          if (_activeGesture == _ActiveGesture.vertical) {
-            verticalSnapping();
-          }
+        onVerticalDragEnd: (_) {
           _activeGesture = _ActiveGesture.none;
+          verticalSnapping();
         },
-        onPointerCancel: (event) {
-          _isFingerDown = false;
-          if (_isReordering) return;
-          if (_activeGesture == _ActiveGesture.vertical) {
-            verticalSnapping();
+        onHorizontalDragStart: (details) {
+          if (offset > maxOffset) return;
+          if (_activeGesture == _ActiveGesture.vertical) return;
+          if (!context.read<SettingsProvider>().swipeToChangeTrack) return;
+          _activeGesture = _ActiveGesture.horizontal;
+          sPrevOffset = sOffset;
+        },
+        onHorizontalDragUpdate: (details) {
+          if (offset > maxOffset) return;
+          final settings = context.read<SettingsProvider>();
+          if (!settings.swipeToChangeTrack) return;
+          if (_activeGesture == _ActiveGesture.vertical) return;
+          if (details.globalPosition.dy > screenSize.height - deadSpace) {
+            return;
           }
-          _activeGesture = _ActiveGesture.none;
+
+          final currentMusic = context.read<CurrentMusicProvider>();
+          final playlist = currentMusic.currentPlaylist;
+          final track = currentMusic.currentTrack;
+
+          bool canNext = false;
+          bool canPrev = false;
+
+          if (playlist != null && track != null) {
+            final index = playlist.tracks.indexOf(track);
+            canNext =
+                index < playlist.tracks.length - 1 ||
+                currentMusic.isRepeatEnabled ||
+                settings.autoPlay;
+            canPrev = index > 0 || currentMusic.isRepeatEnabled;
+          }
+
+          double delta = details.primaryDelta ?? 0.0;
+          sOffset -= delta;
+
+          // Clamping logic:
+          // sOffset > 0 is Swipe Left (Next)
+          // sOffset < 0 is Swipe Right (Prev)
+          double minClamp = canPrev ? -sMaxOffset : 0.0;
+          double maxClamp = canNext ? sMaxOffset : 0.0;
+
+          sOffset = sOffset.clamp(minClamp, maxClamp);
+          sAnim.animateTo(sOffset / sMaxOffset, duration: Duration.zero);
         },
-        child: GestureDetector(
-          onTap: () {
-            if (widget.animation.value < (actuationOffset / maxOffset)) {
-              snapToExpanded();
-            }
-          },
-          onVerticalDragUpdate: (details) {
-            if (_activeGesture == _ActiveGesture.horizontal || _isReordering) {
-              return;
-            }
-            if (details.globalPosition.dy > screenSize.height - deadSpace) {
-              return;
-            }
-            if (_activeGesture == _ActiveGesture.none) {
-              _activeGesture = _ActiveGesture.vertical;
-            }
-            final settings = context.read<SettingsProvider>();
-            final deltaY = details.primaryDelta ?? 0;
-            final isUp = deltaY < 0;
-            final isDown = deltaY > 0;
+        onHorizontalDragEnd: (details) {
+          if (offset > maxOffset) return;
+          _activeGesture = _ActiveGesture.none;
+          final settings = context.read<SettingsProvider>();
+          if (!settings.swipeToChangeTrack) return;
 
-            // --- Gesture Priority Logic ---
-            if (offset >= maxOffset - 10.0) {
-              final bool isAtTop =
-                  offset < (maxOffset * 2 - 10.0) ||
-                  !queueScrollController.hasClients ||
-                  queueScrollController.offset <= 0;
-              final bool isHandle =
-                  details.globalPosition.dy < topInset + 160.0;
+          final currentMusic = context.read<CurrentMusicProvider>();
+          final playlist = currentMusic.currentPlaylist;
+          final track = currentMusic.currentTrack;
 
-              if (!isHandle) {
-                if (isUp && offset >= maxOffset * 2 - 1) return;
-                if (isDown && !isAtTop) return;
-              }
-            }
-            // ------------------------------
+          bool canNext = false;
+          bool canPrev = false;
 
-            offset -= deltaY;
-            offset = _applyStagedClamping(offset, settings);
-            widget.animation.animateTo(
-              offset / maxOffset,
-              duration: Duration.zero,
-            );
-          },
-          onVerticalDragEnd: (_) {
-            _activeGesture = _ActiveGesture.none;
-            verticalSnapping();
-          },
-          onHorizontalDragStart: (details) {
-            if (offset > maxOffset) return;
-            if (_activeGesture == _ActiveGesture.vertical) return;
-            if (!context.read<SettingsProvider>().swipeToChangeTrack) return;
-            _activeGesture = _ActiveGesture.horizontal;
-            sPrevOffset = sOffset;
-          },
-          onHorizontalDragUpdate: (details) {
-            if (offset > maxOffset) return;
-            final settings = context.read<SettingsProvider>();
-            if (!settings.swipeToChangeTrack) return;
-            if (_activeGesture == _ActiveGesture.vertical) return;
-            if (details.globalPosition.dy > screenSize.height - deadSpace) {
-              return;
-            }
+          if (playlist != null && track != null) {
+            final index = playlist.tracks.indexOf(track);
+            canNext =
+                index < playlist.tracks.length - 1 ||
+                currentMusic.isRepeatEnabled ||
+                settings.autoPlay;
+            canPrev = index > 0 || currentMusic.isRepeatEnabled;
+          }
 
-            final currentMusic = context.read<CurrentMusicProvider>();
-            final playlist = currentMusic.currentPlaylist;
-            final track = currentMusic.currentTrack;
+          final distance = sPrevOffset - sOffset;
+          final speed = velocity.getVelocity().pixelsPerSecond.dx;
+          const threshold = 1000.0;
 
-            bool canNext = false;
-            bool canPrev = false;
+          if (canPrev &&
+              (speed > threshold ||
+                  distance > actuationOffset * sActuationMulti)) {
+            snapToPrev();
+          } else if (canNext &&
+              (-speed > threshold ||
+                  -distance > actuationOffset * sActuationMulti)) {
+            snapToNext();
+          } else {
+            snapToCurrent();
+          }
+        },
+        child: AnimatedBuilder(
+          animation: widget.animation,
+          builder: (context, child) {
+            final data = _calculateAnimationData(widget.animation.value);
 
-            if (playlist != null && track != null) {
-              final index = playlist.tracks.indexOf(track);
-              canNext =
-                  index < playlist.tracks.length - 1 ||
-                  currentMusic.isRepeatEnabled ||
-                  settings.autoPlay;
-              canPrev = index > 0 || currentMusic.isRepeatEnabled;
-            }
-
-            double delta = details.primaryDelta ?? 0.0;
-            sOffset -= delta;
-
-            // Clamping logic:
-            // sOffset > 0 is Swipe Left (Next)
-            // sOffset < 0 is Swipe Right (Prev)
-            double minClamp = canPrev ? -sMaxOffset : 0.0;
-            double maxClamp = canNext ? sMaxOffset : 0.0;
-
-            sOffset = sOffset.clamp(minClamp, maxClamp);
-            sAnim.animateTo(sOffset / sMaxOffset, duration: Duration.zero);
-          },
-          onHorizontalDragEnd: (details) {
-            if (offset > maxOffset) return;
-            _activeGesture = _ActiveGesture.none;
-            final settings = context.read<SettingsProvider>();
-            if (!settings.swipeToChangeTrack) return;
-
-            final currentMusic = context.read<CurrentMusicProvider>();
-            final playlist = currentMusic.currentPlaylist;
-            final track = currentMusic.currentTrack;
-
-            bool canNext = false;
-            bool canPrev = false;
-
-            if (playlist != null && track != null) {
-              final index = playlist.tracks.indexOf(track);
-              canNext =
-                  index < playlist.tracks.length - 1 ||
-                  currentMusic.isRepeatEnabled ||
-                  settings.autoPlay;
-              canPrev = index > 0 || currentMusic.isRepeatEnabled;
-            }
-
-            final distance = sPrevOffset - sOffset;
-            final speed = velocity.getVelocity().pixelsPerSecond.dx;
-            const threshold = 1000.0;
-
-            if (canPrev &&
-                (speed > threshold ||
-                    distance > actuationOffset * sActuationMulti)) {
-              snapToPrev();
-            } else if (canNext &&
-                (-speed > threshold ||
-                    -distance > actuationOffset * sActuationMulti)) {
-              snapToNext();
-            } else {
-              snapToCurrent();
-            }
-          },
-          child: AnimatedBuilder(
-            animation: widget.animation,
-            builder: (context, child) {
-              final data = _calculateAnimationData(widget.animation.value);
-
-              return Stack(
-                children: [
-                  // Background component of the player
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Transform.translate(
-                      offset: Offset(0, data.bottomOffset),
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal:
-                              12 *
-                              (1 - data.clampedProgress * 10 + 9).clamp(0, 1),
-                          vertical: 12 * data.inverseClampedProgress,
+            return Stack(
+              children: [
+                // Background component of the player
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Transform.translate(
+                    offset: Offset(0, data.bottomOffset),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal:
+                            12 *
+                            (1 - data.clampedProgress * 10 + 9).clamp(0, 1),
+                        vertical: 12 * data.inverseClampedProgress,
+                      ),
+                      child: Container(
+                        height: rangeProgress(
+                          a: 82.0,
+                          b: data.panelHeight,
+                          c: data.progress.clamp(0, 3),
                         ),
-                        child: Container(
-                          height: rangeProgress(
-                            a: 82.0,
-                            b: data.panelHeight,
-                            c: data.progress.clamp(0, 3),
-                          ),
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            borderRadius: data.borderRadius,
-                            color: Theme.of(context).colorScheme.surface,
-                            boxShadow: showMiniplayerShadow
-                                ? [
-                                    BoxShadow(
-                                      color:
-                                          (Theme.of(context).brightness ==
-                                                      Brightness.dark
-                                                  ? Colors.black.withValues(
-                                                      alpha: 0.2,
-                                                    )
-                                                  : Colors.black.withValues(
-                                                      alpha: 0.08,
-                                                    ))
-                                              .withValues(
-                                                alpha:
-                                                    (Theme.of(
-                                                              context,
-                                                            ).brightness ==
-                                                            Brightness.dark
-                                                        ? 0.2
-                                                        : 0.08) *
-                                                    data.inverseClampedProgress,
-                                              ),
-                                      blurRadius: 15,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ]
-                                : null,
-                          ),
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: data.borderRadius,
+                          color: Theme.of(context).colorScheme.surface,
+                          boxShadow: showMiniplayerShadow
+                              ? [
+                                  BoxShadow(
+                                    color:
+                                        (Theme.of(context).brightness ==
+                                                    Brightness.dark
+                                                ? Colors.black.withValues(
+                                                    alpha: 0.2,
+                                                  )
+                                                : Colors.black.withValues(
+                                                    alpha: 0.08,
+                                                  ))
+                                            .withValues(
+                                              alpha:
+                                                  (Theme.of(
+                                                            context,
+                                                          ).brightness ==
+                                                          Brightness.dark
+                                                      ? 0.2
+                                                      : 0.08) *
+                                                  data.inverseClampedProgress,
+                                            ),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ]
+                              : null,
                         ),
                       ),
                     ),
                   ),
-                  // Horizontal top bar
-                  if (data.topRowOpacity > 0.0)
-                    TopBar(
-                      topRowOpacity: data.topRowOpacity,
-                      bounceProgressValue: data.bounceProgress,
-                      onSecondary: onSecondary,
-                      onSnapToMini: snapToMini,
-                    ),
-                  // Lyrics button
-                  // if (data.opacity > 0.0)
-                  //   Material(
-                  //     type: MaterialType.transparency,
-                  //     child: Opacity(
-                  //       opacity: data.opacity,
-                  //       child: Transform.translate(
-                  //         offset: Offset(-50, -100 * data.inverseProgress),
-                  //         child: Align(
-                  //           alignment: Alignment.bottomRight,
-                  //           child: SafeArea(
-                  //             child: Padding(
-                  //               padding: const EdgeInsets.symmetric(
-                  //                 horizontal: 24.0,
-                  //                 vertical: 12.0,
-                  //               ),
-                  //               child: IconButton(
-                  //                 onPressed: null, // TODO: lyrics
-                  //                 icon: const Icon(
-                  //                   FlutterRemix.chat_quote_line,
-                  //                 ),
-                  //                 color: colorScheme.onSurface,
-                  //               ),
-                  //             ),
-                  //           ),
-                  //         ),
-                  //       ),
-                  //     ),
-                  //   ),
-                  // Queue access button
-                  AnimatedBuilder(
-                    animation: lyricsAnim,
-                    builder: (context, child) {
-                      return Offstage(
-                        offstage: data.opacity == 0.0,
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: Opacity(
-                            opacity: (data.opacity * (1 - lyricsAnim.value))
-                                .clamp(0.0, 1.0),
-                            child: Transform.translate(
-                              offset: Offset(
-                                0,
-                                -100 * data.inverseProgress +
-                                    (100 * lyricsAnim.value),
-                              ),
-                              child: Align(
-                                alignment: Alignment.bottomRight,
-                                child: SafeArea(
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 24.0,
-                                      vertical: 14.0,
+                ),
+                // Horizontal top bar
+                if (data.topRowOpacity > 0.0)
+                  TopBar(
+                    topRowOpacity: data.topRowOpacity,
+                    bounceProgressValue: data.bounceProgress,
+                    onSecondary: onSecondary,
+                    onSnapToMini: snapToMini,
+                  ),
+                // Lyrics button
+                // if (data.opacity > 0.0)
+                //   Material(
+                //     type: MaterialType.transparency,
+                //     child: Opacity(
+                //       opacity: data.opacity,
+                //       child: Transform.translate(
+                //         offset: Offset(-50, -100 * data.inverseProgress),
+                //         child: Align(
+                //           alignment: Alignment.bottomRight,
+                //           child: SafeArea(
+                //             child: Padding(
+                //               padding: const EdgeInsets.symmetric(
+                //                 horizontal: 24.0,
+                //                 vertical: 12.0,
+                //               ),
+                //               child: IconButton(
+                //                 onPressed: null, // TODO: lyrics
+                //                 icon: const Icon(
+                //                   FlutterRemix.chat_quote_line,
+                //                 ),
+                //                 color: colorScheme.onSurface,
+                //               ),
+                //             ),
+                //           ),
+                //         ),
+                //       ),
+                //     ),
+                //   ),
+                // Queue access button
+                AnimatedBuilder(
+                  animation: lyricsAnim,
+                  builder: (context, child) {
+                    return Offstage(
+                      offstage: data.opacity == 0.0,
+                      child: Material(
+                        type: MaterialType.transparency,
+                        child: Opacity(
+                          opacity: (data.opacity * (1 - lyricsAnim.value))
+                              .clamp(0.0, 1.0),
+                          child: Transform.translate(
+                            offset: Offset(
+                              0,
+                              -100 * data.inverseProgress +
+                                  (100 * lyricsAnim.value),
+                            ),
+                            child: Align(
+                              alignment: Alignment.bottomRight,
+                              child: SafeArea(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24.0,
+                                    vertical: 14.0,
+                                  ),
+                                  child: IconButton(
+                                    onPressed: snapToQueue,
+                                    icon: const Icon(
+                                      FlutterRemix.play_list_line,
+                                      size: 24.0,
                                     ),
-                                    child: IconButton(
-                                      onPressed: snapToQueue,
-                                      icon: const Icon(
-                                        FlutterRemix.play_list_line,
-                                        size: 24.0,
-                                      ),
-                                      color: onSecondary,
-                                    ),
+                                    color: onSecondary,
                                   ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      );
-                    },
-                  ),
-                  AnimatedBuilder(
-                    animation: lyricsAnim,
-                    builder: (context, _) {
-                      return LyricsSection(
-                        lyricsAnim: lyricsAnim,
-                        data: data,
-                        maxOffset: maxOffset,
-                        topInset: topInset,
-                        track: track,
-                      );
-                    },
-                  ),
-                  TrackInfo(
-                    sAnim: sAnim,
-                    sMaxOffset: sMaxOffset,
-                    stParallax: stParallax,
-                    maxOffset: maxOffset,
-                    topInset: topInset,
-                    bounceUp: bounceUp,
-                    bounceDown: bounceDown,
-                    screenSize: screenSize,
-                    data: data,
-                    lyricsAnim: lyricsAnim,
-                    onToggleLyrics: toggleLyrics,
-                  ),
-                  TrackImage(
-                    sAnim: sAnim,
-                    sMaxOffset: sMaxOffset,
-                    siParallax: siParallax,
-                    bounceUp: bounceUp,
-                    maxOffset: maxOffset,
-                    topInset: topInset,
-                    bounceDown: bounceDown,
-                    screenSize: screenSize,
-                    data: data,
-                    lyricsAnim: lyricsAnim,
-                  ),
-                  PlayerControls(
-                    maxOffset: maxOffset,
-                    topInset: topInset,
-                    bounceUp: bounceUp,
-                    bounceDown: bounceDown,
-                    onSecondary: onSecondary,
-                    screenSize: screenSize,
-                    onTogglePlay: togglePlay,
-                    playPauseAnim: playPauseAnim,
-                    data: data,
-                    lyricsAnim: lyricsAnim,
-                  ),
-                  QueueView(
-                    queueProgressValue: data.queueProgress,
-                    maxOffset: maxOffset,
-                    topInset: topInset,
-                    controller: queueScrollController,
-                    onReorderBegin: () {
-                      if (!_isReordering) {
-                        setState(() => _isReordering = true);
-                      }
-                    },
-                    onReorderEnd: () {
-                      if (_isReordering) {
-                        setState(() => _isReordering = false);
-                      }
-                    },
-                  ),
-                ],
-              );
-            },
-          ),
+                      ),
+                    );
+                  },
+                ),
+                AnimatedBuilder(
+                  animation: lyricsAnim,
+                  builder: (context, _) {
+                    return LyricsSection(
+                      lyricsAnim: lyricsAnim,
+                      data: data,
+                      maxOffset: maxOffset,
+                      topInset: topInset,
+                      track: track,
+                    );
+                  },
+                ),
+                TrackInfo(
+                  sAnim: sAnim,
+                  sMaxOffset: sMaxOffset,
+                  stParallax: stParallax,
+                  maxOffset: maxOffset,
+                  topInset: topInset,
+                  bounceUp: bounceUp,
+                  bounceDown: bounceDown,
+                  screenSize: screenSize,
+                  data: data,
+                  lyricsAnim: lyricsAnim,
+                  onToggleLyrics: toggleLyrics,
+                ),
+                TrackImage(
+                  sAnim: sAnim,
+                  sMaxOffset: sMaxOffset,
+                  siParallax: siParallax,
+                  bounceUp: bounceUp,
+                  maxOffset: maxOffset,
+                  topInset: topInset,
+                  bounceDown: bounceDown,
+                  screenSize: screenSize,
+                  data: data,
+                  lyricsAnim: lyricsAnim,
+                ),
+                PlayerControls(
+                  maxOffset: maxOffset,
+                  topInset: topInset,
+                  bounceUp: bounceUp,
+                  bounceDown: bounceDown,
+                  onSecondary: onSecondary,
+                  screenSize: screenSize,
+                  onTogglePlay: togglePlay,
+                  playPauseAnim: playPauseAnim,
+                  data: data,
+                  lyricsAnim: lyricsAnim,
+                ),
+                QueueView(
+                  queueProgressValue: data.queueProgress,
+                  maxOffset: maxOffset,
+                  topInset: topInset,
+                  controller: queueScrollController,
+                  onReorderBegin: () {
+                    if (!_isReordering) {
+                      setState(() => _isReordering = true);
+                    }
+                  },
+                  onReorderEnd: () {
+                    if (_isReordering) {
+                      setState(() => _isReordering = false);
+                    }
+                  },
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

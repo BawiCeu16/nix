@@ -22,7 +22,6 @@ class _NavigationScreenState extends State<NavigationScreen>
   late AnimationController animation;
   double? bottom;
   bool _isPlayerOpen = false;
-  Animation<double>? _secondaryAnimation;
 
   // Keys to control each tab's independent Navigator
   final List<GlobalKey<NavigatorState>> _navigatorKeys = [
@@ -81,27 +80,8 @@ class _NavigationScreenState extends State<NavigationScreen>
     }
   }
 
-  void _routeListener() {
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final route = ModalRoute.of(context);
-    final secAnim = route?.secondaryAnimation;
-    if (secAnim != _secondaryAnimation) {
-      _secondaryAnimation?.removeListener(_routeListener);
-      _secondaryAnimation = secAnim;
-      _secondaryAnimation?.addListener(_routeListener);
-    }
-  }
-
   @override
   void dispose() {
-    _secondaryAnimation?.removeListener(_routeListener);
     context.read<CurrentMusicProvider>().removeListener(_onPlaybackChanged);
     animation.dispose();
     super.dispose();
@@ -137,13 +117,17 @@ class _NavigationScreenState extends State<NavigationScreen>
         return PopScope(
           canPop: false,
           onPopInvokedWithResult: (bool didPop, dynamic result) async {
-            debugPrint("NavigationScreen: onPopInvokedWithResult. didPop: $didPop, handler isNull: ${willPop.handler == null}");
+            debugPrint(
+              "NavigationScreen: onPopInvokedWithResult. didPop: $didPop, handler isNull: ${willPop.handler == null}",
+            );
             if (didPop) return;
 
             // 1. Handle dialogs or pages pushed on top of the root navigator first
             final route = ModalRoute.of(context);
             if (route != null && !route.isCurrent) {
-              debugPrint("NavigationScreen: popping top route on root navigator");
+              debugPrint(
+                "NavigationScreen: popping top route on root navigator",
+              );
               Navigator.of(context, rootNavigator: true).pop();
               return;
             }
