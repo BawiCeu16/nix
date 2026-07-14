@@ -22,6 +22,7 @@ class _NavigationScreenState extends State<NavigationScreen>
   late AnimationController animation;
   double? bottom;
   bool _isPlayerOpen = false;
+  Animation<double>? _secondaryAnimation;
 
   // Keys to control each tab's independent Navigator
   final List<GlobalKey<NavigatorState>> _navigatorKeys = [
@@ -80,8 +81,27 @@ class _NavigationScreenState extends State<NavigationScreen>
     }
   }
 
+  void _routeListener() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    final secAnim = route?.secondaryAnimation;
+    if (secAnim != _secondaryAnimation) {
+      _secondaryAnimation?.removeListener(_routeListener);
+      _secondaryAnimation = secAnim;
+      _secondaryAnimation?.addListener(_routeListener);
+    }
+  }
+
   @override
   void dispose() {
+    _secondaryAnimation?.removeListener(_routeListener);
     context.read<CurrentMusicProvider>().removeListener(_onPlaybackChanged);
     animation.dispose();
     super.dispose();
@@ -89,8 +109,12 @@ class _NavigationScreenState extends State<NavigationScreen>
 
   // Helper to build a nested Navigator for each tab
   Widget _buildTabNavigator(int index, Widget page) {
+    final route = ModalRoute.of(context);
+    final isCurrent = route == null || route.isCurrent;
+    final canPopTab = isCurrent && !_isPlayerOpen;
+
     return PopScope(
-      canPop: !_isPlayerOpen,
+      canPop: canPopTab,
       child: Navigator(
         key: _navigatorKeys[index],
         onGenerateRoute: (settings) {
@@ -115,20 +139,23 @@ class _NavigationScreenState extends State<NavigationScreen>
           onPopInvokedWithResult: (bool didPop, dynamic result) async {
             debugPrint("NavigationScreen: onPopInvokedWithResult. didPop: $didPop, handler isNull: ${willPop.handler == null}");
             if (didPop) return;
-            // A. Ask the provider if the player is open and needs to be closed
+
+            // 1. Handle dialogs or pages pushed on top of the root navigator first
+            final route = ModalRoute.of(context);
+            if (route != null && !route.isCurrent) {
+              debugPrint("NavigationScreen: popping top route on root navigator");
+              Navigator.of(context, rootNavigator: true).pop();
+              return;
+            }
+
+            // 2. Ask the provider if the player is open and needs to be closed
             final canPopApp = willPop.handler != null
                 ? willPop.handler!()
                 : true;
             debugPrint("NavigationScreen: canPopApp: $canPopApp");
             if (!canPopApp) return;
-            // Handle dialogs on the root navigator first
-            final route = ModalRoute.of(context);
-            if (route != null && !route.isCurrent) {
-              Navigator.of(context, rootNavigator: true).pop();
-              return;
-            }
 
-            // B. If player is closed, check if the current tab has a page to go back to (like leaving AlbumsPage)
+            // 3. If player is closed, check if the current tab has a page to go back to (like leaving AlbumsPage)
             final currentNavigator =
                 _navigatorKeys[_selectedIndex].currentState;
             if (currentNavigator != null && currentNavigator.canPop()) {
@@ -136,7 +163,7 @@ class _NavigationScreenState extends State<NavigationScreen>
               return; // Prevent app from closing
             }
 
-            // C. If at the root of the tab and player is closed, allow app to close
+            // 4. If at the root of the tab and player is closed, allow app to close
             SystemNavigator.pop();
           },
           child: child!,
