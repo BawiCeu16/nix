@@ -304,10 +304,10 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       // Branch D: History & Persistence (Fire-and-forget)
       unawaited(() async {
         try {
-          final historyBox = await Hive.openBox<int>(HiveKeys.playHistoryBox);
+          final historyBox = Hive.box<int>(HiveKeys.playHistoryBox);
           await historyBox.put(track.id, DateTime.now().millisecondsSinceEpoch);
 
-          final countsBox = await Hive.openBox<int>(HiveKeys.playCountsBox);
+          final countsBox = Hive.box<int>(HiveKeys.playCountsBox);
           final currentCount = countsBox.get(track.id, defaultValue: 0) ?? 0;
           await countsBox.put(track.id, currentCount + 1);
 

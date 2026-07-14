@@ -21,10 +21,19 @@ CurrentMusicProvider? _audioHandler;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
-  await Hive.openBox(HiveKeys.settingsBox);
-  await Hive.openBox<int>(HiveKeys.colorCacheBox);
-  await Hive.openBox(HiveKeys.lyricsBox);
-  await Hive.openBox<int>(HiveKeys.trackPositionsBox);
+  
+  // Open all Hive boxes in parallel to speed up initialization
+  await Future.wait([
+    Hive.openBox(HiveKeys.settingsBox),
+    Hive.openBox<int>(HiveKeys.colorCacheBox),
+    Hive.openBox(HiveKeys.lyricsBox),
+    Hive.openBox<int>(HiveKeys.trackPositionsBox),
+    Hive.openBox<int>(HiveKeys.favoritesBox),
+    Hive.openBox<String>(HiveKeys.playlistsBox),
+    Hive.openBox<int>(HiveKeys.playHistoryBox),
+    Hive.openBox<int>(HiveKeys.playCountsBox),
+  ]);
+
   final bool hasCompletedOnboarding = Hive.box(
     HiveKeys.settingsBox,
   ).get(HiveKeys.onboarding, defaultValue: false);

@@ -209,13 +209,21 @@ class LyricsProvider with ChangeNotifier {
   }
 
   void _updateIndexForPosition(Duration pos) {
-    if (_syncedLyrics == null) return;
+    final lyrics = _syncedLyrics;
+    if (lyrics == null || lyrics.isEmpty) return;
+
+    // Binary search for the active lyric line
+    int low = 0;
+    int high = lyrics.length - 1;
     int newIndex = -1;
-    for (int i = 0; i < _syncedLyrics!.length; i++) {
-      if (pos >= _syncedLyrics![i].time) {
-        newIndex = i;
+
+    while (low <= high) {
+      final mid = (low + high) >> 1;
+      if (lyrics[mid].time <= pos) {
+        newIndex = mid;
+        low = mid + 1;
       } else {
-        break;
+        high = mid - 1;
       }
     }
 

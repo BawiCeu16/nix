@@ -241,18 +241,10 @@ class MusicProvider extends ChangeNotifier {
   bool get hasScanned => _hasScanned;
   String? get error => _error;
 
-  /// Initializes storage and begins background device scan.
   Future<void> init({
     List<String>? customFolders,
     CurrentMusicProvider? currentMusic,
   }) async {
-    // Parallelize Hive box openings
-    await Future.wait([
-      Hive.openBox<int>(HiveKeys.favoritesBox),
-      Hive.openBox<String>(HiveKeys.playlistsBox),
-      Hive.openBox<int>(HiveKeys.playHistoryBox),
-      Hive.openBox<int>(HiveKeys.playCountsBox),
-    ]);
 
     if (currentMusic != null) {
       _currentMusic = currentMusic;
