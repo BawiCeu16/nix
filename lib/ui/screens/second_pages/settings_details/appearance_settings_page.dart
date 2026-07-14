@@ -45,7 +45,7 @@ class AppearanceSettingsPage extends StatelessWidget {
               ),
             ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
               child: M3EToggleButtonGroup(
                 type: M3EButtonGroupType.connected,
                 selectedIndex: settingsParams.themeMode.index,
@@ -283,9 +283,7 @@ class AppearanceSettingsPage extends StatelessWidget {
                     Navigator.of(context, rootNavigator: true).pop();
                   },
                   trailing: IgnorePointer(
-                    child: Radio<ArtworkShape>(
-                      value: shape,
-                    ),
+                    child: Radio<ArtworkShape>(value: shape),
                   ),
                   isFirst: index == 0,
                   isLast: index == ArtworkShape.values.length - 1,
@@ -341,9 +339,7 @@ class AppearanceSettingsPage extends StatelessWidget {
                     Navigator.of(context, rootNavigator: true).pop();
                   },
                   trailing: IgnorePointer(
-                    child: Radio<NixArtworkQuality>(
-                      value: quality,
-                    ),
+                    child: Radio<NixArtworkQuality>(value: quality),
                   ),
                   isFirst: index == 0,
                   isLast: index == qualities.length - 1,
@@ -374,11 +370,14 @@ class AppearanceSettingsPage extends StatelessWidget {
             children: AccentColorMode.values.map((mode) {
               final index = AccentColorMode.values.indexOf(mode);
               String label = mode.name.toUpperCase();
-              if (mode == AccentColorMode.dynamic) label = "DYNAMIC (ALBUM ART)";
+              if (mode == AccentColorMode.dynamic)
+                label = "DYNAMIC (ALBUM ART)";
 
               return Padding(
                 padding: EdgeInsets.only(
-                  bottom: index == AccentColorMode.values.length - 1 ? 0.0 : 2.5,
+                  bottom: index == AccentColorMode.values.length - 1
+                      ? 0.0
+                      : 2.5,
                 ),
                 child: CardListTile(
                   title: label,
@@ -387,9 +386,7 @@ class AppearanceSettingsPage extends StatelessWidget {
                     Navigator.of(context, rootNavigator: true).pop();
                   },
                   trailing: IgnorePointer(
-                    child: Radio<AccentColorMode>(
-                      value: mode,
-                    ),
+                    child: Radio<AccentColorMode>(value: mode),
                   ),
                   isFirst: index == 0,
                   isLast: index == AccentColorMode.values.length - 1,

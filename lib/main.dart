@@ -11,6 +11,7 @@ import 'package:nix/providers/settings_provider.dart';
 import 'package:nix/providers/user_provider.dart';
 import 'package:nix/providers/sleep_timer_provider.dart';
 import 'package:nix/providers/artwork_provider.dart';
+import 'package:nix/providers/lyrics_provider.dart';
 import 'package:nix/ui/screens/navigation_screen.dart';
 import 'package:nix/ui/screens/onboarding_page.dart';
 import 'package:nix/ui/theme/nix_theme.dart';
@@ -46,6 +47,10 @@ void main() async {
         ChangeNotifierProxyProvider<SettingsProvider, CurrentMusicProvider>(
           create: (_) => _audioHandler!,
           update: (_, settings, player) => player!..updateSettings(settings),
+        ),
+        ChangeNotifierProxyProvider2<SettingsProvider, CurrentMusicProvider, LyricsProvider>(
+          create: (_) => LyricsProvider(),
+          update: (_, settings, music, lyrics) => lyrics!..update(settings, music),
         ),
         ChangeNotifierProvider(
           create: (_) => MusicProvider()..init(currentMusic: _audioHandler),
