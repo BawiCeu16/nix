@@ -370,8 +370,9 @@ class AppearanceSettingsPage extends StatelessWidget {
             children: AccentColorMode.values.map((mode) {
               final index = AccentColorMode.values.indexOf(mode);
               String label = mode.name.toUpperCase();
-              if (mode == AccentColorMode.dynamic)
+              if (mode == AccentColorMode.dynamic) {
                 label = "DYNAMIC (ALBUM ART)";
+              }
 
               return Padding(
                 padding: EdgeInsets.only(

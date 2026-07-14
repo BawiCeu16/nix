@@ -154,6 +154,9 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    try {
+      context.read<WillPopProvider>().registerPopper(null);
+    } catch (_) {}
     sAnim.dispose();
     queueScrollController.dispose();
     playPauseAnim.dispose();
@@ -444,17 +447,21 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
     return Consumer<WillPopProvider>(
       builder: (context, willPop, child) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          willPop.registerPopper(() {
-            if (offset > maxOffset) {
-              snapToExpanded(haptic: false);
-              return false; // Prevent app closing
-            }
-            if (offset > maxOffset / 2) {
-              snapToMini(haptic: true);
-              return false; // Prevent app closing
-            }
-            return true; // Let app close normally
-          });
+          if (mounted) {
+            willPop.registerPopper(() {
+              debugPrint("NowPlaying Popper: Invoked. offset: $offset, maxOffset: $maxOffset");
+              if (!mounted) return true;
+              if (offset > maxOffset) {
+                snapToExpanded(haptic: false);
+                return false; // Prevent app closing
+              }
+              if (offset > maxOffset / 2) {
+                snapToMini(haptic: true);
+                return false; // Prevent app closing
+              }
+              return true; // Let app close normally
+            });
+          }
         });
         return child!;
       },

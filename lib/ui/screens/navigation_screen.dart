@@ -21,6 +21,7 @@ class _NavigationScreenState extends State<NavigationScreen>
   int _selectedIndex = 0;
   late AnimationController animation;
   double? bottom;
+  bool _isPlayerOpen = false;
 
   // Keys to control each tab's independent Navigator
   final List<GlobalKey<NavigatorState>> _navigatorKeys = [
@@ -57,6 +58,14 @@ class _NavigationScreenState extends State<NavigationScreen>
       lowerBound: -0.1,
       value: 0.0,
     );
+    animation.addListener(() {
+      final bool isOpen = animation.value > 0.01;
+      if (isOpen != _isPlayerOpen) {
+        setState(() {
+          _isPlayerOpen = isOpen;
+        });
+      }
+    });
     context.read<CurrentMusicProvider>().addListener(_onPlaybackChanged);
   }
 
@@ -80,14 +89,17 @@ class _NavigationScreenState extends State<NavigationScreen>
 
   // Helper to build a nested Navigator for each tab
   Widget _buildTabNavigator(int index, Widget page) {
-    return Navigator(
-      key: _navigatorKeys[index],
-      onGenerateRoute: (settings) {
-        return MaterialPageRoute(
-          builder: (context) => page,
-          settings: settings,
-        );
-      },
+    return PopScope(
+      canPop: !_isPlayerOpen,
+      child: Navigator(
+        key: _navigatorKeys[index],
+        onGenerateRoute: (settings) {
+          return MaterialPageRoute(
+            builder: (context) => page,
+            settings: settings,
+          );
+        },
+      ),
     );
   }
 
@@ -101,11 +113,13 @@ class _NavigationScreenState extends State<NavigationScreen>
         return PopScope(
           canPop: false,
           onPopInvokedWithResult: (bool didPop, dynamic result) async {
+            debugPrint("NavigationScreen: onPopInvokedWithResult. didPop: $didPop, handler isNull: ${willPop.handler == null}");
             if (didPop) return;
             // A. Ask the provider if the player is open and needs to be closed
             final canPopApp = willPop.handler != null
                 ? willPop.handler!()
                 : true;
+            debugPrint("NavigationScreen: canPopApp: $canPopApp");
             if (!canPopApp) return;
             // Handle dialogs on the root navigator first
             final route = ModalRoute.of(context);
