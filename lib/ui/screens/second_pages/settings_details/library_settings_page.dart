@@ -104,33 +104,47 @@ class LibrarySettingsPage extends StatelessWidget {
     NixDialog.show(
       context: context,
       title: 'Filter Tracks',
-      children: options.map((sec) {
-        final index = options.indexOf(sec);
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: index == options.length - 1 ? 0.0 : 2.5,
-          ),
-          child: CardListTile(
-            title: sec == 0 ? 'Off (Show All)' : _getDurationLabel(sec),
-            onTap: () async {
+      children: [
+        RadioGroup<int>(
+          groupValue: settings.minDuration,
+          onChanged: (sec) async {
+            if (sec != null) {
               Navigator.of(context, rootNavigator: true).pop();
               settings.setMinDuration(sec);
               // Trigger re-scan to apply filter
               await music.scanDevice();
-            },
-            trailing: IgnorePointer(
-              child: Radio<int>(
-                value: sec,
-                groupValue: settings.minDuration,
-                onChanged: (_) {},
-                activeColor: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-            isFirst: index == 0,
-            isLast: index == options.length - 1,
+            }
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: options.map((sec) {
+              final index = options.indexOf(sec);
+              return Padding(
+                padding: EdgeInsets.only(
+                  bottom: index == options.length - 1 ? 0.0 : 2.5,
+                ),
+                child: CardListTile(
+                  title: sec == 0 ? 'Off (Show All)' : _getDurationLabel(sec),
+                  onTap: () async {
+                    Navigator.of(context, rootNavigator: true).pop();
+                    settings.setMinDuration(sec);
+                    // Trigger re-scan to apply filter
+                    await music.scanDevice();
+                  },
+                  trailing: IgnorePointer(
+                    child: Radio<int>(
+                      value: sec,
+                      activeColor: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  isFirst: index == 0,
+                  isLast: index == options.length - 1,
+                ),
+              );
+            }).toList(),
           ),
-        );
-      }).toList(),
+        ),
+      ],
     );
   }
 

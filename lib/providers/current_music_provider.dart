@@ -385,7 +385,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
         }
 
         _dynamicSeedColor = scheme.primary;
-        await cache.put(track.id, _dynamicSeedColor!.value);
+        await cache.put(track.id, _dynamicSeedColor!.toARGB32());
         notifyListeners();
       } else {
         if (requestToken == null || requestToken == _playbackSelectionToken) {

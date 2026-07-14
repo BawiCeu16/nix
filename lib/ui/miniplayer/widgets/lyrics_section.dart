@@ -303,12 +303,10 @@ class _LyricsSectionState extends State<LyricsSection> {
       final currentPos = currentMusic.position;
       _updateIndexForPosition(currentPos);
 
-      if (_positionSubscription == null) {
-        _positionSubscription = currentMusic.positionStream.listen((pos) {
-          if (!mounted || _syncedLyrics == null) return;
-          _updateIndexForPosition(pos);
-        });
-      }
+      _positionSubscription ??= currentMusic.positionStream.listen((pos) {
+        if (!mounted || _syncedLyrics == null) return;
+        _updateIndexForPosition(pos);
+      });
     } else {
       _positionSubscription?.cancel();
       _positionSubscription = null;

@@ -259,30 +259,42 @@ class AppearanceSettingsPage extends StatelessWidget {
     NixDialog.show(
       context: context,
       title: 'Artwork Shape',
-      children: ArtworkShape.values.map((shape) {
-        final index = ArtworkShape.values.indexOf(shape);
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: index == ArtworkShape.values.length - 1 ? 0.0 : 2.5,
-          ),
-          child: CardListTile(
-            title: shape.name.toUpperCase(),
-            onTap: () {
+      children: [
+        RadioGroup<ArtworkShape>(
+          groupValue: settings.artworkShape,
+          onChanged: (shape) {
+            if (shape != null) {
               settings.setArtworkShape(shape);
               Navigator.of(context, rootNavigator: true).pop();
-            },
-            trailing: IgnorePointer(
-              child: Radio<ArtworkShape>(
-                value: shape,
-                groupValue: settings.artworkShape,
-                onChanged: (_) {},
-              ),
-            ),
-            isFirst: index == 0,
-            isLast: index == ArtworkShape.values.length - 1,
+            }
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: ArtworkShape.values.map((shape) {
+              final index = ArtworkShape.values.indexOf(shape);
+              return Padding(
+                padding: EdgeInsets.only(
+                  bottom: index == ArtworkShape.values.length - 1 ? 0.0 : 2.5,
+                ),
+                child: CardListTile(
+                  title: shape.name.toUpperCase(),
+                  onTap: () {
+                    settings.setArtworkShape(shape);
+                    Navigator.of(context, rootNavigator: true).pop();
+                  },
+                  trailing: IgnorePointer(
+                    child: Radio<ArtworkShape>(
+                      value: shape,
+                    ),
+                  ),
+                  isFirst: index == 0,
+                  isLast: index == ArtworkShape.values.length - 1,
+                ),
+              );
+            }).toList(),
           ),
-        );
-      }).toList(),
+        ),
+      ],
     );
   }
 
@@ -291,44 +303,56 @@ class AppearanceSettingsPage extends StatelessWidget {
     NixDialog.show(
       context: context,
       title: 'Artwork Quality',
-      children: qualities.map((quality) {
-        final index = qualities.indexOf(quality);
-        String description = '';
-        switch (quality) {
-          case NixArtworkQuality.high:
-            description = 'Full-high quality - Best visuals';
-            break;
-          case NixArtworkQuality.medium:
-            description = 'Balanced quality';
-            break;
-          case NixArtworkQuality.low:
-            description = 'Standard quality - Saves memory';
-            break;
-        }
-
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: index == qualities.length - 1 ? 0.0 : 2.5,
-          ),
-          child: CardListTile(
-            title: quality.name.toUpperCase(),
-            subtitle: description,
-            onTap: () {
+      children: [
+        RadioGroup<NixArtworkQuality>(
+          groupValue: settings.artworkQuality,
+          onChanged: (quality) {
+            if (quality != null) {
               settings.setArtworkQuality(quality);
               Navigator.of(context, rootNavigator: true).pop();
-            },
-            trailing: IgnorePointer(
-              child: Radio<NixArtworkQuality>(
-                value: quality,
-                groupValue: settings.artworkQuality,
-                onChanged: (_) {},
-              ),
-            ),
-            isFirst: index == 0,
-            isLast: index == qualities.length - 1,
+            }
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: qualities.map((quality) {
+              final index = qualities.indexOf(quality);
+              String description = '';
+              switch (quality) {
+                case NixArtworkQuality.high:
+                  description = 'Full-high quality - Best visuals';
+                  break;
+                case NixArtworkQuality.medium:
+                  description = 'Balanced quality';
+                  break;
+                case NixArtworkQuality.low:
+                  description = 'Standard quality - Saves memory';
+                  break;
+              }
+
+              return Padding(
+                padding: EdgeInsets.only(
+                  bottom: index == qualities.length - 1 ? 0.0 : 2.5,
+                ),
+                child: CardListTile(
+                  title: quality.name.toUpperCase(),
+                  subtitle: description,
+                  onTap: () {
+                    settings.setArtworkQuality(quality);
+                    Navigator.of(context, rootNavigator: true).pop();
+                  },
+                  trailing: IgnorePointer(
+                    child: Radio<NixArtworkQuality>(
+                      value: quality,
+                    ),
+                  ),
+                  isFirst: index == 0,
+                  isLast: index == qualities.length - 1,
+                ),
+              );
+            }).toList(),
           ),
-        );
-      }).toList(),
+        ),
+      ],
     );
   }
 
@@ -336,33 +360,45 @@ class AppearanceSettingsPage extends StatelessWidget {
     NixDialog.show(
       context: context,
       title: ' Accent Color Mode',
-      children: AccentColorMode.values.map((mode) {
-        final index = AccentColorMode.values.indexOf(mode);
-        String label = mode.name.toUpperCase();
-        if (mode == AccentColorMode.dynamic) label = "DYNAMIC (ALBUM ART)";
-
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: index == AccentColorMode.values.length - 1 ? 0.0 : 2.5,
-          ),
-          child: CardListTile(
-            title: label,
-            onTap: () {
+      children: [
+        RadioGroup<AccentColorMode>(
+          groupValue: settings.accentColorMode,
+          onChanged: (mode) {
+            if (mode != null) {
               settings.setAccentColorMode(mode);
               Navigator.of(context, rootNavigator: true).pop();
-            },
-            trailing: IgnorePointer(
-              child: Radio<AccentColorMode>(
-                value: mode,
-                groupValue: settings.accentColorMode,
-                onChanged: (_) {},
-              ),
-            ),
-            isFirst: index == 0,
-            isLast: index == AccentColorMode.values.length - 1,
+            }
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: AccentColorMode.values.map((mode) {
+              final index = AccentColorMode.values.indexOf(mode);
+              String label = mode.name.toUpperCase();
+              if (mode == AccentColorMode.dynamic) label = "DYNAMIC (ALBUM ART)";
+
+              return Padding(
+                padding: EdgeInsets.only(
+                  bottom: index == AccentColorMode.values.length - 1 ? 0.0 : 2.5,
+                ),
+                child: CardListTile(
+                  title: label,
+                  onTap: () {
+                    settings.setAccentColorMode(mode);
+                    Navigator.of(context, rootNavigator: true).pop();
+                  },
+                  trailing: IgnorePointer(
+                    child: Radio<AccentColorMode>(
+                      value: mode,
+                    ),
+                  ),
+                  isFirst: index == 0,
+                  isLast: index == AccentColorMode.values.length - 1,
+                ),
+              );
+            }).toList(),
           ),
-        );
-      }).toList(),
+        ),
+      ],
     );
   }
 }
@@ -429,7 +465,7 @@ class _CustomColorPicker extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final color = _colors[index];
                   final isSelected =
-                      settings.customAccentColor.value == color.value;
+                      settings.customAccentColor.toARGB32() == color.toARGB32();
 
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),

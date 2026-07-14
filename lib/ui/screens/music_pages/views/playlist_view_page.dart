@@ -89,16 +89,19 @@ class PlaylistViewPage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               physics: const BouncingScrollPhysics(),
               itemCount: tracks.length + 2, // Header + Tracks + Bottom Padding
-              onReorder: (oldIndex, newIndex) {
+              onReorderItem: (oldIndex, newIndex) {
                 if (isSystemPlaylist) return;
                 if (oldIndex < 1 || oldIndex > tracks.length) return;
 
                 int adjustedOld = oldIndex - 1;
                 int adjustedNew = newIndex - 1;
 
-                if (adjustedNew < 0) adjustedNew = 0;
-                if (adjustedNew >= tracks.length)
+                if (adjustedNew < 0) {
+                  adjustedNew = 0;
+                }
+                if (adjustedNew >= tracks.length) {
                   adjustedNew = tracks.length - 1;
+                }
 
                 music.reorderPlaylistTracks(pl!.id, adjustedOld, adjustedNew);
               },

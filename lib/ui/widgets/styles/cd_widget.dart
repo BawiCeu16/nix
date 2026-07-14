@@ -93,7 +93,7 @@ class NixCustomizableCDWidget extends StatelessWidget {
                       decoration: BoxDecoration(
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.15),
+                            color: Colors.black.withValues(alpha: 0.15),
                             blurRadius: 8,
                             offset: const Offset(3, 3),
                           ),
@@ -152,7 +152,7 @@ class _DiscWithTexture extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: Colors.black.withOpacity(0.4),
+                color: Colors.black.withValues(alpha: 0.4),
                 width: size * 0.1,
               ),
             ),
@@ -164,7 +164,7 @@ class _DiscWithTexture extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withValues(alpha: 0.6),
                 width: 3.0,
               ),
             ),
@@ -223,12 +223,12 @@ class _TextureOverlay extends StatelessWidget {
         double pos = i / (streakCount * 2);
         colors.add(
           i % 2 == 0
-              ? Colors.black.withOpacity(0.05)
-              : Colors.white.withOpacity(0.55),
+              ? Colors.black.withValues(alpha: 0.05)
+              : Colors.white.withValues(alpha: 0.55),
         );
         stops.add(pos);
       }
-      colors.add(Colors.black.withOpacity(0.05));
+      colors.add(Colors.black.withValues(alpha: 0.05));
       stops.add(1.0);
 
       overlayGradient = SweepGradient(
@@ -240,7 +240,7 @@ class _TextureOverlay extends StatelessWidget {
       overlayGradient = LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Colors.white.withOpacity(0.4), Colors.transparent],
+        colors: [Colors.white.withValues(alpha: 0.4), Colors.transparent],
       );
     }
 

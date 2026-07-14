@@ -28,7 +28,7 @@ class NixEmptyState extends StatelessWidget {
             Icon(
               icon,
               size: 80,
-              color: colorScheme.onSurfaceVariant.withOpacity(0.2),
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
             ),
             const SizedBox(height: 24),
             Text(
@@ -45,7 +45,7 @@ class NixEmptyState extends StatelessWidget {
                 subtitle!,
                 textAlign: TextAlign.center,
                 style: textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                 ),
               ),
             ],

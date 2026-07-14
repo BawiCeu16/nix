@@ -68,13 +68,13 @@ class SettingsProvider with ChangeNotifier {
   Color get customAccentColor {
     final int colorValue = _box.get(
       HiveKeys.customAccentColor,
-      defaultValue: Colors.blue.value,
+      defaultValue: Colors.blue.toARGB32(),
     );
     return Color(colorValue);
   }
 
   void setCustomAccentColor(Color color) {
-    _box.put(HiveKeys.customAccentColor, color.value);
+    _box.put(HiveKeys.customAccentColor, color.toARGB32());
     notifyListeners();
   }
 

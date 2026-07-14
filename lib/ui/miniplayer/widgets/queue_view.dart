@@ -169,8 +169,7 @@ class _QueueViewState extends State<QueueView> {
     }
   }
 
-  void _reorderCallback(int oldIndex, int newIndex) {
-    if (newIndex > oldIndex) newIndex--;
+  void _reorderItemCallback(int oldIndex, int newIndex) {
     final settings = context.read<SettingsProvider>();
     final currentMusic = context.read<CurrentMusicProvider>();
     currentMusic.reorderQueue(oldIndex, newIndex);
@@ -221,7 +220,7 @@ class _QueueViewState extends State<QueueView> {
                     child: Stack(
                       children: [
                         CustomScrollView(
-                          cacheExtent: 1000,
+                          scrollCacheExtent: const .pixels(1000.0),
                           controller: widget.controller,
                           physics: widget.queueProgressValue == 1.0
                               ? const BouncingScrollPhysics(
@@ -307,7 +306,7 @@ class _QueueViewState extends State<QueueView> {
                             ),
                             SliverReorderableList(
                               itemCount: tracks.length,
-                              onReorder: _reorderCallback,
+                              onReorderItem: _reorderItemCallback,
                               proxyDecorator: (child, index, animation) {
                                 return AnimatedBuilder(
                                   animation: animation,
@@ -320,8 +319,8 @@ class _QueueViewState extends State<QueueView> {
                                       scale: scale,
                                       child: Material(
                                         elevation: 10,
-                                        shadowColor: Colors.black.withOpacity(
-                                          0.2 * animValue,
+                                        shadowColor: Colors.black.withValues(
+                                          alpha: 0.2 * animValue,
                                         ),
                                         borderRadius: BorderRadius.circular(12),
                                         color: Theme.of(context)
