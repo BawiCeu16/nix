@@ -45,15 +45,22 @@ lib/
 │   └── will_pop_provider.dart         # Back-button interception bridge
 │
 ├── services/
-│   └── snackbar_service.dart          # Global snackbar service
+│   ├── lyrics_service.dart            # LRCLIB HTTP API, LRC text parser, title cleaner & cache
+│   ├── media_library_service.dart     # Native MediaStore scanning and isolate library parsing
+│   ├── playlist_repository.dart       # Hive playlist persistence and CRUD logic
+│   ├── settings_repository.dart       # Hive settings persistence and search history
+│   ├── snackbar_service.dart          # Global snackbar service
+│   └── user_repository.dart           # Hive user metadata persistence
 │
 └── ui/
     ├── theme/
     │   └── nix_theme.dart             # Material 3 dynamic color theme builder
     ├── miniplayer/
+    │   ├── controllers/
+    │   │   └── now_playing_controller.dart # Physics, clamping, and animation calculation engine
     │   ├── models/
     │   │   └── animation_data.dart    # PlayerAnimationData: computed progress values bundle
-    │   ├── now_playing.dart           # Physics engine & orchestrator (PointerEvent + VelocityTracker)
+    │   ├── now_playing.dart           # Miniplayer view & orchestrator (PointerEvent + VelocityTracker)
     │   └── widgets/
     │       ├── lyrics_section.dart    # Lyrics section widget
     │       ├── player_controls.dart   # Play/pause, seek slider, skip, shuffle buttons
@@ -68,11 +75,15 @@ lib/
         ├── profile_page.dart          # User stats and profile page
         │
         ├── main/
+        │   ├── controllers/
+        │   │   └── search_controller.dart # Search query execution, filter selection, and history controller
         │   ├── home_page.dart         # Recently listened, albums carousel, all songs preview
         │   ├── library_page.dart      # Tab host: Songs / Albums / Artists / Playlists
         │   └── search_page.dart       # Real-time search across songs, albums, artists
         │
         ├── music/
+        │   ├── controllers/
+        │   │   └── albums_controller.dart # Album list sorting and CD cover animation controller
         │   ├── albums_page.dart       # Albums grid
         │   ├── artists_page.dart      # Artists grid
         │   ├── playlist_view_page.dart# Playlist detail with reorderable track list
@@ -126,6 +137,8 @@ Each child widget (`TrackImage`, `TrackInfo`, `PlayerControls`, `QueueView`) rec
   - Page headers / full-screen (300 dp+) → `800 × 800`
 
 - **`TrackTile`** — supports swipe-to-queue-next (start → end), long-press song info, and a context menu for playlist, artist, and album navigation.
+
+- **`AlbumCardTile`** — standardized album card presentation widget supporting configurable sizes, onTap callbacks, and dynamic CD artwork / fallback styling.
 
 - **`NixDialog`** — bottom-anchored action sheet with song artwork header, used for all track context menus.
 

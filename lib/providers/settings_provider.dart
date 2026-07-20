@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
-import 'package:nix/core/hive_keys.dart';
 import 'package:nix/models/settings/artwork_quality.dart';
 import 'package:nix/models/settings/timer_gesture.dart';
+import 'package:nix/services/settings_repository.dart';
 
 enum AccentColorMode { dynamic, device, custom }
 
@@ -16,397 +15,201 @@ enum TrackSwipeAction { none, playPlayback }
 
 enum HapticForce { light, medium, heavy }
 
-/// Manages app-wide settings like theme, accent color, and playback behaviors.
-/// Settings are persisted to the Hive.
+/// Manages app-wide settings state and delegates persistence to [SettingsRepository].
 class SettingsProvider with ChangeNotifier {
-  Box get _box => Hive.box(HiveKeys.settingsBox);
+  final SettingsRepository _repo = SettingsRepository();
 
   // Auto Play
-  /// Whether the player should automatically play the next track or random
-  bool get autoPlay => _box.get(HiveKeys.autoPlay, defaultValue: true);
-
+  bool get autoPlay => _repo.autoPlay;
   void setAutoPlay(bool value) {
-    _box.put(HiveKeys.autoPlay, value);
-    notifyListeners();
+    _repo.setAutoPlay(value).then((_) => notifyListeners());
   }
 
   // Theme Mode
-  /// The current theme mode (Light, Dark, or System)
-  ThemeMode get themeMode {
-    final String mode = _box.get(HiveKeys.themeMode, defaultValue: 'system');
-    return ThemeMode.values.firstWhere(
-      (e) => e.name == mode,
-      orElse: () => ThemeMode.system,
-    );
-  }
-
+  ThemeMode get themeMode => _repo.themeMode;
   void setThemeMode(ThemeMode mode) {
-    _box.put(HiveKeys.themeMode, mode.name);
-    notifyListeners();
+    _repo.setThemeMode(mode).then((_) => notifyListeners());
   }
 
   // Accent Color Mode
-  /// Defines how the accent color is determined.
-  AccentColorMode get accentColorMode {
-    final String mode = _box.get(
-      HiveKeys.accentColorMode,
-      defaultValue: 'dynamic',
-    );
-    return AccentColorMode.values.firstWhere(
-      (e) => e.name == mode,
-      orElse: () => AccentColorMode.dynamic,
-    );
-  }
-
+  AccentColorMode get accentColorMode => _repo.accentColorMode;
   void setAccentColorMode(AccentColorMode mode) {
-    _box.put(HiveKeys.accentColorMode, mode.name);
-    notifyListeners();
+    _repo.setAccentColorMode(mode).then((_) => notifyListeners());
   }
 
   // Custom Accent Color
-  /// The fallback custom accent color when AccentColorMode.custom is used.
-  Color get customAccentColor {
-    final int colorValue = _box.get(
-      HiveKeys.customAccentColor,
-      defaultValue: Colors.blue.toARGB32(),
-    );
-    return Color(colorValue);
-  }
-
+  Color get customAccentColor => _repo.customAccentColor;
   void setCustomAccentColor(Color color) {
-    _box.put(HiveKeys.customAccentColor, color.toARGB32());
-    notifyListeners();
+    _repo.setCustomAccentColor(color).then((_) => notifyListeners());
   }
 
   // Swipe to Dismiss
-  /// Whether the user can dismiss the player by swiping down fully.
-  bool get swipeToDismiss =>
-      _box.get(HiveKeys.swipeToDismiss, defaultValue: true);
-
+  bool get swipeToDismiss => _repo.swipeToDismiss;
   void setSwipeToDismiss(bool value) {
-    _box.put(HiveKeys.swipeToDismiss, value);
-    notifyListeners();
+    _repo.setSwipeToDismiss(value).then((_) => notifyListeners());
   }
 
   // Minimum Duration
-  /// Filter out songs with duration less than this (in seconds).
-  int get minDuration => _box.get(HiveKeys.minDuration, defaultValue: 0);
-
+  int get minDuration => _repo.minDuration;
   void setMinDuration(int seconds) {
-    _box.put(HiveKeys.minDuration, seconds);
-    notifyListeners();
+    _repo.setMinDuration(seconds).then((_) => notifyListeners());
   }
 
   // Haptic Feedback
-  /// Whether haptic feedback (vibration) is enabled for major actions.
-  bool get enableHaptics =>
-      _box.get(HiveKeys.enableHaptics, defaultValue: true);
-
+  bool get enableHaptics => _repo.enableHaptics;
   void setEnableHaptics(bool value) {
-    _box.put(HiveKeys.enableHaptics, value);
-    notifyListeners();
+    _repo.setEnableHaptics(value).then((_) => notifyListeners());
   }
 
   // Haptic Force
-  /// The intensity of the haptic feedback.
-  HapticForce get hapticForce {
-    final String force = _box.get(HiveKeys.hapticForce, defaultValue: 'medium');
-    return HapticForce.values.firstWhere(
-      (e) => e.name == force,
-      orElse: () => HapticForce.medium,
-    );
-  }
-
+  HapticForce get hapticForce => _repo.hapticForce;
   void setHapticForce(HapticForce force) {
-    _box.put(HiveKeys.hapticForce, force.name);
-    notifyListeners();
+    _repo.setHapticForce(force).then((_) => notifyListeners());
   }
 
   // Playback Speed
-  /// The current playback speed multiplier (e.g., 1.0, 1.5).
-  double get playbackSpeed =>
-      _box.get(HiveKeys.playbackSpeed, defaultValue: 1.0);
-
+  double get playbackSpeed => _repo.playbackSpeed;
   void setPlaybackSpeed(double value) {
-    _box.put(HiveKeys.playbackSpeed, value);
-    notifyListeners();
+    _repo.setPlaybackSpeed(value).then((_) => notifyListeners());
   }
 
   // Reset Speed on New Track
-  /// Whether the playback speed should reset to 1.0 when a new track starts.
-  bool get resetSpeedOnNewTrack =>
-      _box.get(HiveKeys.resetSpeedOnNewTrack, defaultValue: true);
-
+  bool get resetSpeedOnNewTrack => _repo.resetSpeedOnNewTrack;
   void setResetSpeedOnNewTrack(bool value) {
-    _box.put(HiveKeys.resetSpeedOnNewTrack, value);
-    notifyListeners();
+    _repo.setResetSpeedOnNewTrack(value).then((_) => notifyListeners());
   }
 
   // Skip Silence
-  /// Whether the player should automatically skip silent parts in the audio.
-  bool get skipSilence => _box.get(HiveKeys.skipSilence, defaultValue: false);
-
+  bool get skipSilence => _repo.skipSilence;
   void setSkipSilence(bool value) {
-    _box.put(HiveKeys.skipSilence, value);
-    notifyListeners();
+    _repo.setSkipSilence(value).then((_) => notifyListeners());
   }
 
   // Up Next Indicator
-  /// Whether to show the Up Next indicator near the end of a track.
-  bool get upNextIndicator =>
-      _box.get(HiveKeys.upNextIndicator, defaultValue: true);
-
+  bool get upNextIndicator => _repo.upNextIndicator;
   void setUpNextIndicator(bool value) {
-    _box.put(HiveKeys.upNextIndicator, value);
-    notifyListeners();
+    _repo.setUpNextIndicator(value).then((_) => notifyListeners());
   }
 
   // Up Next Indicator Time
-  /// Time in seconds before track end to show the indicator.
-  int get upNextIndicatorTime =>
-      _box.get(HiveKeys.upNextIndicatorTime, defaultValue: 20);
-
+  int get upNextIndicatorTime => _repo.upNextIndicatorTime;
   void setUpNextIndicatorTime(int seconds) {
-    _box.put(HiveKeys.upNextIndicatorTime, seconds);
-    notifyListeners();
+    _repo.setUpNextIndicatorTime(seconds).then((_) => notifyListeners());
   }
 
   // Appearance - AMOLED Mode
-  /// Whether to use pure black (#000000) for dark mode.
-  bool get useAmoledMode =>
-      _box.get(HiveKeys.useAmoledMode, defaultValue: false);
-
+  bool get useAmoledMode => _repo.useAmoledMode;
   void setUseAmoledMode(bool value) {
-    _box.put(HiveKeys.useAmoledMode, value);
-    notifyListeners();
+    _repo.setUseAmoledMode(value).then((_) => notifyListeners());
   }
 
   // Appearance - Artwork Shape
-  /// The global geometric shape for all artwork.
-  ArtworkShape get artworkShape {
-    final String shape = _box.get(
-      HiveKeys.artworkShape,
-      defaultValue: 'rounded',
-    );
-    return ArtworkShape.values.firstWhere(
-      (e) => e.name == shape,
-      orElse: () => ArtworkShape.rounded,
-    );
-  }
-
+  ArtworkShape get artworkShape => _repo.artworkShape;
   void setArtworkShape(ArtworkShape shape) {
-    _box.put(HiveKeys.artworkShape, shape.name);
-    notifyListeners();
+    _repo.setArtworkShape(shape).then((_) => notifyListeners());
   }
 
   // Appearance - Artwork Quality
-  /// The global resolution for all artwork.
-  NixArtworkQuality get artworkQuality {
-    final String quality = _box.get(
-      HiveKeys.artworkQuality,
-      defaultValue: 'high',
-    );
-    return NixArtworkQuality.values.firstWhere(
-      (e) => e.name == quality,
-      orElse: () => NixArtworkQuality.high,
-    );
-  }
-
+  NixArtworkQuality get artworkQuality => _repo.artworkQuality;
   void setArtworkQuality(NixArtworkQuality quality) {
-    _box.put(HiveKeys.artworkQuality, quality.name);
-    notifyListeners();
+    _repo.setArtworkQuality(quality).then((_) => notifyListeners());
   }
 
   // Appearance - CD Artwork Style
-  /// Whether to display albums using a realistic CD jewel case widget
-  bool get useCdArtworkStyle =>
-      _box.get(HiveKeys.useCdArtworkStyle, defaultValue: true);
-
+  bool get useCdArtworkStyle => _repo.useCdArtworkStyle;
   void setUseCdArtworkStyle(bool value) {
-    _box.put(HiveKeys.useCdArtworkStyle, value);
-    notifyListeners();
+    _repo.setUseCdArtworkStyle(value).then((_) => notifyListeners());
   }
 
-  // Appearance - Split CD when Half Open
-  /// Whether the CD cover and disc split evenly from the center horizontally
-  bool get splitCdWhenHalfOpen =>
-      _box.get(HiveKeys.splitCdWhenHalfOpen, defaultValue: true);
-
+  // Appearance - Split CD
+  bool get splitCdWhenHalfOpen => _repo.splitCdWhenHalfOpen;
   void setSplitCdWhenHalfOpen(bool value) {
-    _box.put(HiveKeys.splitCdWhenHalfOpen, value);
-    notifyListeners();
+    _repo.setSplitCdWhenHalfOpen(value).then((_) => notifyListeners());
   }
 
-  // Appearance - Rotate CD when Playing
-  /// Whether the CD disc rotates physically when a track from the album is playing
-  bool get rotateCdWhenPlaying =>
-      _box.get(HiveKeys.rotateCdWhenPlaying, defaultValue: true);
-
+  // Appearance - Rotate CD
+  bool get rotateCdWhenPlaying => _repo.rotateCdWhenPlaying;
   void setRotateCdWhenPlaying(bool value) {
-    _box.put(HiveKeys.rotateCdWhenPlaying, value);
-    notifyListeners();
+    _repo.setRotateCdWhenPlaying(value).then((_) => notifyListeners());
   }
 
   // Appearance - CD Rotation Speed
-  /// The local multiplier for the continuous rotation of active CD artworks
-  double get cdRotationSpeed =>
-      (_box.get(HiveKeys.cdRotationSpeed) as num?)?.toDouble() ?? 20.0;
-
+  double get cdRotationSpeed => _repo.cdRotationSpeed;
   void setCdRotationSpeed(double speed) {
-    _box.put(HiveKeys.cdRotationSpeed, speed);
-    notifyListeners();
+    _repo.setCdRotationSpeed(speed).then((_) => notifyListeners());
   }
 
   // Appearance - Timer Gesture
-  /// The interaction type for the floating sleep timer indicator.
-  TimerGesture get timerGesture {
-    final String gesture = _box.get(
-      HiveKeys.timerGesture,
-      defaultValue: 'longPress',
-    );
-    return TimerGesture.values.firstWhere(
-      (e) => e.name == gesture,
-      orElse: () => TimerGesture.longPress,
-    );
-  }
-
+  TimerGesture get timerGesture => _repo.timerGesture;
   void setTimerGesture(TimerGesture gesture) {
-    _box.put(HiveKeys.timerGesture, gesture.name);
-    notifyListeners();
+    _repo.setTimerGesture(gesture).then((_) => notifyListeners());
   }
 
   // Appearance - Swipe to Change Track
-  /// Whether horizontal swipes on artwork change the track.
-  bool get swipeToChangeTrack =>
-      _box.get(HiveKeys.swipeToChangeTrack, defaultValue: true);
-
+  bool get swipeToChangeTrack => _repo.swipeToChangeTrack;
   void setSwipeToChangeTrack(bool value) {
-    _box.put(HiveKeys.swipeToChangeTrack, value);
-    notifyListeners();
+    _repo.setSwipeToChangeTrack(value).then((_) => notifyListeners());
   }
 
   // Appearance - Track Swipe Action
-  /// The global action for track tile swipes.
-  TrackSwipeAction get trackSwipeAction {
-    final String action = _box.get(
-      HiveKeys.trackSwipeAction,
-      defaultValue: 'playPlayback',
-    );
-    return TrackSwipeAction.values.firstWhere(
-      (e) => e.name == action,
-      orElse: () => TrackSwipeAction.playPlayback,
-    );
-  }
-
+  TrackSwipeAction get trackSwipeAction => _repo.trackSwipeAction;
   void setTrackSwipeAction(TrackSwipeAction action) {
-    _box.put(HiveKeys.trackSwipeAction, action.name);
-    notifyListeners();
+    _repo.setTrackSwipeAction(action).then((_) => notifyListeners());
   }
 
   // Appearance - Miniplayer Shadow
-  /// Whether to show the dynamic shadow on the miniplayer.
-  bool get showMiniplayerShadow =>
-      _box.get(HiveKeys.showMiniplayerShadow, defaultValue: true);
-
+  bool get showMiniplayerShadow => _repo.showMiniplayerShadow;
   void setShowMiniplayerShadow(bool value) {
-    _box.put(HiveKeys.showMiniplayerShadow, value);
-    notifyListeners();
+    _repo.setShowMiniplayerShadow(value).then((_) => notifyListeners());
   }
 
   // Appearance - Auto Scroll Queue
-  /// Whether to automatically scroll the queue to the currently playing track.
-  bool get autoScrollQueue =>
-      _box.get(HiveKeys.autoScrollQueue, defaultValue: true);
-
+  bool get autoScrollQueue => _repo.autoScrollQueue;
   void setAutoScrollQueue(bool value) {
-    _box.put(HiveKeys.autoScrollQueue, value);
-    notifyListeners();
+    _repo.setAutoScrollQueue(value).then((_) => notifyListeners());
   }
 
   // Lyrics - Save Offline
-  /// Whether to save lyrics for offline use.
-  bool get saveLyricsOffline =>
-      _box.get(HiveKeys.saveLyricsOffline, defaultValue: true);
-
+  bool get saveLyricsOffline => _repo.saveLyricsOffline;
   void setSaveLyricsOffline(bool value) {
-    _box.put(HiveKeys.saveLyricsOffline, value);
-    notifyListeners();
+    _repo.setSaveLyricsOffline(value).then((_) => notifyListeners());
   }
 
   // Appearance - SnackBar Position
-  /// The global position for all snackbars.
-  SnackBarPosition get snackbarPosition {
-    final String position = _box.get(
-      HiveKeys.snackbarPosition,
-      defaultValue: 'bottom',
-    );
-    return SnackBarPosition.values.firstWhere(
-      (e) => e.name == position,
-      orElse: () => SnackBarPosition.bottom,
-    );
-  }
-
+  SnackBarPosition get snackbarPosition => _repo.snackbarPosition;
   void setSnackbarPosition(SnackBarPosition position) {
-    _box.put(HiveKeys.snackbarPosition, position.name);
-    notifyListeners();
+    _repo.setSnackbarPosition(position).then((_) => notifyListeners());
   }
 
   // Appearance - SnackBar Dismissible
-  /// Whether snackbars can be swiped away by the user.
-  bool get snackbarSwipeToDismiss =>
-      _box.get(HiveKeys.snackbarSwipeToDismiss, defaultValue: true);
-
+  bool get snackbarSwipeToDismiss => _repo.snackbarSwipeToDismiss;
   void setSnackbarSwipeToDismiss(bool value) {
-    _box.put(HiveKeys.snackbarSwipeToDismiss, value);
-    notifyListeners();
+    _repo.setSnackbarSwipeToDismiss(value).then((_) => notifyListeners());
   }
 
   // Search History
-  /// List of recent search queries.
-  List<String> get searchHistory {
-    final List<dynamic> history = _box.get(
-      HiveKeys.searchHistory,
-      defaultValue: [],
-    );
-    return history.cast<String>();
-  }
+  List<String> get searchHistory => _repo.searchHistory;
 
   void addSearchQuery(String query) {
-    if (query.isEmpty) return;
-    final List<String> history = searchHistory;
-    history.remove(query); // Remove if exists to move to top
-    history.insert(0, query);
-    if (history.length > 10) history.removeLast(); // Limit to 10
-    _box.put(HiveKeys.searchHistory, history);
-    notifyListeners();
+    _repo.addSearchQuery(query).then((_) => notifyListeners());
   }
 
   void removeSearchQuery(String query) {
-    final List<String> history = searchHistory;
-    history.remove(query);
-    _box.put(HiveKeys.searchHistory, history);
-    notifyListeners();
+    _repo.removeSearchQuery(query).then((_) => notifyListeners());
   }
 
   void clearSearchHistory() {
-    _box.put(HiveKeys.searchHistory, []);
-    notifyListeners();
+    _repo.clearSearchHistory().then((_) => notifyListeners());
   }
 
   // Playback - Resume from Played Duration
-  /// Whether to resume tracks from their last saved position.
-  bool get resumeFromPlayedDuration =>
-      _box.get(HiveKeys.resumeFromPlayedDuration, defaultValue: true);
-
+  bool get resumeFromPlayedDuration => _repo.resumeFromPlayedDuration;
   void setResumeFromPlayedDuration(bool value) {
-    _box.put(HiveKeys.resumeFromPlayedDuration, value);
-    notifyListeners();
+    _repo.setResumeFromPlayedDuration(value).then((_) => notifyListeners());
   }
 
-  /// Resets ALL settings to their factory defaults by clearing the Hive box.
-  /// Each getter's `defaultValue` will take effect on the next read.
+  /// Resets ALL settings to factory defaults.
   void resetToDefaults() {
-    _box.clear();
-    notifyListeners();
+    _repo.resetToDefaults().then((_) => notifyListeners());
   }
 }

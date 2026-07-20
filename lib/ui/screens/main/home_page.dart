@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:nix_button/nix_button.dart';
-import 'package:on_audio_query_forked/on_audio_query.dart';
 import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/providers/user_provider.dart';
-import 'package:nix/providers/settings_provider.dart';
 
 import 'package:nix/ui/widgets/tiles/track_card_tile.dart';
+import 'package:nix/ui/widgets/tiles/album_card_tile.dart';
 import 'package:nix/models/music/track.dart';
 import 'package:nix/models/music/album.dart';
 import 'package:nix/models/music/playlist.dart';
@@ -20,11 +19,9 @@ import 'package:nix/ui/widgets/tiles/track_tile.dart';
 import 'package:nix/ui/widgets/common/nix_section_header.dart';
 import 'package:nix/ui/screens/music/albums_page.dart';
 import 'package:nix/ui/screens/music/tracks_page.dart';
-import 'package:nix/ui/widgets/common/nix_artwork.dart';
 import 'package:expressive_refresh/expressive_refresh.dart';
 import 'package:nix/ui/screens/profile_page.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
-import 'package:nix/ui/widgets/common/cd_widget.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -342,7 +339,7 @@ class HomePage extends StatelessWidget {
                                   ),
                                   child: SizedBox(
                                     width: 160.0,
-                                    child: _AlbumCard(
+                                    child: AlbumCardTile(
                                       title: album.title,
                                       subtitle: album.artist,
                                       firstTrackId: firstTrackId,
@@ -352,18 +349,18 @@ class HomePage extends StatelessWidget {
                                             builder: (_) => AlbumTracksPage(
                                               albumTitle: album.title,
                                               albumArtist: album.artist,
-                                              ),
                                             ),
-                                          );
-                                        },
-                                      ),
+                                          ),
+                                        );
+                                      },
                                     ),
-                                  );
-                                },
-                              ),
+                                  ),
+                                );
+                              },
                             ),
                           ),
-                        );
+                        ),
+                      );
                     },
                   ),
 
@@ -436,119 +433,6 @@ class HomePage extends StatelessWidget {
               const NixBottomSpacer.sliver(),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Album Card with artwork from MediaStore ──
-class _AlbumCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final int? firstTrackId;
-  final VoidCallback? onTap;
-
-  const _AlbumCard({
-    required this.title,
-    required this.subtitle,
-    this.firstTrackId,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    final useCdArtworkStyle = context.select<SettingsProvider, bool>(
-      (s) => s.useCdArtworkStyle,
-    );
-    final splitCdWhenHalfOpen = context.select<SettingsProvider, bool>(
-      (s) => s.splitCdWhenHalfOpen,
-    );
-
-    return Card(
-      margin: EdgeInsets.zero,
-      clipBehavior: Clip.antiAlias,
-      elevation: 0,
-      child: InkWell(
-        onTap: onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AspectRatio(
-              aspectRatio: 1.0,
-              child: Hero(
-                tag: 'album_cd_$title',
-                child: useCdArtworkStyle
-                    ? NixCustomizableCDWidget(
-                        size: 160,
-                        state: CDCoverState.closed,
-                        splitWhenHalfOpen: splitCdWhenHalfOpen,
-                        seedId: title,
-                        coverImage: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            NixArtwork(
-                              id: firstTrackId ?? 0,
-                              type: ArtworkType.AUDIO,
-                              fit: BoxFit.cover,
-                            ),
-                            Transform.scale(
-                              scale: 1.15,
-                              child: Image.asset(
-                                'assets/cd_effects/cd_cover.png',
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ],
-                        ),
-                        discImage: NixArtwork(
-                          id: firstTrackId ?? 0,
-                          type: ArtworkType.AUDIO,
-                          fit: BoxFit.cover,
-                        ),
-                      )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: NixArtwork(
-                          id: firstTrackId ?? 0,
-                          type: ArtworkType.AUDIO,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 1),
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ),
       ),
     );

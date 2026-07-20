@@ -1,9 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:on_audio_query_forked/on_audio_query.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:hive/hive.dart';
 import 'package:nix/models/music/track.dart';
 import 'package:nix/models/music/album.dart';
@@ -11,84 +7,15 @@ import 'package:nix/models/music/artist.dart';
 import 'package:nix/models/music/playlist.dart';
 import 'package:nix/core/hive_keys.dart';
 import 'package:nix/providers/current_music_provider.dart';
+import 'package:nix/services/media_library_service.dart';
+import 'package:nix/services/playlist_repository.dart';
 
-// ── Isolate data types ──
-
-class _ParseInput {
-  final List<Map<String, dynamic>> rawSongs;
-  const _ParseInput(this.rawSongs);
-}
-
-class _ParseOutput {
-  final List<Track> tracks;
-  final List<Album> albums;
-  final List<Artist> artists;
-  final Map<String, int> albumFirstTrackId;
-  const _ParseOutput(
-    this.tracks,
-    this.albums,
-    this.artists,
-    this.albumFirstTrackId,
-  );
-}
-
-/// Top-level function required by [compute] to run on a background isolate.
-_ParseOutput _parseLibraryInIsolate(_ParseInput input) {
-  final rawSongs = input.rawSongs;
-
-  final tracks = rawSongs.map((raw) {
-    return Track(
-      dateAdded: raw['dateAdded'] as int? ?? 0,
-      id: raw['id'] as int,
-      title: raw['title'] as String,
-      artist: raw['artist'] as String? ?? '<Unknown>',
-      album: raw['album'] as String? ?? '<Unknown>',
-      uri: raw['uri'] as String,
-      duration: raw['duration'] as int? ?? 0,
-      size: raw['size'] as int? ?? 0,
-    );
-  }).toList();
-
-  final albumMap = <String, List<Track>>{};
-  final artistMap = <String, List<Track>>{};
-  for (final track in tracks) {
-    albumMap.putIfAbsent(track.album, () => []).add(track);
-    artistMap.putIfAbsent(track.artist, () => []).add(track);
-  }
-
-  var albumIdx = 0;
-  final albums = albumMap.entries.map((entry) {
-    return Album(
-      id: albumIdx++,
-      title: entry.key,
-      artist: entry.value.first.artist,
-      numOfSongs: entry.value.length,
-    );
-  }).toList();
-
-  var artistIdx = 0;
-  final artists = artistMap.entries.map((entry) {
-    return Artist(
-      id: artistIdx++,
-      name: entry.key,
-      numberOfAlbums: albumMap.values
-          .where((tracks) => tracks.first.artist == entry.key)
-          .length,
-      numberOfTracks: entry.value.length,
-    );
-  }).toList();
-
-  final albumFirstTrackId = <String, int>{};
-  for (final track in tracks) {
-    albumFirstTrackId.putIfAbsent(track.album, () => track.id);
-  }
-
-  return _ParseOutput(tracks, albums, artists, albumFirstTrackId);
-}
-
+/// Reactive provider managing device audio tracks, albums, artists, user playlists, and caches.
 class MusicProvider extends ChangeNotifier {
+  final MediaLibraryService _libraryService = MediaLibraryService();
+  final PlaylistRepository _playlistRepo = PlaylistRepository();
+
   List<Track> _tracks = [];
-  final OnAudioQuery _audioQuery = OnAudioQuery();
   List<Album> _albums = [];
   List<Artist> _artists = [];
   Map<String, int> _albumFirstTrackId = {};
@@ -112,8 +39,11 @@ class MusicProvider extends ChangeNotifier {
   Map<String, int> get albumFirstTrackId => _albumFirstTrackId;
   List<Playlist> get playlists => _playlists;
   DateTime? get lastScanned => _lastScanned;
+  bool get isLoading => _isLoading;
+  bool get hasScanned => _hasScanned;
+  String? get error => _error;
 
-  /// Refreshes all cached playlists (recently played, top played, favorites).
+  /// Refreshes cached playlists (Recently Listened, Top Listened, Favorites).
   Future<void> refreshCaches() async {
     await _rebuildCaches();
     notifyListeners();
@@ -237,15 +167,11 @@ class MusicProvider extends ChangeNotifier {
     );
   }
 
-  bool get isLoading => _isLoading;
-  bool get hasScanned => _hasScanned;
-  String? get error => _error;
-
+  /// Initializes subscriptions and triggers the initial media scan.
   Future<void> init({
     List<String>? customFolders,
     CurrentMusicProvider? currentMusic,
   }) async {
-
     if (currentMusic != null) {
       _currentMusic = currentMusic;
       _playbackSubscription?.cancel();
@@ -275,11 +201,8 @@ class MusicProvider extends ChangeNotifier {
       if (Hive.isBoxOpen(HiveKeys.favoritesBox)) {
         await Hive.box<int>(HiveKeys.favoritesBox).clear();
       }
-      if (Hive.isBoxOpen(HiveKeys.playlistsBox)) {
-        await Hive.box<String>(HiveKeys.playlistsBox).clear();
-      }
+      await _playlistRepo.clearAll();
 
-      // Re-scan library
       _isLoading = false;
       await scanDevice();
     } catch (e) {
@@ -289,7 +212,7 @@ class MusicProvider extends ChangeNotifier {
     }
   }
 
-  /// Scans the device for valid audio files and builds the library state.
+  /// Scans the device for valid audio files and builds the library state via [MediaLibraryService].
   Future<void> scanDevice({List<String>? customFolders}) async {
     if (_isLoading) return;
 
@@ -298,178 +221,18 @@ class MusicProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final bool isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
-      bool permissionStatus = false;
-      if (!isMobile) {
-        permissionStatus = true;
-      } else if (Platform.isIOS) {
-        permissionStatus = await _audioQuery.permissionsStatus();
-        if (!permissionStatus) {
-          permissionStatus = await _audioQuery.permissionsRequest();
-        }
-      } else {
-        // Parallelize permission requests
-        final results = await Future.wait([
-          Permission.audio.request(),
-          Permission.storage.request(),
-        ]);
-        permissionStatus = results.any((status) => status.isGranted);
-      }
+      final parsed = await _libraryService.scanDevice(
+        customFolders: customFolders,
+      );
 
-      if (!permissionStatus) {
-        _error = 'Storage permission not granted. Cannot scan music.';
-        _isLoading = false;
-        notifyListeners();
-        return;
-      }
+      _tracks = parsed.tracks;
+      _albums = parsed.albums;
+      _artists = parsed.artists;
+      _albumFirstTrackId = parsed.albumFirstTrackId;
 
-      if (!isMobile) {
-        // Mock tracks for desktop/web debugging
-        _tracks = [
-          Track(
-            id: 1,
-            title: 'Helix Song 1',
-            artist: 'SoundHelix',
-            album: 'Helix Odyssey',
-            uri: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-            duration: 372000,
-            dateAdded: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-          ),
-          Track(
-            id: 2,
-            title: 'Helix Song 2',
-            artist: 'SoundHelix',
-            album: 'Helix Odyssey',
-            uri: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
-            duration: 423000,
-            dateAdded: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-          ),
-          Track(
-            id: 3,
-            title: 'Helix Song 3',
-            artist: 'SoundHelix',
-            album: 'Helix Odyssey',
-            uri: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
-            duration: 344000,
-            dateAdded: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-          ),
-          Track(
-            id: 4,
-            title: 'Helix Song 4',
-            artist: 'SoundHelix',
-            album: 'Helix Odyssey',
-            uri: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
-            duration: 302000,
-            dateAdded: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-          ),
-          Track(
-            id: 5,
-            title: 'Acoustic Breeze',
-            artist: 'Bensound',
-            album: 'Bensound Breeze',
-            uri: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
-            duration: 280000,
-            dateAdded: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-          ),
-          Track(
-            id: 6,
-            title: 'Summer Vibes',
-            artist: 'Bensound',
-            album: 'Bensound Breeze',
-            uri: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3',
-            duration: 310000,
-            dateAdded: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-          ),
-        ];
-
-        final albumMap = <String, List<Track>>{};
-        final artistMap = <String, List<Track>>{};
-        for (final track in _tracks) {
-          albumMap.putIfAbsent(track.album, () => []).add(track);
-          artistMap.putIfAbsent(track.artist, () => []).add(track);
-        }
-
-        var albumIdx = 0;
-        _albums = albumMap.entries.map((entry) {
-          return Album(
-            id: albumIdx++,
-            title: entry.key,
-            artist: entry.value.first.artist,
-            numOfSongs: entry.value.length,
-          );
-        }).toList();
-
-        var artistIdx = 0;
-        _artists = artistMap.entries.map((entry) {
-          return Artist(
-            id: artistIdx++,
-            name: entry.key,
-            numberOfAlbums: albumMap.values
-                .where((tracks) => tracks.first.artist == entry.key)
-                .length,
-            numberOfTracks: entry.value.length,
-          );
-        }).toList();
-
-        _albumFirstTrackId = <String, int>{};
-        for (final track in _tracks) {
-          _albumFirstTrackId.putIfAbsent(track.album, () => track.id);
-        }
-
-        await Future.wait([Future(() => _loadPlaylists()), _rebuildCaches()]);
-        _lastScanned = DateTime.now();
-      } else {
-        final audioList = await _audioQuery.querySongs(
-          sortType: null,
-          orderType: OrderType.ASC_OR_SMALLER,
-          uriType: UriType.EXTERNAL,
-          ignoreCase: true,
-        );
-
-        // Read min duration from settings
-        final settingsBox = Hive.box(HiveKeys.settingsBox);
-        final int minDurationSeconds =
-            settingsBox.get(HiveKeys.minDuration, defaultValue: 0) ?? 0;
-        final int minDurationMs = minDurationSeconds * 1000;
-
-        final validAudio = audioList.where((item) {
-          final bool isAcceptedType =
-              item.isMusic == true || item.isPodcast == true;
-          final bool isLongEnough = (item.duration ?? 0) >= minDurationMs;
-          return isAcceptedType && isLongEnough;
-        }).toList();
-
-        // Opt. #7: Run the CPU-intensive parsing on a background isolate via
-        // compute(), preventing UI-thread jank on startup with large libraries.
-        final rawSongs = validAudio
-            .map(
-              (audio) => <String, dynamic>{
-                'dateAdded': audio.dateAdded ?? 0,
-                'id': audio.id,
-                'title': audio.title,
-                'artist': audio.artist,
-                'album': audio.album,
-                'uri': audio.data,
-                'duration': audio.duration ?? 0,
-                'size': audio.size,
-              },
-            )
-            .toList();
-
-        final parsed = await compute(
-          _parseLibraryInIsolate,
-          _ParseInput(rawSongs),
-        );
-
-        _tracks = parsed.tracks;
-        _albums = parsed.albums;
-        _artists = parsed.artists;
-        _albumFirstTrackId = parsed.albumFirstTrackId;
-
-        // Parallelize playlist loading and cache rebuilding
-        await Future.wait([Future(() => _loadPlaylists()), _rebuildCaches()]);
-        _lastScanned = DateTime.now();
-      }
+      _loadPlaylists();
+      await _rebuildCaches();
+      _lastScanned = DateTime.now();
     } catch (e) {
       _error = 'Failed to scan device: $e';
       debugPrint('Error querying MediaStore: $e');
@@ -493,48 +256,9 @@ class MusicProvider extends ChangeNotifier {
     _favoritesCache = results[2];
   }
 
-  // _createAlbumsAndArtists() is now handled in the background isolate.
-
   void _loadPlaylists() {
     _playlists.clear();
-    final box = Hive.box<String>(HiveKeys.playlistsBox);
-    for (final key in box.keys) {
-      final jsonStr = box.get(key);
-      if (jsonStr != null) {
-        try {
-          final data = jsonDecode(jsonStr) as Map<String, dynamic>;
-          final id = data['id'] as String;
-          final name = data['name'] as String;
-          final createdAt = DateTime.fromMillisecondsSinceEpoch(
-            data['createdAt'] as int,
-          );
-          final trackIdsList = data['trackIds'] as List<dynamic>;
-          final trackIds = trackIdsList.map((e) => e as int).toList();
-
-          final trackMap = {for (final t in _tracks) t.id: t};
-          final playlistTracks = trackIds
-              .where((id) => trackMap.containsKey(id))
-              .map((id) => trackMap[id]!)
-              .toList();
-
-          _playlists.add(
-            Playlist(
-              id: id,
-              name: name,
-              tracks: playlistTracks,
-              createdAt: createdAt,
-              iconCodePoint: data['iconCodePoint'] as int?,
-              colorValue: data['colorValue'] as int?,
-            ),
-          );
-        } catch (e) {
-          debugPrint('Failed to load playlist $key: $e');
-        }
-      }
-    }
-    _playlists.sort(
-      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-    );
+    _playlists.addAll(_playlistRepo.loadPlaylists(_tracks));
   }
 
   // Favorites management
@@ -556,19 +280,6 @@ class MusicProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _savePlaylist(Playlist p) async {
-    final box = Hive.box<String>(HiveKeys.playlistsBox);
-    final data = {
-      'id': p.id,
-      'name': p.name,
-      'createdAt': p.createdAt.millisecondsSinceEpoch,
-      'trackIds': p.tracks.map((s) => s.id).toList(),
-      'iconCodePoint': p.iconCodePoint,
-      'colorValue': p.colorValue,
-    };
-    await box.put(p.id, jsonEncode(data));
-  }
-
   // Playlist management
   Future<void> createPlaylist(
     String name,
@@ -581,8 +292,6 @@ class MusicProvider extends ChangeNotifier {
       name: name,
       tracks: List.from(tracks),
       createdAt: DateTime.now(),
-      iconCodePoint: icon,
-      colorValue: color,
     );
 
     _playlists.add(playlist);
@@ -590,7 +299,7 @@ class MusicProvider extends ChangeNotifier {
       (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
     );
     notifyListeners();
-    await _savePlaylist(playlist);
+    await _playlistRepo.savePlaylist(playlist);
   }
 
   Future<bool> addTrackToPlaylist(String playlistId, Track track) async {
@@ -598,7 +307,7 @@ class MusicProvider extends ChangeNotifier {
     if (!playlist.tracks.contains(track)) {
       playlist.tracks.add(track);
       notifyListeners();
-      await _savePlaylist(playlist);
+      await _playlistRepo.savePlaylist(playlist);
       return true;
     }
     return false;
@@ -608,14 +317,13 @@ class MusicProvider extends ChangeNotifier {
     final playlist = _playlists.firstWhere((p) => p.id == playlistId);
     playlist.tracks.remove(track);
     notifyListeners();
-    await _savePlaylist(playlist);
+    await _playlistRepo.savePlaylist(playlist);
   }
 
   Future<void> deletePlaylist(String playlistId) async {
     _playlists.removeWhere((p) => p.id == playlistId);
     notifyListeners();
-    final box = Hive.box<String>(HiveKeys.playlistsBox);
-    await box.delete(playlistId);
+    await _playlistRepo.deletePlaylist(playlistId);
   }
 
   Future<void> renamePlaylist(
@@ -626,15 +334,9 @@ class MusicProvider extends ChangeNotifier {
   }) async {
     final index = _playlists.indexWhere((p) => p.id == playlistId);
     if (index != -1) {
-      _playlists[index] = _playlists[index].copyWith(
-        name: newName,
-        iconCodePoint: icon,
-        colorValue: color,
-        clearIcon: icon == null,
-        clearColor: color == null,
-      );
+      _playlists[index] = _playlists[index].copyWith(name: newName);
       notifyListeners();
-      await _savePlaylist(_playlists[index]);
+      await _playlistRepo.savePlaylist(_playlists[index]);
     }
   }
 
@@ -650,56 +352,51 @@ class MusicProvider extends ChangeNotifier {
     final track = playlist.tracks.removeAt(oldIndex);
     playlist.tracks.insert(newIndex, track);
     notifyListeners();
-    await _savePlaylist(playlist);
+    await _playlistRepo.savePlaylist(playlist);
   }
 
-  // Search functionality
+  // Search & filtering queries
   List<Track> searchTracks(String query) {
     if (query.isEmpty) return _tracks;
-
+    final q = query.toLowerCase();
     return _tracks
         .where(
           (track) =>
-              track.title.toLowerCase().contains(query.toLowerCase()) ||
-              track.artist.toLowerCase().contains(query.toLowerCase()) ||
-              track.album.toLowerCase().contains(query.toLowerCase()),
+              track.title.toLowerCase().contains(q) ||
+              track.artist.toLowerCase().contains(q) ||
+              track.album.toLowerCase().contains(q),
         )
         .toList();
   }
 
   List<Album> searchAlbums(String query) {
     if (query.isEmpty) return _albums;
-
+    final q = query.toLowerCase();
     return _albums
         .where(
           (album) =>
-              album.title.toLowerCase().contains(query.toLowerCase()) ||
-              album.artist.toLowerCase().contains(query.toLowerCase()),
+              album.title.toLowerCase().contains(q) ||
+              album.artist.toLowerCase().contains(q),
         )
         .toList();
   }
 
   List<Artist> searchArtists(String query) {
     if (query.isEmpty) return _artists;
-
+    final q = query.toLowerCase();
     return _artists
-        .where(
-          (artist) => artist.name.toLowerCase().contains(query.toLowerCase()),
-        )
+        .where((artist) => artist.name.toLowerCase().contains(q))
         .toList();
   }
 
-  // Get tracks by album
   List<Track> getTracksByAlbum(String albumTitle) {
     return _tracks.where((track) => track.album == albumTitle).toList();
   }
 
-  // Get tracks by artist
   List<Track> getTracksByArtist(String artistName) {
     return _tracks.where((track) => track.artist == artistName).toList();
   }
 
-  // Get albums by artist
   List<Album> getAlbumsByArtist(String artistName) {
     return _albums.where((album) => album.artist == artistName).toList();
   }

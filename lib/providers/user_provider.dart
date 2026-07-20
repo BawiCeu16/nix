@@ -1,24 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
-import 'package:hive/hive.dart';
-import 'package:nix/core/hive_keys.dart';
+import 'package:nix/services/user_repository.dart';
 
-/// Manages User metadata. Co-opts the settings box for persistence.
+/// Manages User metadata state and delegates persistence to [UserRepository].
 class UserProvider with ChangeNotifier {
-  Box get _box => Hive.box(HiveKeys.settingsBox);
+  final UserRepository _repo = UserRepository();
 
   // Nickname
-  String get userName => _box.get(HiveKeys.username, defaultValue: 'Nix User');
+  String get userName => _repo.userName;
   void setUserName(String name) {
-    _box.put(HiveKeys.username, name);
-    notifyListeners();
+    _repo.setUserName(name).then((_) => notifyListeners());
   }
 
   // Avatar Index
-  int get avatarIndex => _box.get(HiveKeys.avatarIndex, defaultValue: 0);
+  int get avatarIndex => _repo.avatarIndex;
   void setAvatarIndex(int index) {
-    _box.put(HiveKeys.avatarIndex, index);
-    notifyListeners();
+    _repo.setAvatarIndex(index).then((_) => notifyListeners());
   }
 
   // Shared Avatar Data for Consistency

@@ -1,22 +1,14 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:hive/hive.dart';
-import 'package:nix/core/hive_keys.dart';
 import 'package:nix/models/music/track.dart';
 import 'package:nix/providers/settings_provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
+import 'package:nix/services/lyrics_service.dart';
 
-class LyricLine {
-  final Duration time;
-  final String text;
-
-  LyricLine(this.time, this.text);
-}
-
+/// Reactive provider managing active track lyrics state and position synchronization.
 class LyricsProvider with ChangeNotifier {
+  final LyricsService _service = LyricsService();
+
   SettingsProvider? _settingsProvider;
   CurrentMusicProvider? _currentMusicProvider;
 
@@ -39,7 +31,8 @@ class LyricsProvider with ChangeNotifier {
 
   void update(SettingsProvider settings, CurrentMusicProvider currentMusic) {
     _settingsProvider = settings;
-    final bool trackChanged = currentMusic.currentTrack?.id != _currentMusicProvider?.currentTrack?.id;
+    final bool trackChanged =
+        currentMusic.currentTrack?.id != _currentMusicProvider?.currentTrack?.id;
     _currentMusicProvider = currentMusic;
 
     if (trackChanged) {
@@ -48,7 +41,7 @@ class LyricsProvider with ChangeNotifier {
       _syncedLyrics = null;
       _currentIndex = -1;
       _cancelPositionSubscription();
-      
+
       if (_activeSync) {
         checkAndFetch();
       }
@@ -58,7 +51,7 @@ class LyricsProvider with ChangeNotifier {
   void setActiveSync(bool active) {
     if (_activeSync == active) return;
     _activeSync = active;
-    
+
     if (_activeSync) {
       checkAndFetch();
       _updatePositionListener();
@@ -71,10 +64,10 @@ class LyricsProvider with ChangeNotifier {
     final track = _currentMusicProvider?.currentTrack;
     if (track == null) return;
 
-    final cacheKey = _getCacheKey(track.title, track.artist);
-    final box = Hive.box(HiveKeys.lyricsBox);
+    final cacheKey = _service.getCacheKey(track.title, track.artist);
+    final cached = _service.getCachedLyrics(cacheKey);
 
-    if (box.containsKey(cacheKey)) {
+    if (cached != null) {
       if (track.id != _fetchedTrackId) {
         fetchLyrics(track);
       }
@@ -87,31 +80,6 @@ class LyricsProvider with ChangeNotifier {
   }
 
   Future<void> fetchLyrics(Track track) async {
-    final title = _cleanTitle(track.title, track.artist);
-    final cacheKey = _getCacheKey(track.title, track.artist);
-    final box = Hive.box(HiveKeys.lyricsBox);
-    final settings = _settingsProvider;
-
-    if (box.containsKey(cacheKey)) {
-      try {
-        final cachedValue = box.get(cacheKey);
-        if (cachedValue != null) {
-          final Map<String, dynamic> mapData = Map<String, dynamic>.from(
-            cachedValue is String ? json.decode(cachedValue) : cachedValue,
-          );
-          _plainLyrics = null;
-          _syncedLyrics = null;
-          _currentIndex = -1;
-          _isLoading = false;
-          _fetchedTrackId = track.id;
-          _handleLyricsData(mapData);
-          return;
-        }
-      } catch (e) {
-        // Fallback to fetch if corrupted
-      }
-    }
-
     _isLoading = true;
     _plainLyrics = null;
     _syncedLyrics = null;
@@ -120,47 +88,15 @@ class LyricsProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final queryParams = {
-        'track_name': title,
-        'artist_name': track.artist,
-        'album_name': track.album,
-        'duration': (track.duration ~/ 1000).toString(),
-      };
+      final saveOffline = _settingsProvider?.saveLyricsOffline ?? true;
+      final data = await _service.fetchLyrics(track, saveOffline: saveOffline);
 
-      final uri = Uri.parse(
-        'https://lrclib.net/api/get',
-      ).replace(queryParameters: queryParams);
-      final response = await http.get(uri);
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+      if (data != null) {
         _handleLyricsData(data);
-        if (settings?.saveLyricsOffline == true) {
-          box.put(cacheKey, json.encode(data));
-        }
       } else {
-        final searchUri = Uri.parse(
-          'https://lrclib.net/api/search',
-        ).replace(queryParameters: queryParams);
-        final searchResponse = await http.get(searchUri);
-
-        if (searchResponse.statusCode == 200) {
-          final List searchData = json.decode(searchResponse.body);
-          if (searchData.isNotEmpty) {
-            _handleLyricsData(searchData.first);
-            if (settings?.saveLyricsOffline == true) {
-              box.put(cacheKey, json.encode(searchData.first));
-            }
-          } else {
-            _plainLyrics = "Lyrics not found.";
-            _syncedLyrics = null;
-            notifyListeners();
-          }
-        } else {
-          _plainLyrics = "Lyrics not found.";
-          _syncedLyrics = null;
-          notifyListeners();
-        }
+        _plainLyrics = "Lyrics not found.";
+        _syncedLyrics = null;
+        notifyListeners();
       }
     } catch (e) {
       _plainLyrics = "Error fetching lyrics.";
@@ -175,7 +111,7 @@ class LyricsProvider with ChangeNotifier {
   void _handleLyricsData(Map<String, dynamic> data) {
     if (data['syncedLyrics'] != null &&
         data['syncedLyrics'].toString().isNotEmpty) {
-      final parsed = _parseLrc(data['syncedLyrics']);
+      final parsed = _service.parseLrc(data['syncedLyrics']);
       if (parsed.isNotEmpty) {
         _syncedLyrics = parsed;
         _plainLyrics = null;
@@ -212,7 +148,6 @@ class LyricsProvider with ChangeNotifier {
     final lyrics = _syncedLyrics;
     if (lyrics == null || lyrics.isEmpty) return;
 
-    // Binary search for the active lyric line
     int low = 0;
     int high = lyrics.length - 1;
     int newIndex = -1;
@@ -241,20 +176,10 @@ class LyricsProvider with ChangeNotifier {
   Future<List<dynamic>?> searchLyrics(String title, String artist) async {
     _isLoading = true;
     notifyListeners();
-    
+
     try {
       final query = '$title $artist'.trim();
-      final queryParams = {'q': query};
-
-      final searchUri = Uri.parse(
-        'https://lrclib.net/api/search',
-      ).replace(queryParameters: queryParams);
-      final searchResponse = await http.get(searchUri);
-
-      if (searchResponse.statusCode == 200) {
-        final List searchData = json.decode(searchResponse.body);
-        return searchData;
-      }
+      return await _service.searchLyrics(query);
     } catch (e) {
       debugPrint('Error searching lyrics: $e');
     } finally {
@@ -268,7 +193,7 @@ class LyricsProvider with ChangeNotifier {
     _handleLyricsData(result);
     final settings = _settingsProvider;
     if (settings?.saveLyricsOffline == true) {
-      Hive.box(HiveKeys.lyricsBox).put(cacheKey, json.encode(result));
+      _service.saveLyricsToCache(cacheKey, result);
     }
   }
 
@@ -284,75 +209,8 @@ class LyricsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  List<LyricLine> _parseLrc(String lrc) {
-    final lines = lrc.split('\n');
-    final regex = RegExp(r'\[(\d{2}):(\d{2})\.(\d{2,3})\](.*)');
-    List<LyricLine> parsedLines = [];
-
-    for (var line in lines) {
-      final match = regex.firstMatch(line);
-      if (match != null) {
-        final minutes = int.parse(match.group(1)!);
-        final seconds = int.parse(match.group(2)!);
-        int milliseconds = int.parse(match.group(3)!);
-        if (match.group(3)!.length == 2) {
-          milliseconds *= 10;
-        }
-
-        final text = match.group(4)!.trim();
-        if (text.isNotEmpty) {
-          parsedLines.add(
-            LyricLine(
-              Duration(
-                minutes: minutes,
-                seconds: seconds,
-                milliseconds: milliseconds,
-              ),
-              text,
-            ),
-          );
-        }
-      }
-    }
-    return parsedLines;
-  }
-
-  String _cleanTitle(String title, String? artist) {
-    if (artist == null || artist.isEmpty) return title;
-    String cleaned = title;
-
-    final lowerTitle = title.toLowerCase();
-    final lowerArtist = artist.toLowerCase();
-
-    if (lowerTitle.contains(lowerArtist)) {
-      final regex = RegExp(
-        r'\s*[-\u2010-\u2015]\s*' +
-            RegExp.escape(artist) +
-            r'|\s*' +
-            RegExp.escape(artist) +
-            r'\s*[-\u2010-\u2015]\s*',
-        caseSensitive: false,
-      );
-      if (regex.hasMatch(cleaned)) {
-        cleaned = cleaned.replaceAll(regex, '');
-      } else {
-        final regex2 = RegExp(RegExp.escape(artist), caseSensitive: false);
-        cleaned = cleaned.replaceAll(regex2, '').trim();
-      }
-    }
-
-    cleaned = cleaned.replaceAll(RegExp(r'\(\s*\)'), '').trim();
-    cleaned = cleaned.replaceAll(RegExp(r'\[\s*\]'), '').trim();
-
-    return cleaned.isNotEmpty ? cleaned : title;
-  }
-
-  String _getCacheKey(String title, String? artist) {
-    return "${title.toLowerCase().trim()}_${(artist ?? '').toLowerCase().trim()}";
-  }
-
   String getCacheKey(String title, String? artist) {
-    return _getCacheKey(title, artist);
+    return _service.getCacheKey(title, artist);
   }
 
   @override

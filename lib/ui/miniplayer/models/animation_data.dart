@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// Holds all computed animation values and states for the NowPlaying sheet.
 class PlayerAnimationData {
   final double progress;
   final double clampedProgress;

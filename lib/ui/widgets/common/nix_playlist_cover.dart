@@ -21,27 +21,6 @@ class NixPlaylistCover extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    // 1. Priority: Custom Icon & Color
-    if (playlist.iconCodePoint != null) {
-      return Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(radius),
-          color: playlist.colorValue != null
-              ? Color(playlist.colorValue!).withValues(alpha: 0.2)
-              : colorScheme.secondaryContainer,
-        ),
-        child: Icon(
-          NixIcons.getPlaylistIcon(playlist.iconCodePoint),
-          color: playlist.colorValue != null
-              ? Color(playlist.colorValue!)
-              : colorScheme.onSecondaryContainer,
-          size: size * 0.5,
-        ),
-      );
-    }
-
     // 2. Priority: Artwork Grid (2, 3, or 4+ tracks)
     if (playlist.tracks.length >= 2) {
       // Find unique albums for a diverse grid
