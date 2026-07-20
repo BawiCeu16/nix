@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/current_music_provider.dart';
-import '../../../core/constants.dart';
+import 'package:nix/providers/current_music_provider.dart';
+import 'package:nix/core/constants.dart';
 
 /// A reusable spacer that automatically adjusts its height based on the
 /// MiniPlayer visibility and system safe areas.

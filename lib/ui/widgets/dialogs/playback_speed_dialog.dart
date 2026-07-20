@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
-import 'nix_dialog.dart';
-import '../common/nix_slider.dart';
-import '../list_item/card_list_tile.dart';
-import '../buttons/expressive_tone_button.dart';
+import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
+import 'package:nix/ui/widgets/common/nix_slider.dart';
+import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
+import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
 import 'package:nix/providers/settings_provider.dart';
-import '../../../providers/current_music_provider.dart';
+import 'package:nix/providers/current_music_provider.dart';
 
 class PlaybackSpeedDialog extends StatelessWidget {
   const PlaybackSpeedDialog({super.key});

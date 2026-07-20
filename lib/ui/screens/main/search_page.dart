@@ -4,8 +4,8 @@ import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/providers/settings_provider.dart';
-import 'package:nix/ui/widgets/list_item/track_tile.dart';
-import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
+import 'package:nix/ui/widgets/tiles/track_tile.dart';
+import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
 import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:nix/ui/widgets/buttons/expressive_button.dart';
 import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
@@ -18,10 +18,10 @@ import 'package:nix/models/music/album.dart';
 import 'package:nix/models/music/playlist.dart';
 import 'package:nix/ui/widgets/common/nix_artwork.dart';
 import 'package:nix/ui/widgets/common/nix_playlist_cover.dart';
-import 'package:nix/ui/screens/music_pages/artists_page.dart';
-import 'package:nix/ui/screens/music_pages/albums_page.dart';
-import 'package:nix/ui/screens/music_pages/views/playlist_view_page.dart';
-import 'package:nix/ui/widgets/list_item/nix_choice_chip.dart';
+import 'package:nix/ui/screens/music/artists_page.dart';
+import 'package:nix/ui/screens/music/albums_page.dart';
+import 'package:nix/ui/screens/music/playlist_view_page.dart';
+import 'package:nix/ui/widgets/tiles/nix_choice_chip.dart';
 
 enum SearchFilter { tracks, artists, playlists, albums }
 

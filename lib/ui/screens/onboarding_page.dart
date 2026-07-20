@@ -5,7 +5,7 @@ import 'package:flutter_remix/flutter_remix.dart';
 import 'package:nix/ui/screens/navigation_screen.dart';
 import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
 import 'package:nix/ui/widgets/buttons/expressive_huge_button.dart';
-import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
+import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';

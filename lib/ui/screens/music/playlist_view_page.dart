@@ -3,7 +3,7 @@ import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
-import 'package:nix/ui/widgets/list_item/track_tile.dart';
+import 'package:nix/ui/widgets/tiles/track_tile.dart';
 import 'package:nix/models/music/playlist.dart';
 import 'package:nix/models/music/track.dart';
 import 'package:nix/ui/widgets/common/nix_empty_state.dart';
@@ -11,7 +11,7 @@ import 'package:nix/ui/widgets/common/nix_action_row.dart';
 import 'package:nix/ui/widgets/common/nix_page_header.dart';
 import 'package:nix/ui/widgets/dialogs/playlist_dialogs.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
-import '../../../../services/snackbar_service.dart';
+import 'package:nix/services/snackbar_service.dart';
 
 import 'package:nix/ui/widgets/common/nix_playlist_cover.dart';
 import 'package:nix/ui/widgets/common/nix_scrollbar.dart';

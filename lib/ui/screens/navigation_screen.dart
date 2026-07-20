@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
-import '../../providers/will_pop_provider.dart';
-import '../../providers/current_music_provider.dart';
-import '../miniplayer/now_playing.dart';
-import 'main_pages/home_page/home_page.dart';
-import 'main_pages/library_page/library_page.dart';
-import 'main_pages/search_page/search_page.dart';
+import 'package:nix/providers/will_pop_provider.dart';
+import 'package:nix/providers/current_music_provider.dart';
+import 'package:nix/ui/miniplayer/now_playing.dart';
+import 'package:nix/ui/screens/main/home_page.dart';
+import 'package:nix/ui/screens/main/library_page.dart';
+import 'package:nix/ui/screens/main/search_page.dart';
 
 class NavigationScreen extends StatefulWidget {
   const NavigationScreen({super.key});

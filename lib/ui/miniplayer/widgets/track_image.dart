@@ -10,9 +10,9 @@ import 'package:nix/models/settings/timer_gesture.dart';
 import 'package:nix/ui/widgets/dialogs/sleep_timer_dialog.dart';
 import 'package:nix/ui/widgets/common/nix_artwork.dart';
 import 'package:nix/ui/widgets/common/nix_up_next_indicator.dart';
-import '../../../core/format.dart';
-import '../../../core/math_utils.dart';
-import '../models/animation_data.dart';
+import 'package:nix/core/format.dart';
+import 'package:nix/core/math_utils.dart';
+import 'package:nix/ui/miniplayer/models/animation_data.dart';
 
 class TrackImage extends StatelessWidget {
   final AnimationController sAnim;

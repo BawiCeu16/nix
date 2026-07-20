@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
-import 'package:nix/ui/widgets/list_item/track_tile.dart';
+import 'package:nix/ui/widgets/tiles/track_tile.dart';
 import 'package:nix/models/music/track.dart';
 import 'package:nix/ui/widgets/common/nix_empty_state.dart';
 import 'package:provider/provider.dart';

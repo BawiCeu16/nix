@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
-import 'package:nix/ui/screens/second_pages/settings_details/about_page.dart';
-import 'package:nix/ui/screens/second_pages/settings_details/library_settings_page.dart';
-import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
+import 'package:nix/ui/screens/settings/about_page.dart';
+import 'package:nix/ui/screens/settings/library_settings_page.dart';
+import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
 import 'package:nix/ui/widgets/common/nix_section_header.dart';
-import './settings_details/appearance_settings_page.dart';
-import './settings_details/gestures_settings_page.dart';
-import './settings_details/playback_settings_page.dart';
+import 'package:nix/ui/screens/settings/appearance_settings_page.dart';
+import 'package:nix/ui/screens/settings/gestures_settings_page.dart';
+import 'package:nix/ui/screens/settings/playback_settings_page.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 
 class SettingsPage extends StatelessWidget {

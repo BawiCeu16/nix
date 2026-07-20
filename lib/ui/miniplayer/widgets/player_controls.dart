@@ -5,8 +5,8 @@ import 'package:flutter_remix/flutter_remix.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:wave_slider_flutter/wave_slider_flutter.dart';
-import '../../../core/math_utils.dart';
-import '../models/animation_data.dart';
+import 'package:nix/core/math_utils.dart';
+import 'package:nix/ui/miniplayer/models/animation_data.dart';
 
 class PlayerControls extends StatelessWidget {
   final double maxOffset;

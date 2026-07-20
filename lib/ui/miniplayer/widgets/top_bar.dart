@@ -6,12 +6,12 @@ import 'package:flutter_remix/flutter_remix.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
-import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
+import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
 import 'package:nix/ui/widgets/dialogs/playlist_dialogs.dart';
 import 'package:nix/ui/widgets/dialogs/track_info_dialog.dart';
 import 'package:nix/core/format.dart';
-import '../../widgets/dialogs/playback_speed_dialog.dart';
-import '../../widgets/dialogs/skip_silence_dialog.dart';
+import 'package:nix/ui/widgets/dialogs/playback_speed_dialog.dart';
+import 'package:nix/ui/widgets/dialogs/skip_silence_dialog.dart';
 
 class TopBar extends StatelessWidget {
   final double topRowOpacity;

@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/sleep_timer_provider.dart';
-import '../../../providers/current_music_provider.dart';
-import '../buttons/expressive_button.dart';
-import 'nix_dialog.dart';
-import '../../../core/format.dart';
-import '../common/nix_slider.dart';
+import 'package:nix/providers/sleep_timer_provider.dart';
+import 'package:nix/providers/current_music_provider.dart';
+import 'package:nix/ui/widgets/buttons/expressive_button.dart';
+import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
+import 'package:nix/core/format.dart';
+import 'package:nix/ui/widgets/common/nix_slider.dart';
 
 class SleepTimerDialog extends StatefulWidget {
   const SleepTimerDialog({super.key});

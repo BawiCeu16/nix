@@ -8,17 +8,17 @@ import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/providers/settings_provider.dart';
 import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
-import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
+import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
 import 'package:nix/ui/widgets/dialogs/playlist_dialogs.dart';
 import 'package:nix/ui/widgets/dialogs/track_info_dialog.dart';
 import 'package:nix/core/format.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:nix/core/hive_keys.dart';
 import 'package:on_audio_query_forked/on_audio_query.dart';
-import '../common/nix_artwork.dart';
-import '../../screens/music_pages/artists_page.dart';
-import '../../screens/music_pages/albums_page.dart';
-import '../../../../services/snackbar_service.dart';
+import 'package:nix/ui/widgets/common/nix_artwork.dart';
+import 'package:nix/ui/screens/music/artists_page.dart';
+import 'package:nix/ui/screens/music/albums_page.dart';
+import 'package:nix/services/snackbar_service.dart';
 
 class TrackTile extends StatefulWidget {
   final Track track;

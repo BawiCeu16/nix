@@ -4,19 +4,19 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/math_utils.dart';
-import '../../providers/will_pop_provider.dart';
-import '../../providers/current_music_provider.dart';
+import 'package:nix/core/math_utils.dart';
+import 'package:nix/providers/will_pop_provider.dart';
+import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/settings_provider.dart';
 import 'package:nix/models/music/track.dart';
-import 'widgets/top_bar.dart';
-import 'widgets/track_image.dart';
-import 'widgets/track_info.dart';
-import 'widgets/player_controls.dart';
-import 'widgets/queue_view.dart';
-import 'widgets/lyrics_section.dart';
-import 'models/animation_data.dart';
-import '../../core/haptic_utils.dart';
+import 'package:nix/ui/miniplayer/widgets/top_bar.dart';
+import 'package:nix/ui/miniplayer/widgets/track_image.dart';
+import 'package:nix/ui/miniplayer/widgets/track_info.dart';
+import 'package:nix/ui/miniplayer/widgets/player_controls.dart';
+import 'package:nix/ui/miniplayer/widgets/queue_view.dart';
+import 'package:nix/ui/miniplayer/widgets/lyrics_section.dart';
+import 'package:nix/ui/miniplayer/models/animation_data.dart';
+import 'package:nix/core/haptic_utils.dart';
 
 enum _ActiveGesture { none, vertical, horizontal }
 
@@ -43,7 +43,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
   late double bottomInset;
   final velocity = VelocityTracker.withKind(PointerDeviceKind.touch);
 
-  static const Cubic bouncingCurve = Cubic(0.175, 1.185, 0.80, 1.0);
+  static const Cubic bouncingCurve = Cubic(0.175, 1.195, 0.80, 1.0);
   static const headRoom = 50.0;
   static const actuationOffset = 100.0;
   static const deadSpace = 100.0;

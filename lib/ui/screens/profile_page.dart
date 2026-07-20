@@ -3,7 +3,7 @@ import 'package:flutter_remix/flutter_remix.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/providers/user_provider.dart';
-import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
+import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
 import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:nix/ui/widgets/common/nix_section_header.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';

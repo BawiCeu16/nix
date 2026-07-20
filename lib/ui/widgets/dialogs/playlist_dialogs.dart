@@ -4,10 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:nix/models/music/track.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
-import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
+import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
 import 'package:nix/ui/widgets/buttons/expressive_button.dart';
 import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
-import '../../../../services/snackbar_service.dart';
+import 'package:nix/services/snackbar_service.dart';
 
 class PlaylistDialogs {
   /// Handles both creating a new playlist and renaming an existing one.

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
-import 'package:nix/core/utils/nix_icons.dart';
+import 'package:nix/core/nix_icons.dart';
 import 'package:nix/models/music/playlist.dart';
 import 'package:nix/models/music/track.dart';
 import 'package:nix/ui/widgets/common/nix_artwork.dart';

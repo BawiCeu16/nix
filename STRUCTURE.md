@@ -17,24 +17,35 @@ lib/
 ├── main.dart                          # Entry point, MultiProvider setup, AudioService init
 │
 ├── core/
+│   ├── constants.dart                 # Application-wide constants
 │   ├── format.dart                    # Extension methods: duration, bytes formatting
+│   ├── haptic_utils.dart              # Haptic feedback helpers
 │   ├── hive_keys.dart                 # Centralized constants for all persistent storage keys
-│   └── math_utils.dart                # Pure math helpers: rangeProgress, norm, inverseAboveOne
+│   ├── math_utils.dart                # Pure math helpers: rangeProgress, norm, inverseAboveOne
+│   └── nix_icons.dart                 # Custom Nix icon definitions
 │
 ├── models/
-│   └── music/
-│       ├── song.dart                  # Song value object
-│       ├── album.dart                 # Album value object
-│       ├── artist.dart                # Artist value object
-│       └── playlist.dart              # Playlist value object (contains List<Song>)
+│   ├── music/
+│   │   ├── album.dart                 # Album model
+│   │   ├── artist.dart                # Artist model
+│   │   ├── playlist.dart              # Playlist model
+│   │   └── track.dart                 # Track model
+│   └── settings/
+│       ├── artwork_quality.dart       # Artwork quality enum
+│       └── timer_gesture.dart         # Sleep timer gesture enum
 │
 ├── providers/
+│   ├── artwork_provider.dart          # Artwork extraction & caching
 │   ├── current_music_provider.dart    # BaseAudioHandler: playback, queue, shuffle, seek
+│   ├── lyrics_provider.dart           # Lyrics fetching & sync
 │   ├── music_provider.dart            # MediaStore scan, songs/albums/artists/playlists state
 │   ├── settings_provider.dart         # Appearance & playback settings (Hive-backed)
 │   ├── sleep_timer_provider.dart      # Sleep timer countdown & auto-stop logic
 │   ├── user_provider.dart             # User profile (name, avatar)
 │   └── will_pop_provider.dart         # Back-button interception bridge
+│
+├── services/
+│   └── snackbar_service.dart          # Global snackbar service
 │
 └── ui/
     ├── theme/
@@ -44,6 +55,7 @@ lib/
     │   │   └── animation_data.dart    # PlayerAnimationData: computed progress values bundle
     │   ├── now_playing.dart           # Physics engine & orchestrator (PointerEvent + VelocityTracker)
     │   └── widgets/
+    │       ├── lyrics_section.dart    # Lyrics section widget
     │       ├── player_controls.dart   # Play/pause, seek slider, skip, shuffle buttons
     │       ├── queue_view.dart        # "Up Next" queue list (slides in on over-drag)
     │       ├── top_bar.dart           # "Now Playing" label + dismiss chevron
@@ -53,30 +65,27 @@ lib/
     └── screens/
         ├── navigation_screen.dart     # Root scaffold: bottom nav, miniplayer stack, scale-down bg
         ├── onboarding_page.dart       # First-launch storage permission flow
+        ├── profile_page.dart          # User stats and profile page
         │
-        ├── main_pages/
-        │   ├── home_page/
-        │   │   └── home_page.dart     # Recently listened, albums carousel, all songs preview
-        │   ├── library_page/
-        │   │   └── library_page.dart  # Tab host: Songs / Albums / Artists / Playlists
-        │   └── search_page/
-        │       └── search_page.dart   # Real-time search across songs, albums, artists
+        ├── main/
+        │   ├── home_page.dart         # Recently listened, albums carousel, all songs preview
+        │   ├── library_page.dart      # Tab host: Songs / Albums / Artists / Playlists
+        │   └── search_page.dart       # Real-time search across songs, albums, artists
         │
-        ├── music_pages/
-        │   ├── songs_page.dart        # Generic reusable songs list (sort, shuffle, play all)
-        │   ├── albums_page.dart       # Albums grid + AlbumSongsPage detail
-        │   ├── artists_page.dart      # Artists grid + ArtistSongsPage detail
+        ├── music/
+        │   ├── albums_page.dart       # Albums grid
+        │   ├── artists_page.dart      # Artists grid
+        │   ├── playlist_view_page.dart# Playlist detail with reorderable track list
         │   ├── playlists_page.dart    # Playlists list + create / delete
-        │   └── views/
-        │       └── playlist_view_page.dart   # Playlist detail with reorderable track list
+        │   └── tracks_page.dart       # Generic reusable songs list (sort, shuffle, play all)
         │
-        └── second_pages/
-            ├── profile_page.dart      # User stats (total songs, albums, artists, play time)
+        └── settings/
             ├── settings_page.dart     # Settings entry with navigation to sub-pages
-            └── settings_details/
-                ├── appearance_settings_page.dart   # Theme seed color, AMOLED toggle
-                ├── playback_settings_page.dart     # Skip silence, volume normalization
-                └── about_page.dart                 # App version, links
+            ├── about_page.dart                 # App version, links
+            ├── appearance_settings_page.dart   # Theme seed color, AMOLED toggle
+            ├── gestures_settings_page.dart     # Gestures settings
+            ├── library_settings_page.dart      # Library settings
+            └── playback_settings_page.dart     # Skip silence, volume normalization
 ```
 
 ---

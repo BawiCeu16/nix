@@ -1,4 +1,4 @@
-import 'track.dart';
+import 'package:nix/models/music/track.dart';
 
 class Playlist {
   final String id;

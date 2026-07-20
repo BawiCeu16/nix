@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/settings_provider.dart';
-import 'package:nix/ui/widgets/snackbar/nix_snackbar.dart';
+import 'package:nix/ui/widgets/common/nix_snackbar.dart';
 
 class SnackBarService {
   static void show(

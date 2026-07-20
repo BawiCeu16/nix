@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:m3e_buttons/m3e_buttons.dart';
 import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
-import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
+import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/settings_provider.dart';
 import 'package:nix/models/settings/artwork_quality.dart';

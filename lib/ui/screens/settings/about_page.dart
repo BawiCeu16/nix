@@ -5,10 +5,10 @@ import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../widgets/list_item/card_list_tile.dart';
-import '../../../widgets/common/nix_section_header.dart';
-import '../../../widgets/common/nix_bottom_spacer.dart';
-import '../../../../services/snackbar_service.dart';
+import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
+import 'package:nix/ui/widgets/common/nix_section_header.dart';
+import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
+import 'package:nix/services/snackbar_service.dart';
 
 class AboutPage extends StatefulWidget {
   const AboutPage({super.key});

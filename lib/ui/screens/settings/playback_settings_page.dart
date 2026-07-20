@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/settings_provider.dart';
-import '../../../widgets/list_item/card_list_tile.dart';
-import '../../../widgets/common/nix_section_header.dart';
-import '../../../widgets/common/nix_bottom_spacer.dart';
-import '../../../widgets/common/nix_slider.dart';
+import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
+import 'package:nix/ui/widgets/common/nix_section_header.dart';
+import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
+import 'package:nix/ui/widgets/common/nix_slider.dart';
 
 class PlaybackSettingsPage extends StatelessWidget {
   const PlaybackSettingsPage({super.key});

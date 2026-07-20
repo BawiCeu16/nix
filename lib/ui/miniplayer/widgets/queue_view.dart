@@ -6,7 +6,7 @@ import 'package:nix/providers/settings_provider.dart';
 import 'package:nix/models/music/track.dart';
 import 'package:nix/models/music/playlist.dart';
 import 'package:nix/ui/widgets/buttons/nix_icon_button.dart';
-import 'package:nix/ui/widgets/list_item/queue_tile.dart';
+import 'package:nix/ui/widgets/tiles/queue_tile.dart';
 import 'package:nix/core/haptic_utils.dart';
 
 class QueueView extends StatefulWidget {

@@ -5,14 +5,14 @@ import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
 import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
 import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
-import '../models/animation_data.dart';
+import 'package:nix/ui/miniplayer/models/animation_data.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/lyrics_provider.dart';
 import 'package:nix/models/music/track.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_remix/flutter_remix.dart';
-import '../../widgets/buttons/nix_icon_button.dart';
-import '../../widgets/buttons/expressive_button.dart';
+import 'package:nix/ui/widgets/buttons/nix_icon_button.dart';
+import 'package:nix/ui/widgets/buttons/expressive_button.dart';
 
 class LyricsSection extends StatefulWidget {
   final Animation<double> lyricsAnim;

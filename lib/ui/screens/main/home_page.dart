@@ -11,20 +11,20 @@ import 'package:nix/providers/music_provider.dart';
 import 'package:nix/providers/user_provider.dart';
 import 'package:nix/providers/settings_provider.dart';
 
-import 'package:nix/ui/widgets/list_item/track_card_tile.dart';
+import 'package:nix/ui/widgets/tiles/track_card_tile.dart';
 import 'package:nix/models/music/track.dart';
 import 'package:nix/models/music/album.dart';
 import 'package:nix/models/music/playlist.dart';
 
-import 'package:nix/ui/widgets/list_item/track_tile.dart';
+import 'package:nix/ui/widgets/tiles/track_tile.dart';
 import 'package:nix/ui/widgets/common/nix_section_header.dart';
-import 'package:nix/ui/screens/music_pages/albums_page.dart';
-import 'package:nix/ui/screens/music_pages/tracks_page.dart';
+import 'package:nix/ui/screens/music/albums_page.dart';
+import 'package:nix/ui/screens/music/tracks_page.dart';
 import 'package:nix/ui/widgets/common/nix_artwork.dart';
 import 'package:expressive_refresh/expressive_refresh.dart';
-import 'package:nix/ui/screens/second_pages/profile_page.dart';
+import 'package:nix/ui/screens/profile_page.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
-import 'package:nix/ui/widgets/styles/cd_widget.dart';
+import 'package:nix/ui/widgets/common/cd_widget.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});

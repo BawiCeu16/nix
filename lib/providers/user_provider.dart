@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:hive/hive.dart';
-import '../core/hive_keys.dart';
+import 'package:nix/core/hive_keys.dart';
 
 /// Manages User metadata. Co-opts the settings box for persistence.
 class UserProvider with ChangeNotifier {

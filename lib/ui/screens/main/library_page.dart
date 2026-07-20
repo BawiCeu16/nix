@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:nix/providers/user_provider.dart';
-import 'package:nix/ui/widgets/list_item/card_list_tile.dart';
+import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/ui/widgets/common/nix_section_header.dart';
-import '../../music_pages/albums_page.dart';
-import '../../music_pages/artists_page.dart';
-import '../../music_pages/playlists_page.dart';
-import '../../music_pages/tracks_page.dart';
-import '../../second_pages/profile_page.dart';
-import '../../second_pages/settings_page.dart';
+import 'package:nix/ui/screens/music/albums_page.dart';
+import 'package:nix/ui/screens/music/artists_page.dart';
+import 'package:nix/ui/screens/music/playlists_page.dart';
+import 'package:nix/ui/screens/music/tracks_page.dart';
+import 'package:nix/ui/screens/profile_page.dart';
+import 'package:nix/ui/screens/settings/settings_page.dart';
 import 'package:nix/ui/widgets/common/nix_refreshable_list.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 
