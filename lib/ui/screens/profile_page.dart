@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
-import 'package:nix/providers/current_music_provider.dart';
-import 'package:nix/providers/music_provider.dart';
-import 'package:nix/providers/user_provider.dart';
-import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
-import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
-import 'package:nix/ui/widgets/common/nix_section_header.dart';
-import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 import 'package:provider/provider.dart';
+import 'package:nix/providers/user_provider.dart';
+import 'package:nix/providers/music_provider.dart';
+import 'package:nix/ui/widgets/tiles/track_tile.dart';
+import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
+import 'package:nix/ui/widgets/common/nix_section_header.dart';
+import 'package:nix/ui/widgets/common/nix_scrollbar.dart';
+import 'package:nix/ui/screens/controllers/profile_controller.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -17,244 +17,282 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  bool _isEditing = false;
-  late TextEditingController _nameController;
+  late final ProfilePageController _controller;
 
   @override
   void initState() {
     super.initState();
+    _controller = ProfilePageController();
     final user = context.read<UserProvider>();
-    _nameController = TextEditingController(text: user.userName);
+    _controller.init(user);
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _controller.disposeController();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final user = context.watch<UserProvider>();
     final music = context.watch<MusicProvider>();
-    final colorScheme = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      backgroundColor: colorScheme.surfaceContainer,
-      resizeToAvoidBottomInset: false,
-      appBar: AppBar(
-        title: const Text('Profile'),
-        centerTitle: true,
-        scrolledUnderElevation: 0,
-        backgroundColor: colorScheme.surfaceContainer,
-        actions: [
-          IconButton(
-            icon: Icon(
-              _isEditing ? FlutterRemix.check_line : FlutterRemix.pencil_line,
-            ),
-            onPressed: () {
-              if (_isEditing) {
-                if (_nameController.text.trim().isNotEmpty) {
-                  user.setUserName(_nameController.text.trim());
-                } else {
-                  _nameController.text = user.userName;
-                }
-              }
-              setState(() => _isEditing = !_isEditing);
-            },
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        physics: const BouncingScrollPhysics(),
-        children: [
-          const SizedBox(height: 12),
-          // Profile Header
-          Center(
-            child: Column(
-              children: [
-                GestureDetector(
-                  onTap: _isEditing
-                      ? () => _showAvatarPicker(context, user)
-                      : null,
-                  child: Stack(
-                    children: [
-                      CircleAvatar(
-                        radius: 50,
-                        backgroundColor: UserProvider
-                            .avatarColors[user.avatarIndex]
-                            .withValues(alpha: 0.2),
-                        child: Icon(
-                          UserProvider.avatarIcons[user.avatarIndex],
-                          color: UserProvider.avatarColors[user.avatarIndex],
-                          size: 50,
-                        ),
-                      ),
-                      if (_isEditing)
-                        Positioned(
-                          right: 0,
-                          bottom: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: colorScheme.primary,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              FlutterRemix.pencil_fill,
-                              size: 16,
-                              color: colorScheme.onPrimary,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+    final activeAvatarIndex = _controller.isEditing
+        ? _controller.tempAvatarIndex
+        : user.avatarIndex;
+    final avatarColor = UserProvider.avatarColors[activeAvatarIndex];
+    final avatarIcon = UserProvider.avatarIcons[activeAvatarIndex];
+    final topTracks = music.topPlayed.tracks.take(5).toList();
+
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (context, _) {
+        return Scaffold(
+          backgroundColor: colorScheme.surfaceContainer,
+          appBar: AppBar(
+            backgroundColor: colorScheme.surfaceContainer,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            title: const Text('Profile'),
+            centerTitle: true,
+            actions: [
+              if (!_controller.isEditing)
+                IconButton(
+                  icon: const Icon(FlutterRemix.edit_line),
+                  onPressed: () => _controller.startEditing(user),
+                )
+              else
+                IconButton(
+                  icon: const Icon(FlutterRemix.check_line),
+                  onPressed: () => _controller.saveEditing(context),
                 ),
-                const SizedBox(height: 16),
-                _isEditing
-                    ? Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 40),
-                        child: TextField(
-                          controller: _nameController,
-                          textAlign: TextAlign.center,
-                          autofocus: true,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: colorScheme.surface,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(100),
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                          ),
-                          onSubmitted: (_) {
-                            if (_nameController.text.trim().isNotEmpty) {
-                              context.read<UserProvider>().setUserName(
-                                _nameController.text.trim(),
-                              );
-                            }
-                            setState(() => _isEditing = false);
-                          },
-                        ),
-                      )
-                    : Text(
-                        user.userName,
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 32),
-
-          // Stats Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _StatItem(label: 'Tracks', value: music.tracks.length.toString()),
-              _StatItem(label: 'Albums', value: music.albums.length.toString()),
-              _StatItem(
-                label: 'Artists',
-                value: music.artists.length.toString(),
-              ),
             ],
           ),
+          body: NixScrollbar(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  const SizedBox(height: 10),
 
-          const SizedBox(height: 32),
+                  // Avatar with Badge
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CircleAvatar(
+                        radius: 54,
+                        backgroundColor: avatarColor.withValues(alpha: 0.2),
+                        child: Icon(avatarIcon, size: 54, color: avatarColor),
+                      ),
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: Material(
+                          color: colorScheme.primary,
+                          shape: const CircleBorder(),
+                          elevation: 2,
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: () => _controller.showAvatarPickerDialog(
+                              context,
+                              user,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Icon(
+                                FlutterRemix.camera_line,
+                                size: 18,
+                                color: colorScheme.onPrimary,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
 
-          if (music.topPlayed.tracks.isNotEmpty) ...[
-            const NixSectionHeader(title: 'Top Listened', topPadding: 32),
-            ...List.generate(music.topPlayed.tracks.take(5).length, (index) {
-              final track = music.topPlayed.tracks[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 2.5),
-                child: CardListTile(
-                  title: track.title,
-                  subtitle: track.artist,
-                  icon: FlutterRemix.music_2_line,
-                  isFirst: index == 0,
-                  isLast: index == music.topPlayed.tracks.take(5).length - 1,
-                  onTap: () {
-                    context.read<CurrentMusicProvider>().playTrack(
-                      track,
-                      playlist: music.topPlayed,
-                    );
-                  },
-                ),
-              );
-            }),
-            const SizedBox(height: 24),
-          ],
+                  // User Display Name / Edit Input
+                  if (!_controller.isEditing) ...[
+                    Text(
+                      user.userName,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Music Enthusiast',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ] else ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: TextField(
+                        controller: _controller.nameController,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Enter name',
+                          filled: true,
+                          fillColor: colorScheme.surface,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ExpressiveToneButton(
+                          onPressed: _controller.cancelEditing,
+                          child: const Text('Cancel'),
+                        ),
+                        const SizedBox(width: 8),
+                        ExpressiveToneButton(
+                          onPressed: () => _controller.saveEditing(context),
+                          child: const Text('Save'),
+                        ),
+                      ],
+                    ),
+                  ],
 
-          // Fix for keyboard top bar behavior (SearchPage style)
-          const NixBottomSpacer(),
-        ],
-      ),
-    );
-  }
+                  const SizedBox(height: 32),
 
-  void _showAvatarPicker(BuildContext context, UserProvider user) {
-    NixDialog.show(
-      context: context,
-      title: 'Select Avatar',
-      children: List.generate(UserProvider.avatarIcons.length, (index) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: index == UserProvider.avatarIcons.length - 1 ? 0.0 : 2.5,
-          ),
-          child: CardListTile(
-            title: 'Avatar ${index + 1}',
-            icon: UserProvider.avatarIcons[index],
-            trailing: user.avatarIndex == index
-                ? Icon(
-                    FlutterRemix.check_line,
-                    color: Theme.of(context).colorScheme.primary,
-                  )
-                : null,
-            isFirst: index == 0,
-            isLast: index == UserProvider.avatarIcons.length - 1,
-            onTap: () {
-              user.setAvatarIndex(index);
-              Navigator.of(context, rootNavigator: true).pop();
-            },
+                  // Stats Row
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _StatCard(
+                          icon: FlutterRemix.music_2_line,
+                          title: 'Tracks',
+                          value: '${music.tracks.length}',
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _StatCard(
+                          icon: FlutterRemix.disc_line,
+                          title: 'Albums',
+                          value: '${music.albums.length}',
+                          color: colorScheme.secondary,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _StatCard(
+                          icon: FlutterRemix.user_4_line,
+                          title: 'Artists',
+                          value: '${music.artists.length}',
+                          color: colorScheme.tertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Top Tracks Section
+                  const NixSectionHeader(title: 'Most Listened Tracks', topPadding: 0),
+                  const SizedBox(height: 12),
+
+                  if (topTracks.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        'Start playing music to build your stats!',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    )
+                  else
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: topTracks.length,
+                      itemBuilder: (context, index) {
+                        final track = topTracks[index];
+                        return TrackTile(
+                          track: track,
+                          playlistContext: topTracks,
+                          isFirst: index == 0,
+                          isLast: index == topTracks.length - 1,
+                        );
+                      },
+                    ),
+
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
           ),
         );
-      }),
+      },
     );
   }
 }
 
-class _StatItem extends StatelessWidget {
-  final String label;
+class _StatCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
   final String value;
+  final Color color;
 
-  const _StatItem({required this.label, required this.value});
+  const _StatCard({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label.toUpperCase(),
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-            letterSpacing: 1.2,
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 24),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 2),
+          Text(
+            title,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

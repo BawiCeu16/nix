@@ -1,49 +1,82 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:nix/models/music/album.dart';
-import 'package:nix/ui/widgets/common/cd_widget.dart';
+import 'package:nix/models/music/track.dart';
+import 'package:nix/models/music/playlist.dart';
+import 'package:nix/providers/current_music_provider.dart';
+import 'package:nix/ui/screens/music/albums_page.dart';
 
-enum AlbumSort { defaultOrder, aToZ, zToA }
+enum AlbumSort { name, artist, trackCount }
 
-/// Controller managing sorting computations and CD cover animation state for Albums screens.
-class AlbumsPageController with ChangeNotifier {
-  AlbumSort _sort = AlbumSort.defaultOrder;
-
+class AlbumsPageController extends ChangeNotifier {
+  AlbumSort _sort = AlbumSort.name;
   AlbumSort get sort => _sort;
 
   void setSort(AlbumSort newSort) {
-    if (_sort == newSort) return;
-    _sort = newSort;
-    notifyListeners();
-  }
-
-  /// Sorts album list based on active [AlbumSort] option.
-  List<Album> getSortedAlbums(List<Album> originalAlbums) {
-    final List<Album> albums = List.from(originalAlbums);
-    if (_sort == AlbumSort.aToZ) {
-      albums.sort((a, b) => a.title.compareTo(b.title));
-    } else if (_sort == AlbumSort.zToA) {
-      albums.sort((a, b) => b.title.compareTo(a.title));
-    }
-    return albums;
-  }
-}
-
-/// Controller managing timed CD cover opening animation state for AlbumTracksPage.
-class AlbumTracksController with ChangeNotifier {
-  CDCoverState _cdState = CDCoverState.closed;
-
-  CDCoverState get cdState => _cdState;
-
-  void initializeCDAnimation() {
-    _cdState = CDCoverState.closed;
-    Future.delayed(const Duration(milliseconds: 400), () {
-      _cdState = CDCoverState.halfOpen;
+    if (_sort != newSort) {
+      _sort = newSort;
       notifyListeners();
-    });
+    }
   }
 
-  void setCDState(CDCoverState newState) {
-    _cdState = newState;
-    notifyListeners();
+  List<Album> getSortedAlbums(List<Album> albums) {
+    final list = List<Album>.from(albums);
+    switch (_sort) {
+      case AlbumSort.name:
+        list.sort((a, b) => a.title.compareTo(b.title));
+        break;
+      case AlbumSort.artist:
+        list.sort((a, b) => a.artist.compareTo(b.artist));
+        break;
+      case AlbumSort.trackCount:
+        list.sort((a, b) => b.numOfSongs.compareTo(a.numOfSongs));
+        break;
+    }
+    return list;
+  }
+
+  void openAlbumDetails(BuildContext context, String albumTitle, String albumArtist) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AlbumTracksPage(
+          albumTitle: albumTitle,
+          albumArtist: albumArtist,
+        ),
+      ),
+    );
+  }
+
+  void playAlbumTrack(
+    BuildContext context,
+    Track track,
+    List<Track> albumTracks,
+    String albumTitle,
+  ) {
+    final audio = context.read<CurrentMusicProvider>();
+    final pl = Playlist(
+      id: 'album_$albumTitle',
+      name: albumTitle,
+      tracks: albumTracks,
+      createdAt: DateTime.now(),
+    );
+    audio.playTrack(track, playlist: pl);
+  }
+
+  void shuffleAlbum(
+    BuildContext context,
+    List<Track> albumTracks,
+    String albumTitle,
+  ) {
+    if (albumTracks.isEmpty) return;
+    final audio = context.read<CurrentMusicProvider>();
+    final pl = Playlist(
+      id: 'album_$albumTitle',
+      name: albumTitle,
+      tracks: albumTracks,
+      createdAt: DateTime.now(),
+    );
+    final shuffled = List<Track>.from(albumTracks)..shuffle();
+    if (!audio.isShuffleEnabled) audio.toggleShuffle();
+    audio.playTrack(shuffled.first, playlist: pl);
   }
 }

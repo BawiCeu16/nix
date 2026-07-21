@@ -1,15 +1,11 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
-import 'package:nix/ui/screens/navigation_screen.dart';
+import 'package:flywheel_carousel/flywheel_carousel.dart';
 import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
 import 'package:nix/ui/widgets/buttons/expressive_huge_button.dart';
 import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:provider/provider.dart';
 import 'package:nix/providers/user_provider.dart';
+import 'package:nix/ui/screens/controllers/onboarding_controller.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -19,98 +15,19 @@ class OnboardingPage extends StatefulWidget {
 }
 
 class _OnboardingPageState extends State<OnboardingPage> {
-  final _pageController = PageController();
-  final _nameController = TextEditingController();
-  int _currentPage = 0;
-
-  bool _audioGranted = false;
-  bool _notificationGranted = false;
-
-  int _selectedAvatarIndex = 0;
+  late final OnboardingPageController _controller;
 
   @override
   void initState() {
     super.initState();
-    _checkPermissions();
+    _controller = OnboardingPageController()..init();
   }
 
-  Future<void> _checkPermissions() async {
-    final bool isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
-    if (!isMobile) {
-      if (mounted) {
-        setState(() {
-          _audioGranted = true;
-          _notificationGranted = true;
-        });
-      }
-      return;
-    }
-
-    final audioStatus = await Permission.audio.status;
-    final storageStatus = await Permission.storage.status;
-    final notificationStatus = await Permission.notification.status;
-
-    if (mounted) {
-      setState(() {
-        _audioGranted = audioStatus.isGranted || storageStatus.isGranted;
-        _notificationGranted = notificationStatus.isGranted;
-      });
-    }
-  }
-
-  Future<void> _requestAudioPermission() async {
-    final bool isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
-    if (!isMobile) {
-      if (mounted) {
-        setState(() {
-          _audioGranted = true;
-        });
-      }
-      return;
-    }
-
-    PermissionStatus status = await Permission.audio.status;
-    if (!status.isGranted) {
-      status = await Permission.audio.request();
-    }
-
-    if (!status.isGranted) {
-      status = await Permission.storage.request();
-    }
-
-    if (mounted) {
-      setState(() {
-        _audioGranted = status.isGranted;
-      });
-    }
-  }
-
-  Future<void> _requestNotificationPermission() async {
-    final bool isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
-    if (!isMobile) {
-      if (mounted) {
-        setState(() {
-          _notificationGranted = true;
-        });
-      }
-      return;
-    }
-
-    final status = await Permission.notification.request();
-    if (mounted) {
-      setState(() {
-        _notificationGranted = status.isGranted;
-      });
-    }
-  }
-
-  void _nextPage() {
-    if (_currentPage < 3) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeInOut,
-      );
-    }
+  @override
+  void dispose() {
+    _controller.disposeController();
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -118,47 +35,55 @@ class _OnboardingPageState extends State<OnboardingPage> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Page indicator
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: Row(
-                children: List.generate(4, (index) {
-                  return Expanded(
-                    child: Container(
-                      height: 4,
-                      margin: const EdgeInsets.symmetric(horizontal: 3),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(2),
-                        color: index <= _currentPage
-                            ? colorScheme.primary
-                            : colorScheme.surfaceContainerHighest,
-                      ),
-                    ),
-                  );
-                }),
-              ),
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (context, _) {
+        return Scaffold(
+          body: SafeArea(
+            child: Column(
+              children: [
+                // Page indicator
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
+                  child: Row(
+                    children: List.generate(4, (index) {
+                      return Expanded(
+                        child: Container(
+                          height: 4,
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(2),
+                            color: index <= _controller.currentPage
+                                ? colorScheme.primary
+                                : colorScheme.surfaceContainerHighest,
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+                // Pages
+                Expanded(
+                  child: PageView(
+                    controller: _controller.pageController,
+                    onPageChanged: _controller.onPageChanged,
+                    physics: const BouncingScrollPhysics(),
+                    children: [
+                      _buildWelcomePage(theme, colorScheme),
+                      _buildPrivacyPage(theme, colorScheme),
+                      _buildPermissionsPage(theme, colorScheme),
+                      _buildUsernamePage(theme, colorScheme),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            // Pages
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: (index) => setState(() => _currentPage = index),
-                physics: const BouncingScrollPhysics(), // Force using buttons
-                children: [
-                  _buildWelcomePage(theme, colorScheme),
-                  _buildPrivacyPage(theme, colorScheme),
-                  _buildPermissionsPage(theme, colorScheme),
-                  _buildUsernamePage(theme, colorScheme),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -183,11 +108,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
         ),
         const SizedBox(height: 48),
         ExpressiveHugeButton(
-          onPressed: _nextPage,
+          onPressed: _controller.nextPage,
           child: Icon(
             FlutterRemix.arrow_right_line,
             size: 30,
-            color: Theme.of(context).colorScheme.onPrimary,
+            color: colorScheme.onPrimary,
           ),
         ),
       ],
@@ -219,13 +144,17 @@ class _OnboardingPageState extends State<OnboardingPage> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 48),
-        ExpressiveToneButton(onPressed: _nextPage, child: const Text('Next')),
+        ExpressiveToneButton(
+          onPressed: _controller.nextPage,
+          child: const Text('Next'),
+        ),
       ],
     );
   }
 
   Widget _buildPermissionsPage(ThemeData theme, ColorScheme colorScheme) {
-    final allGranted = _audioGranted && _notificationGranted;
+    final allGranted =
+        _controller.isAudioGranted && _controller.isNotificationGranted;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 25),
@@ -248,10 +177,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
           Card(
             elevation: 0,
             margin: EdgeInsets.zero,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(3.0),
               child: Column(
-                spacing: 0,
                 children: [
                   CardListTile(
                     isFirst: true,
@@ -261,19 +192,17 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     ),
                     title: 'Audio Access',
                     subtitle: 'Allow access to your audio files to play music',
-                    trailing: _audioGranted
+                    trailing: _controller.isAudioGranted
                         ? Icon(
                             FlutterRemix.checkbox_circle_fill,
                             color: colorScheme.primary,
                           )
                         : const Icon(FlutterRemix.close_circle_line),
-
-                    onTap: _requestAudioPermission,
+                    onTap: _controller.requestAudioPermission,
                   ),
                   const SizedBox(height: 2.5),
                   CardListTile(
                     isFirst: false,
-
                     leading: Icon(
                       FlutterRemix.notification_3_line,
                       color: colorScheme.primary,
@@ -281,27 +210,26 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     title: 'Notifications',
                     subtitle:
                         'Allow notifications to receive updates about your music',
-                    trailing: _notificationGranted
+                    trailing: _controller.isNotificationGranted
                         ? Icon(
                             FlutterRemix.checkbox_circle_fill,
                             color: colorScheme.primary,
                           )
                         : const Icon(FlutterRemix.close_circle_line),
                     isLast: true,
-                    onTap: _requestNotificationPermission,
+                    onTap: _controller.requestNotificationPermission,
                   ),
                 ],
               ),
             ),
           ),
-
           const SizedBox(height: 32),
           ExpressiveToneButton(
             onPressed: allGranted
-                ? _nextPage
-                : _notificationGranted
-                ? _requestAudioPermission
-                : _requestNotificationPermission,
+                ? _controller.nextPage
+                : _controller.isNotificationGranted
+                ? _controller.requestAudioPermission
+                : _controller.requestNotificationPermission,
             child: Text(allGranted ? 'Next' : 'Grant all permissions'),
           ),
         ],
@@ -310,8 +238,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   Widget _buildUsernamePage(ThemeData theme, ColorScheme colorScheme) {
+    final isValid = _controller.nameController.text.trim().length >= 3;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -321,44 +251,54 @@ class _OnboardingPageState extends State<OnboardingPage> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 32),
-          SizedBox(
-            height: 80,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: UserProvider.avatarIcons.length,
-              itemBuilder: (context, index) {
-                final isSelected = _selectedAvatarIndex == index;
-                return GestureDetector(
-                  onTap: () => setState(() => _selectedAvatarIndex = index),
-                  child: Container(
-                    margin: const EdgeInsets.only(right: 12),
+          const SizedBox(height: 24),
+
+          // Flywheel Carousel for Avatar Selection (No Glow, Selected Scale Animation, No Looping)
+          FlywheelCarousel<int>(
+            height: 120,
+            cardHeight: 90,
+            viewportFraction: 0.28,
+            loop: false,
+            items: List.generate(UserProvider.avatarIcons.length, (i) => i),
+            initialIndex: _controller.selectedAvatar,
+            onIndexChanged: (index) => _controller.setAvatar(index),
+            itemBuilder: (context, index, isSelected) {
+              final color = UserProvider.avatarColors[index];
+              return Center(
+                child: AnimatedScale(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeOutCubic,
+                  scale: isSelected ? 1.15 : 0.85,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeOutCubic,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: isSelected
                             ? colorScheme.primary
                             : Colors.transparent,
-                        width: 2,
+                        width: 3,
                       ),
                     ),
                     child: CircleAvatar(
                       radius: 30,
-                      backgroundColor: UserProvider.avatarColors[index]
-                          .withValues(alpha: 0.2),
+                      backgroundColor: color.withValues(alpha: 0.2),
                       child: Icon(
                         UserProvider.avatarIcons[index],
-                        color: UserProvider.avatarColors[index],
+                        color: color,
+                        size: 28,
                       ),
                     ),
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
-          const SizedBox(height: 32),
+
+          const SizedBox(height: 24),
           TextField(
-            controller: _nameController,
+            controller: _controller.nameController,
             decoration: InputDecoration(
               hintText: 'Your nickname',
               filled: true,
@@ -367,28 +307,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 borderSide: BorderSide.none,
               ),
             ),
-            onChanged: (_) => setState(() {}),
+            onChanged: _controller.onNameChanged,
           ),
-          const SizedBox(height: 40),
+          const SizedBox(height: 32),
           ExpressiveToneButton(
-            onPressed:
-                _nameController.text.trim().isNotEmpty &&
-                    _nameController.text.trim().length >= 3
-                ? () async {
-                    final settingsBox = Hive.box('settings');
-                    final userProvider = context.read<UserProvider>();
-
-                    await settingsBox.put('hasCompletedOnboarding', true);
-                    userProvider.setUserName(_nameController.text.trim());
-                    userProvider.setAvatarIndex(_selectedAvatarIndex);
-
-                    if (!mounted) return;
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                        builder: (_) => const NavigationScreen(),
-                      ),
-                    );
-                  }
+            onPressed: isValid
+                ? () => _controller.finishOnboarding(context)
                 : null,
             child: const Text('Get Started'),
           ),

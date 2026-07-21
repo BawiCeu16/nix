@@ -453,8 +453,9 @@ class NowPlayingController with ChangeNotifier {
   void onPointerDown(PointerDownEvent event) {
     isFingerDown = true;
     if (isReordering) return;
-    if (event.position.dy > screenSize.height - NowPlayingPhysics.deadSpace)
+    if (event.position.dy > screenSize.height - NowPlayingPhysics.deadSpace) {
       return;
+    }
     startY = event.position.dy;
     activeGesture = ActiveGesture.none;
     velocity.addPosition(event.timeStamp, event.position);
@@ -464,8 +465,9 @@ class NowPlayingController with ChangeNotifier {
   }
 
   void onPointerMove(PointerMoveEvent event, BuildContext context) {
-    if (event.position.dy > screenSize.height - NowPlayingPhysics.deadSpace)
+    if (event.position.dy > screenSize.height - NowPlayingPhysics.deadSpace) {
       return;
+    }
     if (activeGesture == ActiveGesture.horizontal || isReordering) return;
 
     velocity.addPosition(event.timeStamp, event.position);
@@ -543,8 +545,9 @@ class NowPlayingController with ChangeNotifier {
   void onVerticalDragUpdate(DragUpdateDetails details, BuildContext context) {
     if (activeGesture == ActiveGesture.horizontal || isReordering) return;
     if (details.globalPosition.dy >
-        screenSize.height - NowPlayingPhysics.deadSpace)
+        screenSize.height - NowPlayingPhysics.deadSpace) {
       return;
+    }
     if (activeGesture == ActiveGesture.none) {
       activeGesture = ActiveGesture.vertical;
     }
@@ -590,8 +593,9 @@ class NowPlayingController with ChangeNotifier {
     if (!settings.swipeToChangeTrack) return;
     if (activeGesture == ActiveGesture.vertical) return;
     if (details.globalPosition.dy >
-        screenSize.height - NowPlayingPhysics.deadSpace)
+        screenSize.height - NowPlayingPhysics.deadSpace) {
       return;
+    }
 
     final currentMusic = context.read<CurrentMusicProvider>();
     final playlist = currentMusic.currentPlaylist;

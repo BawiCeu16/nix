@@ -38,29 +38,34 @@ class NixPageHeader extends StatelessWidget {
             SizedBox(
               width: 300,
               height: 300,
-              child:
-                  customArtwork ??
-                  (trackId != null
-                      ? NixArtwork(
-                          id: trackId!,
-                          type: ArtworkType.AUDIO,
-                          fit: BoxFit.cover,
-                          width: 300,
-                          height: 300,
-                          quality: NixArtworkQuality
-                              .high, // Header needs ultra-high res
-                        )
-                      : Container(
-                          decoration: BoxDecoration(
-                            color: colorScheme.secondaryContainer,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Icon(
-                            fallbackIcon,
-                            size: 80,
-                            color: colorScheme.onSecondaryContainer,
-                          ),
-                        )),
+              child: customArtwork != null
+                  ? Center(
+                      child: OverflowBox(
+                        maxWidth: 360,
+                        maxHeight: 300,
+                        child: customArtwork,
+                      ),
+                    )
+                  : (trackId != null
+                        ? NixArtwork(
+                            id: trackId!,
+                            type: ArtworkType.AUDIO,
+                            fit: BoxFit.cover,
+                            width: 300,
+                            height: 300,
+                            quality: NixArtworkQuality.high,
+                          )
+                        : Container(
+                            decoration: BoxDecoration(
+                              color: colorScheme.secondaryContainer,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Icon(
+                              fallbackIcon,
+                              size: 80,
+                              color: colorScheme.onSecondaryContainer,
+                            ),
+                          )),
             ),
             const SizedBox(height: 24),
           ],

@@ -1,402 +1,265 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:m3e_buttons/m3e_buttons.dart';
-import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/settings_provider.dart';
-import 'package:nix/models/settings/artwork_quality.dart';
 import 'package:nix/ui/widgets/common/nix_section_header.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 import 'package:nix/ui/widgets/common/nix_slider.dart';
+import 'package:nix/ui/screens/settings/controllers/appearance_settings_controller.dart';
 
-class AppearanceSettingsPage extends StatelessWidget {
+class AppearanceSettingsPage extends StatefulWidget {
   const AppearanceSettingsPage({super.key});
+
+  @override
+  State<AppearanceSettingsPage> createState() => _AppearanceSettingsPageState();
+}
+
+class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
+  late final AppearanceSettingsController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AppearanceSettingsController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final settingsParams = context.watch<SettingsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      backgroundColor: colorScheme.surfaceContainer,
-      appBar: AppBar(
-        title: const Text('Appearance'),
-        centerTitle: true,
-        scrolledUnderElevation: 0,
-        backgroundColor: colorScheme.surfaceContainer,
-        elevation: 0,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        physics: const BouncingScrollPhysics(),
-        children: [
-          const NixSectionHeader(title: 'Theme & Colors', topPadding: 16),
-          Card(
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (context, _) {
+        return Scaffold(
+          backgroundColor: colorScheme.surfaceContainer,
+          appBar: AppBar(
+            title: const Text('Appearance'),
+            centerTitle: true,
+            scrolledUnderElevation: 0,
+            backgroundColor: colorScheme.surfaceContainer,
             elevation: 0,
-            margin: EdgeInsets.zero,
-            color: colorScheme.surface,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
-                bottomLeft: Radius.circular(5),
-                bottomRight: Radius.circular(5),
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-              child: M3EToggleButtonGroup(
-                type: M3EButtonGroupType.connected,
-                selectedIndex: settingsParams.themeMode.index,
-                onSelectedIndexChanged: (index) {
-                  if (index != null) {
-                    settingsParams.setThemeMode(ThemeMode.values[index]);
-                  }
-                },
-
-                actions: const [
-                  M3EToggleButtonGroupAction(
-                    label: Text('SYSTEM'),
-                    icon: Icon(FlutterRemix.smartphone_line),
-                  ),
-                  M3EToggleButtonGroupAction(
-                    label: Text('LIGHT'),
-                    icon: Icon(FlutterRemix.sun_line),
-                  ),
-                  M3EToggleButtonGroupAction(
-                    label: Text('DARK'),
-                    icon: Icon(FlutterRemix.moon_line),
-                  ),
-                ],
-              ),
-            ),
           ),
-          const SizedBox(height: 2.5),
-          CardListTile(
-            title: 'AMOLED Mode',
-            subtitle: 'Pure black for OLED screens',
-            icon: FlutterRemix.moon_clear_line,
-            trailing: Switch(
-              value: settingsParams.useAmoledMode,
-              onChanged: (v) => settingsParams.setUseAmoledMode(v),
-            ),
-            onTap: () =>
-                settingsParams.setUseAmoledMode(!settingsParams.useAmoledMode),
-          ),
-          const SizedBox(height: 2.5),
-          CardListTile(
-            title: 'Accent Color Mode',
-            subtitle: settingsParams.accentColorMode.name.toUpperCase(),
-            icon: FlutterRemix.palette_line,
-            isLast: settingsParams.accentColorMode != AccentColorMode.custom,
-            onTap: () => _showAccentModeDialog(context, settingsParams),
-          ),
-
-          if (settingsParams.accentColorMode == AccentColorMode.custom) ...[
-            const SizedBox(height: 2.5),
-            _CustomColorPicker(settings: settingsParams),
-          ],
-
-          const NixSectionHeader(title: 'Artwork & Visuals', topPadding: 24),
-          NixCardExpansionTile(
-            title: 'Y2k(cd) style album art',
-            icon: FlutterRemix.album_line,
-            isFirst: true,
-            showExpansionIcon: settingsParams.useCdArtworkStyle,
-            initiallyExpanded: settingsParams.useCdArtworkStyle,
-            trailing: Switch(
-              value: settingsParams.useCdArtworkStyle,
-              onChanged: (v) => settingsParams.setUseCdArtworkStyle(v),
-            ),
+          body: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            physics: const BouncingScrollPhysics(),
             children: [
-              if (settingsParams.useCdArtworkStyle) ...[
-                const SizedBox(height: 2.5),
-                CardListTile(
-                  title: 'Split CD Horizontally',
-                  icon: FlutterRemix.split_cells_horizontal,
-                  trailing: Switch(
-                    value: settingsParams.splitCdWhenHalfOpen,
-                    onChanged: (v) => settingsParams.setSplitCdWhenHalfOpen(v),
-                  ),
-                  onTap: () => settingsParams.setSplitCdWhenHalfOpen(
-                    !settingsParams.splitCdWhenHalfOpen,
-                  ),
-                ),
-                const SizedBox(height: 2.5),
-                CardListTile(
-                  title: 'Revolving CD Disc',
-                  icon: FlutterRemix.disc_line,
-                  trailing: Switch(
-                    value: settingsParams.rotateCdWhenPlaying,
-                    onChanged: (v) => settingsParams.setRotateCdWhenPlaying(v),
-                  ),
-                  onTap: () => settingsParams.setRotateCdWhenPlaying(
-                    !settingsParams.rotateCdWhenPlaying,
+              const NixSectionHeader(title: 'Theme & Colors', topPadding: 16),
+              Card(
+                elevation: 0,
+                margin: EdgeInsets.zero,
+                color: colorScheme.surface,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                    bottomLeft: Radius.circular(5),
+                    bottomRight: Radius.circular(5),
                   ),
                 ),
-                if (settingsParams.rotateCdWhenPlaying) ...[
-                  const SizedBox(height: 2.5),
-                  Card(
-                    elevation: 0,
-                    margin: EdgeInsets.zero,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(5),
-                        topRight: Radius.circular(5),
-                        bottomLeft: Radius.circular(5),
-                        bottomRight: Radius.circular(5),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 10,
+                    horizontal: 15,
+                  ),
+                  child: M3EToggleButtonGroup(
+                    type: M3EButtonGroupType.connected,
+                    selectedIndex: settingsParams.themeMode.index,
+                    onSelectedIndexChanged: (index) {
+                      if (index != null) {
+                        settingsParams.setThemeMode(ThemeMode.values[index]);
+                      }
+                    },
+                    actions: const [
+                      M3EToggleButtonGroupAction(
+                        label: Text('SYSTEM'),
+                        icon: Icon(FlutterRemix.smartphone_line),
+                      ),
+                      M3EToggleButtonGroupAction(
+                        label: Text('LIGHT'),
+                        icon: Icon(FlutterRemix.sun_line),
+                      ),
+                      M3EToggleButtonGroupAction(
+                        label: Text('DARK'),
+                        icon: Icon(FlutterRemix.moon_line),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 2.5),
+              CardListTile(
+                title: 'AMOLED Mode',
+                subtitle: 'Pure black for OLED screens',
+                icon: FlutterRemix.moon_clear_line,
+                trailing: Switch(
+                  value: settingsParams.useAmoledMode,
+                  onChanged: (v) => settingsParams.setUseAmoledMode(v),
+                ),
+                onTap: () => settingsParams.setUseAmoledMode(
+                  !settingsParams.useAmoledMode,
+                ),
+              ),
+              const SizedBox(height: 2.5),
+              CardListTile(
+                title: 'Accent Color Mode',
+                subtitle: settingsParams.accentColorMode.name.toUpperCase(),
+                icon: FlutterRemix.palette_line,
+                isLast: settingsParams.accentColorMode != AccentColorMode.custom,
+                onTap: () =>
+                    _controller.showAccentModeDialog(context, settingsParams),
+              ),
+              if (settingsParams.accentColorMode == AccentColorMode.custom) ...[
+                const SizedBox(height: 2.5),
+                _CustomColorPicker(settings: settingsParams),
+              ],
+              const NixSectionHeader(title: 'Artwork & Visuals', topPadding: 24),
+              NixCardExpansionTile(
+                title: 'Y2k(cd) style album art',
+                icon: FlutterRemix.album_line,
+                isFirst: true,
+                showExpansionIcon: settingsParams.useCdArtworkStyle,
+                initiallyExpanded: settingsParams.useCdArtworkStyle,
+                trailing: Switch(
+                  value: settingsParams.useCdArtworkStyle,
+                  onChanged: (v) => settingsParams.setUseCdArtworkStyle(v),
+                ),
+                children: [
+                  if (settingsParams.useCdArtworkStyle) ...[
+                    const SizedBox(height: 2.5),
+                    CardListTile(
+                      title: 'Split CD Horizontally',
+                      icon: FlutterRemix.split_cells_horizontal,
+                      trailing: Switch(
+                        value: settingsParams.splitCdWhenHalfOpen,
+                        onChanged: (v) =>
+                            settingsParams.setSplitCdWhenHalfOpen(v),
+                      ),
+                      onTap: () => settingsParams.setSplitCdWhenHalfOpen(
+                        !settingsParams.splitCdWhenHalfOpen,
                       ),
                     ),
-                    color: Theme.of(context).colorScheme.surface,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
+                    const SizedBox(height: 2.5),
+                    CardListTile(
+                      title: 'Revolving CD Disc',
+                      icon: FlutterRemix.disc_line,
+                      trailing: Switch(
+                        value: settingsParams.rotateCdWhenPlaying,
+                        onChanged: (v) =>
+                            settingsParams.setRotateCdWhenPlaying(v),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      onTap: () => settingsParams.setRotateCdWhenPlaying(
+                        !settingsParams.rotateCdWhenPlaying,
+                      ),
+                    ),
+                    if (settingsParams.rotateCdWhenPlaying) ...[
+                      const SizedBox(height: 2.5),
+                      Card(
+                        elevation: 0,
+                        margin: EdgeInsets.zero,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(5),
+                            topRight: Radius.circular(5),
+                            bottomLeft: Radius.circular(5),
+                            bottomRight: Radius.circular(5),
+                          ),
+                        ),
+                        color: Theme.of(context).colorScheme.surface,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Rotation Speed',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 13,
-                                ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Rotation Speed',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(
+                                      FlutterRemix.refresh_line,
+                                      size: 18,
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                    tooltip: 'Reset to default',
+                                    onPressed: () => _controller.showResetCdSpeedDialog(
+                                      context,
+                                      settingsParams,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              IconButton(
-                                icon: const Icon(
-                                  FlutterRemix.refresh_line,
-                                  size: 18,
-                                ),
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                                tooltip: 'Reset to default',
-                                onPressed: () {
-                                  NixDialog.show(
-                                    context: context,
-                                    title: 'Reset Speed',
-                                    subtitle:
-                                        'Reset CD rotation speed to default 20%?',
-                                    children: [
-                                      CardListTile(
-                                        title: 'Reset',
-                                        icon: FlutterRemix.check_line,
-                                        isFirst: true,
-                                        isLast: true,
-                                        onTap: () {
-                                          settingsParams.setCdRotationSpeed(
-                                            20.0,
-                                          );
-                                          Navigator.of(
-                                            context,
-                                            rootNavigator: true,
-                                          ).pop();
-                                        },
-                                      ),
-                                    ],
-                                  );
-                                },
+                              const SizedBox(height: 4),
+                              NixSlider(
+                                value: settingsParams.cdRotationSpeed,
+                                min: 0,
+                                max: 100,
+                                label:
+                                    '${settingsParams.cdRotationSpeed.toInt()}%',
+                                onChanged: (v) =>
+                                    settingsParams.setCdRotationSpeed(v),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 4),
-                          NixSlider(
-                            value: settingsParams.cdRotationSpeed,
-                            min: 0,
-                            max: 100,
-                            label: '${settingsParams.cdRotationSpeed.toInt()}%',
-                            onChanged: (v) =>
-                                settingsParams.setCdRotationSpeed(v),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
+                    ],
+                  ],
                 ],
-              ],
+              ),
+              const SizedBox(height: 2.5),
+              CardListTile(
+                title: 'Artwork Shape(Default)',
+                subtitle: settingsParams.artworkShape.name.toUpperCase(),
+                icon: FlutterRemix.shape_2_line,
+                onTap: () =>
+                    _controller.showShapeDialog(context, settingsParams),
+              ),
+              const SizedBox(height: 2.5),
+              CardListTile(
+                title: 'Artwork Quality',
+                subtitle: settingsParams.artworkQuality.name.toUpperCase(),
+                icon: FlutterRemix.image_line,
+                onTap: () =>
+                    _controller.showQualityDialog(context, settingsParams),
+              ),
+              const SizedBox(height: 2.5),
+              CardListTile(
+                title: 'Miniplayer Shadow',
+                subtitle: 'Dynamic depth effect for player',
+                icon: FlutterRemix.magic_line,
+                trailing: Switch(
+                  value: settingsParams.showMiniplayerShadow,
+                  onChanged: (v) => settingsParams.setShowMiniplayerShadow(v),
+                ),
+                isLast: true,
+                onTap: () => settingsParams.setShowMiniplayerShadow(
+                  !settingsParams.showMiniplayerShadow,
+                ),
+              ),
+              const NixBottomSpacer(),
             ],
           ),
-
-          const SizedBox(height: 2.5),
-          CardListTile(
-            title: 'Artwork Shape(Default)',
-            subtitle: settingsParams.artworkShape.name.toUpperCase(),
-            icon: FlutterRemix.shape_2_line,
-            onTap: () => _showShapeDialog(context, settingsParams),
-          ),
-          const SizedBox(height: 2.5),
-          CardListTile(
-            title: 'Artwork Quality',
-            subtitle: settingsParams.artworkQuality.name.toUpperCase(),
-            icon: FlutterRemix.image_line,
-            onTap: () => _showQualityDialog(context, settingsParams),
-          ),
-          const SizedBox(height: 2.5),
-          CardListTile(
-            title: 'Miniplayer Shadow',
-            subtitle: 'Dynamic depth effect for player',
-            icon: FlutterRemix.magic_line,
-            trailing: Switch(
-              value: settingsParams.showMiniplayerShadow,
-              onChanged: (v) => settingsParams.setShowMiniplayerShadow(v),
-            ),
-            isLast: true,
-            onTap: () => settingsParams.setShowMiniplayerShadow(
-              !settingsParams.showMiniplayerShadow,
-            ),
-          ),
-          const NixBottomSpacer(),
-        ],
-      ),
-    );
-  }
-
-  void _showShapeDialog(BuildContext context, SettingsProvider settings) {
-    NixDialog.show(
-      context: context,
-      title: 'Artwork Shape',
-      children: [
-        RadioGroup<ArtworkShape>(
-          groupValue: settings.artworkShape,
-          onChanged: (shape) {
-            if (shape != null) {
-              settings.setArtworkShape(shape);
-              Navigator.of(context, rootNavigator: true).pop();
-            }
-          },
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: ArtworkShape.values.map((shape) {
-              final index = ArtworkShape.values.indexOf(shape);
-              return Padding(
-                padding: EdgeInsets.only(
-                  bottom: index == ArtworkShape.values.length - 1 ? 0.0 : 2.5,
-                ),
-                child: CardListTile(
-                  title: shape.name.toUpperCase(),
-                  onTap: () {
-                    settings.setArtworkShape(shape);
-                    Navigator.of(context, rootNavigator: true).pop();
-                  },
-                  trailing: IgnorePointer(
-                    child: Radio<ArtworkShape>(value: shape),
-                  ),
-                  isFirst: index == 0,
-                  isLast: index == ArtworkShape.values.length - 1,
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _showQualityDialog(BuildContext context, SettingsProvider settings) {
-    final qualities = NixArtworkQuality.values.reversed.toList();
-    NixDialog.show(
-      context: context,
-      title: 'Artwork Quality',
-      children: [
-        RadioGroup<NixArtworkQuality>(
-          groupValue: settings.artworkQuality,
-          onChanged: (quality) {
-            if (quality != null) {
-              settings.setArtworkQuality(quality);
-              Navigator.of(context, rootNavigator: true).pop();
-            }
-          },
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: qualities.map((quality) {
-              final index = qualities.indexOf(quality);
-              String description = '';
-              switch (quality) {
-                case NixArtworkQuality.high:
-                  description = 'Full-high quality - Best visuals';
-                  break;
-                case NixArtworkQuality.medium:
-                  description = 'Balanced quality';
-                  break;
-                case NixArtworkQuality.low:
-                  description = 'Standard quality - Saves memory';
-                  break;
-              }
-
-              return Padding(
-                padding: EdgeInsets.only(
-                  bottom: index == qualities.length - 1 ? 0.0 : 2.5,
-                ),
-                child: CardListTile(
-                  title: quality.name.toUpperCase(),
-                  subtitle: description,
-                  onTap: () {
-                    settings.setArtworkQuality(quality);
-                    Navigator.of(context, rootNavigator: true).pop();
-                  },
-                  trailing: IgnorePointer(
-                    child: Radio<NixArtworkQuality>(value: quality),
-                  ),
-                  isFirst: index == 0,
-                  isLast: index == qualities.length - 1,
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _showAccentModeDialog(BuildContext context, SettingsProvider settings) {
-    NixDialog.show(
-      context: context,
-      title: ' Accent Color Mode',
-      children: [
-        RadioGroup<AccentColorMode>(
-          groupValue: settings.accentColorMode,
-          onChanged: (mode) {
-            if (mode != null) {
-              settings.setAccentColorMode(mode);
-              Navigator.of(context, rootNavigator: true).pop();
-            }
-          },
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: AccentColorMode.values.map((mode) {
-              final index = AccentColorMode.values.indexOf(mode);
-              String label = mode.name.toUpperCase();
-              if (mode == AccentColorMode.dynamic) {
-                label = "DYNAMIC (ALBUM ART)";
-              }
-
-              return Padding(
-                padding: EdgeInsets.only(
-                  bottom: index == AccentColorMode.values.length - 1
-                      ? 0.0
-                      : 2.5,
-                ),
-                child: CardListTile(
-                  title: label,
-                  onTap: () {
-                    settings.setAccentColorMode(mode);
-                    Navigator.of(context, rootNavigator: true).pop();
-                  },
-                  trailing: IgnorePointer(
-                    child: Radio<AccentColorMode>(value: mode),
-                  ),
-                  isFirst: index == 0,
-                  isLast: index == AccentColorMode.values.length - 1,
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
+        );
+      },
     );
   }
 }

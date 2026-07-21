@@ -14,6 +14,7 @@ class NixCustomizableCDWidget extends StatelessWidget {
   final bool isSpinning;
   final bool resetRotation;
   final double rotateSpeed;
+  final VoidCallback? onTap;
 
   const NixCustomizableCDWidget({
     super.key,
@@ -27,87 +28,106 @@ class NixCustomizableCDWidget extends StatelessWidget {
     this.isSpinning = false,
     this.resetRotation = false,
     this.rotateSpeed = 1.0,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.center,
-        children: [
-          // CD Disc Layer
-          AnimatedSlide(
-            duration: const Duration(milliseconds: 600),
-            curve: Curves.easeOutCubic,
-            offset: state == CDCoverState.halfOpen
-                ? (splitWhenHalfOpen
-                      ? const Offset(0.25, 0)
-                      : const Offset(0.5, 0))
-                : (state == CDCoverState.closed
-                      ? Offset(-2 / size, -2 / size)
-                      : Offset.zero),
-            child: AnimatedScale(
-              duration: const Duration(milliseconds: 600),
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            // CD Disc Layer
+            AnimatedSlide(
+              duration: const Duration(milliseconds: 700),
               curve: Curves.easeOutCubic,
-              scale: state == CDCoverState.fullDisc ? 1.0 : 0.92,
-              child: _SpinningDiscWrapper(
-                isSpinning: isSpinning,
-                resetRotation: resetRotation,
-                rotateSpeed: rotateSpeed,
-                baseRotationOffset: rotationAngle,
-                child: RepaintBoundary(
-                  child: _DiscWithTexture(
-                    size: size,
-                    image: discImage,
-                    seedId: seedId,
+              offset: state == CDCoverState.halfOpen
+                  ? (splitWhenHalfOpen
+                        ? const Offset(0.28, 0)
+                        : const Offset(0.55, 0))
+                  : (state == CDCoverState.closed
+                        ? Offset(-2 / size, -2 / size)
+                        : Offset.zero),
+              child: AnimatedScale(
+                duration: const Duration(milliseconds: 700),
+                curve: Curves.easeOutCubic,
+                scale: state == CDCoverState.fullDisc ? 1.0 : 0.94,
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(
+                          alpha: state == CDCoverState.closed ? 0.0 : 0.28,
+                        ),
+                        blurRadius: 16,
+                        spreadRadius: 2,
+                        offset: const Offset(6, 6),
+                      ),
+                    ],
+                  ),
+                  child: _SpinningDiscWrapper(
+                    isSpinning: isSpinning,
+                    resetRotation: resetRotation,
+                    rotateSpeed: rotateSpeed,
+                    baseRotationOffset: rotationAngle,
+                    child: RepaintBoundary(
+                      child: _DiscWithTexture(
+                        size: size,
+                        image: discImage,
+                        seedId: seedId,
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
 
-          // Cover Layer
-          AnimatedSlide(
-            duration: const Duration(milliseconds: 600),
-            curve: Curves.easeOutCubic,
-            offset: (splitWhenHalfOpen && state == CDCoverState.halfOpen)
-                ? const Offset(-0.25, 0)
-                : Offset.zero,
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 500),
+            // Cover Layer (Jewel Case)
+            AnimatedSlide(
+              duration: const Duration(milliseconds: 700),
               curve: Curves.easeOutCubic,
-              opacity: state == CDCoverState.fullDisc ? 0.0 : 1.0,
-              child: AnimatedScale(
+              offset: (splitWhenHalfOpen && state == CDCoverState.halfOpen)
+                  ? const Offset(-0.28, 0)
+                  : Offset.zero,
+              child: AnimatedOpacity(
                 duration: const Duration(milliseconds: 500),
                 curve: Curves.easeOutCubic,
-                scale: state == CDCoverState.fullDisc ? 0.8 : 1.0,
-                child: RepaintBoundary(
-                  child: IgnorePointer(
-                    ignoring: state == CDCoverState.fullDisc,
-                    child: Container(
-                      width: size,
-                      height: size,
-                      decoration: BoxDecoration(
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.15),
-                            blurRadius: 8,
-                            offset: const Offset(3, 3),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: Stack(
-                          children: [
-                            Positioned.fill(child: coverImage),
-                            const Positioned.fill(
-                              child: _TextureOverlay(type: 'cover'),
+                opacity: state == CDCoverState.fullDisc ? 0.0 : 1.0,
+                child: AnimatedScale(
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeOutCubic,
+                  scale: state == CDCoverState.fullDisc ? 0.8 : 1.0,
+                  child: RepaintBoundary(
+                    child: IgnorePointer(
+                      ignoring: state == CDCoverState.fullDisc,
+                      child: Container(
+                        width: size,
+                        height: size,
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.25),
+                              blurRadius: 12,
+                              offset: const Offset(4, 4),
                             ),
                           ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: Stack(
+                            children: [
+                              Positioned.fill(child: coverImage),
+                              const Positioned.fill(
+                                child: _TextureOverlay(type: 'cover'),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -115,8 +135,8 @@ class NixCustomizableCDWidget extends StatelessWidget {
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -140,20 +160,47 @@ class _DiscWithTexture extends StatelessWidget {
             child: SizedBox(
               width: size,
               height: size,
-              // Fallback to a silver color if no discImage is provided
               child: image ?? Container(color: const Color(0xFFD1D5DB)),
             ),
           ),
+          // Rainbow & Specular Light Overlay
           _TextureOverlay(type: 'cd', size: size, seedId: seedId),
-          // Dark textured inner ring to simulate real CD clamp area
+
+          // Outer Grooves Ring Line
           Container(
-            width: size * 0.35,
-            height: size * 0.35,
+            width: size * 0.88,
+            height: size * 0.88,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: Colors.black.withValues(alpha: 0.4),
-                width: size * 0.1,
+                color: Colors.white.withValues(alpha: 0.15),
+                width: 1.0,
+              ),
+            ),
+          ),
+
+          // Dark textured inner ring to simulate real CD clamp area
+          Container(
+            width: size * 0.36,
+            height: size * 0.36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.black.withValues(alpha: 0.15),
+              border: Border.all(
+                color: Colors.black.withValues(alpha: 0.45),
+                width: size * 0.08,
+              ),
+            ),
+          ),
+          // Transparent plastic clamp ring bevel
+          Container(
+            width: size * 0.22,
+            height: size * 0.22,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.5),
+                width: 2.0,
               ),
             ),
           ),
@@ -164,8 +211,8 @@ class _DiscWithTexture extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.6),
-                width: 3.0,
+                color: Colors.white.withValues(alpha: 0.7),
+                width: 2.5,
               ),
             ),
           ),
@@ -207,53 +254,76 @@ class _TextureOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Gradient? overlayGradient;
-
     if (type == 'cd') {
       final random = math.Random(seedId?.hashCode ?? 0);
       final rotation = seedId != null ? random.nextDouble() * math.pi * 2 : 0.0;
-      final streakCount = seedId != null
-          ? random.nextInt(2) + 2
-          : 2; // either 2 or 3 streaks dynamically
 
-      List<Color> colors = [];
-      List<double> stops = [];
-
-      for (int i = 0; i < streakCount * 2; i++) {
-        double pos = i / (streakCount * 2);
-        colors.add(
-          i % 2 == 0
-              ? Colors.black.withValues(alpha: 0.05)
-              : Colors.white.withValues(alpha: 0.55),
-        );
-        stops.add(pos);
-      }
-      colors.add(Colors.black.withValues(alpha: 0.05));
-      stops.add(1.0);
-
-      overlayGradient = SweepGradient(
-        colors: colors,
-        stops: stops,
+      final overlayGradient = SweepGradient(
+        colors: [
+          Colors.white.withValues(alpha: 0.55),
+          Colors.black.withValues(alpha: 0.1),
+          Colors.white.withValues(alpha: 0.65),
+          Colors.black.withValues(alpha: 0.1),
+          Colors.white.withValues(alpha: 0.55),
+        ],
+        stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
         transform: GradientRotation(rotation),
       );
+
+      return IgnorePointer(
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: overlayGradient,
+          ),
+        ),
+      );
     } else {
-      overlayGradient = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Colors.white.withValues(alpha: 0.4), Colors.transparent],
+      // Jewel Case Plastic Texture Overlay
+      return IgnorePointer(
+        child: Stack(
+          children: [
+            // Glass sheen gradient
+            Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withValues(alpha: 0.35),
+                    Colors.white.withValues(alpha: 0.05),
+                    Colors.black.withValues(alpha: 0.12),
+                  ],
+                  stops: const [0.0, 0.4, 1.0],
+                ),
+              ),
+            ),
+            // Left Hinge Plastic Ridge
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: 14,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.black.withValues(alpha: 0.25),
+                      Colors.white.withValues(alpha: 0.2),
+                      Colors.black.withValues(alpha: 0.1),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       );
     }
-
-    return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: type == 'cd' ? BoxShape.circle : BoxShape.rectangle,
-          gradient: overlayGradient,
-        ),
-      ),
-    );
   }
 }
 
