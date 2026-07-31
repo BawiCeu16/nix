@@ -33,54 +33,51 @@ class AlbumCardTile extends StatelessWidget {
       (s) => s.splitCdWhenHalfOpen,
     );
 
-    final artworkWidget = Hero(
-      tag: 'album_cd_$title',
-      child: useCdArtworkStyle
-          ? NixCustomizableCDWidget(
-              size: size ?? 160,
-              state: CDCoverState.closed,
-              splitWhenHalfOpen: splitCdWhenHalfOpen,
-              seedId: title,
-              coverImage: Stack(
-                fit: StackFit.expand,
-                children: [
-                  NixArtwork(
-                    id: firstTrackId ?? 0,
-                    type: ArtworkType.AUDIO,
+    final artworkWidget = useCdArtworkStyle
+        ? NixCustomizableCDWidget(
+            size: size ?? 160,
+            state: CDCoverState.closed,
+            splitWhenHalfOpen: splitCdWhenHalfOpen,
+            seedId: title,
+            coverImage: Stack(
+              fit: StackFit.expand,
+              children: [
+                NixArtwork(
+                  id: firstTrackId ?? 0,
+                  type: ArtworkType.AUDIO,
+                  fit: BoxFit.cover,
+                ),
+                Transform.scale(
+                  scale: 1.15,
+                  child: Image.asset(
+                    'assets/cd_effects/cd_cover.png',
                     fit: BoxFit.cover,
                   ),
-                  Transform.scale(
-                    scale: 1.15,
-                    child: Image.asset(
-                      'assets/cd_effects/cd_cover.png',
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ],
-              ),
-              discImage: NixArtwork(
-                id: firstTrackId ?? 0,
-                type: ArtworkType.AUDIO,
-                fit: BoxFit.cover,
-              ),
-            )
-          : ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: NixArtwork(
-                id: firstTrackId ?? 0,
-                type: ArtworkType.AUDIO,
-                fit: BoxFit.cover,
-                width: size,
-                height: size,
-              ),
+                ),
+              ],
             ),
-    );
+            discImage: NixArtwork(
+              id: firstTrackId ?? 0,
+              type: ArtworkType.AUDIO,
+              fit: BoxFit.cover,
+            ),
+          )
+        : ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: NixArtwork(
+              id: firstTrackId ?? 0,
+              type: ArtworkType.AUDIO,
+              fit: BoxFit.cover,
+              width: size,
+              height: size,
+            ),
+          );
 
     return Card(
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
       elevation: 0,
-      color: Colors.transparent,
+      // color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         child: Column(

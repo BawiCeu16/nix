@@ -34,7 +34,9 @@ class NavigationScreenController extends ChangeNotifier {
       final bool isOpen = animation.value > 0.01;
       if (isOpen != _isPlayerOpen) {
         _isPlayerOpen = isOpen;
-        notifyListeners();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          notifyListeners();
+        });
       }
     });
 
@@ -61,11 +63,13 @@ class NavigationScreenController extends ChangeNotifier {
   }
 
   void updateBottomInset(BuildContext context) {
-    double? newBottom = MediaQuery.of(context).viewPadding.bottom;
+    double? newBottom = MediaQuery.viewPaddingOf(context).bottom;
     if (newBottom == 0) newBottom = null;
     if (bottom != newBottom) {
       bottom = newBottom;
-      notifyListeners();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
     }
   }
 
@@ -82,7 +86,9 @@ class NavigationScreenController extends ChangeNotifier {
     // 1. Handle dialogs or pages pushed on top of the root navigator first
     final route = ModalRoute.of(context);
     if (route != null && !route.isCurrent) {
-      debugPrint("NavigationScreenController: popping top route on root navigator");
+      debugPrint(
+        "NavigationScreenController: popping top route on root navigator",
+      );
       Navigator.of(context, rootNavigator: true).pop();
       return;
     }

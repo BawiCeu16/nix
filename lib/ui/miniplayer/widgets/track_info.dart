@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_remix/flutter_remix.dart';
+// import 'package:flutter_remix/flutter_remix.dart';
 import 'package:nix/providers/current_music_provider.dart';
-import 'package:nix/providers/music_provider.dart';
+// import 'package:nix/providers/music_provider.dart';
 import 'package:nix/models/music/track.dart';
 import 'package:nix/core/math_utils.dart';
 import 'package:nix/ui/miniplayer/models/animation_data.dart';
@@ -37,8 +37,10 @@ class TrackInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final track = context.select<CurrentMusicProvider, Track?>((p) => p.currentTrack);
-    final music = context.read<MusicProvider>();
+    final track = context.select<CurrentMusicProvider, Track?>(
+      (p) => p.currentTrack,
+    );
+    // final music = context.read<MusicProvider>();
     final title = track?.title ?? 'No track';
     final artist = track?.artist ?? '';
 
@@ -207,47 +209,47 @@ class TrackInfo extends StatelessWidget {
                               ),
                             ),
                             // Favorite Icon
-                            Opacity(
-                              opacity:
-                                  (inverseAboveOne(data.bounceProgress) * 10 -
-                                          9)
-                                      .clamp(0, 1),
-                              child: Transform.translate(
-                                offset: Offset(
-                                  -100 * (1.0 - data.bounceClampedProgress),
-                                  0.0,
-                                ),
-                                child: GestureDetector(
-                                  onTap: track != null
-                                      ? () => music.toggleFavorite(track)
-                                      : null,
-                                  child: IconButton(
-                                    onPressed: onToggleLyrics,
-                                    icon: Icon(
-                                      lyricsAnim.value > 0.5
-                                          ? FlutterRemix.chat_quote_fill
-                                          : FlutterRemix.chat_quote_line,
-                                    ),
-                                    color: lyricsAnim.value > 0.5
-                                        ? Theme.of(context).colorScheme.primary
-                                        : Theme.of(
-                                            context,
-                                          ).colorScheme.onSecondaryContainer,
-                                  ),
-                                  // child: Icon(
-                                  //   isFav
-                                  //       ? FlutterRemix.heart_fill
-                                  //       : FlutterRemix.heart_line,
-                                  //   size: 32.0,
-                                  //   color: isFav
-                                  //       ? Theme.of(context).colorScheme.primary
-                                  //       : Theme.of(
-                                  //           context,
-                                  //         ).colorScheme.onSecondaryContainer,
-                                  // ),
-                                ),
-                              ),
-                            ),
+                            // Opacity(
+                            //   opacity:
+                            //       (inverseAboveOne(data.bounceProgress) * 10 -
+                            //               9)
+                            //           .clamp(0, 1),
+                            //   child: Transform.translate(
+                            //     offset: Offset(
+                            //       -100 * (1.0 - data.bounceClampedProgress),
+                            //       0.0,
+                            //     ),
+                            //     child: GestureDetector(
+                            //       onTap: track != null
+                            //           ? () => music.toggleFavorite(track)
+                            //           : null,
+                            //       child: IconButton(
+                            //         onPressed: onToggleLyrics,
+                            //         icon: Icon(
+                            //           lyricsAnim.value > 0.5
+                            //               ? FlutterRemix.chat_quote_fill
+                            //               : FlutterRemix.chat_quote_line,
+                            //         ),
+                            //         color: lyricsAnim.value > 0.5
+                            //             ? Theme.of(context).colorScheme.primary
+                            //             : Theme.of(
+                            //                 context,
+                            //               ).colorScheme.onSecondaryContainer,
+                            //       ),
+                            //       // child: Icon(
+                            //       //   isFav
+                            //       //       ? FlutterRemix.heart_fill
+                            //       : FlutterRemix.heart_line,
+                            //       //   size: 32.0,
+                            //       //   color: isFav
+                            //       //       ? Theme.of(context).colorScheme.primary
+                            //       //       : Theme.of(
+                            //       //           context,
+                            //       //         ).colorScheme.onSecondaryContainer,
+                            //       // ),
+                            //     ),
+                            //   ),
+                            // ),
                           ],
                         ),
                       ),

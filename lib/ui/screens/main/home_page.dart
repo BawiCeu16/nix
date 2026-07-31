@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_remix/flutter_remix.dart';
-import 'package:nix_button/nix_button.dart';
 import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/music_provider.dart';
@@ -16,6 +14,7 @@ import 'package:nix/ui/widgets/common/nix_section_header.dart';
 import 'package:expressive_refresh/expressive_refresh.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 import 'package:nix/ui/screens/main/controllers/home_controller.dart';
+import 'package:nix/ui/controllers/padding_controller.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -83,52 +82,26 @@ class _HomePageState extends State<HomePage> {
                     expandedHeight: 200,
                     flexibleSpace: FlexibleSpaceBar(
                       titlePadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                      title: Selector<
-                        UserProvider,
-                        ({String userName, int avatarIndex})
-                      >(
-                        selector: (_, p) =>
-                            (userName: p.userName, avatarIndex: p.avatarIndex),
-                        builder: (context, data, _) {
-                          final userName = data.userName;
-                          final avatarIndex = data.avatarIndex;
-                          return Row(
+                      title: Selector<UserProvider, String>(
+                        selector: (_, p) => p.userName,
+                        builder: (context, userName, _) {
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      _controller.getGreeting(),
-                                      style: NixTypography.specialGothicLabelMedium(
-                                        context,
-                                        colorScheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 0),
-                                    Text(
-                                      userName,
-                                      style: NixTypography.specialGothicHeadlineSmall(
-                                        context,
-                                        colorScheme.onSurface,
-                                      ),
-                                    ),
-                                  ],
+                              Text(
+                                _controller.getGreeting(),
+                                style: NixTypography.specialGothicLabelMedium(
+                                  context,
+                                  colorScheme.onSurfaceVariant,
                                 ),
                               ),
-                              GestureDetector(
-                                onTap: () => _controller.openProfile(context),
-                                child: CircleAvatar(
-                                  radius: 20,
-                                  backgroundColor: UserProvider
-                                      .avatarColors[avatarIndex]
-                                      .withValues(alpha: 0.2),
-                                  child: Icon(
-                                    UserProvider.avatarIcons[avatarIndex],
-                                    color: UserProvider.avatarColors[avatarIndex],
-                                    size: 20,
-                                  ),
+                              const SizedBox(height: 0),
+                              Text(
+                                userName,
+                                style: NixTypography.specialGothicHeadlineSmall(
+                                  context,
+                                  colorScheme.onSurface,
                                 ),
                               ),
                             ],
@@ -140,44 +113,46 @@ class _HomePageState extends State<HomePage> {
 
                   SliverMainAxisGroup(
                     slivers: [
-                      // ── Quick Actions ──
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                          child: const NixSectionHeader(
-                            title: 'Quick Actions',
-                            topPadding: 20,
-                          ),
-                        ),
-                      ),
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                          child: Row(
-                            children: [
-                              NixButton(
-                                customBackgroundColor: Theme.of(
-                                  context,
-                                ).colorScheme.primary.withValues(alpha: 0.7),
-                                icon: const Icon(FlutterRemix.music_2_fill),
-                                label: const Text("All Songs"),
-                                enableAnimations: true,
-                                onPressed: () => _controller.openAllSongs(context),
-                              ),
-                              const SizedBox(width: 12),
-                              NixButton(
-                                customBackgroundColor: Theme.of(
-                                  context,
-                                ).colorScheme.primary.withValues(alpha: 0.7),
-                                icon: const Icon(FlutterRemix.disc_fill),
-                                label: const Text("Albums"),
-                                enableAnimations: true,
-                                onPressed: () => _controller.openAlbums(context),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                      // // ── Quick Actions ──
+                      // SliverToBoxAdapter(
+                      //   child: Padding(
+                      //     padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                      //     child: const NixSectionHeader(
+                      //       title: 'Quick Actions',
+                      //       topPadding: 20,
+                      //     ),
+                      //   ),
+                      // ),
+                      // SliverToBoxAdapter(
+                      //   child: Padding(
+                      //     padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                      //     child: Row(
+                      //       children: [
+                      //         NixButton(
+                      //           customBackgroundColor: Theme.of(
+                      //             context,
+                      //           ).colorScheme.primary.withValues(alpha: 0.7),
+                      //           icon: const Icon(FlutterRemix.music_2_fill),
+                      //           label: const Text("All Songs"),
+                      //           enableAnimations: true,
+                      //           onPressed: () =>
+                      //               _controller.openAllSongs(context),
+                      //         ),
+                      //         const SizedBox(width: 12),
+                      //         NixButton(
+                      //           customBackgroundColor: Theme.of(
+                      //             context,
+                      //           ).colorScheme.primary.withValues(alpha: 0.7),
+                      //           icon: const Icon(FlutterRemix.disc_fill),
+                      //           label: const Text("Albums"),
+                      //           enableAnimations: true,
+                      //           onPressed: () =>
+                      //               _controller.openAlbums(context),
+                      //         ),
+                      //       ],
+                      //     ),
+                      //   ),
+                      // ),
                       // ── Recently Listened ──
                       SliverToBoxAdapter(
                         child: Padding(
@@ -206,34 +181,35 @@ class _HomePageState extends State<HomePage> {
                           }
                           final recentTracks = tracks.take(10).toList();
                           return SliverToBoxAdapter(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                              child: SizedBox(
-                                height: 215,
-                                child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  physics: const BouncingScrollPhysics(),
-                                  itemCount: recentTracks.length,
-                                  itemBuilder: (context, index) {
-                                    final track = recentTracks[index];
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 5.0,
-                                      ),
-                                      child: SizedBox(
-                                        width: 161.0,
-                                        child: GestureDetector(
-                                          onTap: () => _controller.playRecentTrack(
-                                            context,
-                                            track,
-                                            tracks,
-                                          ),
-                                          child: TrackCardTile(track: track),
+                            child: SizedBox(
+                              height: 215,
+
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                physics: const BouncingScrollPhysics(),
+                                itemCount: recentTracks.length,
+                                itemBuilder: (context, index) {
+                                  final track = recentTracks[index];
+                                  return Padding(
+                                    padding:
+                                        PaddingController.getHorizontalListPadding(
+                                          index: index,
+                                          length: recentTracks.length,
                                         ),
+                                    child: SizedBox(
+                                      width: 161.0,
+                                      child: GestureDetector(
+                                        onTap: () =>
+                                            _controller.playRecentTrack(
+                                              context,
+                                              track,
+                                              tracks,
+                                            ),
+                                        child: TrackCardTile(track: track),
                                       ),
-                                    );
-                                  },
-                                ),
+                                    ),
+                                  );
+                                },
                               ),
                             ),
                           );
@@ -270,38 +246,38 @@ class _HomePageState extends State<HomePage> {
                               .albumFirstTrackId;
                           final recentAlbums = albums.take(10).toList();
                           return SliverToBoxAdapter(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                              child: SizedBox(
-                                height: 213,
-                                child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  physics: const BouncingScrollPhysics(),
-                                  itemCount: recentAlbums.length,
-                                  itemBuilder: (context, index) {
-                                    final album = recentAlbums[index];
-                                    final firstTrackId =
-                                        albumFirstTrackId[album.title];
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 5.0,
-                                      ),
-                                      child: SizedBox(
-                                        width: 160.0,
-                                        child: AlbumCardTile(
-                                          title: album.title,
-                                          subtitle: album.artist,
-                                          firstTrackId: firstTrackId,
-                                          onTap: () => _controller.openAlbumDetails(
-                                            context,
-                                            album.title,
-                                            album.artist,
-                                          ),
+                            child: SizedBox(
+                              height: 213,
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                physics: const BouncingScrollPhysics(),
+                                itemCount: recentAlbums.length,
+                                itemBuilder: (context, index) {
+                                  final album = recentAlbums[index];
+                                  final firstTrackId =
+                                      albumFirstTrackId[album.title];
+                                  return Padding(
+                                    padding:
+                                        PaddingController.getHorizontalListPadding(
+                                          index: index,
+                                          length: recentAlbums.length,
                                         ),
+                                    child: SizedBox(
+                                      width: 160.0,
+                                      child: AlbumCardTile(
+                                        title: album.title,
+                                        subtitle: album.artist,
+                                        firstTrackId: firstTrackId,
+                                        onTap: () =>
+                                            _controller.openAlbumDetails(
+                                              context,
+                                              album.title,
+                                              album.artist,
+                                            ),
                                       ),
-                                    );
-                                  },
-                                ),
+                                    ),
+                                  );
+                                },
                               ),
                             ),
                           );

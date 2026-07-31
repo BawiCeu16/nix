@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
-import 'package:nix/providers/user_provider.dart';
 import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/music_provider.dart';
@@ -33,8 +32,6 @@ class _LibraryPageState extends State<LibraryPage> {
 
   @override
   Widget build(BuildContext context) {
-    final user = context.watch<UserProvider>();
-
     return ListenableBuilder(
       listenable: _controller,
       builder: (context, _) {
@@ -65,40 +62,21 @@ class _LibraryPageState extends State<LibraryPage> {
                       parent: BouncingScrollPhysics(),
                     ),
                     children: [
-                      // User Profile
-                      ListTile(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        tileColor: Theme.of(context).colorScheme.surface,
-                        leading: CircleAvatar(
-                          radius: 30,
-                          backgroundColor: UserProvider
-                              .avatarColors[user.avatarIndex]
-                              .withValues(alpha: 0.2),
-                          child: Icon(
-                            UserProvider.avatarIcons[user.avatarIndex],
-                            color: UserProvider.avatarColors[user.avatarIndex],
-                            size: 30,
-                          ),
-                        ),
-                        title: Text(user.userName),
-                        subtitle: const Text("View your music profile"),
-                        onTap: () => _controller.openProfile(context),
-                      ),
-                      const SizedBox(height: 10),
-                      const NixSectionHeader(title: 'Personal', topPadding: 16),
+                      const NixSectionHeader(title: 'Personal', topPadding: 0),
 
                       // Dynamic stats
+                      CardListTile(
+                        title: 'Listening Stats',
+                        icon: FlutterRemix.bar_chart_fill,
+                        subtitle: 'Overview, top tracks, artists & history',
+                        isFirst: true,
+                        onTap: () => _controller.openListeningStats(context),
+                      ),
+                      const SizedBox(height: 2.5),
                       CardListTile(
                         title: 'Top Listened',
                         icon: FlutterRemix.fire_fill,
                         subtitle: '${music.topPlayed.tracks.length} tracks',
-                        isFirst: true,
                         onTap: () => _controller.openTopListened(context),
                       ),
                       const SizedBox(height: 2.5),

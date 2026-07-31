@@ -32,6 +32,7 @@ void main() async {
     Hive.openBox<String>(HiveKeys.playlistsBox),
     Hive.openBox<int>(HiveKeys.playHistoryBox),
     Hive.openBox<int>(HiveKeys.playCountsBox),
+    Hive.openBox<int>(HiveKeys.playDurationsBox),
   ]);
 
   final bool hasCompletedOnboarding = Hive.box(
@@ -118,7 +119,7 @@ class NixApp extends StatelessWidget {
             );
 
             return MaterialApp(
-              showPerformanceOverlay: true,
+              // showPerformanceOverlay: true,
               title: 'Nix',
               debugShowCheckedModeBanner: false,
               theme: theme,

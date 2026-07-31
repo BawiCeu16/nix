@@ -10,6 +10,7 @@ import 'package:nix/providers/music_provider.dart';
 import 'package:nix/providers/user_provider.dart';
 import 'package:nix/providers/sleep_timer_provider.dart';
 import 'package:nix/providers/artwork_provider.dart';
+import 'package:nix/providers/lyrics_provider.dart';
 import 'package:nix/providers/will_pop_provider.dart';
 import 'package:nix/main.dart';
 
@@ -45,6 +46,7 @@ void main() {
           ChangeNotifierProvider(create: (_) => UserProvider()),
           ChangeNotifierProvider(create: (_) => SleepTimerProvider()),
           ChangeNotifierProvider(create: (_) => ArtworkProvider()),
+          ChangeNotifierProvider(create: (_) => LyricsProvider()),
           Provider(create: (_) => WillPopProvider()),
         ],
         child: const NixApp(hasCompletedOnboarding: false),

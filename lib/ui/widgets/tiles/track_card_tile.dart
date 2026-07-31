@@ -27,7 +27,6 @@ class TrackCardTile extends StatelessWidget {
       margin: EdgeInsets.zero,
       clipBehavior: Clip.none,
       elevation: 0,
-      color: Colors.transparent,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -61,11 +60,14 @@ class TrackCardTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 1),
                 ValueListenableBuilder<Box<int>>(
-                  valueListenable: Hive.box<int>(HiveKeys.trackPositionsBox)
-                      .listenable(keys: [track.id]),
+                  valueListenable: Hive.box<int>(
+                    HiveKeys.trackPositionsBox,
+                  ).listenable(keys: [track.id]),
                   builder: (context, box, _) {
                     final savedMs = showResume ? box.get(track.id) : null;
-                    final totalDurationStr = Duration(milliseconds: track.duration).shortFormat();
+                    final totalDurationStr = Duration(
+                      milliseconds: track.duration,
+                    ).shortFormat();
                     final durationStr = savedMs != null
                         ? '${Duration(milliseconds: savedMs).shortFormat()} / $totalDurationStr'
                         : totalDurationStr;

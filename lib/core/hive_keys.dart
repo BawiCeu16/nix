@@ -9,6 +9,7 @@ abstract final class HiveKeys {
   static const String favoritesBox = 'favorites';
   static const String playHistoryBox = 'play_history';
   static const String playCountsBox = 'play_counts';
+  static const String playDurationsBox = 'play_durations';
   static const String colorCacheBox = 'color_cache';
   static const String lyricsBox = 'lyrics_cache';
 
@@ -47,6 +48,5 @@ abstract final class HiveKeys {
 
   // ── User keys ──────────────────────────────────────────────────────────────
   static const String username = 'username';
-  static const String avatarIndex = 'avatarIndex';
   static const String searchHistory = 'searchHistory';
 }

@@ -4,7 +4,6 @@ import 'package:nix/providers/music_provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/models/music/track.dart';
 import 'package:nix/models/music/playlist.dart';
-import 'package:nix/ui/screens/profile_page.dart';
 import 'package:nix/ui/screens/music/tracks_page.dart';
 import 'package:nix/ui/screens/music/albums_page.dart';
 
@@ -21,12 +20,6 @@ class HomePageController extends ChangeNotifier {
     await context.read<MusicProvider>().scanDevice();
   }
 
-  void openProfile(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ProfilePage()),
-    );
-  }
-
   void openAllSongs(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -39,9 +32,9 @@ class HomePageController extends ChangeNotifier {
   }
 
   void openAlbums(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AlbumsPage()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const AlbumsPage()));
   }
 
   void openRecentlyListened(BuildContext context) {
@@ -49,13 +42,18 @@ class HomePageController extends ChangeNotifier {
       MaterialPageRoute(
         builder: (_) => TracksPage(
           title: 'Recently Listened',
-          tracksSource: () => context.read<MusicProvider>().recentlyPlayed.tracks,
+          tracksSource: () =>
+              context.read<MusicProvider>().recentlyPlayed.tracks,
         ),
       ),
     );
   }
 
-  void playRecentTrack(BuildContext context, Track track, List<Track> allRecents) {
+  void playRecentTrack(
+    BuildContext context,
+    Track track,
+    List<Track> allRecents,
+  ) {
     final currentMusic = context.read<CurrentMusicProvider>();
     final pl = Playlist(
       id: 'recently_played',
@@ -66,13 +64,15 @@ class HomePageController extends ChangeNotifier {
     currentMusic.playTrack(track, playlist: pl);
   }
 
-  void openAlbumDetails(BuildContext context, String albumTitle, String albumArtist) {
+  void openAlbumDetails(
+    BuildContext context,
+    String albumTitle,
+    String albumArtist,
+  ) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => AlbumTracksPage(
-          albumTitle: albumTitle,
-          albumArtist: albumArtist,
-        ),
+        builder: (_) =>
+            AlbumTracksPage(albumTitle: albumTitle, albumArtist: albumArtist),
       ),
     );
   }

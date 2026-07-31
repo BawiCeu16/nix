@@ -3,15 +3,15 @@ import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
 
 import 'package:nix/core/math_utils.dart';
-import 'package:nix/providers/current_music_provider.dart';
+// import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/settings_provider.dart';
-import 'package:nix/models/music/track.dart';
+// import 'package:nix/models/music/track.dart';
 import 'package:nix/ui/miniplayer/widgets/top_bar.dart';
 import 'package:nix/ui/miniplayer/widgets/track_image.dart';
 import 'package:nix/ui/miniplayer/widgets/track_info.dart';
 import 'package:nix/ui/miniplayer/widgets/player_controls.dart';
 import 'package:nix/ui/miniplayer/widgets/queue_view.dart';
-import 'package:nix/ui/miniplayer/widgets/lyrics_section.dart';
+// import 'package:nix/ui/miniplayer/widgets/lyrics_section.dart';
 import 'package:nix/ui/miniplayer/controllers/now_playing_controller.dart';
 
 class NowPlaying extends StatefulWidget {
@@ -55,9 +55,9 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final track = context.select<CurrentMusicProvider, Track?>(
-      (p) => p.currentTrack,
-    );
+    // final track = context.select<CurrentMusicProvider, Track?>(
+    //   (p) => p.currentTrack,
+    // );
     final showMiniplayerShadow = context.select<SettingsProvider, bool>(
       (s) => s.showMiniplayerShadow,
     );
@@ -203,18 +203,18 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                       },
                     ),
                     //Lyrics section
-                    AnimatedBuilder(
-                      animation: _controller.lyricsAnim,
-                      builder: (context, _) {
-                        return LyricsSection(
-                          lyricsAnim: _controller.lyricsAnim,
-                          data: data,
-                          maxOffset: _controller.maxOffset,
-                          topInset: _controller.topInset,
-                          track: track,
-                        );
-                      },
-                    ),
+                    // AnimatedBuilder(
+                    //   animation: _controller.lyricsAnim,
+                    //   builder: (context, _) {
+                    //     return LyricsSection(
+                    //       lyricsAnim: _controller.lyricsAnim,
+                    //       data: data,
+                    //       maxOffset: _controller.maxOffset,
+                    //       topInset: _controller.topInset,
+                    //       track: track,
+                    //     );
+                    //   },
+                    // ),
                     //Track info
                     TrackInfo(
                       sAnim: _controller.sAnim,

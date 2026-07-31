@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/ui/screens/settings/settings_page.dart';
-import 'package:nix/ui/screens/profile_page.dart';
+import 'package:nix/ui/screens/stats_page.dart';
 import 'package:nix/ui/screens/music/tracks_page.dart';
 import 'package:nix/ui/screens/music/artists_page.dart';
 import 'package:nix/ui/screens/music/albums_page.dart';
@@ -21,8 +21,8 @@ class LibraryPageController extends ChangeNotifier {
     pushPage(context, const SettingsPage());
   }
 
-  void openProfile(BuildContext context) {
-    pushPage(context, const ProfilePage());
+  void openListeningStats(BuildContext context) {
+    pushPage(context, const StatsPage());
   }
 
   void openTopListened(BuildContext context) {

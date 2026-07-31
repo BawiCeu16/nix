@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
-import 'package:flywheel_carousel/flywheel_carousel.dart';
 import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
 import 'package:nix/ui/widgets/buttons/expressive_huge_button.dart';
 import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
-import 'package:nix/providers/user_provider.dart';
 import 'package:nix/ui/screens/controllers/onboarding_controller.dart';
 
 class OnboardingPage extends StatefulWidget {
@@ -238,7 +236,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   Widget _buildUsernamePage(ThemeData theme, ColorScheme colorScheme) {
-    final isValid = _controller.nameController.text.trim().length >= 3;
+    final isValid = _controller.nameController.text.trim().isNotEmpty;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -246,61 +244,16 @@ class _OnboardingPageState extends State<OnboardingPage> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            'Setup your profile',
+            'What should we call you?',
             style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 24),
-
-          // Flywheel Carousel for Avatar Selection (No Glow, Selected Scale Animation, No Looping)
-          FlywheelCarousel<int>(
-            height: 120,
-            cardHeight: 90,
-            viewportFraction: 0.28,
-            loop: false,
-            items: List.generate(UserProvider.avatarIcons.length, (i) => i),
-            initialIndex: _controller.selectedAvatar,
-            onIndexChanged: (index) => _controller.setAvatar(index),
-            itemBuilder: (context, index, isSelected) {
-              final color = UserProvider.avatarColors[index];
-              return Center(
-                child: AnimatedScale(
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeOutCubic,
-                  scale: isSelected ? 1.15 : 0.85,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    curve: Curves.easeOutCubic,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isSelected
-                            ? colorScheme.primary
-                            : Colors.transparent,
-                        width: 3,
-                      ),
-                    ),
-                    child: CircleAvatar(
-                      radius: 30,
-                      backgroundColor: color.withValues(alpha: 0.2),
-                      child: Icon(
-                        UserProvider.avatarIcons[index],
-                        color: color,
-                        size: 28,
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           TextField(
             controller: _controller.nameController,
             decoration: InputDecoration(
-              hintText: 'Your nickname',
+              hintText: 'Your name',
               filled: true,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(100),

@@ -10,7 +10,6 @@ class OnboardingPageController extends ChangeNotifier {
   final PageController pageController = PageController();
   final TextEditingController nameController = TextEditingController(text: '');
   int currentPage = 0;
-  int selectedAvatar = 0;
   bool isAudioGranted = false;
   bool isNotificationGranted = false;
 
@@ -20,11 +19,6 @@ class OnboardingPageController extends ChangeNotifier {
 
   void onPageChanged(int index) {
     currentPage = index;
-    notifyListeners();
-  }
-
-  void setAvatar(int index) {
-    selectedAvatar = index;
     notifyListeners();
   }
 
@@ -72,7 +66,6 @@ class OnboardingPageController extends ChangeNotifier {
     final name = nameController.text.trim();
     final userProvider = context.read<UserProvider>();
     userProvider.setUserName(name.isEmpty ? '' : name);
-    userProvider.setAvatarIndex(selectedAvatar);
 
     final box = Hive.box(HiveKeys.settingsBox);
     await box.put(HiveKeys.onboarding, true);

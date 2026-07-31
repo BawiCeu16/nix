@@ -211,9 +211,34 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
     await _audioPlayer.setSkipSilenceEnabled(
       _settingsProvider?.skipSilence ?? false,
     );
+
+    // Track actual listening duration in real-time
+    _audioPlayer.positionStream.listen((pos) {
+      final track = _currentTrack;
+      if (track != null && _audioPlayer.playing) {
+        final last = _lastPlaybackPosition;
+        _lastPlaybackPosition = pos;
+        if (last != null) {
+          final delta = pos.inMilliseconds - last.inMilliseconds;
+          // Valid playing delta between 10ms and 3000ms (filtering out seeks/skips)
+          if (delta > 10 && delta < 3000) {
+            if (Hive.isBoxOpen(HiveKeys.playDurationsBox)) {
+              final box = Hive.box<int>(HiveKeys.playDurationsBox);
+              final currentMs = box.get(track.id) ?? 0;
+              box.put(track.id, currentMs + delta);
+            }
+          }
+        }
+      } else {
+        _lastPlaybackPosition = null;
+      }
+    });
   }
 
+  Duration? _lastPlaybackPosition;
+
   Future<void> playTrack(Track track, {Playlist? playlist}) async {
+    _lastPlaybackPosition = null;
     // 1. PHASE 1: Immediate State Update (Synchronous-like)
     _playbackSelectionToken++;
     final int currentToken = _playbackSelectionToken;
@@ -417,11 +442,13 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
     _currentPlaylist = null;
     _audioLoadingState = AudioLoadingState.idle;
     _isTransitioning = false;
+    _lastPlaybackPosition = null;
     notifyListeners();
   }
 
   @override
   Future<void> seek(Duration position) async {
+    _lastPlaybackPosition = null;
     await _audioPlayer.seek(position);
   }
 
