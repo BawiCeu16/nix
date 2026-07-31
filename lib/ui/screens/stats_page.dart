@@ -132,7 +132,9 @@ class _StatsPageState extends State<StatsPage> {
                   height: 48,
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+                    color: colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.6,
+                    ),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
@@ -166,8 +168,8 @@ class _StatsPageState extends State<StatsPage> {
                   child: _controller.selectedTabIndex == 0
                       ? _buildTopSongsList(context)
                       : _controller.selectedTabIndex == 1
-                          ? _buildTopArtistsList(context)
-                          : _buildHistoryList(context),
+                      ? _buildTopArtistsList(context)
+                      : _buildHistoryList(context),
                 ),
 
                 const NixBottomSpacer(),
@@ -226,7 +228,7 @@ class _StatsPageState extends State<StatsPage> {
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.2),
                         blurRadius: 4,
-                      )
+                      ),
                     ],
                   ),
                   child: const Icon(
@@ -280,8 +282,8 @@ class _StatsPageState extends State<StatsPage> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -289,8 +291,8 @@ class _StatsPageState extends State<StatsPage> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -343,9 +345,9 @@ class _StatsPageState extends State<StatsPage> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: colorScheme.onSurface,
-                ),
+              fontWeight: FontWeight.w800,
+              color: colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 2),
           Text(
@@ -353,9 +355,9 @@ class _StatsPageState extends State<StatsPage> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w500,
-                ),
+              color: colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
@@ -386,7 +388,7 @@ class _StatsPageState extends State<StatsPage> {
                       color: Colors.black.withValues(alpha: 0.06),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
-                    )
+                    ),
                   ]
                 : [],
           ),
@@ -429,7 +431,8 @@ class _StatsPageState extends State<StatsPage> {
       return _buildEmptyState(
         context,
         icon: FlutterRemix.music_2_line,
-        message: 'No song plays recorded yet.\nStart listening to see your top songs!',
+        message:
+            'No song plays recorded yet.\nStart listening to see your top songs!',
       );
     }
 
@@ -464,14 +467,20 @@ class _StatsPageState extends State<StatsPage> {
                       child: Container(
                         height: 3,
                         decoration: BoxDecoration(
-                          color: _getRankColor(rank, colorScheme).withValues(alpha: 0.8),
+                          color: _getRankColor(
+                            rank,
+                            colorScheme,
+                          ).withValues(alpha: 0.8),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     child: Row(
                       children: [
                         _buildRankBadge(context, rank),
@@ -519,7 +528,9 @@ class _StatsPageState extends State<StatsPage> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: colorScheme.primaryContainer.withValues(alpha: 0.5),
+                            color: colorScheme.primaryContainer.withValues(
+                              alpha: 0.5,
+                            ),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
@@ -552,7 +563,8 @@ class _StatsPageState extends State<StatsPage> {
       return _buildEmptyState(
         context,
         icon: FlutterRemix.user_4_line,
-        message: 'No artist stats recorded yet.\nListen to songs to discover your top artists!',
+        message:
+            'No artist stats recorded yet.\nListen to songs to discover your top artists!',
       );
     }
 
@@ -582,22 +594,28 @@ class _StatsPageState extends State<StatsPage> {
                     child: Container(
                       height: 3,
                       decoration: BoxDecoration(
-                        color: _getRankColor(rank, colorScheme).withValues(alpha: 0.8),
+                        color: _getRankColor(
+                          rank,
+                          colorScheme,
+                        ).withValues(alpha: 0.8),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
                   child: Row(
                     children: [
                       _buildRankBadge(context, rank),
                       const SizedBox(width: 10),
                       CircleAvatar(
                         radius: 21,
-                        backgroundColor:
-                            colorScheme.secondaryContainer.withValues(alpha: 0.8),
+                        backgroundColor: colorScheme.secondaryContainer
+                            .withValues(alpha: 0.8),
                         child: Icon(
                           FlutterRemix.user_3_fill,
                           color: colorScheme.onSecondaryContainer,
@@ -636,7 +654,9 @@ class _StatsPageState extends State<StatsPage> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: colorScheme.secondaryContainer.withValues(alpha: 0.6),
+                          color: colorScheme.secondaryContainer.withValues(
+                            alpha: 0.6,
+                          ),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -667,7 +687,8 @@ class _StatsPageState extends State<StatsPage> {
       return _buildEmptyState(
         context,
         icon: FlutterRemix.history_line,
-        message: 'No playback history recorded yet.\nPlayed songs will appear here.',
+        message:
+            'No playback history recorded yet.\nPlayed songs will appear here.',
       );
     }
 
@@ -675,7 +696,9 @@ class _StatsPageState extends State<StatsPage> {
       key: const ValueKey('history'),
       children: List.generate(history.length, (index) {
         final item = history[index];
-        final relativeTime = StatsController.formatRelativeTime(item.lastPlayed);
+        final relativeTime = StatsController.formatRelativeTime(
+          item.lastPlayed,
+        );
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
@@ -684,8 +707,10 @@ class _StatsPageState extends State<StatsPage> {
             borderRadius: BorderRadius.circular(14),
             clipBehavior: Clip.antiAlias,
             child: ListTile(
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 4,
+              ),
               leading: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: NixArtwork(
@@ -716,7 +741,9 @@ class _StatsPageState extends State<StatsPage> {
               trailing: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+                  color: colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.6,
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -840,7 +867,11 @@ class _StatsPageState extends State<StatsPage> {
       child: Center(
         child: Column(
           children: [
-            Icon(icon, size: 48, color: colorScheme.outline.withValues(alpha: 0.7)),
+            Icon(
+              icon,
+              size: 48,
+              color: colorScheme.outline.withValues(alpha: 0.7),
+            ),
             const SizedBox(height: 12),
             Text(
               message,

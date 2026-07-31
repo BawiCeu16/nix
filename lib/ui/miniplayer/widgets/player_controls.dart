@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:nix/core/format.dart';
 import 'package:provider/provider.dart';
@@ -242,105 +243,155 @@ class PlayerControls extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 25),
                     child: Align(
                       alignment: Alignment.bottomLeft,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          StreamBuilder<PlayerState>(
-                            stream: currentMusic.playerStateStream,
-                            builder: (context, stateSnap) {
-                              final isPlaying =
-                                  stateSnap.data?.playing ?? false;
-                              return TweenAnimationBuilder<double>(
-                                tween: Tween<double>(
-                                  begin: 0.0,
-                                  end: isPlaying ? 3.0 : 0.0,
-                                ),
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeInOut,
-                                builder: (context, amplitude, _) {
-                                  return StreamBuilder<Duration>(
-                                    stream: currentMusic.positionStream,
-                                    builder: (context, posSnap) {
-                                      final pos = posSnap.data ?? Duration.zero;
-                                      final dur =
-                                          duration ??
-                                          Duration.zero;
-                                      final sliderVal = dur.inMilliseconds > 0
-                                          ? (pos.inMilliseconds /
-                                                    dur.inMilliseconds)
-                                                .clamp(0.0, 1.0)
-                                          : 0.0;
-                                      return WaveSlider(
-                                        value: sliderVal,
-                                        theme: WaveSliderTheme(
-                                          activeColor: Theme.of(
-                                            context,
-                                          ).colorScheme.primary,
-                                          thumbColor: Theme.of(
-                                            context,
-                                          ).colorScheme.primary,
-                                          inactiveColor: Theme.of(context)
-                                              .colorScheme
-                                              .primary
-                                              .withValues(alpha: .3),
-                                          amplitude: amplitude,
-
-                                          frequency: 15,
-                                          strokeWidth: 2.8,
-                                          thumbShape: WaveSliderThumbShape.bar,
-                                        ),
-                                        onChanged: (v) {
-                                          if (dur.inMilliseconds > 0) {
-                                            currentMusic.seek(
-                                              Duration(
-                                                milliseconds:
-                                                    (v * dur.inMilliseconds)
-                                                        .round(),
-                                              ),
-                                            );
-                                          }
-                                        },
-                                      );
-                                    },
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 0.0,
-                            ),
-                            child: StreamBuilder<Duration>(
-                              stream: currentMusic.positionStream,
-                              builder: (context, posSnap) {
-                                final pos = posSnap.data ?? Duration.zero;
-                                final dur =
-                                    duration ?? Duration.zero;
-                                return Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      pos.shortFormat(),
-                                      style: TextStyle(color: onSecondary),
-                                    ),
-                                    Text(
-                                      dur.shortFormat(),
-                                      style: TextStyle(color: onSecondary),
-                                    ),
-                                  ],
-                                );
-                              },
-                            ),
-                          ),
-                        ],
+                      child: _PlayerSlider(
+                        currentMusic: currentMusic,
+                        duration: duration,
+                        onSecondary: onSecondary,
                       ),
                     ),
                   ),
                 ),
               ),
           ],
+        );
+      },
+    );
+  }
+}
+
+class _PlayerSlider extends StatefulWidget {
+  final CurrentMusicProvider currentMusic;
+  final Duration? duration;
+  final Color onSecondary;
+
+  const _PlayerSlider({
+    required this.currentMusic,
+    required this.duration,
+    required this.onSecondary,
+  });
+
+  @override
+  State<_PlayerSlider> createState() => _PlayerSliderState();
+}
+
+class _PlayerSliderState extends State<_PlayerSlider> {
+  bool _isDragging = false;
+  double _dragValue = 0.0;
+  Timer? _dragTimer;
+
+  void _onSliderChanged(double v, Duration dur) {
+    setState(() {
+      _isDragging = true;
+      _dragValue = v;
+    });
+
+    if (dur.inMilliseconds > 0) {
+      widget.currentMusic.seek(
+        Duration(milliseconds: (v * dur.inMilliseconds).round()),
+      );
+    }
+
+    _dragTimer?.cancel();
+    _dragTimer = Timer(const Duration(milliseconds: 200), () {
+      if (mounted) {
+        setState(() {
+          _isDragging = false;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _dragTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<PlayerState>(
+      stream: widget.currentMusic.playerStateStream,
+      builder: (context, stateSnap) {
+        final isPlaying = stateSnap.data?.playing ?? false;
+
+        return TweenAnimationBuilder<double>(
+          tween: Tween<double>(
+            begin: 0.0,
+            end: isPlaying ? 3.0 : 0.0,
+          ),
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          builder: (context, amplitude, _) {
+            return StreamBuilder<Duration>(
+              stream: widget.currentMusic.positionStream,
+              builder: (context, posSnap) {
+                final realPos = posSnap.data ?? Duration.zero;
+                final dur = widget.duration ?? Duration.zero;
+                final double realVal = dur.inMilliseconds > 0
+                    ? (realPos.inMilliseconds / dur.inMilliseconds).clamp(
+                        0.0,
+                        1.0,
+                      )
+                    : 0.0;
+
+                final targetVal = _isDragging ? _dragValue : realVal;
+                final displayPos = _isDragging
+                    ? Duration(
+                        milliseconds: (targetVal * dur.inMilliseconds).round(),
+                      )
+                    : realPos;
+
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TweenAnimationBuilder<double>(
+                      tween: Tween<double>(
+                        end: targetVal,
+                      ),
+                      duration: _isDragging
+                          ? Duration.zero
+                          : const Duration(milliseconds: 250),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, animatedVal, _) {
+                        return WaveSlider(
+                          value: animatedVal,
+                          theme: WaveSliderTheme(
+                            activeColor: Theme.of(context).colorScheme.primary,
+                            thumbColor: Theme.of(context).colorScheme.primary,
+                            inactiveColor: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withValues(alpha: .3),
+                            amplitude: amplitude,
+                            frequency: 15,
+                            strokeWidth: 2.8,
+                            thumbShape: WaveSliderThumbShape.bar,
+                          ),
+                          onChanged: (v) => _onSliderChanged(v, dur),
+                        );
+                      },
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 0.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            displayPos.shortFormat(),
+                            style: TextStyle(color: widget.onSecondary),
+                          ),
+                          Text(
+                            dur.shortFormat(),
+                            style: TextStyle(color: widget.onSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
         );
       },
     );

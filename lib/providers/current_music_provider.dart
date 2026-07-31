@@ -99,6 +99,21 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
     return null;
   }
 
+  /// Returns the track that played previously.
+  Track? get previousTrack {
+    if (_currentPlaylist == null || _currentTrack == null) return null;
+
+    final tracks = _currentPlaylist!.tracks;
+    final currentIndex = tracks.indexWhere((t) => t.id == _currentTrack!.id);
+
+    if (currentIndex > 0) {
+      return tracks[currentIndex - 1];
+    } else if (_isRepeatEnabled && tracks.isNotEmpty) {
+      return tracks.last;
+    }
+    return null;
+  }
+
   /// Returns true if a track is loaded and the MiniPlayer should be visible.
   bool get showMiniPlayer => _currentTrack != null;
 
@@ -355,7 +370,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       _audioLoadingState = AudioLoadingState.error;
       notifyListeners();
     } finally {
-      Future.delayed(const Duration(milliseconds: 500), () {
+      Future.delayed(const Duration(milliseconds: 100), () {
         if (currentToken == _playbackSelectionToken) {
           _isTransitioning = false;
         }

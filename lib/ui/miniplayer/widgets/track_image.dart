@@ -40,10 +40,50 @@ class TrackImage extends StatelessWidget {
     required this.lyricsAnim,
   });
 
+  Widget _buildSingleArtwork(
+    BuildContext context,
+    Track? song,
+    BorderRadius radius,
+  ) {
+    if (song != null) {
+      return RepaintBoundary(
+        child: NixArtwork(
+          id: song.id,
+          type: ArtworkType.AUDIO,
+          borderRadius: radius,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+        ),
+      );
+    }
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primaryContainer,
+        borderRadius: radius,
+      ),
+      child: Center(
+        child: Icon(
+          FlutterRemix.music_2_fill,
+          size: 40,
+          color: Theme.of(
+            context,
+          ).colorScheme.onPrimaryContainer.withValues(alpha: .5),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentSong = context.select<CurrentMusicProvider, Track?>(
       (p) => p.currentTrack,
+    );
+    final nextSong = context.select<CurrentMusicProvider, Track?>(
+      (p) => p.nextTrack,
+    );
+    final previousSong = context.select<CurrentMusicProvider, Track?>(
+      (p) => p.previousTrack,
     );
 
     final double maxStandardSize = screenSize.width - 46.0;
@@ -56,199 +96,190 @@ class TrackImage extends StatelessWidget {
     return AnimatedBuilder(
       animation: Listenable.merge([sAnim, lyricsAnim]),
       builder: (context, child) {
-        return Opacity(
-          opacity: 1 - sAnim.value.abs(),
+        final double sVal = sAnim.value;
+        final borderRadius = BorderRadius.circular(
+          rangeProgress(a: 100.0, b: 15.0, c: data.bounceClampedProgress),
+        );
+
+        return Transform.translate(
+          offset: Offset(
+            -sVal * sMaxOffset / siParallax,
+            !bounceUp
+                ? (-maxOffset + topInset + 108.0) *
+                      (!bounceDown
+                          ? data.queueProgress
+                          : (1 - data.bounceProgress))
+                : 0.0,
+          ),
           child: Transform.translate(
             offset: Offset(
-              -sAnim.value * sMaxOffset / siParallax,
-              !bounceUp
-                  ? (-maxOffset + topInset + 108.0) *
-                        (!bounceDown
-                            ? data.queueProgress
-                            : (1 - data.bounceProgress))
-                  : 0.0,
+              0,
+              data.bottomOffset +
+                  rangeProgress(
+                    a: -maxOffset / 2.30 * data.bounceProgress.clamp(0, 2),
+                    b: -maxOffset / 3.6 * data.bounceProgress.clamp(0, 2),
+                    c: lyricsAnim.value,
+                  ) +
+                  (90.0 * lyricsAnim.value * data.bounceClampedProgress),
             ),
-            child: Transform.translate(
-              offset: Offset(
-                0,
-                data.bottomOffset +
-                    rangeProgress(
-                      a: -maxOffset / 2.30 * data.bounceProgress.clamp(0, 2),
-                      b: -maxOffset / 3.6 * data.bounceProgress.clamp(0, 2),
-                      c: lyricsAnim.value,
-                    ) +
-                    (90.0 * lyricsAnim.value * data.bounceClampedProgress),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(12.0 * (1 - data.bounceClampedProgress))
-                    .add(
-                      EdgeInsets.only(
-                        left: rangeProgress(
-                          a:
-                              22.0 *
-                              data.bounceClampedProgress *
-                              lyricsAnim.value,
-                          b: 20.0 * data.bounceClampedProgress,
-                          c: lyricsAnim.value,
-                        ),
+            child: Padding(
+              padding: EdgeInsets.all(12.0 * (1 - data.bounceClampedProgress))
+                  .add(
+                    EdgeInsets.only(
+                      left: rangeProgress(
+                        a: 22.0 * data.bounceClampedProgress * lyricsAnim.value,
+                        b: 20.0 * data.bounceClampedProgress,
+                        c: lyricsAnim.value,
                       ),
                     ),
-                child: Align(
-                  alignment:
-                      Alignment.lerp(
-                        Alignment.bottomLeft,
-                        Alignment.bottomCenter,
-                        data.bounceClampedProgress * (1 - lyricsAnim.value),
-                      ) ??
+                  ),
+              child: Align(
+                alignment:
+                    Alignment.lerp(
                       Alignment.bottomLeft,
-                  child: SizedBox(
-                    height: rangeProgress(
-                      a: 82.0,
-                      b: rangeProgress(
-                        a: expandedSize,
-                        b: 60.0,
-                        c: lyricsAnim.value,
-                      ),
-                      c: data.bounceClampedProgress,
+                      Alignment.bottomCenter,
+                      data.bounceClampedProgress * (1 - lyricsAnim.value),
+                    ) ??
+                    Alignment.bottomLeft,
+                child: SizedBox(
+                  height: rangeProgress(
+                    a: 82.0,
+                    b: rangeProgress(
+                      a: expandedSize,
+                      b: 60.0,
+                      c: lyricsAnim.value,
                     ),
-                    width: rangeProgress(
-                      a: 82.0,
-                      b: rangeProgress(
-                        a: expandedSize,
-                        b: 60.0,
-                        c: lyricsAnim.value,
-                      ),
-                      c: data.bounceClampedProgress,
+                    c: data.bounceClampedProgress,
+                  ),
+                  width: rangeProgress(
+                    a: 82.0,
+                    b: rangeProgress(
+                      a: expandedSize,
+                      b: 60.0,
+                      c: lyricsAnim.value,
                     ),
-                    child: Padding(
-                      padding: EdgeInsets.all(
-                        12.0 * (1 - data.bounceClampedProgress),
-                      ),
-                      child: Stack(
-                        children: [
-                          currentSong != null
-                              ? RepaintBoundary(
-                                  child: NixArtwork(
-                                    id: currentSong.id,
-                                    type: ArtworkType.AUDIO,
-                                    borderRadius: BorderRadius.circular(
-                                      rangeProgress(
-                                        a: 100.0,
-                                        b: 15.0,
-                                        c: data.bounceClampedProgress,
-                                      ),
-                                    ),
-                                    fit: BoxFit.cover,
-                                    width: double.infinity,
-                                    height: double.infinity,
-                                  ),
-                                )
-                              : Container(
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primaryContainer,
-                                    borderRadius: BorderRadius.circular(
-                                      rangeProgress(
-                                        a: 100.0,
-                                        b: 15.0,
-                                        c: data.bounceClampedProgress,
-                                      ),
-                                    ),
-                                  ),
-                                  child: Center(
-                                    child: Icon(
-                                      FlutterRemix.music_2_fill,
-                                      size: 40,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onPrimaryContainer
-                                          .withValues(alpha: .5),
-                                    ),
-                                  ),
-                                ),
-                          // Sleep Timer Indicator
-                          Consumer<SleepTimerProvider>(
-                            builder: (context, timer, _) {
-                              if (!timer.isActive) return const SizedBox();
-                              final opacity =
-                                  ((data.opacity - data.queueClampedProgress) *
-                                          (1 - lyricsAnim.value))
-                                      .clamp(0.0, 1.0);
-                              if (opacity == 0) return const SizedBox();
-
-                              return Positioned(
-                                top: 12,
-                                left: 12,
-                                child: Opacity(
-                                  opacity: opacity,
-                                  child: GestureDetector(
-                                    onTap:
-                                        context
-                                                .read<SettingsProvider>()
-                                                .timerGesture ==
-                                            TimerGesture.tap
-                                        ? () => SleepTimerDialog.show(context)
-                                        : null,
-                                    onLongPress:
-                                        context
-                                                .read<SettingsProvider>()
-                                                .timerGesture ==
-                                            TimerGesture.longPress
-                                        ? () => SleepTimerDialog.show(context)
-                                        : null,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.5,
-                                        ),
-                                        borderRadius: BorderRadius.circular(
-                                          100,
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(
-                                            FlutterRemix.timer_2_line,
-                                            size: 14,
-                                            color: Colors.white,
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            timer.remainingTime
-                                                    ?.shortFormat() ??
-                                                "00:00",
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                          // Up Next Indicator
-                          Positioned(
-                            bottom: 8,
-                            left: 8,
-                            right: 8,
-                            child: Opacity(
-                              opacity: (1 - lyricsAnim.value).clamp(0.0, 1.0),
-                              child: NixUpNextIndicator(data: data),
+                    c: data.bounceClampedProgress,
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(
+                      12.0 * (1 - data.bounceClampedProgress),
+                    ),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        // 1. Next Track Artwork (sliding from right when swiping left, sVal > 0)
+                        if (sVal > 0.001)
+                          Positioned.fill(
+                            child: Transform.translate(
+                              offset: Offset(sMaxOffset, 0),
+                              child: _buildSingleArtwork(
+                                context,
+                                nextSong,
+                                borderRadius,
+                              ),
                             ),
                           ),
-                        ],
-                      ),
+
+                        // 2. Previous Track Artwork (sliding from left when swiping right, sVal < 0)
+                        if (sVal < -0.001)
+                          Positioned.fill(
+                            child: Transform.translate(
+                              offset: Offset(-sMaxOffset, 0),
+                              child: _buildSingleArtwork(
+                                context,
+                                previousSong,
+                                borderRadius,
+                              ),
+                            ),
+                          ),
+
+                        // 3. Current Track Artwork
+                        Positioned.fill(
+                          child: _buildSingleArtwork(
+                            context,
+                            currentSong,
+                            borderRadius,
+                          ),
+                        ),
+
+                        // Sleep Timer Indicator
+                        Consumer<SleepTimerProvider>(
+                          builder: (context, timer, _) {
+                            if (!timer.isActive) return const SizedBox();
+                            final opacity =
+                                ((data.opacity - data.queueClampedProgress) *
+                                        (1 - lyricsAnim.value))
+                                    .clamp(0.0, 1.0);
+                            if (opacity == 0) return const SizedBox();
+
+                            return Positioned(
+                              top: 12,
+                              left: 12,
+                              child: Opacity(
+                                opacity: opacity,
+                                child: GestureDetector(
+                                  onTap:
+                                      context
+                                              .read<SettingsProvider>()
+                                              .timerGesture ==
+                                          TimerGesture.tap
+                                      ? () => SleepTimerDialog.show(context)
+                                      : null,
+                                  onLongPress:
+                                      context
+                                              .read<SettingsProvider>()
+                                              .timerGesture ==
+                                          TimerGesture.longPress
+                                      ? () => SleepTimerDialog.show(context)
+                                      : null,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                      borderRadius: BorderRadius.circular(100),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                          FlutterRemix.timer_2_line,
+                                          size: 14,
+                                          color: Colors.white,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          timer.remainingTime?.shortFormat() ??
+                                              "00:00",
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        // Up Next Indicator
+                        Positioned(
+                          bottom: 8,
+                          left: 8,
+                          right: 8,
+                          child: Opacity(
+                            opacity: (1 - lyricsAnim.value).clamp(0.0, 1.0),
+                            child: NixUpNextIndicator(data: data),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

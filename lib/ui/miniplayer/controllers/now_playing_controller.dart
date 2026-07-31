@@ -144,7 +144,7 @@ class NowPlayingController with ChangeNotifier {
   double sOffset = 0.0;
   double sPrevOffset = 0.0;
   double stParallax = 1.0;
-  double siParallax = 1.15;
+  double siParallax = 1.0;
   late double sMaxOffset;
   late AnimationController sAnim;
 
@@ -400,16 +400,16 @@ class NowPlayingController with ChangeNotifier {
     sAnim
         .animateTo(
           -1.0,
-          curve: NowPlayingPhysics.bouncingCurve,
-          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutQuad,
+          duration: const Duration(milliseconds: 180),
         )
         .then((_) {
           final currentMusic = context.read<CurrentMusicProvider>();
           final oldTrackId = currentMusic.currentTrack?.id;
 
-          sOffset = 0;
-          sAnim.animateTo(0.0, duration: Duration.zero);
           currentMusic.playPrevious();
+          sOffset = 0;
+          sAnim.value = 0.0;
 
           if (currentMusic.currentTrack?.id != oldTrackId) {
             HapticUtils.trigger(settings);
@@ -422,7 +422,7 @@ class NowPlayingController with ChangeNotifier {
     sAnim.animateTo(
       0.0,
       curve: NowPlayingPhysics.bouncingCurve,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 180),
     );
   }
 
@@ -432,16 +432,16 @@ class NowPlayingController with ChangeNotifier {
     sAnim
         .animateTo(
           1.0,
-          curve: NowPlayingPhysics.bouncingCurve,
-          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutQuad,
+          duration: const Duration(milliseconds: 180),
         )
         .then((_) {
           final currentMusic = context.read<CurrentMusicProvider>();
           final oldTrackId = currentMusic.currentTrack?.id;
 
-          sOffset = 0;
-          sAnim.animateTo(0.0, duration: Duration.zero);
           currentMusic.playNext();
+          sOffset = 0;
+          sAnim.value = 0.0;
 
           if (currentMusic.currentTrack?.id != oldTrackId) {
             HapticUtils.trigger(settings);
