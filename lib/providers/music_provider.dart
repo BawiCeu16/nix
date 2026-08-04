@@ -179,6 +179,12 @@ class MusicProvider extends ChangeNotifier {
         refreshCaches();
       });
     }
+    if (Hive.isBoxOpen(HiveKeys.favoritesBox)) {
+      Hive.box<int>(HiveKeys.favoritesBox).watch().listen((_) {
+        _favoritesCache = _calculateFavorites();
+        notifyListeners();
+      });
+    }
 
     await scanDevice(customFolders: customFolders);
     if (_currentMusic != null) {
@@ -277,6 +283,7 @@ class MusicProvider extends ChangeNotifier {
       await box.put(track.id, DateTime.now().millisecondsSinceEpoch);
     }
     _favoritesCache = _calculateFavorites();
+    _currentMusic?.notifyFavoriteChanged();
     notifyListeners();
   }
 

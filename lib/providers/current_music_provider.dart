@@ -131,6 +131,58 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   Stream<Duration?> get durationStream => _audioPlayer.durationStream;
   Stream<PlayerState> get playerStateStream => _audioPlayer.playerStateStream;
 
+  bool _isCurrentTrackFavorite() {
+    final track = _currentTrack;
+    if (track == null || !Hive.isBoxOpen(HiveKeys.favoritesBox)) {
+      return false;
+    }
+    return Hive.box<int>(HiveKeys.favoritesBox).containsKey(track.id);
+  }
+
+  MediaControl _getFavoriteControl() {
+    final isFav = _isCurrentTrackFavorite();
+    return MediaControl.custom(
+      androidIcon: isFav
+          ? 'drawable/ic_favorite'
+          : 'drawable/ic_favorite_border',
+      label: isFav ? 'Unfavorite' : 'Favorite',
+      name: 'favorite',
+    );
+  }
+
+  void _updatePlaybackState() {
+    final state = _audioPlayer.playerState;
+    playbackState.add(
+      PlaybackState(
+        controls: [
+          MediaControl.skipToPrevious,
+          if (state.playing) MediaControl.pause else MediaControl.play,
+          MediaControl.skipToNext,
+          _getFavoriteControl(),
+          // MediaControl.stop,
+        ],
+        systemActions: const {
+          MediaAction.seek,
+          MediaAction.seekForward,
+          MediaAction.seekBackward,
+        },
+        androidCompactActionIndices: const [0, 1, 2],
+        processingState: const {
+          ProcessingState.idle: AudioProcessingState.idle,
+          ProcessingState.loading: AudioProcessingState.loading,
+          ProcessingState.buffering: AudioProcessingState.buffering,
+          ProcessingState.ready: AudioProcessingState.ready,
+          ProcessingState.completed: AudioProcessingState.completed,
+        }[state.processingState]!,
+        playing: state.playing,
+        updatePosition: _audioPlayer.position,
+        bufferedPosition: _audioPlayer.bufferedPosition,
+        speed: _audioPlayer.speed,
+        queueIndex: _currentPlaylist?.tracks.indexOf(_currentTrack!),
+      ),
+    );
+  }
+
   Future<void> init() async {
     // Set up audio player
     _audioPlayer.setLoopMode(_isRepeatEnabled ? LoopMode.all : LoopMode.off);
@@ -140,36 +192,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
         playNext();
       }
       notifyListeners();
-
-      // Broadcast state to audio_service
-      playbackState.add(
-        PlaybackState(
-          controls: [
-            MediaControl.skipToPrevious,
-            if (state.playing) MediaControl.pause else MediaControl.play,
-            MediaControl.stop,
-            MediaControl.skipToNext,
-          ],
-          systemActions: const {
-            MediaAction.seek,
-            MediaAction.seekForward,
-            MediaAction.seekBackward,
-          },
-          androidCompactActionIndices: const [0, 1, 3],
-          processingState: const {
-            ProcessingState.idle: AudioProcessingState.idle,
-            ProcessingState.loading: AudioProcessingState.loading,
-            ProcessingState.buffering: AudioProcessingState.buffering,
-            ProcessingState.ready: AudioProcessingState.ready,
-            ProcessingState.completed: AudioProcessingState.completed,
-          }[state.processingState]!,
-          playing: state.playing,
-          updatePosition: _audioPlayer.position,
-          bufferedPosition: _audioPlayer.bufferedPosition,
-          speed: _audioPlayer.speed,
-          queueIndex: _currentPlaylist?.tracks.indexOf(_currentTrack!),
-        ),
-      );
+      _updatePlaybackState();
     });
 
     // Resume from played duration position saving
@@ -262,6 +285,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       _audioLoadingState = AudioLoadingState.loading;
       _currentTrack = track;
       _currentPlaylist = playlist ?? _getDefaultPlaylistForTrack(track);
+      _updatePlaybackState();
       notifyListeners();
 
       // 2. PHASE 2: Parallel Execution Branches
@@ -269,9 +293,13 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
 
       unawaited(() async {
         try {
-          final isNetworkUrl = track.uri.startsWith('http://') || track.uri.startsWith('https://');
-          final source = isNetworkUrl ? AudioSource.uri(Uri.parse(track.uri)) : AudioSource.file(track.uri);
-          
+          final isNetworkUrl =
+              track.uri.startsWith('http://') ||
+              track.uri.startsWith('https://');
+          final source = isNetworkUrl
+              ? AudioSource.uri(Uri.parse(track.uri))
+              : AudioSource.file(track.uri);
+
           Duration? initialPosition;
           if (_settingsProvider?.resumeFromPlayedDuration == true) {
             final positionBox = Hive.box<int>(HiveKeys.trackPositionsBox);
@@ -281,7 +309,10 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
             }
           }
 
-          await _audioPlayer.setAudioSource(source, initialPosition: initialPosition);
+          await _audioPlayer.setAudioSource(
+            source,
+            initialPosition: initialPosition,
+          );
           if (currentToken == _playbackSelectionToken) {
             await _audioPlayer.play();
             _audioLoadingState = AudioLoadingState.loaded;
@@ -458,6 +489,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
     _audioLoadingState = AudioLoadingState.idle;
     _isTransitioning = false;
     _lastPlaybackPosition = null;
+    _updatePlaybackState();
     notifyListeners();
   }
 
@@ -479,6 +511,34 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
 
   @override
   Future<void> skipToPrevious() async => playPrevious();
+
+  @override
+  Future<void> customAction(String name, [Map<String, dynamic>? extras]) async {
+    if (name == 'favorite') {
+      await _toggleFavorite();
+    } else {
+      await super.customAction(name, extras);
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    final track = _currentTrack;
+    if (track == null || !Hive.isBoxOpen(HiveKeys.favoritesBox)) return;
+
+    final box = Hive.box<int>(HiveKeys.favoritesBox);
+    if (box.containsKey(track.id)) {
+      await box.delete(track.id);
+    } else {
+      await box.put(track.id, DateTime.now().millisecondsSinceEpoch);
+    }
+    notifyFavoriteChanged();
+  }
+
+  /// Called when favorite status changes so the notification control is updated.
+  void notifyFavoriteChanged() {
+    _updatePlaybackState();
+    notifyListeners();
+  }
 
   Future<void> playNext() async {
     if (_currentPlaylist == null || _currentTrack == null || _isTransitioning) {
