@@ -16,7 +16,7 @@ enum ActiveGesture { none, vertical, horizontal }
 
 /// Calculates animation values, thresholds, and physics curves for the NowPlaying sheet.
 class NowPlayingPhysics {
-  static const Cubic bouncingCurve = Cubic(0.175, 1.195, 0.80, 1.0);
+  static const Cubic bouncingCurve = Cubic(0.175, 1.185, 0.80, 1.0);
   static const double headRoom = 50.0;
   static const double actuationOffset = 100.0;
   static const double deadSpace = 100.0;

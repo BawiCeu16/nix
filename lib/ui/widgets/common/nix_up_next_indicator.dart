@@ -49,14 +49,10 @@ class NixUpNextIndicator extends StatelessWidget {
         return Opacity(
           opacity: finalOpacity,
           child: Container(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(2.0),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.6),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.1),
-                width: 0.5,
-              ),
+              color: Colors.black.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(12.0),
             ),
             child: Row(
               children: [
@@ -67,7 +63,7 @@ class NixUpNextIndicator extends StatelessWidget {
                   child: NixArtwork(
                     id: nextTrack.id,
                     type: ArtworkType.AUDIO,
-
+                    borderRadius: BorderRadius.circular(8.0),
                     width: 40,
                     height: 40,
                     fit: BoxFit.cover,

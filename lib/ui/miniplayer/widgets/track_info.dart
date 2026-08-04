@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
+import 'package:nix/providers/music_provider.dart';
+import 'package:nix/providers/settings_provider.dart';
+import 'package:nix/core/haptic_utils.dart';
 import 'package:nix/models/music/track.dart';
 import 'package:nix/core/math_utils.dart';
 import 'package:nix/ui/miniplayer/models/animation_data.dart';
@@ -47,19 +51,17 @@ class TrackInfo extends StatelessWidget {
             return FadeTransition(
               opacity: animation,
               child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0.0, 0.1),
-                  end: Offset.zero,
-                ).animate(
-                  CurvedAnimation(
-                    parent: animation,
-                    curve: Curves.easeOutQuad,
-                  ),
-                ),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: child,
-                ),
+                position:
+                    Tween<Offset>(
+                      begin: const Offset(0.0, 0.1),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutQuad,
+                      ),
+                    ),
+                child: Align(alignment: Alignment.centerLeft, child: child),
               ),
             );
           },
@@ -87,19 +89,17 @@ class TrackInfo extends StatelessWidget {
             return FadeTransition(
               opacity: animation,
               child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0.0, 0.1),
-                  end: Offset.zero,
-                ).animate(
-                  CurvedAnimation(
-                    parent: animation,
-                    curve: Curves.easeOutQuad,
-                  ),
-                ),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: child,
-                ),
+                position:
+                    Tween<Offset>(
+                      begin: const Offset(0.0, 0.1),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutQuad,
+                      ),
+                    ),
+                child: Align(alignment: Alignment.centerLeft, child: child),
               ),
             );
           },
@@ -114,10 +114,9 @@ class TrackInfo extends StatelessWidget {
                 b: 17.0 - (3.0 * lyricsAnim.value),
                 c: data.bounceProgress,
               ),
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurface
-                  .withValues(alpha: .7),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: .7),
             ),
           ),
         ),
@@ -143,11 +142,13 @@ class TrackInfo extends StatelessWidget {
         animation: Listenable.merge([sAnim, lyricsAnim]),
         builder: (context, child) {
           final double sVal = sAnim.value;
+          final double absSVal = sVal.abs().clamp(0.0, 1.0);
+          final double currentOpacity = (1.0 - absSVal).clamp(0.0, 1.0);
+          final double incomingOpacity = absSVal;
 
           return Transform.translate(
             offset: Offset(
-              -sVal * sMaxOffset / stParallax +
-                  (12.0 * data.queueProgress),
+              -sVal * sMaxOffset / stParallax + (12.0 * data.queueProgress),
               (-maxOffset + topInset + 102.0) *
                   (!bounceUp
                       ? !bounceDown
@@ -163,18 +164,17 @@ class TrackInfo extends StatelessWidget {
                     (140.0 * lyricsAnim.value * data.bounceClampedProgress),
               ),
               child: Padding(
-                padding: EdgeInsets.all(
-                  12.0 * (1 - data.bounceClampedProgress),
-                ).add(
-                  EdgeInsets.only(
-                    left:
-                        20.0 * data.bounceClampedProgress +
-                        (72.0 *
-                            lyricsAnim.value *
-                            data.bounceClampedProgress),
-                    right: 20.0 * data.bounceClampedProgress,
-                  ),
-                ),
+                padding: EdgeInsets.all(12.0 * (1 - data.bounceClampedProgress))
+                    .add(
+                      EdgeInsets.only(
+                        left:
+                            20.0 * data.bounceClampedProgress +
+                            (72.0 *
+                                lyricsAnim.value *
+                                data.bounceClampedProgress),
+                        right: 20.0 * data.bounceClampedProgress,
+                      ),
+                    ),
                 child: Align(
                   alignment: Alignment.bottomLeft,
                   child: Padding(
@@ -204,7 +204,13 @@ class TrackInfo extends StatelessWidget {
                           ),
                           Expanded(
                             child: Padding(
-                              padding: const EdgeInsets.only(right: 42.0),
+                              padding: EdgeInsets.only(
+                                right: rangeProgress(
+                                  a: 88.0,
+                                  b: 8.0,
+                                  c: data.bounceClampedProgress,
+                                ),
+                              ),
                               child: Stack(
                                 clipBehavior: Clip.none,
                                 children: [
@@ -213,9 +219,12 @@ class TrackInfo extends StatelessWidget {
                                     Positioned.fill(
                                       child: Transform.translate(
                                         offset: Offset(sMaxOffset, 0),
-                                        child: _buildSingleTrackInfo(
-                                          context,
-                                          nextTrack,
+                                        child: Opacity(
+                                          opacity: incomingOpacity,
+                                          child: _buildSingleTrackInfo(
+                                            context,
+                                            nextTrack,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -225,23 +234,84 @@ class TrackInfo extends StatelessWidget {
                                     Positioned.fill(
                                       child: Transform.translate(
                                         offset: Offset(-sMaxOffset, 0),
-                                        child: _buildSingleTrackInfo(
-                                          context,
-                                          previousTrack,
+                                        child: Opacity(
+                                          opacity: incomingOpacity,
+                                          child: _buildSingleTrackInfo(
+                                            context,
+                                            previousTrack,
+                                          ),
                                         ),
                                       ),
                                     ),
 
                                   // 3. Current Track Info
                                   Positioned.fill(
-                                    child: _buildSingleTrackInfo(
-                                      context,
-                                      currentTrack,
+                                    child: Opacity(
+                                      opacity: currentOpacity,
+                                      child: _buildSingleTrackInfo(
+                                        context,
+                                        currentTrack,
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
+                          ),
+
+                          // Favorite IconButton
+                          Consumer<MusicProvider>(
+                            builder: (context, musicProvider, _) {
+                              final isFav =
+                                  currentTrack != null &&
+                                  musicProvider.isFavorite(currentTrack);
+                              final favOpacity =
+                                  ((inverseAboveOne(data.bounceProgress) * 10 -
+                                                  9)
+                                              .clamp(0.0, 1.0) *
+                                          (1.0 - lyricsAnim.value))
+                                      .clamp(0.0, 1.0);
+
+                              if (favOpacity == 0.0) {
+                                return const SizedBox();
+                              }
+
+                              return Opacity(
+                                opacity: favOpacity,
+                                child: Transform.translate(
+                                  offset: Offset(
+                                    -100 * (1.0 - data.bounceClampedProgress),
+                                    0.0,
+                                  ),
+                                  child: IconButton(
+                                    onPressed: currentTrack != null
+                                        ? () {
+                                            musicProvider.toggleFavorite(
+                                              currentTrack,
+                                            );
+                                            HapticUtils.trigger(
+                                              context.read<SettingsProvider>(),
+                                            );
+                                          }
+                                        : null,
+                                    icon: Icon(
+                                      isFav
+                                          ? FlutterRemix.heart_3_fill
+                                          : FlutterRemix.heart_3_line,
+                                      size: 26.0,
+                                      color: isFav
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.primary
+                                          : Theme.of(context)
+                                                .colorScheme
+                                                .onSurface
+                                                .withValues(alpha: .7),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),

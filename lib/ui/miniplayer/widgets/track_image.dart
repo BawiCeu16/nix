@@ -57,18 +57,20 @@ class TrackImage extends StatelessWidget {
         ),
       );
     }
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer,
-        borderRadius: radius,
-      ),
-      child: Center(
-        child: Icon(
-          FlutterRemix.music_2_fill,
-          size: 40,
-          color: Theme.of(
-            context,
-          ).colorScheme.onPrimaryContainer.withValues(alpha: .5),
+    return RepaintBoundary(
+      child: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primaryContainer,
+          borderRadius: radius,
+        ),
+        child: Center(
+          child: Icon(
+            FlutterRemix.music_2_fill,
+            size: 40,
+            color: Theme.of(
+              context,
+            ).colorScheme.onPrimaryContainer.withValues(alpha: .5),
+          ),
         ),
       ),
     );
@@ -97,6 +99,10 @@ class TrackImage extends StatelessWidget {
       animation: Listenable.merge([sAnim, lyricsAnim]),
       builder: (context, child) {
         final double sVal = sAnim.value;
+        final double absSVal = sVal.abs().clamp(0.0, 1.0);
+        final double currentOpacity = (1.0 - absSVal).clamp(0.0, 1.0);
+        final double incomingOpacity = absSVal;
+
         final borderRadius = BorderRadius.circular(
           rangeProgress(a: 100.0, b: 15.0, c: data.bounceClampedProgress),
         );
@@ -172,10 +178,13 @@ class TrackImage extends StatelessWidget {
                           Positioned.fill(
                             child: Transform.translate(
                               offset: Offset(sMaxOffset, 0),
-                              child: _buildSingleArtwork(
-                                context,
-                                nextSong,
-                                borderRadius,
+                              child: Opacity(
+                                opacity: incomingOpacity,
+                                child: _buildSingleArtwork(
+                                  context,
+                                  nextSong,
+                                  borderRadius,
+                                ),
                               ),
                             ),
                           ),
@@ -185,20 +194,26 @@ class TrackImage extends StatelessWidget {
                           Positioned.fill(
                             child: Transform.translate(
                               offset: Offset(-sMaxOffset, 0),
-                              child: _buildSingleArtwork(
-                                context,
-                                previousSong,
-                                borderRadius,
+                              child: Opacity(
+                                opacity: incomingOpacity,
+                                child: _buildSingleArtwork(
+                                  context,
+                                  previousSong,
+                                  borderRadius,
+                                ),
                               ),
                             ),
                           ),
 
                         // 3. Current Track Artwork
                         Positioned.fill(
-                          child: _buildSingleArtwork(
-                            context,
-                            currentSong,
-                            borderRadius,
+                          child: Opacity(
+                            opacity: currentOpacity,
+                            child: _buildSingleArtwork(
+                              context,
+                              currentSong,
+                              borderRadius,
+                            ),
                           ),
                         ),
 
@@ -275,7 +290,11 @@ class TrackImage extends StatelessWidget {
                           left: 8,
                           right: 8,
                           child: Opacity(
-                            opacity: (1 - lyricsAnim.value).clamp(0.0, 1.0),
+                            opacity:
+                                ((1 - lyricsAnim.value) * currentOpacity).clamp(
+                                  0.0,
+                                  1.0,
+                                ),
                             child: NixUpNextIndicator(data: data),
                           ),
                         ),
