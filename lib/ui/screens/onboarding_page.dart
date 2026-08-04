@@ -152,7 +152,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   Widget _buildPermissionsPage(ThemeData theme, ColorScheme colorScheme) {
     final allGranted =
-        _controller.isAudioGranted && _controller.isNotificationGranted;
+        _controller.isAudioGranted &&
+        _controller.isNotificationGranted &&
+        _controller.isBluetoothGranted;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 25),
@@ -214,8 +216,27 @@ class _OnboardingPageState extends State<OnboardingPage> {
                             color: colorScheme.primary,
                           )
                         : const Icon(FlutterRemix.close_circle_line),
-                    isLast: true,
+                    isLast: false,
                     onTap: _controller.requestNotificationPermission,
+                  ),
+                  const SizedBox(height: 2.5),
+                  CardListTile(
+                    isFirst: false,
+                    leading: Icon(
+                      FlutterRemix.bluetooth_line,
+                      color: colorScheme.primary,
+                    ),
+                    title: 'Bluetooth Access',
+                    subtitle:
+                        'Allow access to Bluetooth devices for audio routing',
+                    trailing: _controller.isBluetoothGranted
+                        ? Icon(
+                            FlutterRemix.checkbox_circle_fill,
+                            color: colorScheme.primary,
+                          )
+                        : const Icon(FlutterRemix.close_circle_line),
+                    isLast: true,
+                    onTap: _controller.requestBluetoothPermission,
                   ),
                 ],
               ),
@@ -225,9 +246,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
           ExpressiveToneButton(
             onPressed: allGranted
                 ? _controller.nextPage
-                : _controller.isNotificationGranted
-                ? _controller.requestAudioPermission
-                : _controller.requestNotificationPermission,
+                : !_controller.isAudioGranted
+                    ? _controller.requestAudioPermission
+                    : !_controller.isNotificationGranted
+                        ? _controller.requestNotificationPermission
+                        : _controller.requestBluetoothPermission,
             child: Text(allGranted ? 'Next' : 'Grant all permissions'),
           ),
         ],

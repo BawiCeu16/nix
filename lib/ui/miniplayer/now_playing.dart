@@ -11,6 +11,7 @@ import 'package:nix/ui/miniplayer/widgets/track_image.dart';
 import 'package:nix/ui/miniplayer/widgets/track_info.dart';
 import 'package:nix/ui/miniplayer/widgets/player_controls.dart';
 import 'package:nix/ui/miniplayer/widgets/queue_view.dart';
+// import 'package:nix/ui/miniplayer/widgets/audio_output_button.dart';
 // import 'package:nix/ui/miniplayer/widgets/lyrics_section.dart';
 import 'package:nix/ui/miniplayer/controllers/now_playing_controller.dart';
 
@@ -193,6 +194,45 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                                         ),
                                         color: onSecondary,
                                       ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    // Audio output button (BottomLeft)
+                    AnimatedBuilder(
+                      animation: _controller.lyricsAnim,
+                      builder: (context, child) {
+                        return Offstage(
+                          offstage: data.opacity == 0.0,
+                          child: Material(
+                            type: MaterialType.transparency,
+                            child: Opacity(
+                              opacity:
+                                  (data.opacity *
+                                          (1 - _controller.lyricsAnim.value))
+                                      .clamp(0.0, 1.0),
+                              child: Transform.translate(
+                                offset: Offset(
+                                  0,
+                                  -100 * data.inverseProgress +
+                                      (100 * _controller.lyricsAnim.value),
+                                ),
+                                child: Align(
+                                  alignment: Alignment.bottomLeft,
+                                  child: SafeArea(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16.0,
+                                        vertical: 14.0,
+                                      ),
+                                      // child: AudioOutputButton(
+                                      //   onSecondary: onSecondary,
+                                      // ),
                                     ),
                                   ),
                                 ),

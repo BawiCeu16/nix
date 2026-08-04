@@ -12,6 +12,7 @@ class OnboardingPageController extends ChangeNotifier {
   int currentPage = 0;
   bool isAudioGranted = false;
   bool isNotificationGranted = false;
+  bool isBluetoothGranted = false;
 
   void init() {
     checkPermissions();
@@ -34,6 +35,9 @@ class OnboardingPageController extends ChangeNotifier {
 
     final notif = await Permission.notification.status;
     isNotificationGranted = notif.isGranted;
+
+    final bluetooth = await Permission.bluetoothConnect.status;
+    isBluetoothGranted = bluetooth.isGranted;
     notifyListeners();
   }
 
@@ -52,6 +56,12 @@ class OnboardingPageController extends ChangeNotifier {
   Future<void> requestNotificationPermission() async {
     final status = await Permission.notification.request();
     isNotificationGranted = status.isGranted;
+    notifyListeners();
+  }
+
+  Future<void> requestBluetoothPermission() async {
+    final status = await Permission.bluetoothConnect.request();
+    isBluetoothGranted = status.isGranted;
     notifyListeners();
   }
 

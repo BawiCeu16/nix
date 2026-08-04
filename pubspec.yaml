@@ -58,6 +58,7 @@ dependencies:
   nix_button: ^0.1.0
   m3e_buttons: ^0.0.3
   flywheel_carousel: ^0.1.0
+  output_route_selector: ^2.1.4
 
 dev_dependencies:
   flutter_test:
