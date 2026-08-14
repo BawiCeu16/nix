@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/providers/settings_provider.dart';
+import 'package:nix/services/snackbar_service.dart';
 import 'package:nix/core/haptic_utils.dart';
 import 'package:nix/models/music/track.dart';
 import 'package:nix/core/math_utils.dart';
@@ -40,6 +42,8 @@ class TrackInfo extends StatelessWidget {
   Widget _buildSingleTrackInfo(BuildContext context, Track? track) {
     final title = track?.title ?? 'No track';
     final artist = track?.artist ?? '';
+    final bool isNowPlaying =
+        data.clampedProgress > 0.8 && data.queueProgress < 0.2;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -65,20 +69,30 @@ class TrackInfo extends StatelessWidget {
               ),
             );
           },
-          child: Text(
-            title,
+          child: GestureDetector(
             key: ValueKey(title),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: rangeProgress(
-                a: 18.0,
-                b: 24.0 - (5.0 * lyricsAnim.value),
-                c: data.bounceProgress,
+            onLongPress:
+                (isNowPlaying && track != null && track.title.isNotEmpty)
+                    ? () {
+                        Clipboard.setData(ClipboardData(text: track.title));
+                        HapticUtils.trigger(context.read<SettingsProvider>());
+                        context.showSnackBar('Title copied to clipboard');
+                      }
+                    : null,
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: rangeProgress(
+                  a: 18.0,
+                  b: 24.0 - (5.0 * lyricsAnim.value),
+                  c: data.bounceProgress,
+                ),
+                fontWeight: FontWeight.w600,
+                height: 1,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
-              fontWeight: FontWeight.w600,
-              height: 1,
-              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ),
