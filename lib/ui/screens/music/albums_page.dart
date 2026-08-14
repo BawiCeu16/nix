@@ -86,6 +86,7 @@ class _AlbumsPageState extends State<AlbumsPage> {
                 ),
                 child: NixScrollbar(
                   child: GridView.builder(
+                    cacheExtent: 600,
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
                     physics: const AlwaysScrollableScrollPhysics(
                       parent: BouncingScrollPhysics(),
@@ -258,6 +259,7 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> {
 
               return NixScrollbar(
                 child: ListView.builder(
+                  cacheExtent: 600,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   physics: const BouncingScrollPhysics(),
                   itemCount: tracks.length + 2,

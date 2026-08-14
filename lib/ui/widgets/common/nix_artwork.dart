@@ -8,9 +8,15 @@ import 'package:nix/providers/settings_provider.dart';
 import 'package:nix/models/settings/artwork_quality.dart';
 import 'package:nix/providers/artwork_provider.dart';
 
-/// A high-performance, high-fidelity artwork widget for Nix.
-/// Enforces 'best of the best' quality by using tiered resolution queries,
-/// lossless PNG format, and advanced filtering.
+/// A high-performance, parallelized artwork widget for Nix.
+///
+/// Features:
+/// - Isolated per-key [ValueListenable] subscription: zero global rebuild sweeps.
+/// - Synchronous memory cache fast-path: instantaneous 0-frame rendering without
+///   placeholder flashes or unnecessary animation overhead.
+/// - Hardware texture downscaling via [cacheWidth] / [cacheHeight].
+/// - [RepaintBoundary] layer isolation preventing paint invalidation cascades
+///   up to parent scroll views during fast flings.
 class NixArtwork extends StatelessWidget {
   /// The ID of the track/album to query artwork for.
   final int id;
@@ -54,49 +60,84 @@ class NixArtwork extends StatelessWidget {
           (s) => s.artworkQuality,
         );
 
-    Widget artwork = Selector<ArtworkProvider, Uint8List?>(
-      selector: (_, artworkProv) =>
-          artworkProv.getCachedArtwork(id, type, currentQuality),
-      builder: (context, bytes, _) {
-        final double? pixelRatio = MediaQuery.maybeOf(context)?.devicePixelRatio;
-        final int? targetCacheWidth = width != null && width! > 0 && width! < double.infinity && pixelRatio != null
-            ? (width! * pixelRatio).round()
-            : null;
-        final int? targetCacheHeight = height != null && height! > 0 && height! < double.infinity && pixelRatio != null
-            ? (height! * pixelRatio).round()
-            : null;
+    // Read ArtworkProvider without subscribing to global ChangeNotifier notifications
+    final artworkProv = context.read<ArtworkProvider>();
+    final double? pixelRatio = MediaQuery.maybeOf(context)?.devicePixelRatio;
+    final int? targetCacheWidth =
+        width != null &&
+            width! > 0 &&
+            width! < double.infinity &&
+            pixelRatio != null
+        ? (width! * pixelRatio).round()
+        : null;
+    final int? targetCacheHeight =
+        height != null &&
+            height! > 0 &&
+            height! < double.infinity &&
+            pixelRatio != null
+        ? (height! * pixelRatio).round()
+        : null;
 
-        return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: bytes != null
-              ? Image.memory(
-                  bytes,
-                  key: ValueKey('art_$id'),
-                  fit: fit,
-                  width: width,
-                  height: height,
-                  cacheWidth: targetCacheWidth,
-                  cacheHeight: targetCacheHeight,
-                  filterQuality: _getFilterQuality(currentQuality),
-                  gaplessPlayback: true,
-                  errorBuilder: (context, error, stackTrace) =>
-                      _buildFallback(colorScheme),
-                )
-              : _buildFallback(colorScheme),
-        );
-      },
-    );
+    final filterQuality = _getFilterQuality(currentQuality);
 
-    Widget artworkWidget;
+    // Synchronous memory cache fast-path
+    final syncBytes = artworkProv.getSync(id, type, currentQuality);
 
-    if (shape == ArtworkShape.circle) {
-      artworkWidget = ClipOval(child: artwork);
+    Widget content;
+    if (syncBytes != null) {
+      // Immediate synchronous render: zero microtasks, zero placeholder flash, zero animation
+      content = Image.memory(
+        syncBytes,
+        key: ValueKey('art_sync_${id}_${currentQuality.name}'),
+        fit: fit,
+        width: width,
+        height: height,
+        cacheWidth: targetCacheWidth,
+        cacheHeight: targetCacheHeight,
+        filterQuality: filterQuality,
+        gaplessPlayback: true,
+        errorBuilder: (context, error, stackTrace) =>
+            _buildFallback(colorScheme),
+      );
     } else {
-      artworkWidget = ClipRRect(
-        borderRadius: borderRadius ?? BorderRadius.circular(12.0),
-        child: artwork,
+      // Asynchronous background load: subscribe strictly to this specific key's notifier
+      final notifier = artworkProv.getArtworkNotifier(id, type, currentQuality);
+
+      content = ValueListenableBuilder<Uint8List?>(
+        valueListenable: notifier,
+        builder: (context, bytes, _) {
+          return AnimatedSwitcher(
+            duration: const Duration(milliseconds: 180),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            child: bytes != null
+                ? Image.memory(
+                    bytes,
+                    key: ValueKey('art_async_${id}_${currentQuality.name}'),
+                    fit: fit,
+                    width: width,
+                    height: height,
+                    cacheWidth: targetCacheWidth,
+                    cacheHeight: targetCacheHeight,
+                    filterQuality: filterQuality,
+                    gaplessPlayback: true,
+                    errorBuilder: (context, error, stackTrace) =>
+                        _buildFallback(colorScheme),
+                  )
+                : _buildFallback(colorScheme),
+          );
+        },
       );
     }
+
+    Widget artworkWidget = RepaintBoundary(
+      child: shape == ArtworkShape.circle
+          ? ClipOval(child: content)
+          : ClipRRect(
+              borderRadius: borderRadius ?? BorderRadius.circular(12.0),
+              child: content,
+            ),
+    );
 
     if (width != null || height != null) {
       return SizedBox(width: width, height: height, child: artworkWidget);

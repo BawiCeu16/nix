@@ -59,6 +59,7 @@ class _HomePageState extends State<HomePage> {
             body: ExpressiveRefreshIndicator(
               onRefresh: () => _controller.refreshLibrary(context),
               child: CustomScrollView(
+                cacheExtent: 600,
                 physics: const AlwaysScrollableScrollPhysics(
                   parent: BouncingScrollPhysics(),
                 ),

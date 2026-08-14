@@ -67,6 +67,7 @@ class _SearchPageState extends State<SearchPage> {
               bottom: false,
               child: NixScrollbar(
                 child: CustomScrollView(
+                  cacheExtent: 600,
                   physics: const AlwaysScrollableScrollPhysics(
                     parent: BouncingScrollPhysics(),
                   ),
@@ -102,14 +103,20 @@ class _SearchPageState extends State<SearchPage> {
                               child: const Icon(FlutterRemix.search_line),
                             ),
                             trailing: [
-                              if (_controller.searchInputController.text.isNotEmpty)
+                              if (_controller
+                                  .searchInputController
+                                  .text
+                                  .isNotEmpty)
                                 IconButton(
                                   icon: const Icon(FlutterRemix.close_line),
-                                  onPressed: () => _controller.clearSearch(music),
+                                  onPressed: () =>
+                                      _controller.clearSearch(music),
                                 ),
                             ],
-                            onChanged: (val) => _controller.onSearchChanged(val, music),
-                            onSubmitted: (val) => _controller.submitSearch(val, settings),
+                            onChanged: (val) =>
+                                _controller.onSearchChanged(val, music),
+                            onSubmitted: (val) =>
+                                _controller.submitSearch(val, settings),
                           ),
                         ),
                       ),
@@ -130,7 +137,8 @@ class _SearchPageState extends State<SearchPage> {
                                   label: 'Tracks',
                                   value: SearchFilter.tracks,
                                   groupValue: _controller.selectedFilter,
-                                  onChanged: (val) => _controller.setFilter(val),
+                                  onChanged: (val) =>
+                                      _controller.setFilter(val),
                                   isFirst: true,
                                 ),
                                 const SizedBox(width: 4),
@@ -138,21 +146,24 @@ class _SearchPageState extends State<SearchPage> {
                                   label: 'Artists',
                                   value: SearchFilter.artists,
                                   groupValue: _controller.selectedFilter,
-                                  onChanged: (val) => _controller.setFilter(val),
+                                  onChanged: (val) =>
+                                      _controller.setFilter(val),
                                 ),
                                 const SizedBox(width: 4),
                                 NixChoiceChip<SearchFilter>(
                                   label: 'Playlists',
                                   value: SearchFilter.playlists,
                                   groupValue: _controller.selectedFilter,
-                                  onChanged: (val) => _controller.setFilter(val),
+                                  onChanged: (val) =>
+                                      _controller.setFilter(val),
                                 ),
                                 const SizedBox(width: 4),
                                 NixChoiceChip<SearchFilter>(
                                   label: 'Albums',
                                   value: SearchFilter.albums,
                                   groupValue: _controller.selectedFilter,
-                                  onChanged: (val) => _controller.setFilter(val),
+                                  onChanged: (val) =>
+                                      _controller.setFilter(val),
                                   isLast: true,
                                 ),
                               ],
@@ -176,7 +187,9 @@ class _SearchPageState extends State<SearchPage> {
                               ),
                             )
                           : SliverPadding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
                               sliver: SliverList(
                                 delegate: SliverChildListDelegate([
                                   Row(
@@ -189,28 +202,34 @@ class _SearchPageState extends State<SearchPage> {
                                             .textTheme
                                             .titleSmall
                                             ?.copyWith(
-                                              color: colorScheme.onSurfaceVariant,
+                                              color:
+                                                  colorScheme.onSurfaceVariant,
                                               fontWeight: FontWeight.bold,
                                             ),
                                       ),
                                       TextButton(
                                         onPressed: () => NixDialog.show(
                                           title: "Clear Search History?",
-                                          subtitle: "Remove all search history?",
+                                          subtitle:
+                                              "Remove all search history?",
                                           children: [
                                             Builder(
                                               builder: (dialogContext) {
                                                 return Row(
                                                   children: [
                                                     Expanded(
-                                                      child: ExpressiveToneButton(
-                                                        onPressed: () =>
-                                                            Navigator.of(
-                                                              dialogContext,
-                                                              rootNavigator: true,
-                                                            ).pop(),
-                                                        child: const Text("Cancel"),
-                                                      ),
+                                                      child:
+                                                          ExpressiveToneButton(
+                                                            onPressed: () =>
+                                                                Navigator.of(
+                                                                  dialogContext,
+                                                                  rootNavigator:
+                                                                      true,
+                                                                ).pop(),
+                                                            child: const Text(
+                                                              "Cancel",
+                                                            ),
+                                                          ),
                                                     ),
                                                     const SizedBox(width: 8),
                                                     Expanded(
@@ -223,7 +242,9 @@ class _SearchPageState extends State<SearchPage> {
                                                             rootNavigator: true,
                                                           ).pop();
                                                         },
-                                                        child: const Text("Clear"),
+                                                        child: const Text(
+                                                          "Clear",
+                                                        ),
                                                       ),
                                                     ),
                                                   ],
@@ -285,7 +306,8 @@ class _SearchPageState extends State<SearchPage> {
                                                           onPressed: () =>
                                                               Navigator.of(
                                                                 dialogContext,
-                                                                rootNavigator: true,
+                                                                rootNavigator:
+                                                                    true,
                                                               ).pop(),
                                                           child: const Text(
                                                             "Cancel",
@@ -302,7 +324,8 @@ class _SearchPageState extends State<SearchPage> {
                                                                 );
                                                             Navigator.of(
                                                               dialogContext,
-                                                              rootNavigator: true,
+                                                              rootNavigator:
+                                                                  true,
                                                             ).pop();
                                                           },
                                                           child: const Text(
@@ -330,7 +353,9 @@ class _SearchPageState extends State<SearchPage> {
                         child: Center(
                           child: Text(
                             "No results found.",
-                            style: TextStyle(color: colorScheme.onSurfaceVariant),
+                            style: TextStyle(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
                       )
@@ -348,7 +373,8 @@ class _SearchPageState extends State<SearchPage> {
                               track: track,
                               playlistContext: _controller.searchResults,
                               isFirst: index == 0,
-                              isLast: index == _controller.searchResults.length - 1,
+                              isLast:
+                                  index == _controller.searchResults.length - 1,
                             );
                           },
                         ),
@@ -383,12 +409,15 @@ class _SearchPageState extends State<SearchPage> {
                                   borderRadius: BorderRadius.circular(100),
                                 ),
                                 isFirst: index == 0,
-                                isLast: index == _controller.searchArtists.length - 1,
+                                isLast:
+                                    index ==
+                                    _controller.searchArtists.length - 1,
                                 onTap: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
-                                      builder: (_) =>
-                                          ArtistTracksPage(artistName: artist.name),
+                                      builder: (_) => ArtistTracksPage(
+                                        artistName: artist.name,
+                                      ),
                                     ),
                                   );
                                 },
@@ -397,7 +426,8 @@ class _SearchPageState extends State<SearchPage> {
                           },
                         ),
                       )
-                    else if (_controller.selectedFilter == SearchFilter.playlists)
+                    else if (_controller.selectedFilter ==
+                        SearchFilter.playlists)
                       SliverPadding(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         sliver: SliverList.builder(
@@ -417,7 +447,9 @@ class _SearchPageState extends State<SearchPage> {
                                   size: 48,
                                 ),
                                 isFirst: index == 0,
-                                isLast: index == _controller.searchPlaylists.length - 1,
+                                isLast:
+                                    index ==
+                                    _controller.searchPlaylists.length - 1,
                                 onTap: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
@@ -443,7 +475,9 @@ class _SearchPageState extends State<SearchPage> {
                               return const NixBottomSpacer();
                             }
                             final album = _controller.searchAlbums[index];
-                            final albumTracks = music.getTracksByAlbum(album.title);
+                            final albumTracks = music.getTracksByAlbum(
+                              album.title,
+                            );
                             final firstTrackId = albumTracks.isNotEmpty
                                 ? albumTracks.first.id
                                 : 0;
@@ -461,7 +495,9 @@ class _SearchPageState extends State<SearchPage> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 isFirst: index == 0,
-                                isLast: index == _controller.searchAlbums.length - 1,
+                                isLast:
+                                    index ==
+                                    _controller.searchAlbums.length - 1,
                                 onTap: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(

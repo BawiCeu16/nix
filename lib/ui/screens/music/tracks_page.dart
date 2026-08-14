@@ -92,6 +92,7 @@ class _TracksPageState extends State<TracksPage> {
               ),
               child: NixScrollbar(
                 child: ListView.builder(
+                  cacheExtent: 600,
                   physics: const AlwaysScrollableScrollPhysics(
                     parent: BouncingScrollPhysics(),
                   ),
