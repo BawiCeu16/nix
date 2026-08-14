@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
+import 'package:nix/ui/miniplayer/widgets/audio_output_button.dart';
 import 'package:provider/provider.dart';
 
 import 'package:nix/core/math_utils.dart';
-// import 'package:nix/providers/current_music_provider.dart';
+import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/settings_provider.dart';
-// import 'package:nix/models/music/track.dart';
+import 'package:nix/models/music/track.dart';
 import 'package:nix/ui/miniplayer/widgets/top_bar.dart';
 import 'package:nix/ui/miniplayer/widgets/track_image.dart';
 import 'package:nix/ui/miniplayer/widgets/track_info.dart';
 import 'package:nix/ui/miniplayer/widgets/player_controls.dart';
 import 'package:nix/ui/miniplayer/widgets/queue_view.dart';
-// import 'package:nix/ui/miniplayer/widgets/audio_output_button.dart';
+import 'package:nix/ui/miniplayer/widgets/audio_output_button.dart';
 // import 'package:nix/ui/miniplayer/widgets/lyrics_section.dart';
 import 'package:nix/ui/miniplayer/controllers/now_playing_controller.dart';
 
@@ -230,9 +231,9 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                                         horizontal: 16.0,
                                         vertical: 14.0,
                                       ),
-                                      // child: AudioOutputButton(
-                                      //   onSecondary: onSecondary,
-                                      // ),
+                                      child: AudioOutputButton(
+                                        onSecondary: onSecondary,
+                                      ),
                                     ),
                                   ),
                                 ),
