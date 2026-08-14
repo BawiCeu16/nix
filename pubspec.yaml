@@ -89,6 +89,10 @@ flutter:
     - assets/cd_effects/
   #   - images/a_dot_ham.jpeg
 
+  fonts:
+    - family: SpecialGothicExpandedOne
+      fonts:
+        - asset: assets/fonts/SpecialGothicExpandedOne-Regular.ttf
 
 
 flutter_launcher_icons:

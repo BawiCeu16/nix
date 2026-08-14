@@ -44,6 +44,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
           backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
           appBar: AppBar(
             title: const Text('Playlists'),
+            centerTitle: true,
             backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
             scrolledUnderElevation: 0,
             actions: [

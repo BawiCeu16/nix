@@ -49,6 +49,7 @@ class _AlbumsPageState extends State<AlbumsPage> {
           backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
           appBar: AppBar(
             title: const Text('Albums'),
+            centerTitle: true,
             backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
             scrolledUnderElevation: 0,
             actions: [
@@ -59,8 +60,14 @@ class _AlbumsPageState extends State<AlbumsPage> {
                 onToggleOrder: _controller.toggleOrder,
                 items: const [
                   NixSortMenuItem(value: AlbumSort.name, label: 'Album Name'),
-                  NixSortMenuItem(value: AlbumSort.artist, label: 'Artist Name'),
-                  NixSortMenuItem(value: AlbumSort.trackCount, label: 'Track Count'),
+                  NixSortMenuItem(
+                    value: AlbumSort.artist,
+                    label: 'Artist Name',
+                  ),
+                  NixSortMenuItem(
+                    value: AlbumSort.trackCount,
+                    label: 'Track Count',
+                  ),
                 ],
               ),
             ],
@@ -93,8 +100,7 @@ class _AlbumsPageState extends State<AlbumsPage> {
                     itemCount: sortedAlbums.length,
                     itemBuilder: (context, index) {
                       final album = sortedAlbums[index];
-                      final firstTrackId =
-                          music.albumFirstTrackId[album.title];
+                      final firstTrackId = music.albumFirstTrackId[album.title];
                       return AlbumCardTile(
                         title: album.title,
                         subtitle: album.artist,
@@ -233,21 +239,21 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> {
                       ),
                     )
                   : (firstTrackId != null
-                      ? NixArtwork(
-                          id: firstTrackId,
-                          type: ArtworkType.AUDIO,
-                          width: 240,
-                          height: 240,
-                          borderRadius: BorderRadius.circular(16),
-                        )
-                      : Container(
-                          width: 240,
-                          height: 240,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface,
+                        ? NixArtwork(
+                            id: firstTrackId,
+                            type: ArtworkType.AUDIO,
+                            width: 240,
+                            height: 240,
                             borderRadius: BorderRadius.circular(16),
-                          ),
-                        ));
+                          )
+                        : Container(
+                            width: 240,
+                            height: 240,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surface,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ));
 
               return NixScrollbar(
                 child: ListView.builder(

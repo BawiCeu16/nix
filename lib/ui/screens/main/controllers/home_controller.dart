@@ -24,7 +24,7 @@ class HomePageController extends ChangeNotifier {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => TracksPage(
-          title: 'All Songs',
+          title: 'All Tracks',
           tracksSource: () => context.read<MusicProvider>().tracks,
         ),
       ),

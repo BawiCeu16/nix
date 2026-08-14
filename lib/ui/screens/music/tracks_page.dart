@@ -52,6 +52,7 @@ class _TracksPageState extends State<TracksPage> {
           backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
           appBar: AppBar(
             title: Text(widget.title),
+            centerTitle: true,
             backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
             scrolledUnderElevation: 0,
             actions: [
@@ -65,7 +66,10 @@ class _TracksPageState extends State<TracksPage> {
                   NixSortMenuItem(value: TrackSort.artist, label: 'Artist'),
                   NixSortMenuItem(value: TrackSort.album, label: 'Album'),
                   NixSortMenuItem(value: TrackSort.duration, label: 'Duration'),
-                  NixSortMenuItem(value: TrackSort.dateAdded, label: 'Date Added'),
+                  NixSortMenuItem(
+                    value: TrackSort.dateAdded,
+                    label: 'Date Added',
+                  ),
                 ],
               ),
             ],

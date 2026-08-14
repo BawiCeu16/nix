@@ -46,6 +46,7 @@ class _ArtistsPageState extends State<ArtistsPage> {
           backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
           appBar: AppBar(
             title: const Text('Artists'),
+            centerTitle: true,
             backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
             scrolledUnderElevation: 0,
             actions: [
@@ -56,7 +57,10 @@ class _ArtistsPageState extends State<ArtistsPage> {
                 onToggleOrder: _controller.toggleOrder,
                 items: const [
                   NixSortMenuItem(value: ArtistSort.name, label: 'Artist Name'),
-                  NixSortMenuItem(value: ArtistSort.trackCount, label: 'Track Count'),
+                  NixSortMenuItem(
+                    value: ArtistSort.trackCount,
+                    label: 'Track Count',
+                  ),
                 ],
               ),
             ],
@@ -89,8 +93,9 @@ class _ArtistsPageState extends State<ArtistsPage> {
                       final tracks = music.tracks
                           .where((t) => t.artist == artist.name)
                           .toList();
-                      final firstTrackId =
-                          tracks.isNotEmpty ? tracks.first.id : null;
+                      final firstTrackId = tracks.isNotEmpty
+                          ? tracks.first.id
+                          : null;
 
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 2.5),
@@ -117,7 +122,9 @@ class _ArtistsPageState extends State<ArtistsPage> {
                                 ),
                           trailing: Icon(
                             FlutterRemix.arrow_right_s_line,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       );

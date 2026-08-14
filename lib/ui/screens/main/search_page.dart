@@ -73,6 +73,7 @@ class _SearchPageState extends State<SearchPage> {
                   ),
                   slivers: [
                     SliverAppBar(
+            centerTitle: true,
                       systemOverlayStyle: brightness == Brightness.dark
                           ? SystemUiOverlayStyle.light.copyWith(
                               statusBarColor: Colors.transparent,
