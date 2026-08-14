@@ -9,6 +9,7 @@ import 'package:nix/ui/widgets/common/nix_refreshable_list.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 import 'package:nix/ui/widgets/common/nix_scrollbar.dart';
 import 'package:nix/ui/screens/music/controllers/tracks_controller.dart';
+import 'package:nix/ui/widgets/common/nix_sort_widget.dart';
 
 class TracksPage extends StatefulWidget {
   final String title;
@@ -54,28 +55,17 @@ class _TracksPageState extends State<TracksPage> {
             backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
             scrolledUnderElevation: 0,
             actions: [
-              PopupMenuButton<TrackSort>(
-                icon: const Icon(FlutterRemix.sort_desc),
-                tooltip: 'Sort',
-                initialValue: _controller.sort,
-                onSelected: _controller.setSort,
-                itemBuilder: (_) => const [
-                  PopupMenuItem(
-                    value: TrackSort.defaultOrder,
-                    child: Text('Default'),
-                  ),
-                  PopupMenuItem(
-                    value: TrackSort.aToZ,
-                    child: Text('A → Z'),
-                  ),
-                  PopupMenuItem(
-                    value: TrackSort.zToA,
-                    child: Text('Z → A'),
-                  ),
-                  PopupMenuItem(
-                    value: TrackSort.duration,
-                    child: Text('Duration'),
-                  ),
+              NixSortWidget<TrackSort>(
+                currentSort: _controller.sort,
+                isAscending: _controller.isAscending,
+                onSortSelected: _controller.setSort,
+                onToggleOrder: _controller.toggleOrder,
+                items: const [
+                  NixSortMenuItem(value: TrackSort.title, label: 'Title'),
+                  NixSortMenuItem(value: TrackSort.artist, label: 'Artist'),
+                  NixSortMenuItem(value: TrackSort.album, label: 'Album'),
+                  NixSortMenuItem(value: TrackSort.duration, label: 'Duration'),
+                  NixSortMenuItem(value: TrackSort.dateAdded, label: 'Date Added'),
                 ],
               ),
             ],

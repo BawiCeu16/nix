@@ -16,6 +16,7 @@ import 'package:nix/ui/widgets/common/cd_widget.dart';
 import 'package:nix/ui/widgets/common/nix_artwork.dart';
 import 'package:nix/ui/widgets/common/nix_scrollbar.dart';
 import 'package:nix/ui/screens/music/controllers/albums_controller.dart';
+import 'package:nix/ui/widgets/common/nix_sort_widget.dart';
 
 class AlbumsPage extends StatefulWidget {
   const AlbumsPage({super.key});
@@ -51,24 +52,15 @@ class _AlbumsPageState extends State<AlbumsPage> {
             backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
             scrolledUnderElevation: 0,
             actions: [
-              PopupMenuButton<AlbumSort>(
-                icon: const Icon(FlutterRemix.sort_desc),
-                tooltip: 'Sort',
-                initialValue: _controller.sort,
-                onSelected: _controller.setSort,
-                itemBuilder: (_) => const [
-                  PopupMenuItem(
-                    value: AlbumSort.name,
-                    child: Text('Album Name'),
-                  ),
-                  PopupMenuItem(
-                    value: AlbumSort.artist,
-                    child: Text('Artist Name'),
-                  ),
-                  PopupMenuItem(
-                    value: AlbumSort.trackCount,
-                    child: Text('Track Count'),
-                  ),
+              NixSortWidget<AlbumSort>(
+                currentSort: _controller.sort,
+                isAscending: _controller.isAscending,
+                onSortSelected: _controller.setSort,
+                onToggleOrder: _controller.toggleOrder,
+                items: const [
+                  NixSortMenuItem(value: AlbumSort.name, label: 'Album Name'),
+                  NixSortMenuItem(value: AlbumSort.artist, label: 'Artist Name'),
+                  NixSortMenuItem(value: AlbumSort.trackCount, label: 'Track Count'),
                 ],
               ),
             ],

@@ -12,11 +12,19 @@ class AlbumsPageController extends ChangeNotifier {
   AlbumSort _sort = AlbumSort.name;
   AlbumSort get sort => _sort;
 
+  bool _isAscending = true;
+  bool get isAscending => _isAscending;
+
   void setSort(AlbumSort newSort) {
     if (_sort != newSort) {
       _sort = newSort;
       notifyListeners();
     }
+  }
+
+  void toggleOrder() {
+    _isAscending = !_isAscending;
+    notifyListeners();
   }
 
   List<Album> getSortedAlbums(List<Album> albums) {
@@ -32,6 +40,11 @@ class AlbumsPageController extends ChangeNotifier {
         list.sort((a, b) => b.numOfSongs.compareTo(a.numOfSongs));
         break;
     }
+    
+    if (!_isAscending) {
+      return list.reversed.toList();
+    }
+    
     return list;
   }
 

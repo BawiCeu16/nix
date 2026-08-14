@@ -73,17 +73,18 @@ class _LibraryPageState extends State<LibraryPage> {
                         onTap: () => _controller.openListeningStats(context),
                       ),
                       const SizedBox(height: 2.5),
-                      CardListTile(
-                        title: 'Top Listened',
-                        icon: FlutterRemix.fire_fill,
-                        subtitle: '${music.topPlayed.tracks.length} tracks',
-                        onTap: () => _controller.openTopListened(context),
-                      ),
-                      const SizedBox(height: 2.5),
+                      // CardListTile(
+                      //   title: 'Top Listened',
+                      //   icon: FlutterRemix.fire_fill,
+                      //   subtitle: '${music.topPlayed.tracks.length} tracks',
+                      //   onTap: () => _controller.openTopListened(context),
+                      // ),
+                      // const SizedBox(height: 2.5),
                       CardListTile(
                         title: 'Recently Listened',
                         icon: FlutterRemix.time_line,
-                        subtitle: '${music.recentlyPlayed.tracks.length} tracks',
+                        subtitle:
+                            '${music.recentlyPlayed.tracks.length} tracks',
                         onTap: () => _controller.openRecentlyListened(context),
                       ),
                       const SizedBox(height: 2.5),

@@ -1,10 +1,13 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:nix/core/hive_keys.dart';
 import 'package:nix/models/music/track.dart';
+import 'package:nix/models/music/playlist.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
+import 'package:nix/ui/screens/music/artists_page.dart';
 
 class TrackStat {
   final Track track;
@@ -74,6 +77,10 @@ class StatsController extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  List<TrackStat> get sortedTopSongs => _topSongs;
+  List<ArtistStat> get sortedTopArtists => _topArtists;
+  List<HistoryStat> get sortedPlaybackHistory => _playbackHistory;
 
   /// Initialize real-time listeners for automatic stats refresh
   void init(MusicProvider musicProvider, CurrentMusicProvider currentMusicProvider) {
@@ -224,6 +231,42 @@ class StatsController extends ChangeNotifier {
     notifyListeners();
   }
 
+  int? getFirstTrackIdForArtist(String artistName) {
+    final tracks = _musicProvider?.tracks;
+    if (tracks == null) return null;
+    for (final t in tracks) {
+      if (t.artist.trim().toLowerCase() == artistName.trim().toLowerCase()) {
+        return t.id;
+      }
+    }
+    return null;
+  }
+
+  void openArtistDetails(BuildContext context, String artistName) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ArtistTracksPage(artistName: artistName),
+      ),
+    );
+  }
+
+  void playTrack(
+    BuildContext context,
+    Track track, [
+    List<Track>? playlistContext,
+  ]) {
+    final player = context.read<CurrentMusicProvider>();
+    final playlist = playlistContext != null && playlistContext.isNotEmpty
+        ? Playlist(
+            id: 'stats_playlist',
+            name: 'Listening Stats',
+            tracks: playlistContext,
+            createdAt: DateTime.now(),
+          )
+        : null;
+    player.playTrack(track, playlist: playlist);
+  }
+
   static String formatDuration(Duration duration) {
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
@@ -256,6 +299,14 @@ class StatsController extends ChangeNotifier {
     } else {
       return '${time.day}/${time.month}/${time.year}';
     }
+  }
+
+  static String formatDateAdded(int dateAdded) {
+    if (dateAdded <= 0) return 'Unknown';
+    // If in seconds (< 100000000000), convert to ms
+    final ms = dateAdded < 100000000000 ? dateAdded * 1000 : dateAdded;
+    final dt = DateTime.fromMillisecondsSinceEpoch(ms);
+    return '${dt.day}/${dt.month}/${dt.year}';
   }
 
   @override

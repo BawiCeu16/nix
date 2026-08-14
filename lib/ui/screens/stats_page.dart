@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:on_audio_query_forked/on_audio_query.dart';
 import 'package:provider/provider.dart';
+import 'package:expressive_refresh/expressive_refresh.dart';
 
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/ui/screens/controllers/stats_controller.dart';
 import 'package:nix/ui/widgets/common/nix_artwork.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
+import 'package:nix/ui/widgets/common/nix_empty_state.dart';
+import 'package:nix/ui/widgets/common/nix_section_header.dart';
+import 'package:nix/ui/widgets/tiles/nix_choice_chip.dart';
 
 class StatsPage extends StatefulWidget {
   const StatsPage({super.key});
@@ -52,8 +56,8 @@ class _StatsPageState extends State<StatsPage> {
           backgroundColor: colorScheme.surfaceContainer,
           appBar: AppBar(
             title: const Text(
-              'Listening Insights',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              'Listening Stats',
+              style: TextStyle(fontWeight: FontWeight.w600),
             ),
             centerTitle: true,
             scrolledUnderElevation: 0,
@@ -70,52 +74,54 @@ class _StatsPageState extends State<StatsPage> {
               ),
             ],
           ),
-          body: RefreshIndicator(
-            color: colorScheme.primary,
-            backgroundColor: colorScheme.surface,
+          body: ExpressiveRefreshIndicator(
             onRefresh: () async {
               final music = context.read<MusicProvider>();
               _controller.calculateStats(music);
             },
             child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              cacheExtent: 600,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               physics: const AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics(),
               ),
               children: [
+                // ── Overview Section ──
+                const NixSectionHeader(title: 'Overview', topPadding: 4),
+
                 // ── Hero Highlight Card (Top Song) ──
                 if (topSongStat != null) ...[
                   _buildHeroHighlightCard(context, topSongStat),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 10),
                 ],
 
-                // ── Summary Cards Grid ──
+                // ── Bento Metrics Grid ──
                 Row(
                   children: [
                     Expanded(
-                      child: _buildSummaryCard(
-                        context,
-                        title: 'Total Plays',
-                        value: '${_controller.totalPlayCount}',
-                        icon: FlutterRemix.play_circle_fill,
-                        accentColor: colorScheme.primary,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _buildSummaryCard(
+                      child: _buildBentoCard(
                         context,
                         title: 'Listen Time',
                         value: StatsController.formatDuration(
                           _controller.totalListeningTime,
                         ),
                         icon: FlutterRemix.time_fill,
+                        accentColor: colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _buildBentoCard(
+                        context,
+                        title: 'Total Plays',
+                        value: '${_controller.totalPlayCount}',
+                        icon: FlutterRemix.play_circle_fill,
                         accentColor: colorScheme.secondary,
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: _buildSummaryCard(
+                      child: _buildBentoCard(
                         context,
                         title: 'Artists',
                         value: '${_controller.uniqueArtistsCount}',
@@ -125,46 +131,51 @@ class _StatsPageState extends State<StatsPage> {
                     ),
                   ],
                 ),
+
                 const SizedBox(height: 20),
 
-                // ── Tab Navigation Selector ──
-                Container(
-                  height: 48,
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest.withValues(
-                      alpha: 0.6,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    children: [
-                      _buildTabButton(
-                        context,
-                        index: 0,
+                // ── Insights Section ──
+                const NixSectionHeader(title: 'Insights', topPadding: 0),
+
+                // ── Nix Choice Chips Tab Selector ──
+                Row(
+                  children: [
+                    Expanded(
+                      child: NixChoiceChip<int>(
                         label: 'Top Songs',
-                        icon: FlutterRemix.music_2_fill,
+                        value: 0,
+                        groupValue: _controller.selectedTabIndex,
+                        isFirst: true,
+                        onChanged: _controller.setTabIndex,
                       ),
-                      _buildTabButton(
-                        context,
-                        index: 1,
+                    ),
+                    const SizedBox(width: 2.5),
+                    Expanded(
+                      child: NixChoiceChip<int>(
                         label: 'Top Artists',
-                        icon: FlutterRemix.user_4_fill,
+                        value: 1,
+                        groupValue: _controller.selectedTabIndex,
+                        onChanged: _controller.setTabIndex,
                       ),
-                      _buildTabButton(
-                        context,
-                        index: 2,
+                    ),
+                    const SizedBox(width: 2.5),
+                    Expanded(
+                      child: NixChoiceChip<int>(
                         label: 'History',
-                        icon: FlutterRemix.history_fill,
+                        value: 2,
+                        groupValue: _controller.selectedTabIndex,
+                        isLast: true,
+                        onChanged: _controller.setTabIndex,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
+
+                const SizedBox(height: 8),
 
                 // ── Tab Content Lists ──
                 AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 250),
+                  duration: const Duration(milliseconds: 220),
                   child: _controller.selectedTabIndex == 0
                       ? _buildTopSongsList(context)
                       : _controller.selectedTabIndex == 1
@@ -186,131 +197,129 @@ class _StatsPageState extends State<StatsPage> {
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: LinearGradient(
-          colors: [
-            colorScheme.primaryContainer.withValues(alpha: 0.8),
-            colorScheme.surface,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Stack(
-              alignment: Alignment.bottomRight,
+      clipBehavior: Clip.antiAlias,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            _controller.playTrack(
+              context,
+              stat.track,
+              _controller.sortedTopSongs.map((s) => s.track).toList(),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: NixArtwork(
-                    id: stat.track.id,
-                    type: ArtworkType.AUDIO,
-                    width: 72,
-                    height: 72,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFD700), // Gold
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        blurRadius: 4,
+                Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    NixArtwork(
+                      id: stat.track.id,
+                      type: ArtworkType.AUDIO,
+                      width: 68,
+                      height: 68,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(3.5),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFFD700), // Gold
+                        shape: BoxShape.circle,
                       ),
-                    ],
-                  ),
-                  child: const Icon(
-                    FlutterRemix.vip_crown_fill,
-                    size: 12,
-                    color: Colors.black87,
-                  ),
+                      child: const Icon(
+                        FlutterRemix.vip_crown_fill,
+                        size: 11,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '#1 TOP SONG',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            color: colorScheme.onPrimary,
-                            letterSpacing: 0.5,
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: Text(
+                              '#1 MOST PLAYED',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: colorScheme.onPrimaryContainer,
+                                letterSpacing: 0.4,
+                              ),
+                            ),
                           ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${stat.playCount} plays',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        stat.track.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(height: 2),
                       Text(
-                        '${stat.playCount} plays',
+                        stat.track.artist,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
                           color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    stat.track.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    stat.track.artist,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 8),
+                IconButton.filledTonal(
+                  icon: const Icon(FlutterRemix.play_fill),
+                  onPressed: () {
+                    _controller.playTrack(
+                      context,
+                      stat.track,
+                      _controller.sortedTopSongs.map((s) => s.track).toList(),
+                    );
+                  },
+                ),
+              ],
             ),
-            IconButton.filledTonal(
-              icon: const Icon(FlutterRemix.play_fill),
-              onPressed: () {
-                final player = context.read<CurrentMusicProvider>();
-                player.playTrack(stat.track);
-              },
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildSummaryCard(
+  Widget _buildBentoCard(
     BuildContext context, {
     required String title,
     required String value,
@@ -324,9 +333,6 @@ class _StatsPageState extends State<StatsPage> {
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
-        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -337,7 +343,7 @@ class _StatsPageState extends State<StatsPage> {
               color: accentColor.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, size: 18, color: accentColor),
+            child: Icon(icon, size: 16, color: accentColor),
           ),
           const SizedBox(height: 10),
           Text(
@@ -364,75 +370,21 @@ class _StatsPageState extends State<StatsPage> {
     );
   }
 
-  Widget _buildTabButton(
-    BuildContext context, {
-    required int index,
-    required String label,
-    required IconData icon,
-  }) {
-    final isSelected = _controller.selectedTabIndex == index;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => _controller.setTabIndex(index),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOutCubic,
-          decoration: BoxDecoration(
-            color: isSelected ? colorScheme.surface : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : [],
-          ),
-          child: Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  icon,
-                  size: 15,
-                  color: isSelected
-                      ? colorScheme.primary
-                      : colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    color: isSelected
-                        ? colorScheme.onSurface
-                        : colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildTopSongsList(BuildContext context) {
-    final songs = _controller.topSongs;
+    final songs = _controller.sortedTopSongs;
     final colorScheme = Theme.of(context).colorScheme;
-    final maxPlays = songs.isNotEmpty ? songs.first.playCount : 1;
+    final maxPlays = _controller.topSongs.isNotEmpty
+        ? _controller.topSongs.first.playCount
+        : 1;
 
     if (songs.isEmpty) {
-      return _buildEmptyState(
-        context,
-        icon: FlutterRemix.music_2_line,
-        message:
-            'No song plays recorded yet.\nStart listening to see your top songs!',
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 40),
+        child: NixEmptyState(
+          icon: FlutterRemix.music_2_line,
+          title: 'No song plays recorded yet',
+          subtitle: 'Start listening to discover your top songs!',
+        ),
       );
     }
 
@@ -441,112 +393,82 @@ class _StatsPageState extends State<StatsPage> {
       children: List.generate(songs.length, (index) {
         final stat = songs[index];
         final rank = index + 1;
-        final ratio = (stat.playCount / maxPlays).clamp(0.05, 1.0);
+        final ratio = (stat.playCount / maxPlays).clamp(0.04, 1.0);
+        final isFirst = index == 0;
+        final isLast = index == songs.length - 1;
 
         return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Material(
-            color: colorScheme.surface,
-            borderRadius: BorderRadius.circular(14),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: () {
-                final player = context.read<CurrentMusicProvider>();
-                player.playTrack(stat.track);
-              },
-              child: Stack(
-                children: [
-                  // Relative popularity bar accent at bottom
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: ratio,
-                      child: Container(
-                        height: 3,
-                        decoration: BoxDecoration(
-                          color: _getRankColor(
-                            rank,
-                            colorScheme,
-                          ).withValues(alpha: 0.8),
-                          borderRadius: BorderRadius.circular(2),
+          padding: const EdgeInsets.only(bottom: 2.5),
+          child: _StatsGroupedTile(
+            isFirst: isFirst,
+            isLast: isLast,
+            onTap: () {
+              _controller.playTrack(
+                context,
+                stat.track,
+                songs.map((s) => s.track).toList(),
+              );
+            },
+            bottomAccentRatio: ratio,
+            bottomAccentColor: _getRankColor(rank, colorScheme),
+            child: Row(
+              children: [
+                _buildRankBadge(context, rank),
+                const SizedBox(width: 10),
+                NixArtwork(
+                  id: stat.track.id,
+                  type: ArtworkType.AUDIO,
+                  width: 44,
+                  height: 44,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        stat.track.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
                         ),
                       ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${stat.track.artist}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: Text(
+                    '${stat.playCount} ${stat.playCount == 1 ? 'play' : 'plays'}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      children: [
-                        _buildRankBadge(context, rank),
-                        const SizedBox(width: 10),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: NixArtwork(
-                            id: stat.track.id,
-                            type: ArtworkType.AUDIO,
-                            width: 46,
-                            height: 46,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                stat.track.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                stat.track.artist,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colorScheme.primaryContainer.withValues(
-                              alpha: 0.5,
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            '${stat.playCount} ${stat.playCount == 1 ? 'play' : 'plays'}',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.onPrimaryContainer,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
@@ -555,16 +477,20 @@ class _StatsPageState extends State<StatsPage> {
   }
 
   Widget _buildTopArtistsList(BuildContext context) {
-    final artists = _controller.topArtists;
+    final artists = _controller.sortedTopArtists;
     final colorScheme = Theme.of(context).colorScheme;
-    final maxPlays = artists.isNotEmpty ? artists.first.totalPlayCount : 1;
+    final maxPlays = _controller.topArtists.isNotEmpty
+        ? _controller.topArtists.first.totalPlayCount
+        : 1;
 
     if (artists.isEmpty) {
-      return _buildEmptyState(
-        context,
-        icon: FlutterRemix.user_4_line,
-        message:
-            'No artist stats recorded yet.\nListen to songs to discover your top artists!',
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 40),
+        child: NixEmptyState(
+          icon: FlutterRemix.user_4_line,
+          title: 'No artist stats recorded yet',
+          subtitle: 'Listen to songs to discover your top artists!',
+        ),
       );
     }
 
@@ -573,103 +499,94 @@ class _StatsPageState extends State<StatsPage> {
       children: List.generate(artists.length, (index) {
         final artist = artists[index];
         final rank = index + 1;
-        final ratio = (artist.totalPlayCount / maxPlays).clamp(0.05, 1.0);
+        final ratio = (artist.totalPlayCount / maxPlays).clamp(0.04, 1.0);
+        final isFirst = index == 0;
+        final isLast = index == artists.length - 1;
+        final firstTrackId = _controller.getFirstTrackIdForArtist(
+          artist.artistName,
+        );
 
         return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Material(
-            color: colorScheme.surface,
-            borderRadius: BorderRadius.circular(14),
-            clipBehavior: Clip.antiAlias,
-            child: Stack(
+          padding: const EdgeInsets.only(bottom: 2.5),
+          child: _StatsGroupedTile(
+            isFirst: isFirst,
+            isLast: isLast,
+            onTap: () {
+              _controller.openArtistDetails(context, artist.artistName);
+            },
+            bottomAccentRatio: ratio,
+            bottomAccentColor: _getRankColor(rank, colorScheme),
+            child: Row(
               children: [
-                // Relative popularity bar accent
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: FractionallySizedBox(
-                    alignment: Alignment.centerLeft,
-                    widthFactor: ratio,
-                    child: Container(
-                      height: 3,
-                      decoration: BoxDecoration(
-                        color: _getRankColor(
-                          rank,
-                          colorScheme,
-                        ).withValues(alpha: 0.8),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
+                _buildRankBadge(context, rank),
+                const SizedBox(width: 10),
+                if (firstTrackId != null)
+                  NixArtwork(
+                    id: firstTrackId,
+                    type: ArtworkType.AUDIO,
+                    width: 44,
+                    height: 44,
+                    borderRadius: BorderRadius.circular(100),
+                  )
+                else
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundColor: colorScheme.secondaryContainer,
+                    child: Icon(
+                      FlutterRemix.user_3_fill,
+                      color: colorScheme.onSecondaryContainer,
+                      size: 18,
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
-                  ),
-                  child: Row(
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildRankBadge(context, rank),
-                      const SizedBox(width: 10),
-                      CircleAvatar(
-                        radius: 21,
-                        backgroundColor: colorScheme.secondaryContainer
-                            .withValues(alpha: 0.8),
-                        child: Icon(
-                          FlutterRemix.user_3_fill,
-                          color: colorScheme.onSecondaryContainer,
-                          size: 20,
+                      Text(
+                        artist.artistName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              artist.artistName,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '${artist.trackCount} ${artist.trackCount == 1 ? 'track played' : 'tracks played'}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.secondaryContainer.withValues(
-                            alpha: 0.6,
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '${artist.totalPlayCount} ${artist.totalPlayCount == 1 ? 'play' : 'plays'}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.onSecondaryContainer,
-                          ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${artist.trackCount} ${artist.trackCount == 1 ? 'track' : 'tracks'} played',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
                   ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: Text(
+                    '${artist.totalPlayCount} ${artist.totalPlayCount == 1 ? 'play' : 'plays'}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Icon(
+                  FlutterRemix.arrow_right_s_line,
+                  size: 18,
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                 ),
               ],
             ),
@@ -680,15 +597,17 @@ class _StatsPageState extends State<StatsPage> {
   }
 
   Widget _buildHistoryList(BuildContext context) {
-    final history = _controller.playbackHistory;
+    final history = _controller.sortedPlaybackHistory;
     final colorScheme = Theme.of(context).colorScheme;
 
     if (history.isEmpty) {
-      return _buildEmptyState(
-        context,
-        icon: FlutterRemix.history_line,
-        message:
-            'No playback history recorded yet.\nPlayed songs will appear here.',
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 40),
+        child: NixEmptyState(
+          icon: FlutterRemix.history_line,
+          title: 'No playback history recorded yet',
+          subtitle: 'Played songs will appear here.',
+        ),
       );
     }
 
@@ -696,69 +615,80 @@ class _StatsPageState extends State<StatsPage> {
       key: const ValueKey('history'),
       children: List.generate(history.length, (index) {
         final item = history[index];
+        final isFirst = index == 0;
+        final isLast = index == history.length - 1;
         final relativeTime = StatsController.formatRelativeTime(
           item.lastPlayed,
         );
 
         return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Material(
-            color: colorScheme.surface,
-            borderRadius: BorderRadius.circular(14),
-            clipBehavior: Clip.antiAlias,
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 4,
-              ),
-              leading: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: NixArtwork(
+          padding: const EdgeInsets.only(bottom: 2.5),
+          child: _StatsGroupedTile(
+            isFirst: isFirst,
+            isLast: isLast,
+            onTap: () {
+              _controller.playTrack(
+                context,
+                item.track,
+                history.map((h) => h.track).toList(),
+              );
+            },
+            child: Row(
+              children: [
+                NixArtwork(
                   id: item.track.id,
                   type: ArtworkType.AUDIO,
-                  width: 46,
-                  height: 46,
-                ),
-              ),
-              title: Text(
-                item.track.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-              subtitle: Text(
-                item.track.artist,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-              trailing: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.6,
-                  ),
+                  width: 44,
+                  height: 44,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(
-                  relativeTime,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: colorScheme.onSurfaceVariant,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.track.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        item.track.artist,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              onTap: () {
-                final player = context.read<CurrentMusicProvider>();
-                player.playTrack(item.track);
-              },
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    relativeTime,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         );
@@ -771,8 +701,8 @@ class _StatsPageState extends State<StatsPage> {
 
     if (rank == 1) {
       return Container(
-        width: 26,
-        height: 26,
+        width: 24,
+        height: 24,
         decoration: const BoxDecoration(
           color: Color(0xFFFFD700), // Gold
           shape: BoxShape.circle,
@@ -783,15 +713,15 @@ class _StatsPageState extends State<StatsPage> {
             style: TextStyle(
               color: Colors.black87,
               fontWeight: FontWeight.w900,
-              fontSize: 13,
+              fontSize: 12,
             ),
           ),
         ),
       );
     } else if (rank == 2) {
       return Container(
-        width: 26,
-        height: 26,
+        width: 24,
+        height: 24,
         decoration: const BoxDecoration(
           color: Color(0xFFC0C0C0), // Silver
           shape: BoxShape.circle,
@@ -802,15 +732,15 @@ class _StatsPageState extends State<StatsPage> {
             style: TextStyle(
               color: Colors.black87,
               fontWeight: FontWeight.w900,
-              fontSize: 13,
+              fontSize: 12,
             ),
           ),
         ),
       );
     } else if (rank == 3) {
       return Container(
-        width: 26,
-        height: 26,
+        width: 24,
+        height: 24,
         decoration: const BoxDecoration(
           color: Color(0xFFCD7F32), // Bronze
           shape: BoxShape.circle,
@@ -821,7 +751,7 @@ class _StatsPageState extends State<StatsPage> {
             style: TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w900,
-              fontSize: 13,
+              fontSize: 12,
             ),
           ),
         ),
@@ -829,7 +759,7 @@ class _StatsPageState extends State<StatsPage> {
     }
 
     return SizedBox(
-      width: 26,
+      width: 24,
       child: Text(
         '#$rank',
         textAlign: TextAlign.center,
@@ -854,35 +784,106 @@ class _StatsPageState extends State<StatsPage> {
         return colorScheme.primary;
     }
   }
+}
 
-  Widget _buildEmptyState(
-    BuildContext context, {
-    required IconData icon,
-    required String message,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
+/// Nix-styled interactive grouped tile container with continuous corner radii and micro-scaling
+class _StatsGroupedTile extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+  final bool isFirst;
+  final bool isLast;
+  final double? bottomAccentRatio;
+  final Color? bottomAccentColor;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 48),
-      child: Center(
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              size: 48,
-              color: colorScheme.outline.withValues(alpha: 0.7),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                height: 1.4,
-                color: colorScheme.onSurfaceVariant,
+  const _StatsGroupedTile({
+    required this.child,
+    required this.onTap,
+    this.isFirst = false,
+    this.isLast = false,
+    this.bottomAccentRatio,
+    this.bottomAccentColor,
+  });
+
+  @override
+  State<_StatsGroupedTile> createState() => _StatsGroupedTileState();
+}
+
+class _StatsGroupedTileState extends State<_StatsGroupedTile> {
+  bool _isPressed = false;
+
+  void _setPressed(bool pressed) {
+    if (_isPressed != pressed && mounted) {
+      setState(() => _isPressed = pressed);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final defaultRadius = BorderRadius.only(
+      topLeft: Radius.circular(widget.isFirst ? 16 : 5),
+      topRight: Radius.circular(widget.isFirst ? 16 : 5),
+      bottomLeft: Radius.circular(widget.isLast ? 16 : 5),
+      bottomRight: Radius.circular(widget.isLast ? 16 : 5),
+    );
+
+    final targetRadius = _isPressed
+        ? BorderRadius.circular(100.0)
+        : defaultRadius;
+    final targetScale = _isPressed ? 0.98 : 1.0;
+
+    return GestureDetector(
+      onTapDown: (_) => _setPressed(true),
+      onTapUp: (_) => _setPressed(false),
+      onTapCancel: () => _setPressed(false),
+      child: AnimatedScale(
+        scale: targetScale,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutQuad,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 100),
+          curve: Curves.easeOutQuad,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: targetRadius,
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: widget.onTap,
+              child: Stack(
+                children: [
+                  if (widget.bottomAccentRatio != null &&
+                      widget.bottomAccentColor != null)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: widget.bottomAccentRatio!,
+                        child: Container(
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: widget.bottomAccentColor!.withValues(
+                              alpha: 0.75,
+                            ),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                    ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    child: widget.child,
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
