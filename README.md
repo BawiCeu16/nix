@@ -1,6 +1,10 @@
-# nix
+<p align="center">
+  <img src="assets/nix_icon/icon.svg" width="120" alt="Nix Icon" />
+</p>
 
-A fast, minimal music player for Android built with Flutter.
+<h1 align="center">nix</h1>
+
+<p align="center">A fast, minimal music player for Android built with Flutter.</p>
 
 ## Features
 

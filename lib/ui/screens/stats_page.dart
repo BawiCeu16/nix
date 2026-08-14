@@ -779,7 +779,7 @@ class _StatsPageState extends State<StatsPage> {
       case 2:
         return colorScheme.primary.withValues(alpha: 0.7);
       case 3:
-        return colorScheme.primary.withValues(alpha: 0.4);
+        return colorScheme.primary.withValues(alpha: 0.5);
       default:
         return colorScheme.primary.withValues(alpha: 0.15);
     }
