@@ -703,15 +703,15 @@ class _StatsPageState extends State<StatsPage> {
       return Container(
         width: 24,
         height: 24,
-        decoration: const BoxDecoration(
-          color: Color(0xFFFFD700), // Gold
+        decoration: BoxDecoration(
+          color: _getRankColor(rank, colorScheme),
           shape: BoxShape.circle,
         ),
-        child: const Center(
+        child: Center(
           child: Text(
             '1',
             style: TextStyle(
-              color: Colors.black87,
+              color: colorScheme.onPrimary,
               fontWeight: FontWeight.w900,
               fontSize: 12,
             ),
@@ -722,15 +722,15 @@ class _StatsPageState extends State<StatsPage> {
       return Container(
         width: 24,
         height: 24,
-        decoration: const BoxDecoration(
-          color: Color(0xFFC0C0C0), // Silver
+        decoration: BoxDecoration(
+          color: _getRankColor(rank, colorScheme),
           shape: BoxShape.circle,
         ),
-        child: const Center(
+        child: Center(
           child: Text(
             '2',
             style: TextStyle(
-              color: Colors.black87,
+              color: colorScheme.onPrimary,
               fontWeight: FontWeight.w900,
               fontSize: 12,
             ),
@@ -741,15 +741,15 @@ class _StatsPageState extends State<StatsPage> {
       return Container(
         width: 24,
         height: 24,
-        decoration: const BoxDecoration(
-          color: Color(0xFFCD7F32), // Bronze
+        decoration: BoxDecoration(
+          color: _getRankColor(rank, colorScheme),
           shape: BoxShape.circle,
         ),
-        child: const Center(
+        child: Center(
           child: Text(
             '3',
             style: TextStyle(
-              color: Colors.white,
+              color: colorScheme.onPrimary,
               fontWeight: FontWeight.w900,
               fontSize: 12,
             ),
@@ -775,13 +775,13 @@ class _StatsPageState extends State<StatsPage> {
   Color _getRankColor(int rank, ColorScheme colorScheme) {
     switch (rank) {
       case 1:
-        return const Color(0xFFFFD700);
-      case 2:
-        return const Color(0xFFC0C0C0);
-      case 3:
-        return const Color(0xFFCD7F32);
-      default:
         return colorScheme.primary;
+      case 2:
+        return colorScheme.primary.withValues(alpha: 0.7);
+      case 3:
+        return colorScheme.primary.withValues(alpha: 0.4);
+      default:
+        return colorScheme.primary.withValues(alpha: 0.15);
     }
   }
 }
