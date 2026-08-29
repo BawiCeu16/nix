@@ -26,6 +26,7 @@ class TrackTile extends StatefulWidget {
   final bool isFirst;
   final bool isLast;
   final VoidCallback? onPressed;
+  final Widget? trailing;
 
   const TrackTile({
     super.key,
@@ -34,6 +35,7 @@ class TrackTile extends StatefulWidget {
     this.isFirst = false,
     this.isLast = false,
     this.onPressed,
+    this.trailing,
   });
 
   @override
@@ -325,7 +327,7 @@ class _TrackTileState extends State<TrackTile> {
                         );
                       },
                     ),
-                    trailing: IconButton(
+                    trailing: widget.trailing ?? IconButton(
                       icon: Icon(
                         FlutterRemix.more_2_fill,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,

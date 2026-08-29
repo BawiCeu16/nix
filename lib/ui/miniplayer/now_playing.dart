@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
+import 'package:m3e_buttons/m3e_buttons.dart';
 import 'package:provider/provider.dart';
 
 import 'package:nix/core/math_utils.dart';
 import 'package:nix/providers/settings_provider.dart';
+import 'package:nix/providers/current_music_provider.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:nix/core/hive_keys.dart';
 import 'package:nix/ui/miniplayer/widgets/top_bar.dart';
 import 'package:nix/ui/miniplayer/widgets/track_image.dart';
 import 'package:nix/ui/miniplayer/widgets/track_info.dart';
@@ -199,6 +203,156 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                         );
                       },
                     ),
+                    // Action controls (Shuffle, Favorite, Repeat)
+                    AnimatedBuilder(
+                      animation: _controller.lyricsAnim,
+                      builder: (context, child) {
+                        return Offstage(
+                          offstage: data.opacity == 0.0,
+                          child: Material(
+                            type: MaterialType.transparency,
+                            child: Opacity(
+                              opacity:
+                                  (data.opacity *
+                                          (1 - _controller.lyricsAnim.value))
+                                      .clamp(0.0, 1.0),
+                              child: Transform.translate(
+                                offset: Offset(
+                                  0,
+                                  -100 * data.inverseProgress +
+                                      (100 * _controller.lyricsAnim.value),
+                                ),
+                                child: Align(
+                                  alignment: Alignment.bottomCenter,
+                                  child: SafeArea(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 14.0,
+                                      ),
+                                      child: Consumer<CurrentMusicProvider>(
+                                        builder: (context, music, _) {
+                                          return ValueListenableBuilder<
+                                            Box<int>
+                                          >(
+                                            valueListenable: Hive.box<int>(
+                                              HiveKeys.favoritesBox,
+                                            ).listenable(),
+                                            builder: (context, box, _) {
+                                              final track = music.currentTrack;
+                                              final isFavorite =
+                                                  track != null &&
+                                                  box.containsKey(track.id);
+                                              final selectedIndices = <int>{
+                                                if (music.isShuffleEnabled) 0,
+                                                if (isFavorite) 1,
+                                                if (music.isRepeatEnabled) 2,
+                                              };
+
+                                              return M3EToggleButtonGroup(
+                                                type: M3EButtonGroupType
+                                                    .connected,
+                                                style: M3EButtonStyle.tonal,
+                                                size: M3EButtonSize.custom(
+                                                  height: 45,
+                                                ),
+                                                decoration:
+                                                    M3EToggleButtonDecoration.styleFrom(
+                                                      foregroundColor:
+                                                          onSecondary,
+                                                      checkedForegroundColor:
+                                                          Theme.of(
+                                                            context,
+                                                          ).colorScheme.primary,
+                                                      backgroundColor:
+                                                          Theme.of(context)
+                                                              .colorScheme
+                                                              .surfaceContainer
+                                                              .withValues(
+                                                                alpha: 1,
+                                                              ),
+                                                      checkedBackgroundColor:
+                                                          Theme.of(context)
+                                                              .colorScheme
+                                                              .primaryContainer,
+                                                    ),
+                                                selectedIndices:
+                                                    selectedIndices,
+                                                onSelectedIndicesChanged:
+                                                    (newIndices) {
+                                                      if (newIndices.contains(
+                                                            0,
+                                                          ) !=
+                                                          music
+                                                              .isShuffleEnabled) {
+                                                        music.toggleShuffle();
+                                                      }
+                                                      if (newIndices.contains(
+                                                            1,
+                                                          ) !=
+                                                          isFavorite) {
+                                                        if (track != null) {
+                                                          music.customAction(
+                                                            'favorite',
+                                                          );
+                                                        }
+                                                      }
+                                                      if (newIndices.contains(
+                                                            2,
+                                                          ) !=
+                                                          music
+                                                              .isRepeatEnabled) {
+                                                        music.toggleRepeat();
+                                                      }
+                                                    },
+                                                actions: [
+                                                  M3EToggleButtonGroupAction(
+                                                    icon: const Icon(
+                                                      FlutterRemix.shuffle_line,
+                                                      size: 20.0,
+                                                    ),
+                                                    tooltip: 'Shuffle',
+                                                  ),
+                                                  M3EToggleButtonGroupAction(
+                                                    icon: const Icon(
+                                                      FlutterRemix.heart_3_line,
+                                                      size: 20.0,
+                                                    ),
+                                                    checkedIcon: Icon(
+                                                      FlutterRemix.heart_3_fill,
+                                                      size: 20.0,
+                                                      color: Theme.of(
+                                                        context,
+                                                      ).colorScheme.primary,
+                                                    ),
+                                                    tooltip: 'Favorite',
+                                                    width: 62,
+                                                  ),
+                                                  M3EToggleButtonGroupAction(
+                                                    icon: Icon(
+                                                      music.isRepeatOne
+                                                          ? FlutterRemix
+                                                                .repeat_one_line
+                                                          : FlutterRemix
+                                                                .repeat_2_line,
+                                                      size: 20.0,
+                                                    ),
+                                                    tooltip: 'Repeat',
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                     // Audio output button (BottomLeft)
                     // AnimatedBuilder(
                     //   animation: _controller.lyricsAnim,
@@ -307,6 +461,7 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                           _controller.isReordering = false;
                         }
                       },
+                      onClose: () => _controller.snapToExpanded(context),
                     ),
                   ],
                 );

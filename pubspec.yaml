@@ -56,10 +56,13 @@ dependencies:
   scrollable_positioned_list: ^0.3.8
   loading_indicator_m3e: ^0.1.1
   nix_button: ^0.1.0
-  m3e_buttons: ^0.0.3
+  m3e_buttons: ^1.0.0
   flywheel_carousel: ^0.1.0
   output_route_selector: ^2.1.4
   material_ui: ^1.0.0
+  m3e_floating_toolbar: ^1.0.0
+  material_3_expressive: ^1.0.9
+  m3e_seekbar: ^1.0.0
 
 dev_dependencies:
   flutter_test:

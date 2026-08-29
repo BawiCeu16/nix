@@ -3,11 +3,10 @@ import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/settings_provider.dart';
-import 'package:nix/models/music/track.dart';
 import 'package:nix/models/music/playlist.dart';
-import 'package:nix/ui/widgets/buttons/nix_icon_button.dart';
-import 'package:nix/ui/widgets/tiles/queue_tile.dart';
+import 'package:nix/ui/widgets/tiles/track_tile.dart';
 import 'package:nix/core/haptic_utils.dart';
+import 'package:m3e_floating_toolbar/m3e_floating_toolbar.dart';
 
 class QueueView extends StatefulWidget {
   final double queueProgressValue;
@@ -16,6 +15,7 @@ class QueueView extends StatefulWidget {
   final ScrollController? controller;
   final VoidCallback? onReorderBegin;
   final VoidCallback? onReorderEnd;
+  final VoidCallback? onClose;
 
   const QueueView({
     super.key,
@@ -25,6 +25,7 @@ class QueueView extends StatefulWidget {
     this.controller,
     this.onReorderBegin,
     this.onReorderEnd,
+    this.onClose,
   });
 
   @override
@@ -35,6 +36,8 @@ class _QueueViewState extends State<QueueView> {
   bool _showScrollButton = false;
   bool _isPlayerAbove = true;
   int? _lastScrolledTrackId;
+  bool _isQueueLocked = true;
+  bool _isToolbarExpanded = false;
 
   @override
   void initState() {
@@ -84,18 +87,18 @@ class _QueueViewState extends State<QueueView> {
     final currentIndex = tracks.indexWhere((s) => s.id == playing.id);
     if (currentIndex < 0) return;
 
-    final double itemHeight = 64.0;
-    final double headerHeight = 68.0;
+    final double itemHeight = 74.0;
+    final double headerHeight = 38.4;
     final double viewportHeight = widget.controller!.position.viewportDimension;
 
     final currentScroll = widget.controller!.offset;
-    final itemPosition = (currentIndex * itemHeight) + headerHeight;
+    final itemTop = (currentIndex * itemHeight) + headerHeight;
+    final itemBottom = itemTop + itemHeight;
 
     // Show button if playing item is off-screen
-    // Off-screen is when itemPosition < scroll (above) or itemPosition > scroll + viewport (below)
-    final bool isAbove = itemPosition < currentScroll - (itemHeight / 2);
+    final bool isAbove = itemBottom < currentScroll + (itemHeight / 2);
     final bool isBelow =
-        itemPosition > currentScroll + viewportHeight - (itemHeight / 2);
+        itemTop > currentScroll + viewportHeight - (itemHeight / 2);
     final bool shouldShow = isAbove || isBelow;
 
     if (shouldShow != _showScrollButton || isAbove != _isPlayerAbove) {
@@ -137,12 +140,8 @@ class _QueueViewState extends State<QueueView> {
     final currentIndex = tracks.indexWhere((s) => s.id == playing.id);
 
     if (currentIndex >= 0) {
-      final double itemHeight = 64.0;
-      final double headerInitialPadding = 16.0;
-      final double headerContentHeight = 40.0;
-      final double headerBottomPadding = 12.0;
-      final double headerHeight =
-          headerInitialPadding + headerContentHeight + headerBottomPadding;
+      final double itemHeight = 74.0;
+      final double headerHeight = 38.4;
 
       final double viewportHeight =
           widget.controller!.position.viewportDimension;
@@ -181,9 +180,6 @@ class _QueueViewState extends State<QueueView> {
     final playlist = context.select<CurrentMusicProvider, Playlist?>(
       (p) => p.currentPlaylist,
     );
-    final currentTrack = context.select<CurrentMusicProvider, Track?>(
-      (p) => p.currentTrack,
-    );
     final currentMusic = context.read<CurrentMusicProvider>();
     final tracks = playlist?.tracks ?? [];
 
@@ -219,198 +215,268 @@ class _QueueViewState extends State<QueueView> {
                   Expanded(
                     child: Stack(
                       children: [
-                        CustomScrollView(
-                          scrollCacheExtent: const .pixels(1000.0),
-                          controller: widget.controller,
-                          physics: widget.queueProgressValue == 1.0
-                              ? const BouncingScrollPhysics(
-                                  parent: AlwaysScrollableScrollPhysics(),
-                                )
-                              : const NeverScrollableScrollPhysics(),
-                          slivers: [
-                            // Properly Styled Header
-                            SliverPadding(
-                              padding: const EdgeInsets.only(
-                                left: 24.0,
-                                top: 16.0,
-                                bottom: 12.0,
-                              ),
-                              sliver: SliverToBoxAdapter(
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      "Queue",
-                                      style: TextStyle(
-                                        fontSize: 22.0,
-                                        fontWeight: FontWeight.w700,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onSurface,
-                                        letterSpacing: -0.5,
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    // ExpressiveToneButton(
-                                    //   onPressed: () {
-                                    //     currentMusic.shuffleQueue();
-                                    //     HapticUtils.trigger(settings);
-                                    //   },
-                                    //   padding: const EdgeInsets.symmetric(
-                                    //     horizontal: 12,
-                                    //     vertical: 8,
-                                    //   ),
-                                    //   child: const Row(
-                                    //     mainAxisSize: MainAxisSize.min,
-                                    //     children: [
-                                    //       Icon(
-                                    //         FlutterRemix.shuffle_line,
-                                    //         size: 16,
-                                    //       ),
-                                    //       SizedBox(width: 6),
-                                    //       Text(
-                                    //         "Shuffle",
-                                    //         style: TextStyle(fontSize: 12),
-                                    //       ),
-                                    //     ],
-                                    //   ),
-                                    // ),
-                                    // const SizedBox(width: 8),
-                                    // ExpressiveToneButton(
-                                    //   onPressed: () {
-                                    //     currentMusic.clearQueue();
-                                    //     HapticUtils.trigger(settings);
-                                    //   },
-                                    //   padding: const EdgeInsets.symmetric(
-                                    //     horizontal: 12,
-                                    //     vertical: 8,
-                                    //   ),
-                                    //   child: const Row(
-                                    //     mainAxisSize: MainAxisSize.min,
-                                    //     children: [
-                                    //       Icon(
-                                    //         FlutterRemix.delete_bin_line,
-                                    //         size: 16,
-                                    //       ),
-                                    //       SizedBox(width: 6),
-                                    //       Text(
-                                    //         "Clear",
-                                    //         style: TextStyle(fontSize: 12),
-                                    //       ),
-                                    //     ],
-                                    //   ),
-                                    // ),
-                                    // const SizedBox(width: 24),
-                                  ],
+                        M3EFloatingToolbarVerticalNestedScroll(
+                          expanded: _isToolbarExpanded,
+                          onExpand: () =>
+                              setState(() => _isToolbarExpanded = true),
+                          onCollapse: () =>
+                              setState(() => _isToolbarExpanded = false),
+                          child: CustomScrollView(
+                            scrollCacheExtent: const .pixels(1000.0),
+                            controller: widget.controller,
+                            physics: widget.queueProgressValue == 1.0
+                                ? const BouncingScrollPhysics(
+                                    parent: AlwaysScrollableScrollPhysics(),
+                                  )
+                                : const NeverScrollableScrollPhysics(),
+                            slivers: [
+                              // Properly Styled Header
+                              SliverPadding(
+                                padding: const EdgeInsets.only(
+                                  left: 24.0,
+                                  top: 0.0,
+                                  bottom: 12.0,
                                 ),
-                              ),
-                            ),
-                            SliverReorderableList(
-                              itemCount: tracks.length,
-                              onReorderItem: _reorderItemCallback,
-                              proxyDecorator: (child, index, animation) {
-                                return AnimatedBuilder(
-                                  animation: animation,
-                                  builder: (context, child) {
-                                    final double animValue = Curves.easeInOut
-                                        .transform(animation.value);
-                                    final double scale =
-                                        1.0 + (0.05 * animValue);
-                                    return Transform.scale(
-                                      scale: scale,
-                                      child: Material(
-                                        elevation: 10,
-                                        shadowColor: Colors.black.withValues(
-                                          alpha: 0.2 * animValue,
-                                        ),
-                                        borderRadius: BorderRadius.circular(12),
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .surfaceContainerHighest
-                                            .withValues(
-                                              alpha: 0.95 * animValue,
-                                            ),
-                                        child: child,
-                                      ),
-                                    );
-                                  },
-                                  child: child,
-                                );
-                              },
-                              itemBuilder: (context, index) {
-                                final track = tracks[index];
-                                return QueueTile(
-                                  key: ValueKey('queue_${track.id}_$index'),
-                                  title: track.title,
-                                  subtitle: track.artist,
-                                  trackId: track.id,
-                                  itemIndex: index,
-                                  isPlaying: currentTrack?.id == track.id,
-                                  onTap: () {
-                                    currentMusic.playTrack(
-                                      track,
-                                      playlist: playlist,
-                                    );
-                                    HapticUtils.selection(
-                                      context.read<SettingsProvider>(),
-                                    );
-                                  },
-                                  onRemove: () {
-                                    currentMusic.removeFromQueue(index);
-                                  },
-                                  trailing: Listener(
-                                    onPointerDown: (_) =>
-                                        widget.onReorderBegin?.call(),
-                                    onPointerUp: (_) =>
-                                        widget.onReorderEnd?.call(),
-                                    onPointerCancel: (_) =>
-                                        widget.onReorderEnd?.call(),
-                                    child: ReorderableDragStartListener(
-                                      index: index,
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Icon(
-                                          FlutterRemix.menu_line,
+                                sliver: SliverToBoxAdapter(
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        "Queue",
+                                        style: TextStyle(
+                                          fontSize: 22.0,
+                                          fontWeight: FontWeight.w700,
                                           color: Theme.of(
                                             context,
-                                          ).colorScheme.onSurfaceVariant,
-                                          size: 20,
+                                          ).colorScheme.onSurface,
+                                          letterSpacing: -0.5,
                                         ),
                                       ),
-                                    ),
+                                      const Spacer(),
+                                    ],
                                   ),
-                                );
-                              },
-                            ),
-                            const SliverPadding(
-                              padding: EdgeInsets.only(bottom: 100),
-                            ),
-                          ],
+                                ),
+                              ),
+                              SliverPadding(
+                                padding: const EdgeInsets.only(
+                                  left: 16,
+                                  right: 16,
+                                  bottom: 16,
+                                ),
+                                sliver: SliverReorderableList(
+                                  itemCount: tracks.length,
+                                  onReorderItem: _reorderItemCallback,
+                                  proxyDecorator: (child, index, animation) {
+                                    return AnimatedBuilder(
+                                      animation: animation,
+                                      builder: (context, child) {
+                                        final double animValue = Curves
+                                            .easeInOut
+                                            .transform(animation.value);
+                                        final double scale =
+                                            1.0 + (0.05 * animValue);
+                                        return Transform.scale(
+                                          scale: scale,
+                                          child: Material(
+                                            elevation: 10,
+                                            shadowColor: Colors.black
+                                                .withValues(
+                                                  alpha: 0.2 * animValue,
+                                                ),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .surfaceContainerHighest
+                                                .withValues(
+                                                  alpha: 0.95 * animValue,
+                                                ),
+                                            child: child,
+                                          ),
+                                        );
+                                      },
+                                      child: child,
+                                    );
+                                  },
+                                  itemBuilder: (context, index) {
+                                    final track = tracks[index];
+                                    return Dismissible(
+                                      key: ValueKey(
+                                        'dismiss_queue_${track.id}_$index',
+                                      ),
+                                      direction: DismissDirection.endToStart,
+                                      background: Container(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.errorContainer,
+                                        alignment: Alignment.centerRight,
+                                        padding: const EdgeInsets.only(
+                                          right: 24.0,
+                                        ),
+                                        child: Icon(
+                                          FlutterRemix.delete_bin_line,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onErrorContainer,
+                                        ),
+                                      ),
+                                      onDismissed: (direction) {
+                                        currentMusic.removeFromQueue(index);
+                                      },
+                                      child: TrackTile(
+                                        isFirst: index == 0,
+                                        isLast: index == tracks.length - 1,
+                                        track: track,
+                                        onPressed: () {
+                                          currentMusic.playTrack(
+                                            track,
+                                            playlist: playlist,
+                                          );
+                                          HapticUtils.selection(
+                                            context.read<SettingsProvider>(),
+                                          );
+                                        },
+                                        trailing: AnimatedSwitcher(
+                                          duration: const Duration(
+                                            milliseconds: 250,
+                                          ),
+
+                                          switchInCurve: Curves.easeOutCubic,
+                                          switchOutCurve: Curves.easeInCubic,
+                                          transitionBuilder:
+                                              (child, animation) {
+                                                return FadeTransition(
+                                                  opacity: animation,
+                                                  child: SizeTransition(
+                                                    sizeFactor: animation,
+                                                    axis: Axis.horizontal,
+                                                    alignment:
+                                                        Alignment.centerRight,
+                                                    child: child,
+                                                  ),
+                                                );
+                                              },
+                                          child: _isQueueLocked
+                                              ? const SizedBox.shrink(
+                                                  key: ValueKey('locked'),
+                                                )
+                                              : Listener(
+                                                  key: const ValueKey(
+                                                    'unlocked',
+                                                  ),
+                                                  onPointerDown: (_) => widget
+                                                      .onReorderBegin
+                                                      ?.call(),
+                                                  onPointerUp: (_) => widget
+                                                      .onReorderEnd
+                                                      ?.call(),
+                                                  onPointerCancel: (_) => widget
+                                                      .onReorderEnd
+                                                      ?.call(),
+                                                  child: ReorderableDragStartListener(
+                                                    index: index,
+                                                    child: SizedBox(
+                                                      width: 48,
+                                                      height: 48,
+                                                      child: Center(
+                                                        child: Icon(
+                                                          FlutterRemix
+                                                              .menu_line,
+                                                          color: Theme.of(context)
+                                                              .colorScheme
+                                                              .onSurfaceVariant,
+                                                          size: 20,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SliverPadding(
+                                padding: EdgeInsets.only(bottom: 100),
+                              ),
+                            ],
+                          ),
                         ),
-                        // Floating Scroll to Playing Button
+                        // Floating Toolbar
                         Positioned(
                           bottom: 24,
                           left: 0,
                           right: 0,
                           child: Center(
-                            child: AnimatedSlide(
-                              offset: _showScrollButton
-                                  ? Offset.zero
-                                  : const Offset(0, 1),
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeOutBack,
-                              child: AnimatedOpacity(
-                                opacity: _showScrollButton ? 1.0 : 0.0,
-                                duration: const Duration(milliseconds: 200),
-                                child: NixIconButton(
-                                  onPressed: _scrollToCurrentTrack,
-                                  icon: Icon(
-                                    _isPlayerAbove
-                                        ? FlutterRemix.arrow_up_line
-                                        : FlutterRemix.arrow_down_line,
-                                  ),
-                                  tooltip: 'Scroll to playing',
-                                  size: 52,
+                            child: M3EHorizontalFloatingToolbar(
+                              expanded: _isToolbarExpanded,
+                              tooltip: 'Queue Options',
+                              decoration: M3EFloatingToolbarDecoration(
+                                colors: M3EFloatingToolbarColors(
+                                  toolbarContainerColor: Theme.of(
+                                    context,
+                                  ).colorScheme.primaryContainer,
+                                  toolbarContentColor: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimaryContainer,
+                                  fabContainerColor: Theme.of(
+                                    context,
+                                  ).colorScheme.primaryContainer,
+                                  fabContentColor: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimaryContainer,
                                 ),
+                              ),
+                              content: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        _isQueueLocked = !_isQueueLocked;
+                                      });
+                                    },
+                                    icon: Icon(
+                                      _isQueueLocked
+                                          ? FlutterRemix.lock_line
+                                          : FlutterRemix.lock_unlock_line,
+                                    ),
+                                    tooltip: _isQueueLocked
+                                        ? 'Unlock Queue'
+                                        : 'Lock Queue',
+                                  ),
+
+                                  AnimatedSize(
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeOutBack,
+                                    child: _showScrollButton
+                                        ? Padding(
+                                            padding: const EdgeInsets.only(
+                                              left: 8.0,
+                                            ),
+                                            child: IconButton(
+                                              alignment: Alignment.center,
+                                              onPressed: _scrollToCurrentTrack,
+                                              icon: Icon(
+                                                _isPlayerAbove
+                                                    ? FlutterRemix.arrow_up_line
+                                                    : FlutterRemix
+                                                          .arrow_down_line,
+                                              ),
+                                              tooltip: 'Scroll to playing',
+                                            ),
+                                          )
+                                        : const SizedBox.shrink(),
+                                  ),
+                                  IconButton(
+                                    onPressed: () => widget.onClose?.call(),
+                                    icon: const Icon(
+                                      FlutterRemix.arrow_down_s_line,
+                                    ),
+                                    tooltip: 'Close Queue',
+                                  ),
+                                ],
                               ),
                             ),
                           ),

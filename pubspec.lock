@@ -433,10 +433,10 @@ packages:
     dependency: "direct main"
     description:
       name: m3e_buttons
-      sha256: "50cdf9ba30fb3ab529afafb0e837484549f8599f1f109ac07da50951febaace1"
+      sha256: "001031f1b72ef19643a8a6a531aafcfb31a06b53456b6f60014403c125e67056"
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.3"
+    version: "1.0.0"
   m3e_design:
     dependency: transitive
     description:
@@ -445,6 +445,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.1"
+  m3e_floating_toolbar:
+    dependency: "direct main"
+    description:
+      name: m3e_floating_toolbar
+      sha256: "20e1f0475353915c82cd61d3e82970a32746dd68f475828cfad17966f7579495"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
+  m3e_haptics:
+    dependency: transitive
+    description:
+      name: m3e_haptics
+      sha256: e19c8bc49df25ad0512a6bb603a3ffcc6b2e4c2c1d4644302eb78f586bd7a0d0
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
+  m3e_seekbar:
+    dependency: "direct main"
+    description:
+      name: m3e_seekbar
+      sha256: e0c4aaf0d618fa6e39f86fd353e95c830dd3f08fd89608b3081ff4e068ea88df
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   matcher:
     dependency: transitive
     description:
@@ -453,6 +477,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.12.20"
+  material_3_expressive:
+    dependency: "direct main"
+    description:
+      name: material_3_expressive
+      sha256: "46230f3486e061559668581ef57df381fa343009e93b2285efb5aed4b42da11e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.9"
   material_color_utilities:
     dependency: transitive
     description:
@@ -1011,5 +1043,5 @@ packages:
     source: hosted
     version: "3.1.3"
 sdks:
-  dart: ">=3.12.1 <4.0.0"
-  flutter: ">=3.44.0"
+  dart: ">=3.12.2 <4.0.0"
+  flutter: ">=3.47.0"

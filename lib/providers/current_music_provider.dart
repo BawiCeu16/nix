@@ -50,9 +50,27 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
 
   Track? _currentTrack;
   Playlist? _currentPlaylist;
+  Track? _shuffledNextTrack;
   bool _isShuffleEnabled = false;
   bool _isRepeatEnabled = false;
   List<Track> _libraryTracks = [];
+
+  void _updateShuffledNextTrack() {
+    if (!_isShuffleEnabled ||
+        _currentPlaylist == null ||
+        _currentPlaylist!.tracks.length <= 1) {
+      _shuffledNextTrack = null;
+      return;
+    }
+    final available = _currentPlaylist!.tracks
+        .where((t) => t.id != _currentTrack?.id)
+        .toList();
+    if (available.isEmpty) {
+      _shuffledNextTrack = null;
+      return;
+    }
+    _shuffledNextTrack = available[math.Random().nextInt(available.length)];
+  }
 
   // Stream for signaling when a track starts playing
   final StreamController<Track> _onTrackPlayedController =
@@ -76,11 +94,27 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   AudioLoadingState get audioLoading => _audioLoadingState;
   Color? get dynamicSeedColor => _dynamicSeedColor;
 
+  LoopMode get loopMode => _audioPlayer.loopMode;
+  bool get isRepeatOne => _audioPlayer.loopMode == LoopMode.one;
+
   /// Returns the track that is scheduled to play next.
   Track? get nextTrack {
     if (_currentPlaylist == null || _currentTrack == null) return null;
 
+    if (_audioPlayer.loopMode == LoopMode.one) {
+      return _currentTrack;
+    }
+
+    if (_isShuffleEnabled && _currentPlaylist!.tracks.length > 1) {
+      if (_shuffledNextTrack == null) {
+        _updateShuffledNextTrack();
+      }
+      return _shuffledNextTrack;
+    }
+
     final tracks = _currentPlaylist!.tracks;
+    if (tracks.isEmpty) return null;
+
     final currentIndex = tracks.indexWhere((t) => t.id == _currentTrack!.id);
 
     // 1. Check for next track in playlist
@@ -89,13 +123,11 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
     }
 
     // 2. Check for Repeat
-    if (_isRepeatEnabled && tracks.isNotEmpty) {
+    if ((_isRepeatEnabled || _audioPlayer.loopMode == LoopMode.all) &&
+        tracks.isNotEmpty) {
       return tracks[0];
     }
 
-    // 3. Auto-play logic (simplified, as we don't want to trigger Random repeatedly in a getter)
-    // For now, we return null if no explicit next track or repeat, or we could return a placeholder.
-    // However, if autoPlay is on, we know SOME track will play.
     return null;
   }
 
@@ -103,12 +135,19 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   Track? get previousTrack {
     if (_currentPlaylist == null || _currentTrack == null) return null;
 
+    if (_audioPlayer.loopMode == LoopMode.one) {
+      return _currentTrack;
+    }
+
     final tracks = _currentPlaylist!.tracks;
+    if (tracks.isEmpty) return null;
+
     final currentIndex = tracks.indexWhere((t) => t.id == _currentTrack!.id);
 
     if (currentIndex > 0) {
       return tracks[currentIndex - 1];
-    } else if (_isRepeatEnabled && tracks.isNotEmpty) {
+    } else if ((_isRepeatEnabled || _audioPlayer.loopMode == LoopMode.all) &&
+        tracks.isNotEmpty) {
       return tracks.last;
     }
     return null;
@@ -285,6 +324,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       _audioLoadingState = AudioLoadingState.loading;
       _currentTrack = track;
       _currentPlaylist = playlist ?? _getDefaultPlaylistForTrack(track);
+      _updateShuffledNextTrack();
       _updatePlaybackState();
       notifyListeners();
 
@@ -547,16 +587,25 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
 
     _isTransitioning = true; // Set guard
 
-    if (_isShuffleEnabled && _currentPlaylist!.tracks.length > 1) {
-      int nextIndex;
-      do {
-        nextIndex = math.Random().nextInt(_currentPlaylist!.tracks.length);
-      } while (nextIndex == _currentPlaylist!.tracks.indexOf(_currentTrack!));
-      await playTrack(
-        _currentPlaylist!.tracks[nextIndex],
-        playlist: _currentPlaylist,
-      );
+    if (_audioPlayer.loopMode == LoopMode.one) {
+      await seek(Duration.zero);
+      await play();
+      _isTransitioning = false;
       return;
+    }
+
+    if (_isShuffleEnabled && _currentPlaylist!.tracks.length > 1) {
+      if (_shuffledNextTrack == null) {
+        _updateShuffledNextTrack();
+      }
+      final nextToPlay = _shuffledNextTrack;
+      if (nextToPlay != null) {
+        await playTrack(
+          nextToPlay,
+          playlist: _currentPlaylist,
+        );
+        return;
+      }
     }
 
     final currentIndex = _currentPlaylist!.tracks.indexOf(_currentTrack!);
@@ -565,7 +614,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
         _currentPlaylist!.tracks[currentIndex + 1],
         playlist: _currentPlaylist,
       );
-    } else if (_isRepeatEnabled) {
+    } else if (_isRepeatEnabled || _audioPlayer.loopMode == LoopMode.all) {
       await playTrack(_currentPlaylist!.tracks[0], playlist: _currentPlaylist);
     } else if (_settingsProvider?.autoPlay == true) {
       // Auto-play: pick a random track from the ENTIRE library that isn't the current one
@@ -726,12 +775,21 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
 
   void toggleShuffle() {
     _isShuffleEnabled = !_isShuffleEnabled;
+    _updateShuffledNextTrack();
     notifyListeners();
   }
 
   void toggleRepeat() {
-    _isRepeatEnabled = !_isRepeatEnabled;
-    _audioPlayer.setLoopMode(_isRepeatEnabled ? LoopMode.all : LoopMode.off);
+    if (_audioPlayer.loopMode == LoopMode.off) {
+      _isRepeatEnabled = true;
+      _audioPlayer.setLoopMode(LoopMode.all);
+    } else if (_audioPlayer.loopMode == LoopMode.all) {
+      _isRepeatEnabled = true;
+      _audioPlayer.setLoopMode(LoopMode.one);
+    } else {
+      _isRepeatEnabled = false;
+      _audioPlayer.setLoopMode(LoopMode.off);
+    }
     notifyListeners();
   }
 

@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:nix/providers/current_music_provider.dart';
-import 'package:wave_slider_flutter/wave_slider_flutter.dart';
+import 'package:m3e_seekbar/m3e_seekbar.dart';
 import 'package:nix/core/math_utils.dart';
 import 'package:nix/ui/miniplayer/models/animation_data.dart';
 
@@ -37,9 +37,9 @@ class PlayerControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isShuffleEnabled = context.select<CurrentMusicProvider, bool>((p) => p.isShuffleEnabled);
-    final isRepeatEnabled = context.select<CurrentMusicProvider, bool>((p) => p.isRepeatEnabled);
-    final duration = context.select<CurrentMusicProvider, Duration?>((p) => p.duration);
+    final duration = context.select<CurrentMusicProvider, Duration?>(
+      (p) => p.duration,
+    );
     final currentMusic = context.read<CurrentMusicProvider>();
 
     return AnimatedBuilder(
@@ -88,34 +88,34 @@ class PlayerControls extends StatelessWidget {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  IconButton(
-                                    iconSize: 28.0,
-                                    icon: Icon(
-                                      FlutterRemix.shuffle_line,
-                                      color: isShuffleEnabled
-                                          ? Theme.of(
-                                              context,
-                                            ).colorScheme.primary
-                                          : onSecondary,
-                                    ),
-                                    onPressed: () =>
-                                        currentMusic.toggleShuffle(),
-                                  ),
-                                  IconButton(
-                                    iconSize: 28.0,
-                                    icon: Icon(
-                                      isRepeatEnabled
-                                          ? FlutterRemix.repeat_one_line
-                                          : FlutterRemix.repeat_2_line,
-                                      color: isRepeatEnabled
-                                          ? Theme.of(
-                                              context,
-                                            ).colorScheme.primary
-                                          : onSecondary,
-                                    ),
-                                    onPressed: () =>
-                                        currentMusic.toggleRepeat(),
-                                  ),
+                                  // IconButton(
+                                  //   iconSize: 28.0,
+                                  //   icon: Icon(
+                                  //     FlutterRemix.shuffle_line,
+                                  //     color: isShuffleEnabled
+                                  //         ? Theme.of(
+                                  //             context,
+                                  //           ).colorScheme.primary
+                                  //         : onSecondary,
+                                  //   ),
+                                  //   onPressed: () =>
+                                  //       currentMusic.toggleShuffle(),
+                                  // ),
+                                  // IconButton(
+                                  //   iconSize: 28.0,
+                                  //   icon: Icon(
+                                  //     isRepeatEnabled
+                                  //         ? FlutterRemix.repeat_one_line
+                                  //         : FlutterRemix.repeat_2_line,
+                                  //     color: isRepeatEnabled
+                                  //         ? Theme.of(
+                                  //             context,
+                                  //           ).colorScheme.primary
+                                  //         : onSecondary,
+                                  //   ),
+                                  //   onPressed: () =>
+                                  //       currentMusic.toggleRepeat(),
+                                  // ),
                                 ],
                               ),
                             ),
@@ -314,82 +314,57 @@ class _PlayerSliderState extends State<_PlayerSlider> {
       builder: (context, stateSnap) {
         final isPlaying = stateSnap.data?.playing ?? false;
 
-        return TweenAnimationBuilder<double>(
-          tween: Tween<double>(
-            begin: 0.0,
-            end: isPlaying ? 3.0 : 0.0,
-          ),
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          builder: (context, amplitude, _) {
-            return StreamBuilder<Duration>(
-              stream: widget.currentMusic.positionStream,
-              builder: (context, posSnap) {
-                final realPos = posSnap.data ?? Duration.zero;
-                final dur = widget.duration ?? Duration.zero;
-                final double realVal = dur.inMilliseconds > 0
-                    ? (realPos.inMilliseconds / dur.inMilliseconds).clamp(
-                        0.0,
-                        1.0,
-                      )
-                    : 0.0;
+        return StreamBuilder<Duration>(
+          stream: widget.currentMusic.positionStream,
+          builder: (context, posSnap) {
+            final realPos = posSnap.data ?? Duration.zero;
+            final dur = widget.duration ?? Duration.zero;
+            final double realVal = dur.inMilliseconds > 0
+                ? (realPos.inMilliseconds / dur.inMilliseconds).clamp(0.0, 1.0)
+                : 0.0;
 
-                final targetVal = _isDragging ? _dragValue : realVal;
-                final displayPos = _isDragging
-                    ? Duration(
-                        milliseconds: (targetVal * dur.inMilliseconds).round(),
-                      )
-                    : realPos;
+            final targetVal = _isDragging ? _dragValue : realVal;
+            final displayPos = _isDragging
+                ? Duration(
+                    milliseconds: (targetVal * dur.inMilliseconds).round(),
+                  )
+                : realPos;
 
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TweenAnimationBuilder<double>(
-                      tween: Tween<double>(
-                        end: targetVal,
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                M3EWavySeekbar(
+                  value: targetVal.clamp(0.0, 1.0),
+                  isPlaying: isPlaying,
+                  handleShape: M3ESeekbarHandleShape.rectangle,
+                  handleHeight: 18,
+                  lineAmplitude: 2.5,
+                  waveLength: 22.0,
+                  activeColor: Theme.of(context).colorScheme.primary,
+                  thumbColor: Theme.of(context).colorScheme.primary,
+                  inactiveColor: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: .3),
+                  strokeWidth: 2.8,
+                  onChanged: (v) => _onSliderChanged(v, dur),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 0.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        displayPos.shortFormat(),
+                        style: TextStyle(color: widget.onSecondary),
                       ),
-                      duration: _isDragging
-                          ? Duration.zero
-                          : const Duration(milliseconds: 250),
-                      curve: Curves.easeOutCubic,
-                      builder: (context, animatedVal, _) {
-                        return WaveSlider(
-                          value: animatedVal,
-                          theme: WaveSliderTheme(
-                            activeColor: Theme.of(context).colorScheme.primary,
-                            thumbColor: Theme.of(context).colorScheme.primary,
-                            inactiveColor: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withValues(alpha: .3),
-                            amplitude: amplitude,
-                            frequency: 15,
-                            strokeWidth: 2.8,
-                            thumbShape: WaveSliderThumbShape.bar,
-                          ),
-                          onChanged: (v) => _onSliderChanged(v, dur),
-                        );
-                      },
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 0.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            displayPos.shortFormat(),
-                            style: TextStyle(color: widget.onSecondary),
-                          ),
-                          Text(
-                            dur.shortFormat(),
-                            style: TextStyle(color: widget.onSecondary),
-                          ),
-                        ],
+                      Text(
+                        dur.shortFormat(),
+                        style: TextStyle(color: widget.onSecondary),
                       ),
-                    ),
-                  ],
-                );
-              },
+                    ],
+                  ),
+                ),
+              ],
             );
           },
         );

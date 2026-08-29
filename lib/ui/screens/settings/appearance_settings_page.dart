@@ -70,28 +70,40 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                     vertical: 10,
                     horizontal: 15,
                   ),
-                  child: M3EToggleButtonGroup(
-                    type: M3EButtonGroupType.connected,
-                    selectedIndex: settingsParams.themeMode.index,
-                    onSelectedIndexChanged: (index) {
-                      if (index != null) {
-                        settingsParams.setThemeMode(ThemeMode.values[index]);
-                      }
-                    },
-                    actions: const [
-                      M3EToggleButtonGroupAction(
-                        label: Text('SYSTEM'),
-                        icon: Icon(FlutterRemix.smartphone_line),
+                  child: Center(
+                    child: M3EToggleButtonGroup(
+                      type: M3EButtonGroupType.connected,
+                      style: M3EButtonStyle.tonal,
+                      decoration: M3EToggleButtonDecoration.styleFrom(
+                        foregroundColor: colorScheme.onSurfaceVariant,
+                        checkedForegroundColor: colorScheme.onPrimaryContainer,
+                        backgroundColor: colorScheme.surfaceContainer,
+                        checkedBackgroundColor: colorScheme.primaryContainer,
                       ),
-                      M3EToggleButtonGroupAction(
-                        label: Text('LIGHT'),
-                        icon: Icon(FlutterRemix.sun_line),
-                      ),
-                      M3EToggleButtonGroupAction(
-                        label: Text('DARK'),
-                        icon: Icon(FlutterRemix.moon_line),
-                      ),
-                    ],
+                      selectedIndex: settingsParams.themeMode.index,
+                      onSelectedIndexChanged: (index) {
+                        if (index != null) {
+                          settingsParams.setThemeMode(ThemeMode.values[index]);
+                        }
+                      },
+                      actions: const [
+                        M3EToggleButtonGroupAction(
+                          label: Text('SYSTEM'),
+                          icon: Icon(FlutterRemix.smartphone_line),
+                          checkedIcon: Icon(FlutterRemix.smartphone_fill),
+                        ),
+                        M3EToggleButtonGroupAction(
+                          label: Text('LIGHT'),
+                          icon: Icon(FlutterRemix.sun_line),
+                          checkedIcon: Icon(FlutterRemix.sun_fill),
+                        ),
+                        M3EToggleButtonGroupAction(
+                          label: Text('DARK'),
+                          icon: Icon(FlutterRemix.moon_line),
+                          checkedIcon: Icon(FlutterRemix.moon_fill),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -113,7 +125,8 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                 title: 'Accent Color Mode',
                 subtitle: settingsParams.accentColorMode.name.toUpperCase(),
                 icon: FlutterRemix.palette_line,
-                isLast: settingsParams.accentColorMode != AccentColorMode.custom,
+                isLast:
+                    settingsParams.accentColorMode != AccentColorMode.custom,
                 onTap: () =>
                     _controller.showAccentModeDialog(context, settingsParams),
               ),
@@ -121,7 +134,10 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                 const SizedBox(height: 2.5),
                 _CustomColorPicker(settings: settingsParams),
               ],
-              const NixSectionHeader(title: 'Artwork & Visuals', topPadding: 24),
+              const NixSectionHeader(
+                title: 'Artwork & Visuals',
+                topPadding: 24,
+              ),
               NixCardExpansionTile(
                 title: 'Y2k(cd) style album art',
                 icon: FlutterRemix.album_line,
@@ -183,7 +199,8 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Text(
                                     'Rotation Speed',
@@ -200,10 +217,11 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                                     padding: EdgeInsets.zero,
                                     constraints: const BoxConstraints(),
                                     tooltip: 'Reset to default',
-                                    onPressed: () => _controller.showResetCdSpeedDialog(
-                                      context,
-                                      settingsParams,
-                                    ),
+                                    onPressed: () =>
+                                        _controller.showResetCdSpeedDialog(
+                                          context,
+                                          settingsParams,
+                                        ),
                                   ),
                                 ],
                               ),
