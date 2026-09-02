@@ -299,3 +299,162 @@ class _NixCardExpansionTileState extends State<NixCardExpansionTile>
     );
   }
 }
+
+class CardListTileWithChild extends StatefulWidget {
+  const CardListTileWithChild({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.icon,
+    this.leading,
+    this.topRightChild,
+    this.child,
+    this.onTap,
+    this.onLongPress,
+    this.isFirst = false,
+    this.isLast = false,
+    this.isSelected = false,
+    this.contentPadding,
+  });
+
+  final String title;
+  final String? subtitle;
+  final IconData? icon;
+  final Widget? leading;
+  final Widget? topRightChild;
+  final Widget? child;
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
+  final bool isFirst;
+  final bool isLast;
+  final bool isSelected;
+  final EdgeInsetsGeometry? contentPadding;
+
+  @override
+  State<CardListTileWithChild> createState() => _CardListTileWithChildState();
+}
+
+class _CardListTileWithChildState extends State<CardListTileWithChild> {
+  bool _isPressed = false;
+
+  void _setPressed(bool pressed) {
+    if (_isPressed != pressed && widget.onTap != null) {
+      if (mounted) setState(() => _isPressed = pressed);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final defaultRadius = BorderRadius.only(
+      topLeft: Radius.circular(widget.isFirst ? 16 : 5),
+      topRight: Radius.circular(widget.isFirst ? 16 : 5),
+      bottomLeft: Radius.circular(widget.isLast ? 16 : 5),
+      bottomRight: Radius.circular(widget.isLast ? 16 : 5),
+    );
+
+    final targetRadius = (_isPressed || widget.isSelected)
+        ? BorderRadius.circular(100.0)
+        : defaultRadius;
+    final targetScale = _isPressed ? 0.98 : 1.0;
+
+    final colorScheme = Theme.of(context).colorScheme;
+    final backgroundColor = widget.isSelected
+        ? colorScheme.primaryContainer
+        : colorScheme.surface;
+    final onPrimaryContainer = colorScheme.onPrimaryContainer;
+    final onSurface = colorScheme.onSurface;
+    final onSurfaceVariant = colorScheme.onSurfaceVariant;
+
+    return GestureDetector(
+      onTapDown: widget.onTap != null ? (_) => _setPressed(true) : null,
+      onTapUp: widget.onTap != null ? (_) => _setPressed(false) : null,
+      onTapCancel: widget.onTap != null ? () => _setPressed(false) : null,
+      onTap: widget.onTap,
+      onLongPress: widget.onLongPress,
+      child: AnimatedScale(
+        scale: targetScale,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: targetRadius,
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Material(
+            color: Colors.transparent,
+            child: Padding(
+              padding: widget.contentPadding ??
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      if (widget.leading != null) ...[
+                        widget.leading!,
+                        const SizedBox(width: 12),
+                      ] else if (widget.icon != null) ...[
+                        Icon(
+                          widget.icon,
+                          color: widget.isSelected ? onPrimaryContainer : null,
+                        ),
+                        const SizedBox(width: 12),
+                      ],
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.title,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: widget.isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                color: widget.isSelected
+                                    ? onPrimaryContainer
+                                    : onSurface,
+                              ),
+                            ),
+                            if (widget.subtitle != null) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                widget.subtitle!,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: widget.isSelected
+                                      ? onPrimaryContainer.withValues(alpha: 0.8)
+                                      : onSurfaceVariant,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      if (widget.topRightChild != null) ...[
+                        const SizedBox(width: 8),
+                        widget.topRightChild!,
+                      ],
+                    ],
+                  ),
+                  if (widget.child != null) ...[
+                    const SizedBox(height: 12),
+                    widget.child!,
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

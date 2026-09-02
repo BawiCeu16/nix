@@ -63,6 +63,7 @@ dependencies:
   m3e_floating_toolbar: ^1.0.0
   material_3_expressive: ^1.0.9
   m3e_seekbar: ^1.0.0
+  m3e_dropdown_menu: ^1.0.1
 
 dev_dependencies:
   flutter_test:

@@ -445,6 +445,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.1"
+  m3e_dropdown_menu:
+    dependency: "direct main"
+    description:
+      name: m3e_dropdown_menu
+      sha256: "68315cb4c11936b101ba3bbd56855445df73fc006e6ce22307211b9bfe46003b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
   m3e_floating_toolbar:
     dependency: "direct main"
     description:
