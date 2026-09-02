@@ -37,10 +37,7 @@ class HistoryStat {
   final Track track;
   final DateTime lastPlayed;
 
-  const HistoryStat({
-    required this.track,
-    required this.lastPlayed,
-  });
+  const HistoryStat({required this.track, required this.lastPlayed});
 }
 
 class StatsController extends ChangeNotifier {
@@ -69,7 +66,8 @@ class StatsController extends ChangeNotifier {
   Duration get totalListeningTime => _totalListeningTime;
   int get uniqueArtistsCount => _uniqueArtistsCount;
   TrackStat? get topSong => _topSongs.isNotEmpty ? _topSongs.first : null;
-  ArtistStat? get topArtist => _topArtists.isNotEmpty ? _topArtists.first : null;
+  ArtistStat? get topArtist =>
+      _topArtists.isNotEmpty ? _topArtists.first : null;
 
   void setTabIndex(int index) {
     if (_selectedTabIndex != index) {
@@ -82,35 +80,53 @@ class StatsController extends ChangeNotifier {
   List<ArtistStat> get sortedTopArtists => _topArtists;
   List<HistoryStat> get sortedPlaybackHistory => _playbackHistory;
 
+  Timer? _debounceTimer;
+
+  void _scheduleDebouncedCalculation() {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      calculateStats();
+    });
+  }
+
   /// Initialize real-time listeners for automatic stats refresh
-  void init(MusicProvider musicProvider, CurrentMusicProvider currentMusicProvider) {
+  void init(
+    MusicProvider musicProvider,
+    CurrentMusicProvider currentMusicProvider,
+  ) {
     _musicProvider = musicProvider;
     calculateStats();
 
     // 1. Listen to when a track starts playing
-    _trackPlayedSubscription = currentMusicProvider.onTrackPlayedStream.listen((_) {
-      Future.delayed(const Duration(milliseconds: 300), () {
-        calculateStats();
-      });
+    _trackPlayedSubscription = currentMusicProvider.onTrackPlayedStream.listen((
+      _,
+    ) {
+      _scheduleDebouncedCalculation();
     });
 
     // 2. Listen to Hive Box changes for real-time play counts, history, and duration updates
     if (Hive.isBoxOpen(HiveKeys.playCountsBox)) {
-      _playCountsSubscription = Hive.box<int>(HiveKeys.playCountsBox).watch().listen((_) {
-        calculateStats();
-      });
+      _playCountsSubscription = Hive.box<int>(HiveKeys.playCountsBox)
+          .watch()
+          .listen((_) {
+            _scheduleDebouncedCalculation();
+          });
     }
 
     if (Hive.isBoxOpen(HiveKeys.playHistoryBox)) {
-      _playHistorySubscription = Hive.box<int>(HiveKeys.playHistoryBox).watch().listen((_) {
-        calculateStats();
-      });
+      _playHistorySubscription = Hive.box<int>(HiveKeys.playHistoryBox)
+          .watch()
+          .listen((_) {
+            _scheduleDebouncedCalculation();
+          });
     }
 
     if (Hive.isBoxOpen(HiveKeys.playDurationsBox)) {
-      _playDurationsSubscription = Hive.box<int>(HiveKeys.playDurationsBox).watch().listen((_) {
-        calculateStats();
-      });
+      _playDurationsSubscription = Hive.box<int>(HiveKeys.playDurationsBox)
+          .watch()
+          .listen((_) {
+            _scheduleDebouncedCalculation();
+          });
     }
   }
 
@@ -176,7 +192,9 @@ class StatsController extends ChangeNotifier {
           TrackStat(
             track: track,
             playCount: count,
-            lastPlayed: ts != null ? DateTime.fromMillisecondsSinceEpoch(ts) : null,
+            lastPlayed: ts != null
+                ? DateTime.fromMillisecondsSinceEpoch(ts)
+                : null,
           ),
         );
       }
@@ -311,6 +329,7 @@ class StatsController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _trackPlayedSubscription?.cancel();
     _playCountsSubscription?.cancel();
     _playHistorySubscription?.cancel();

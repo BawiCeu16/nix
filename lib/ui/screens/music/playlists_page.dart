@@ -79,7 +79,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
                 ),
                 child: NixScrollbar(
                   child: ListView.builder(
-                    cacheExtent: 600,
+                    scrollCacheExtent: const .pixels(600.0),
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                     physics: const AlwaysScrollableScrollPhysics(
                       parent: BouncingScrollPhysics(),

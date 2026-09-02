@@ -52,7 +52,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   Playlist? _currentPlaylist;
   Track? _shuffledNextTrack;
   bool _isShuffleEnabled = false;
-  bool _isRepeatEnabled = false;
+  LoopMode _loopMode = LoopMode.off;
   List<Track> _libraryTracks = [];
 
   void _updateShuffledNextTrack() {
@@ -90,18 +90,18 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   Track? get currentTrack => _currentTrack;
   Playlist? get currentPlaylist => _currentPlaylist;
   bool get isShuffleEnabled => _isShuffleEnabled;
-  bool get isRepeatEnabled => _isRepeatEnabled;
+  bool get isRepeatEnabled => _loopMode != LoopMode.off;
   AudioLoadingState get audioLoading => _audioLoadingState;
   Color? get dynamicSeedColor => _dynamicSeedColor;
 
-  LoopMode get loopMode => _audioPlayer.loopMode;
-  bool get isRepeatOne => _audioPlayer.loopMode == LoopMode.one;
+  LoopMode get loopMode => _loopMode;
+  bool get isRepeatOne => _loopMode == LoopMode.one;
 
   /// Returns the track that is scheduled to play next.
   Track? get nextTrack {
     if (_currentPlaylist == null || _currentTrack == null) return null;
 
-    if (_audioPlayer.loopMode == LoopMode.one) {
+    if (_loopMode == LoopMode.one) {
       return _currentTrack;
     }
 
@@ -123,8 +123,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
     }
 
     // 2. Check for Repeat
-    if ((_isRepeatEnabled || _audioPlayer.loopMode == LoopMode.all) &&
-        tracks.isNotEmpty) {
+    if (_loopMode == LoopMode.all && tracks.isNotEmpty) {
       return tracks[0];
     }
 
@@ -135,7 +134,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   Track? get previousTrack {
     if (_currentPlaylist == null || _currentTrack == null) return null;
 
-    if (_audioPlayer.loopMode == LoopMode.one) {
+    if (_loopMode == LoopMode.one) {
       return _currentTrack;
     }
 
@@ -146,8 +145,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
 
     if (currentIndex > 0) {
       return tracks[currentIndex - 1];
-    } else if ((_isRepeatEnabled || _audioPlayer.loopMode == LoopMode.all) &&
-        tracks.isNotEmpty) {
+    } else if (_loopMode == LoopMode.all && tracks.isNotEmpty) {
       return tracks.last;
     }
     return null;
@@ -191,6 +189,15 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
 
   void _updatePlaybackState() {
     final state = _audioPlayer.playerState;
+    final repeatMode = switch (_audioPlayer.loopMode) {
+      LoopMode.off => AudioServiceRepeatMode.none,
+      LoopMode.one => AudioServiceRepeatMode.one,
+      LoopMode.all => AudioServiceRepeatMode.all,
+    };
+    final shuffleMode = _isShuffleEnabled
+        ? AudioServiceShuffleMode.all
+        : AudioServiceShuffleMode.none;
+
     playbackState.add(
       PlaybackState(
         controls: [
@@ -198,12 +205,13 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
           if (state.playing) MediaControl.pause else MediaControl.play,
           MediaControl.skipToNext,
           _getFavoriteControl(),
-          // MediaControl.stop,
         ],
         systemActions: const {
           MediaAction.seek,
           MediaAction.seekForward,
           MediaAction.seekBackward,
+          MediaAction.setRepeatMode,
+          MediaAction.setShuffleMode,
         },
         androidCompactActionIndices: const [0, 1, 2],
         processingState: const {
@@ -214,6 +222,8 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
           ProcessingState.completed: AudioProcessingState.completed,
         }[state.processingState]!,
         playing: state.playing,
+        repeatMode: repeatMode,
+        shuffleMode: shuffleMode,
         updatePosition: _audioPlayer.position,
         bufferedPosition: _audioPlayer.bufferedPosition,
         speed: _audioPlayer.speed,
@@ -224,7 +234,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
 
   Future<void> init() async {
     // Set up audio player
-    _audioPlayer.setLoopMode(_isRepeatEnabled ? LoopMode.all : LoopMode.off);
+    await _syncAudioPlayerLoopMode();
 
     _audioPlayer.playerStateStream.listen((state) {
       if (state.processingState == ProcessingState.completed) {
@@ -234,21 +244,47 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       _updatePlaybackState();
     });
 
-    // Resume from played duration position saving
+    // Native High-Fidelity Skip Silence (Android only)
+    await _audioPlayer.setSkipSilenceEnabled(
+      _settingsProvider?.skipSilence ?? false,
+    );
+
+    int pendingDurationDeltaMs = 0;
+    int lastDurationFlushTimestamp = 0;
+
+    void flushPlayDuration(int trackId) {
+      if (pendingDurationDeltaMs > 0 &&
+          Hive.isBoxOpen(HiveKeys.playDurationsBox)) {
+        final box = Hive.box<int>(HiveKeys.playDurationsBox);
+        final currentMs = box.get(trackId) ?? 0;
+        box.put(trackId, currentMs + pendingDurationDeltaMs);
+        pendingDurationDeltaMs = 0;
+      }
+    }
+
+    // Consolidated single Position Stream Listener for high-performance zero-lag audio ticks
     _audioPlayer.positionStream.listen((pos) {
       final currentTrack = _currentTrack;
-      if (currentTrack != null &&
-          _settingsProvider?.resumeFromPlayedDuration == true) {
-        final duration = _audioPlayer.duration;
-        if (duration != null) {
-          final posMs = pos.inMilliseconds;
-          final durMs = duration.inMilliseconds;
-          final remainingMs = durMs - posMs;
-          final positionBox = Hive.box<int>(HiveKeys.trackPositionsBox);
+      if (currentTrack == null) {
+        _lastPlaybackPosition = null;
+        return;
+      }
 
+      final isPlaying = _audioPlayer.playing;
+      final duration = _audioPlayer.duration;
+      final settings = _settingsProvider;
+
+      // 1. Resume position saving (throttled to every 3 seconds)
+      if (settings?.resumeFromPlayedDuration == true && duration != null) {
+        final posMs = pos.inMilliseconds;
+        final durMs = duration.inMilliseconds;
+        final remainingMs = durMs - posMs;
+
+        if (Hive.isBoxOpen(HiveKeys.trackPositionsBox)) {
+          final positionBox = Hive.box<int>(HiveKeys.trackPositionsBox);
           if (pos.inSeconds > 5 && remainingMs > 5000) {
             final lastSaved = positionBox.get(currentTrack.id);
-            if (lastSaved == null || (lastSaved - posMs).abs() >= 1000) {
+            if (lastSaved == null || (lastSaved - posMs).abs() >= 3000) {
               positionBox.put(currentTrack.id, posMs);
             }
           } else if (remainingMs <= 5000 || pos.inSeconds <= 5) {
@@ -258,56 +294,39 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
           }
         }
       }
-    });
 
-    // Platform-Agnostic 'Smart Skip' Logic
-    // Trims the last 3 seconds of a track ONLY if skipSilence is enabled.
-    // This provides a "dynamic" transition where the native engine fails.
-    _audioPlayer.positionStream.listen((pos) {
-      // Opt. #6: Early exit — skip all computation when feature is disabled.
-      // This fires ~5 times/second so every avoided comparison matters.
-      if (_settingsProvider?.skipSilence != true) return;
-
-      final settings = _settingsProvider;
-      if (settings != null) {
-        final duration = _audioPlayer.duration;
-        if (duration != null &&
-            _audioPlayer.playing &&
-            !_isTransitioning &&
-            _audioPlayer.processingState == ProcessingState.ready) {
-          final remaining = duration.inMilliseconds - pos.inMilliseconds;
-          // Threshold set to 3 seconds (3000ms)
-          if (remaining > 0 && remaining < 3000) {
-            playNext();
-          }
+      // 2. Smart Skip Silence check
+      if (settings?.skipSilence == true &&
+          duration != null &&
+          isPlaying &&
+          !_isTransitioning &&
+          _audioPlayer.processingState == ProcessingState.ready) {
+        final remaining = duration.inMilliseconds - pos.inMilliseconds;
+        if (remaining > 0 && remaining < 3000) {
+          playNext();
         }
       }
-    });
 
-    // Native High-Fidelity Skip Silence (Android only)
-    await _audioPlayer.setSkipSilenceEnabled(
-      _settingsProvider?.skipSilence ?? false,
-    );
-
-    // Track actual listening duration in real-time
-    _audioPlayer.positionStream.listen((pos) {
-      final track = _currentTrack;
-      if (track != null && _audioPlayer.playing) {
+      // 3. Batched Play Duration Tracking (Flushes every 3s instead of every tick)
+      if (isPlaying) {
         final last = _lastPlaybackPosition;
         _lastPlaybackPosition = pos;
         if (last != null) {
           final delta = pos.inMilliseconds - last.inMilliseconds;
-          // Valid playing delta between 10ms and 3000ms (filtering out seeks/skips)
           if (delta > 10 && delta < 3000) {
-            if (Hive.isBoxOpen(HiveKeys.playDurationsBox)) {
-              final box = Hive.box<int>(HiveKeys.playDurationsBox);
-              final currentMs = box.get(track.id) ?? 0;
-              box.put(track.id, currentMs + delta);
+            pendingDurationDeltaMs += delta;
+            final nowMs = DateTime.now().millisecondsSinceEpoch;
+            if (nowMs - lastDurationFlushTimestamp >= 3000) {
+              lastDurationFlushTimestamp = nowMs;
+              flushPlayDuration(currentTrack.id);
             }
           }
         }
       } else {
         _lastPlaybackPosition = null;
+        if (pendingDurationDeltaMs > 0) {
+          flushPlayDuration(currentTrack.id);
+        }
       }
     });
   }
@@ -353,6 +372,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
             source,
             initialPosition: initialPosition,
           );
+          await _syncAudioPlayerLoopMode();
           if (currentToken == _playbackSelectionToken) {
             await _audioPlayer.play();
             _audioLoadingState = AudioLoadingState.loaded;
@@ -553,6 +573,36 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   Future<void> skipToPrevious() async => playPrevious();
 
   @override
+  Future<void> setRepeatMode(AudioServiceRepeatMode repeatMode) async {
+    switch (repeatMode) {
+      case AudioServiceRepeatMode.none:
+        _loopMode = LoopMode.off;
+        break;
+      case AudioServiceRepeatMode.one:
+        _loopMode = LoopMode.one;
+        break;
+      case AudioServiceRepeatMode.all:
+      case AudioServiceRepeatMode.group:
+        _loopMode = LoopMode.all;
+        break;
+    }
+    await _syncAudioPlayerLoopMode();
+    _updatePlaybackState();
+    notifyListeners();
+  }
+
+  @override
+  Future<void> setShuffleMode(AudioServiceShuffleMode shuffleMode) async {
+    final enabled = shuffleMode != AudioServiceShuffleMode.none;
+    if (_isShuffleEnabled != enabled) {
+      _isShuffleEnabled = enabled;
+      _updateShuffledNextTrack();
+      _updatePlaybackState();
+      notifyListeners();
+    }
+  }
+
+  @override
   Future<void> customAction(String name, [Map<String, dynamic>? extras]) async {
     if (name == 'favorite') {
       await _toggleFavorite();
@@ -587,23 +637,13 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
 
     _isTransitioning = true; // Set guard
 
-    if (_audioPlayer.loopMode == LoopMode.one) {
-      await seek(Duration.zero);
-      await play();
-      _isTransitioning = false;
-      return;
-    }
-
     if (_isShuffleEnabled && _currentPlaylist!.tracks.length > 1) {
       if (_shuffledNextTrack == null) {
         _updateShuffledNextTrack();
       }
       final nextToPlay = _shuffledNextTrack;
       if (nextToPlay != null) {
-        await playTrack(
-          nextToPlay,
-          playlist: _currentPlaylist,
-        );
+        await playTrack(nextToPlay, playlist: _currentPlaylist);
         return;
       }
     }
@@ -614,7 +654,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
         _currentPlaylist!.tracks[currentIndex + 1],
         playlist: _currentPlaylist,
       );
-    } else if (_isRepeatEnabled || _audioPlayer.loopMode == LoopMode.all) {
+    } else if (_loopMode == LoopMode.all) {
       await playTrack(_currentPlaylist!.tracks[0], playlist: _currentPlaylist);
     } else if (_settingsProvider?.autoPlay == true) {
       // Auto-play: pick a random track from the ENTIRE library that isn't the current one
@@ -647,7 +687,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
         _currentPlaylist!.tracks[currentIndex - 1],
         playlist: _currentPlaylist,
       );
-    } else if (_isRepeatEnabled) {
+    } else if (_loopMode == LoopMode.all) {
       await playTrack(
         _currentPlaylist!.tracks.last,
         playlist: _currentPlaylist,
@@ -765,6 +805,15 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   }
 
   Playlist _getDefaultPlaylistForTrack(Track track) {
+    if (_libraryTracks.isNotEmpty &&
+        _libraryTracks.any((t) => t.id == track.id)) {
+      return Playlist(
+        id: 'library_queue_${track.id}',
+        name: 'All Tracks',
+        tracks: List.from(_libraryTracks),
+        createdAt: DateTime.now(),
+      );
+    }
     return Playlist(
       id: 'single_${track.id}',
       name: track.title,
@@ -776,20 +825,28 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   void toggleShuffle() {
     _isShuffleEnabled = !_isShuffleEnabled;
     _updateShuffledNextTrack();
+    _updatePlaybackState();
     notifyListeners();
   }
 
-  void toggleRepeat() {
-    if (_audioPlayer.loopMode == LoopMode.off) {
-      _isRepeatEnabled = true;
-      _audioPlayer.setLoopMode(LoopMode.all);
-    } else if (_audioPlayer.loopMode == LoopMode.all) {
-      _isRepeatEnabled = true;
-      _audioPlayer.setLoopMode(LoopMode.one);
+  Future<void> _syncAudioPlayerLoopMode() async {
+    // Only pass LoopMode.one to native player when repeating a single track.
+    // For LoopMode.all (Repeat Queue), keep native player at LoopMode.off so that
+    // ProcessingState.completed is emitted at track completion, allowing playNext() to loop the queue.
+    final nativeMode = _loopMode == LoopMode.one ? LoopMode.one : LoopMode.off;
+    await _audioPlayer.setLoopMode(nativeMode);
+  }
+
+  Future<void> toggleRepeat() async {
+    if (_loopMode == LoopMode.off) {
+      _loopMode = LoopMode.all;
+    } else if (_loopMode == LoopMode.all) {
+      _loopMode = LoopMode.one;
     } else {
-      _isRepeatEnabled = false;
-      _audioPlayer.setLoopMode(LoopMode.off);
+      _loopMode = LoopMode.off;
     }
+    await _syncAudioPlayerLoopMode();
+    _updatePlaybackState();
     notifyListeners();
   }
 

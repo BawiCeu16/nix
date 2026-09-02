@@ -310,6 +310,13 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                                                       FlutterRemix.shuffle_line,
                                                       size: 20.0,
                                                     ),
+                                                    checkedIcon: Icon(
+                                                      FlutterRemix.shuffle_line,
+                                                      size: 20.0,
+                                                      color: Theme.of(
+                                                        context,
+                                                      ).colorScheme.primary,
+                                                    ),
                                                     tooltip: 'Shuffle',
                                                   ),
                                                   M3EToggleButtonGroupAction(
@@ -328,13 +335,21 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                                                     width: 62,
                                                   ),
                                                   M3EToggleButtonGroupAction(
-                                                    icon: Icon(
+                                                    icon: const Icon(
+                                                      FlutterRemix
+                                                          .repeat_2_line,
+                                                      size: 20.0,
+                                                    ),
+                                                    checkedIcon: Icon(
                                                       music.isRepeatOne
                                                           ? FlutterRemix
                                                                 .repeat_one_line
                                                           : FlutterRemix
                                                                 .repeat_2_line,
                                                       size: 20.0,
+                                                      color: Theme.of(
+                                                        context,
+                                                      ).colorScheme.primary,
                                                     ),
                                                     tooltip: 'Repeat',
                                                   ),

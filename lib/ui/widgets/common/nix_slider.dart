@@ -25,32 +25,39 @@ class NixSlider extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return SliderTheme(
-      data: SliderTheme.of(context).copyWith(
-        trackHeight: 2.5,
-        thumbShape: _NixThumbShape(
-          label: label,
-          color: colorScheme.primary,
-          textColor: colorScheme.onPrimary,
-        ),
-        overlayShape: SliderComponentShape.noOverlay,
-        activeTrackColor: colorScheme.primary,
-        inactiveTrackColor: colorScheme.primary.withValues(alpha: 0.15),
-        overlayColor: colorScheme.primary.withValues(alpha: 0.1),
-        trackShape: const RoundedRectSliderTrackShape(),
-      ),
-      child: Slider(
-        value: value,
-        min: min,
-        max: max,
-        divisions: divisions,
-        onChanged: (val) {
-          if ((val - value).abs() > (max - min) / 100) {
-            HapticFeedback.selectionClick();
-          }
-          onChanged(val);
-        },
-      ),
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: value, end: value),
+      duration: const Duration(milliseconds: 150),
+      curve: Curves.easeOutCubic,
+      builder: (context, animatedValue, child) {
+        return SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            trackHeight: 2.5,
+            thumbShape: _NixThumbShape(
+              label: label,
+              color: colorScheme.primary,
+              textColor: colorScheme.onPrimary,
+            ),
+            overlayShape: SliderComponentShape.noOverlay,
+            activeTrackColor: colorScheme.primary,
+            inactiveTrackColor: colorScheme.primary.withValues(alpha: 0.15),
+            overlayColor: colorScheme.primary.withValues(alpha: 0.1),
+            trackShape: const RoundedRectSliderTrackShape(),
+          ),
+          child: Slider(
+            value: animatedValue.clamp(min, max),
+            min: min,
+            max: max,
+            divisions: divisions,
+            onChanged: (val) {
+              if ((val - value).abs() > (max - min) / 100) {
+                HapticFeedback.selectionClick();
+              }
+              onChanged(val);
+            },
+          ),
+        );
+      },
     );
   }
 }

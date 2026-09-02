@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
-import 'package:nix/providers/music_provider.dart';
 import 'package:nix/providers/settings_provider.dart';
 import 'package:nix/services/snackbar_service.dart';
 import 'package:nix/core/haptic_utils.dart';

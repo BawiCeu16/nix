@@ -67,7 +67,7 @@ class _SearchPageState extends State<SearchPage> {
               bottom: false,
               child: NixScrollbar(
                 child: CustomScrollView(
-                  cacheExtent: 600,
+                  scrollCacheExtent: const .pixels(600.0),
                   physics: const AlwaysScrollableScrollPhysics(
                     parent: BouncingScrollPhysics(),
                   ),

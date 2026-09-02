@@ -63,16 +63,6 @@ class _StatsPageState extends State<StatsPage> {
             scrolledUnderElevation: 0,
             backgroundColor: colorScheme.surfaceContainer,
             elevation: 0,
-            actions: [
-              IconButton(
-                icon: const Icon(FlutterRemix.refresh_line),
-                tooltip: 'Refresh Stats',
-                onPressed: () {
-                  final music = context.read<MusicProvider>();
-                  _controller.calculateStats(music);
-                },
-              ),
-            ],
           ),
           body: ExpressiveRefreshIndicator(
             onRefresh: () async {
@@ -80,7 +70,7 @@ class _StatsPageState extends State<StatsPage> {
               _controller.calculateStats(music);
             },
             child: ListView(
-              cacheExtent: 600,
+              scrollCacheExtent: const .pixels(600.0),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               physics: const AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics(),
@@ -438,7 +428,7 @@ class _StatsPageState extends State<StatsPage> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${stat.track.artist}',
+                        stat.track.artist,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(

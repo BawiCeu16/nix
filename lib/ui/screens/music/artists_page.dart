@@ -78,7 +78,7 @@ class _ArtistsPageState extends State<ArtistsPage> {
                 ),
                 child: NixScrollbar(
                   child: ListView.builder(
-                    cacheExtent: 600,
+                    scrollCacheExtent: const .pixels(600.0),
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                     physics: const AlwaysScrollableScrollPhysics(
                       parent: BouncingScrollPhysics(),
@@ -186,7 +186,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> {
 
               return NixScrollbar(
                 child: ListView.builder(
-                  cacheExtent: 600,
+                  scrollCacheExtent: const .pixels(600.0),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   physics: const BouncingScrollPhysics(),
                   itemCount: tracks.length + 2,

@@ -221,12 +221,6 @@ class _TrackTileState extends State<TrackTile> {
       bottomLeft: Radius.circular(widget.isLast ? 16 : 5),
       bottomRight: Radius.circular(widget.isLast ? 16 : 5),
     );
-
-    final targetRadius = _isPressed
-        ? BorderRadius.circular(100.0)
-        : defaultRadius;
-    final targetScale = _isPressed ? 0.98 : 1.0;
-
     final showSwipe = context.select<SettingsProvider, bool>(
       (s) => s.trackSwipeAction != TrackSwipeAction.none,
     );
@@ -240,6 +234,19 @@ class _TrackTileState extends State<TrackTile> {
       builder: (context, currentlyPlaying, child) {
         final isNowPlaying =
             currentlyPlaying != null && currentlyPlaying.id == widget.track.id;
+
+        final targetRadius = (isNowPlaying || _isPressed)
+            ? BorderRadius.circular(100.0)
+            : defaultRadius;
+        final targetScale = _isPressed ? 0.98 : 1.0;
+
+        final colorScheme = Theme.of(context).colorScheme;
+        final backgroundColor = isNowPlaying
+            ? colorScheme.primaryContainer
+            : colorScheme.surface;
+        final onPrimaryContainer = colorScheme.onPrimaryContainer;
+        final onSurface = colorScheme.onSurface;
+        final onSurfaceVariant = colorScheme.onSurfaceVariant;
 
         return GestureDetector(
           onTapDown: (_) => _setPressed(true),
@@ -278,13 +285,13 @@ class _TrackTileState extends State<TrackTile> {
           },
           child: AnimatedScale(
             scale: targetScale,
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOutQuad,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic,
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 100),
-              curve: Curves.easeOutQuad,
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOutCubic,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
+                color: backgroundColor,
                 borderRadius: targetRadius,
               ),
               child: Material(
@@ -296,16 +303,21 @@ class _TrackTileState extends State<TrackTile> {
                       trackId: widget.track.id,
                       isPlaying: isNowPlaying,
                     ),
-                    title: Text(
-                      widget.track.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: isNowPlaying
-                          ? TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.primary,
-                            )
-                          : null,
+                    title: AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOutCubic,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: isNowPlaying
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        color: isNowPlaying ? onPrimaryContainer : onSurface,
+                      ),
+                      child: Text(
+                        widget.track.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     subtitle: ValueListenableBuilder<Box<int>>(
                       valueListenable: Hive.box<int>(
@@ -320,21 +332,39 @@ class _TrackTileState extends State<TrackTile> {
                             ? '${Duration(milliseconds: savedMs).shortFormat()} / $totalDurationStr'
                             : totalDurationStr;
 
-                        return Text(
-                          '${widget.track.artist} · $durationStr',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        return AnimatedDefaultTextStyle(
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.easeOutCubic,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isNowPlaying
+                                ? onPrimaryContainer.withValues(alpha: 0.8)
+                                : onSurfaceVariant,
+                          ),
+                          child: Text(
+                            '${widget.track.artist} · $durationStr',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         );
                       },
                     ),
-                    trailing: widget.trailing ?? IconButton(
-                      icon: Icon(
-                        FlutterRemix.more_2_fill,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        size: 20,
-                      ),
-                      onPressed: () => _showTrackMenu(context),
-                    ),
+                    trailing:
+                        widget.trailing ??
+                        IconButton(
+                          icon: AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            curve: Curves.easeOutCubic,
+                            child: Icon(
+                              FlutterRemix.more_2_fill,
+                              color: isNowPlaying
+                                  ? onPrimaryContainer
+                                  : onSurfaceVariant,
+                              size: 20,
+                            ),
+                          ),
+                          onPressed: () => _showTrackMenu(context),
+                        ),
                     visualDensity: VisualDensity.compact,
                   ),
                 ),
@@ -428,12 +458,21 @@ class _ArtworkLeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    final targetRadius = isPlaying
+        ? BorderRadius.circular(100.0)
+        : BorderRadius.circular(12.0);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOutCubic,
       width: 48,
       height: 48,
+      decoration: BoxDecoration(borderRadius: targetRadius),
+      clipBehavior: Clip.antiAlias,
       child: NixArtwork(
         id: trackId,
         type: ArtworkType.AUDIO,
+        borderRadius: targetRadius,
         width: 48,
         height: 48,
       ),

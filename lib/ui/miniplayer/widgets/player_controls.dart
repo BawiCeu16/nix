@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:nix/core/format.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_remix/flutter_remix.dart';
@@ -277,7 +278,16 @@ class _PlayerSlider extends StatefulWidget {
 class _PlayerSliderState extends State<_PlayerSlider> {
   bool _isDragging = false;
   double _dragValue = 0.0;
-  Timer? _dragTimer;
+  DateTime? _lastSeekTime;
+  Timer? _dragEndTimer;
+
+  void _onSliderChangeStart(double v) {
+    HapticFeedback.selectionClick();
+    setState(() {
+      _isDragging = true;
+      _dragValue = v;
+    });
+  }
 
   void _onSliderChanged(double v, Duration dur) {
     setState(() {
@@ -285,14 +295,26 @@ class _PlayerSliderState extends State<_PlayerSlider> {
       _dragValue = v;
     });
 
+    final now = DateTime.now();
+    if (_lastSeekTime == null ||
+        now.difference(_lastSeekTime!) > const Duration(milliseconds: 100)) {
+      _lastSeekTime = now;
+      if (dur.inMilliseconds > 0) {
+        widget.currentMusic.seek(
+          Duration(milliseconds: (v * dur.inMilliseconds).round()),
+        );
+      }
+    }
+  }
+
+  void _onSliderChangeEnd(double v, Duration dur) {
     if (dur.inMilliseconds > 0) {
       widget.currentMusic.seek(
         Duration(milliseconds: (v * dur.inMilliseconds).round()),
       );
     }
-
-    _dragTimer?.cancel();
-    _dragTimer = Timer(const Duration(milliseconds: 200), () {
+    _dragEndTimer?.cancel();
+    _dragEndTimer = Timer(const Duration(milliseconds: 300), () {
       if (mounted) {
         setState(() {
           _isDragging = false;
@@ -303,7 +325,7 @@ class _PlayerSliderState extends State<_PlayerSlider> {
 
   @override
   void dispose() {
-    _dragTimer?.cancel();
+    _dragEndTimer?.cancel();
     super.dispose();
   }
 
@@ -333,20 +355,31 @@ class _PlayerSliderState extends State<_PlayerSlider> {
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                M3EWavySeekbar(
-                  value: targetVal.clamp(0.0, 1.0),
-                  isPlaying: isPlaying,
-                  handleShape: M3ESeekbarHandleShape.rectangle,
-                  handleHeight: 18,
-                  lineAmplitude: 2.5,
-                  waveLength: 22.0,
-                  activeColor: Theme.of(context).colorScheme.primary,
-                  thumbColor: Theme.of(context).colorScheme.primary,
-                  inactiveColor: Theme.of(
-                    context,
-                  ).colorScheme.primary.withValues(alpha: .3),
-                  strokeWidth: 2.8,
-                  onChanged: (v) => _onSliderChanged(v, dur),
+                TweenAnimationBuilder<double>(
+                  tween: Tween<double>(begin: targetVal, end: targetVal),
+                  duration: _isDragging || !isPlaying
+                      ? Duration.zero
+                      : const Duration(milliseconds: 250),
+                  curve: Curves.linear,
+                  builder: (context, animVal, child) {
+                    return M3EWavySeekbar(
+                      value: animVal.clamp(0.0, 1.0),
+                      isPlaying: isPlaying,
+                      handleShape: M3ESeekbarHandleShape.rectangle,
+                      handleHeight: 18,
+                      lineAmplitude: 2.5,
+                      waveLength: 22.0,
+                      activeColor: Theme.of(context).colorScheme.primary,
+                      thumbColor: Theme.of(context).colorScheme.primary,
+                      inactiveColor: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: .3),
+                      strokeWidth: 2.8,
+                      onChangeStart: _onSliderChangeStart,
+                      onChanged: (v) => _onSliderChanged(v, dur),
+                      onChangeEnd: (v) => _onSliderChangeEnd(v, dur),
+                    );
+                  },
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 0.0),

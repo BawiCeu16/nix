@@ -13,6 +13,7 @@ class CardListTile extends StatefulWidget {
     this.trailing,
     this.isFirst = false,
     this.isLast = false,
+    this.isSelected = false,
     this.contentPadding,
   });
 
@@ -25,6 +26,7 @@ class CardListTile extends StatefulWidget {
   final Widget? trailing;
   final bool isFirst;
   final bool isLast;
+  final bool isSelected;
   final EdgeInsetsGeometry? contentPadding;
 
   @override
@@ -49,10 +51,18 @@ class _CardListTileState extends State<CardListTile> {
       bottomRight: Radius.circular(widget.isLast ? 16 : 5),
     );
 
-    final targetRadius = _isPressed
+    final targetRadius = (_isPressed || widget.isSelected)
         ? BorderRadius.circular(100.0)
         : defaultRadius;
     final targetScale = _isPressed ? 0.98 : 1.0;
+
+    final colorScheme = Theme.of(context).colorScheme;
+    final backgroundColor = widget.isSelected
+        ? colorScheme.primaryContainer
+        : colorScheme.surface;
+    final onPrimaryContainer = colorScheme.onPrimaryContainer;
+    final onSurface = colorScheme.onSurface;
+    final onSurfaceVariant = colorScheme.onSurfaceVariant;
 
     return GestureDetector(
       onTapDown: (_) => _setPressed(true),
@@ -60,13 +70,13 @@ class _CardListTileState extends State<CardListTile> {
       onTapCancel: () => _setPressed(false),
       child: AnimatedScale(
         scale: targetScale,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOutQuad,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 100),
-          curve: Curves.easeOutQuad,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
+            color: backgroundColor,
             borderRadius: targetRadius,
           ),
           clipBehavior: Clip.antiAlias,
@@ -76,19 +86,44 @@ class _CardListTileState extends State<CardListTile> {
               contentPadding: widget.contentPadding,
               leading:
                   widget.leading ??
-                  (widget.icon != null ? Icon(widget.icon) : null),
-              title: Text(widget.title),
+                  (widget.icon != null
+                      ? AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.easeOutCubic,
+                          child: Icon(
+                            widget.icon,
+                            color: widget.isSelected
+                                ? onPrimaryContainer
+                                : null,
+                          ),
+                        )
+                      : null),
+              title: AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOutCubic,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: widget.isSelected
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                  color: widget.isSelected ? onPrimaryContainer : onSurface,
+                ),
+                child: Text(widget.title),
+              ),
               subtitle: widget.subtitle != null
-                  ? Text(
-                      widget.subtitle!,
+                  ? AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOutCubic,
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 14,
+                        color: widget.isSelected
+                            ? onPrimaryContainer.withValues(alpha: 0.8)
+                            : onSurfaceVariant,
                       ),
-                      maxLines: 4,
+                      child: Text(widget.subtitle!, maxLines: 4),
                     )
                   : null,
               trailing: widget.trailing,
-              // const Icon(FlutterRemix.arrow_right_s_line),
               onTap: widget.onTap,
               onLongPress: widget.onLongPress,
             ),
@@ -181,7 +216,6 @@ class _NixCardExpansionTileState extends State<NixCardExpansionTile>
     final defaultRadius = BorderRadius.only(
       topLeft: Radius.circular(widget.isFirst ? 16 : 5),
       topRight: Radius.circular(widget.isFirst ? 16 : 5),
-      bottomLeft: Radius.circular(widget.isLast && !_isExpanded ? 16 : 5),
       bottomRight: Radius.circular(widget.isLast && !_isExpanded ? 16 : 5),
     );
 
@@ -201,6 +235,7 @@ class _NixCardExpansionTileState extends State<NixCardExpansionTile>
           onTap: _toggleExpansion,
           child: AnimatedScale(
             scale: targetScale,
+
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeOutQuad,
             child: AnimatedContainer(

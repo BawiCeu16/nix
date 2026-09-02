@@ -62,7 +62,7 @@ class _HomePageState extends State<HomePage> {
                 bottom: false,
                 top: false,
                 child: CustomScrollView(
-                  cacheExtent: 600,
+                  scrollCacheExtent: const .pixels(600.0),
                   physics: const AlwaysScrollableScrollPhysics(
                     parent: BouncingScrollPhysics(),
                   ),

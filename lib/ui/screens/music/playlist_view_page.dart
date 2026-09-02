@@ -106,7 +106,7 @@ class _PlaylistViewPageState extends State<PlaylistViewPage> {
 
               return NixScrollbar(
                 child: ReorderableListView.builder(
-                  cacheExtent: 600,
+                  scrollCacheExtent: const .pixels(600.0),
                   buildDefaultDragHandles: !isSystemPlaylist,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   physics: const BouncingScrollPhysics(),
