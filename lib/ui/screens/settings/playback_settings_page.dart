@@ -106,7 +106,7 @@ class _PlaybackSettingsPageState extends State<PlaybackSettingsPage> {
                 subtitle: 'Show the upcoming track before the current one ends',
                 icon: FlutterRemix.skip_forward_mini_line,
                 isFirst: true,
-                initiallyExpanded: settings.upNextIndicator,
+                initiallyExpanded: false,
                 showExpansionIcon: settings.upNextIndicator,
                 trailing: Switch(
                   value: settings.upNextIndicator,

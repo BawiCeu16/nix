@@ -143,7 +143,7 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                 icon: FlutterRemix.album_line,
                 isFirst: true,
                 showExpansionIcon: settingsParams.useCdArtworkStyle,
-                initiallyExpanded: settingsParams.useCdArtworkStyle,
+                initiallyExpanded: false,
                 trailing: Switch(
                   value: settingsParams.useCdArtworkStyle,
                   onChanged: (v) => settingsParams.setUseCdArtworkStyle(v),

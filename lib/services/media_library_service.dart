@@ -125,7 +125,7 @@ class MediaLibraryService {
 
     final settingsBox = Hive.box(HiveKeys.settingsBox);
     final int minDurationSeconds =
-        settingsBox.get(HiveKeys.minDuration, defaultValue: 0) ?? 0;
+        settingsBox.get(HiveKeys.minDuration, defaultValue: 60) ?? 60;
     final int minDurationMs = minDurationSeconds * 1000;
 
     final validAudio = audioList.where((item) {

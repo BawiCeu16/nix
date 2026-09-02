@@ -94,7 +94,7 @@ class _GesturesSettingsPageState extends State<GesturesSettingsPage> {
                 icon: FlutterRemix.smartphone_line,
                 isFirst: true,
                 isLast: true,
-                initiallyExpanded: settings.enableHaptics,
+                initiallyExpanded: false,
                 showExpansionIcon: settings.enableHaptics,
                 trailing: Switch(
                   value: settings.enableHaptics,

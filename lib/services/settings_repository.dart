@@ -10,7 +10,7 @@ class SettingsRepository {
   Box get _box => Hive.box(HiveKeys.settingsBox);
 
   // Auto Play
-  bool get autoPlay => _box.get(HiveKeys.autoPlay, defaultValue: true);
+  bool get autoPlay => _box.get(HiveKeys.autoPlay, defaultValue: false);
   Future<void> setAutoPlay(bool value) => _box.put(HiveKeys.autoPlay, value);
 
   // Theme Mode
@@ -48,7 +48,7 @@ class SettingsRepository {
   Future<void> setSwipeToDismiss(bool value) => _box.put(HiveKeys.swipeToDismiss, value);
 
   // Minimum Duration
-  int get minDuration => _box.get(HiveKeys.minDuration, defaultValue: 0);
+  int get minDuration => _box.get(HiveKeys.minDuration, defaultValue: 60);
   Future<void> setMinDuration(int seconds) => _box.put(HiveKeys.minDuration, seconds);
 
   // Haptic Feedback
