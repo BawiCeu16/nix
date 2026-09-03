@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import 'package:nix/core/math_utils.dart';
 import 'package:nix/core/haptic_utils.dart';
+import 'package:nix/core/motion.dart';
 import 'package:nix/providers/will_pop_provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/settings_provider.dart';
@@ -17,7 +18,7 @@ enum ActiveGesture { none, vertical, horizontal }
 
 /// Calculates animation values, thresholds, and physics curves for the NowPlaying sheet.
 class NowPlayingPhysics {
-  static const Cubic bouncingCurve = Cubic(0.175, 1.185, 0.80, 1.0);
+  static const Cubic bouncingCurve = NixCurves.bouncing;
   static const double headRoom = 50.0;
   static const double actuationOffset = 100.0;
   static const double deadSpace = 100.0;

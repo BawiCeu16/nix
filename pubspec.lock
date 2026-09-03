@@ -433,10 +433,10 @@ packages:
     dependency: "direct main"
     description:
       name: m3e_buttons
-      sha256: "001031f1b72ef19643a8a6a531aafcfb31a06b53456b6f60014403c125e67056"
+      sha256: e013c1166f8a053df15080c5a82fe5868f5a4e9ca0aa667f1419197838879861
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.0"
+    version: "1.0.1"
   m3e_design:
     dependency: transitive
     description:
@@ -526,7 +526,7 @@ packages:
     source: hosted
     version: "1.19.0"
   motor:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: motor
       sha256: cbd49f21b00e568c2b1a55f134ed803614a107782f4fea7769693bca32940c58

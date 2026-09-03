@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:nix/core/motion.dart';
 import 'package:nix/core/hive_keys.dart';
 import 'package:nix/providers/user_provider.dart';
 import 'package:nix/ui/screens/navigation_screen.dart';
@@ -67,8 +68,8 @@ class OnboardingPageController extends ChangeNotifier {
 
   void nextPage() {
     pageController.nextPage(
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeInOutCubic,
+      duration: NixDurations.medium,
+      curve: NixCurves.expressiveDecelerated,
     );
   }
 

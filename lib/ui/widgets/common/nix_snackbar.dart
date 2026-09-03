@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
+import 'package:nix/core/motion.dart';
 import 'package:nix/providers/current_music_provider.dart';
 
 enum NixSnackBarType { success, error, info, warning }
@@ -186,14 +187,14 @@ class _NixSnackBarOverlayState extends State<_NixSnackBarOverlay>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 500),
+      duration: NixDurations.medium,
       vsync: this,
     );
 
     _offsetAnimation = Tween<Offset>(
       begin: widget.isTop ? const Offset(0, -1.5) : const Offset(0, 1.5),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+    ).animate(CurvedAnimation(parent: _controller, curve: NixCurves.bouncing));
 
     _controller.forward();
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nix/core/motion.dart';
 
 class NixChoiceChip<T> extends StatefulWidget {
   final String label;
@@ -45,11 +46,11 @@ class _NixChoiceChipState<T> extends State<NixChoiceChip<T>> {
       onTap: () => widget.onChanged(widget.value),
       child: AnimatedScale(
         scale: targetScale,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOutQuad,
+        duration: NixDurations.short,
+        curve: NixCurves.springy,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 240),
-          curve: Curves.easeOutBack,
+          duration: NixDurations.short,
+          curve: NixCurves.bouncing,
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
           decoration: BoxDecoration(
             color: isSelected
@@ -72,8 +73,8 @@ class _NixChoiceChipState<T> extends State<NixChoiceChip<T>> {
           ),
           child: Center(
             child: AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeInOutQuad,
+              duration: NixDurations.short,
+              curve: NixCurves.expressiveEmphasized,
               style: TextStyle(
                 color: isSelected
                     ? colorScheme.onPrimary

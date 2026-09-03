@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
+import 'package:m3e_buttons/m3e_buttons.dart';
 
 class NixSectionHeader extends StatelessWidget {
   final String title;
@@ -29,22 +30,18 @@ class NixSectionHeader extends StatelessWidget {
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 color: colorScheme.primary,
                 fontWeight: FontWeight.bold,
-                // letterSpacing: 1.2,
               ),
             ),
           ),
           if (onShowAll != null)
-            SizedBox(
-              height: 52,
-              width: 38,
-              child: FilledButton.tonal(
-                style: FilledButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  elevation: 0,
-                ),
-                onPressed: onShowAll,
-                child: Icon(FlutterRemix.arrow_right_line),
+            M3EFilledButton.tonal(
+              size: M3EButtonSize.custom(hPadding: 0, height: 48, width: 38),
+              decoration: M3EButtonDecoration.styleFrom(
+                backgroundColor: colorScheme.secondaryContainer,
+                foregroundColor: colorScheme.onSecondaryContainer,
               ),
+              onPressed: onShowAll,
+              child: const Icon(FlutterRemix.arrow_right_line),
             ),
         ],
       ),

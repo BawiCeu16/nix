@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:nix/core/motion.dart';
 
 /// A premium, bespoke slider widget for Nix music player.
 /// Used for both Sleep Timer and Playback Speed to ensure visual consistency.
@@ -27,8 +28,8 @@ class NixSlider extends StatelessWidget {
 
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: value, end: value),
-      duration: const Duration(milliseconds: 150),
-      curve: Curves.easeOutCubic,
+      duration: NixDurations.fast,
+      curve: NixCurves.expressiveDecelerated,
       builder: (context, animatedValue, child) {
         return SliderTheme(
           data: SliderTheme.of(context).copyWith(
@@ -98,7 +99,7 @@ class _NixThumbShape extends SliderComponentShape {
     // Use curved animation for smoother scaling effect
     final scaleAnimation = CurvedAnimation(
       parent: activationAnimation,
-      curve: Curves.easeOutBack,
+      curve: NixCurves.bouncing,
     );
 
     final paint = Paint()

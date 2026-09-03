@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
+import 'package:nix/core/motion.dart';
 
 class CardListTile extends StatefulWidget {
   const CardListTile({
@@ -70,11 +71,11 @@ class _CardListTileState extends State<CardListTile> {
       onTapCancel: () => _setPressed(false),
       child: AnimatedScale(
         scale: targetScale,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOutCubic,
+        duration: NixDurations.short,
+        curve: NixCurves.springy,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOutCubic,
+          duration: NixDurations.short,
+          curve: NixCurves.expressiveEmphasized,
           decoration: BoxDecoration(
             color: backgroundColor,
             borderRadius: targetRadius,
@@ -88,8 +89,8 @@ class _CardListTileState extends State<CardListTile> {
                   widget.leading ??
                   (widget.icon != null
                       ? AnimatedContainer(
-                          duration: const Duration(milliseconds: 250),
-                          curve: Curves.easeOutCubic,
+                          duration: NixDurations.short,
+                          curve: NixCurves.expressiveEmphasized,
                           child: Icon(
                             widget.icon,
                             color: widget.isSelected
@@ -99,8 +100,8 @@ class _CardListTileState extends State<CardListTile> {
                         )
                       : null),
               title: AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeOutCubic,
+                duration: NixDurations.short,
+                curve: NixCurves.expressiveEmphasized,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: widget.isSelected
@@ -112,8 +113,8 @@ class _CardListTileState extends State<CardListTile> {
               ),
               subtitle: widget.subtitle != null
                   ? AnimatedDefaultTextStyle(
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeOutCubic,
+                      duration: NixDurations.short,
+                      curve: NixCurves.expressiveEmphasized,
                       style: TextStyle(
                         fontSize: 14,
                         color: widget.isSelected
@@ -176,13 +177,13 @@ class _NixCardExpansionTileState extends State<NixCardExpansionTile>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 200),
+      duration: NixDurations.short,
       vsync: this,
     );
     _iconTurns = Tween<double>(
       begin: 0.0,
       end: 0.5,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
+    ).animate(CurvedAnimation(parent: _controller, curve: NixCurves.expressiveEmphasized));
 
     _isExpanded = widget.initiallyExpanded;
     if (_isExpanded) _controller.value = 1.0;
@@ -237,11 +238,11 @@ class _NixCardExpansionTileState extends State<NixCardExpansionTile>
           child: AnimatedScale(
             scale: targetScale,
 
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOutQuad,
+            duration: NixDurations.short,
+            curve: NixCurves.springy,
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 100),
-              curve: Curves.easeOutQuad,
+              duration: NixDurations.fast,
+              curve: NixCurves.expressiveDecelerated,
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: targetRadius,
@@ -374,11 +375,11 @@ class _CardListTileWithChildState extends State<CardListTileWithChild> {
       onLongPress: widget.onLongPress,
       child: AnimatedScale(
         scale: targetScale,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOutCubic,
+        duration: NixDurations.short,
+        curve: NixCurves.springy,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOutCubic,
+          duration: NixDurations.short,
+          curve: NixCurves.expressiveEmphasized,
           decoration: BoxDecoration(
             color: backgroundColor,
             borderRadius: targetRadius,

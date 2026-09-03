@@ -3,6 +3,7 @@ import 'package:flutter_remix/flutter_remix.dart';
 import 'package:on_audio_query_forked/on_audio_query.dart';
 import 'package:provider/provider.dart';
 import 'package:expressive_refresh/expressive_refresh.dart';
+import 'package:nix/core/motion.dart';
 
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/music_provider.dart';
@@ -165,7 +166,8 @@ class _StatsPageState extends State<StatsPage> {
 
                 // ── Tab Content Lists ──
                 AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
+                  duration: NixDurations.fast,
+                  switchInCurve: NixCurves.expressiveDecelerated,
                   child: _controller.selectedTabIndex == 0
                       ? _buildTopSongsList(context)
                       : _controller.selectedTabIndex == 1
@@ -825,13 +827,14 @@ class _StatsGroupedTileState extends State<_StatsGroupedTile> {
       onTapDown: (_) => _setPressed(true),
       onTapUp: (_) => _setPressed(false),
       onTapCancel: () => _setPressed(false),
+      onTap: widget.onTap,
       child: AnimatedScale(
         scale: targetScale,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOutQuad,
+        duration: NixDurations.short,
+        curve: NixCurves.expressiveEmphasized,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 100),
-          curve: Curves.easeOutQuad,
+          duration: NixDurations.micro,
+          curve: NixCurves.expressiveEmphasized,
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
             borderRadius: targetRadius,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:on_audio_query_forked/on_audio_query.dart';
+import 'package:nix/core/motion.dart';
 import 'package:nix/ui/widgets/common/nix_artwork.dart';
 import 'package:nix/models/settings/artwork_quality.dart';
 
@@ -33,8 +34,20 @@ class NixDialog extends StatelessWidget {
       barrierDismissible: true,
       barrierLabel: '',
       useRootNavigator: useRootNavigator,
-      transitionDuration: Duration(milliseconds: 300),
-
+      transitionDuration: NixDurations.medium,
+      transitionBuilder: (context, anim1, anim2, child) {
+        final curve = CurvedAnimation(
+          parent: anim1,
+          curve: NixCurves.expressiveDecelerated,
+        );
+        return FadeTransition(
+          opacity: curve,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.92, end: 1.0).animate(curve),
+            child: child,
+          ),
+        );
+      },
       pageBuilder: (context, anim1, anim2) {
         return NixDialog(
           title: title,

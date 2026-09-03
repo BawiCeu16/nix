@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nix/core/motion.dart';
 
 /// A Material 3 Expressive button that animates its scale and border radius when pressed.
 class ExpressiveButton extends StatefulWidget {
@@ -30,11 +31,11 @@ class _ExpressiveButtonState extends State<ExpressiveButton> {
 
     return AnimatedScale(
       scale: targetScale,
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeOutQuad,
+      duration: NixDurations.short,
+      curve: NixCurves.springy,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        curve: Curves.easeOutQuad,
+        duration: NixDurations.fast,
+        curve: NixCurves.expressiveDecelerated,
         decoration: BoxDecoration(
           color: enabled
               ? colorScheme.primary
@@ -55,17 +56,24 @@ class _ExpressiveButtonState extends State<ExpressiveButton> {
             },
             child: Padding(
               padding: widget.padding,
-              child: DefaultTextStyle(
-                style: Theme.of(context).textTheme.labelLarge!.copyWith(
+              child: IconTheme(
+                data: IconThemeData(
                   color: enabled
                       ? colorScheme.onPrimary
                       : colorScheme.onPrimaryContainer.withValues(alpha: 0.38),
-                  fontWeight: FontWeight.w600,
                 ),
-                child: Center(
-                  widthFactor: 1.0,
-                  heightFactor: 1.0,
-                  child: widget.child,
+                child: DefaultTextStyle(
+                  style: Theme.of(context).textTheme.labelLarge!.copyWith(
+                    color: enabled
+                        ? colorScheme.onPrimary
+                        : colorScheme.onPrimaryContainer.withValues(alpha: 0.38),
+                    fontWeight: FontWeight.w600,
+                  ),
+                  child: Center(
+                    widthFactor: 1.0,
+                    heightFactor: 1.0,
+                    child: widget.child,
+                  ),
                 ),
               ),
             ),

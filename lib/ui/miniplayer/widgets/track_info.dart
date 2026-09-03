@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:nix/core/motion.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/settings_provider.dart';
 import 'package:nix/services/snackbar_service.dart';
@@ -44,7 +45,7 @@ class TrackInfo extends StatelessWidget {
         data.clampedProgress > 0.8 && data.queueProgress < 0.2;
     final bool isMiniplayer = data.clampedProgress < 0.5;
     final animDuration =
-        isMiniplayer ? const Duration(milliseconds: 300) : Duration.zero;
+        isMiniplayer ? NixDurations.medium : Duration.zero;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -66,7 +67,7 @@ class TrackInfo extends StatelessWidget {
                     ).animate(
                       CurvedAnimation(
                         parent: animation,
-                        curve: Curves.easeOutQuad,
+                        curve: NixCurves.expressiveDecelerated,
                       ),
                     ),
                 child: Align(alignment: Alignment.centerLeft, child: child),
@@ -117,7 +118,7 @@ class TrackInfo extends StatelessWidget {
                     ).animate(
                       CurvedAnimation(
                         parent: animation,
-                        curve: Curves.easeOutQuad,
+                        curve: NixCurves.expressiveDecelerated,
                       ),
                     ),
                 child: Align(alignment: Alignment.centerLeft, child: child),

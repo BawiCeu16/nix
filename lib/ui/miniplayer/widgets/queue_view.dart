@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
+import 'package:nix/core/motion.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/settings_provider.dart';
 import 'package:nix/models/music/playlist.dart';
@@ -170,8 +171,8 @@ class _QueueViewState extends State<QueueView> {
       _lastScrolledTrackId = playing.id;
       widget.controller?.animateTo(
         targetOffset,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeOutCubic,
+        duration: NixDurations.medium,
+        curve: NixCurves.expressiveDecelerated,
       );
     }
   }
@@ -381,13 +382,11 @@ class _QueueViewState extends State<QueueView> {
                                                     );
                                                   },
                                                   trailing: AnimatedSwitcher(
-                                                    duration: const Duration(
-                                                      milliseconds: 250,
-                                                    ),
+                                                    duration: NixDurations.short,
                                                     switchInCurve:
-                                                        Curves.easeOutCubic,
+                                                        NixCurves.expressiveDecelerated,
                                                     switchOutCurve:
-                                                        Curves.easeInCubic,
+                                                        NixCurves.expressiveAccelerated,
                                                     transitionBuilder:
                                                         (child, animation) {
                                                           return FadeTransition(
@@ -503,10 +502,8 @@ class _QueueViewState extends State<QueueView> {
                                           ),
 
                                           AnimatedSize(
-                                            duration: const Duration(
-                                              milliseconds: 300,
-                                            ),
-                                            curve: Curves.easeOutBack,
+                                            duration: NixDurations.short,
+                                            curve: NixCurves.bouncing,
                                             child: _showScrollButton
                                                 ? Padding(
                                                     padding:

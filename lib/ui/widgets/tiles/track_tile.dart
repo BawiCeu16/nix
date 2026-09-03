@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
+import 'package:nix/core/motion.dart';
 import 'package:nix/models/music/track.dart';
 import 'package:nix/models/music/playlist.dart';
 import 'package:nix/providers/current_music_provider.dart';
@@ -285,11 +286,11 @@ class _TrackTileState extends State<TrackTile> {
           },
           child: AnimatedScale(
             scale: targetScale,
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOutCubic,
+            duration: NixDurations.short,
+            curve: NixCurves.springy,
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeOutCubic,
+              duration: NixDurations.short,
+              curve: NixCurves.expressiveEmphasized,
               decoration: BoxDecoration(
                 color: backgroundColor,
                 borderRadius: targetRadius,
@@ -304,8 +305,8 @@ class _TrackTileState extends State<TrackTile> {
                       isPlaying: isNowPlaying,
                     ),
                     title: AnimatedDefaultTextStyle(
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeOutCubic,
+                      duration: NixDurations.short,
+                      curve: NixCurves.expressiveEmphasized,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: isNowPlaying
@@ -333,8 +334,8 @@ class _TrackTileState extends State<TrackTile> {
                             : totalDurationStr;
 
                         return AnimatedDefaultTextStyle(
-                          duration: const Duration(milliseconds: 250),
-                          curve: Curves.easeOutCubic,
+                          duration: NixDurations.short,
+                          curve: NixCurves.expressiveEmphasized,
                           style: TextStyle(
                             fontSize: 14,
                             color: isNowPlaying
@@ -353,8 +354,8 @@ class _TrackTileState extends State<TrackTile> {
                         widget.trailing ??
                         IconButton(
                           icon: AnimatedContainer(
-                            duration: const Duration(milliseconds: 250),
-                            curve: Curves.easeOutCubic,
+                            duration: NixDurations.short,
+                            curve: NixCurves.expressiveEmphasized,
                             child: Icon(
                               FlutterRemix.more_2_fill,
                               color: isNowPlaying
@@ -463,8 +464,8 @@ class _ArtworkLeading extends StatelessWidget {
         : BorderRadius.circular(12.0);
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeOutCubic,
+      duration: NixDurations.short,
+      curve: NixCurves.expressiveEmphasized,
       width: 48,
       height: 48,
       decoration: BoxDecoration(borderRadius: targetRadius),

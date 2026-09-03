@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
+import 'package:nix/core/motion.dart';
 import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
 import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -108,8 +109,8 @@ class _LyricsSectionState extends State<LyricsSection> {
       if (!_userScrolled && _scrollController.isAttached) {
         _scrollController.scrollTo(
           index: currentIndex,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
+          duration: NixDurations.medium,
+          curve: NixCurves.expressiveDecelerated,
           alignment: 0.5,
         );
       }
@@ -148,8 +149,8 @@ class _LyricsSectionState extends State<LyricsSection> {
         provider.currentIndex != -1) {
       _scrollController.scrollTo(
         index: provider.currentIndex,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
+        duration: NixDurations.medium,
+        curve: NixCurves.expressiveDecelerated,
         alignment: 0.5,
       );
     }
@@ -371,9 +372,8 @@ class _LyricsSectionState extends State<LyricsSection> {
                                   itemBuilder: (context, index) {
                                     final isCurrent = index == currentIndex;
                                     return AnimatedDefaultTextStyle(
-                                      duration: const Duration(
-                                        milliseconds: 300,
-                                      ),
+                                      duration: NixDurations.medium,
+                                      curve: NixCurves.expressiveDecelerated,
                                       style: TextStyle(
                                         fontSize: isCurrent ? 24.0 : 20.0,
                                         height: 1.8,
@@ -454,11 +454,11 @@ class _LyricsSectionState extends State<LyricsSection> {
                   child: Center(
                     child: AnimatedSlide(
                       offset: _userScrolled ? Offset.zero : const Offset(0, 1),
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeOutBack,
+                      duration: NixDurations.medium,
+                      curve: NixCurves.bouncing,
                       child: AnimatedOpacity(
                         opacity: _userScrolled ? 1.0 : 0.0,
-                        duration: const Duration(milliseconds: 200),
+                        duration: NixDurations.fast,
                         child: NixIconButton(
                           onPressed: _scrollToCurrentTrack,
                           icon: Icon(

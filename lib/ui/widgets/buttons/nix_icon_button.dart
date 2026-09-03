@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nix/core/motion.dart';
 
 /// A reusable icon button that matches the Nix app's expressive design language.
 /// It features scale-down animation on press and a circular shape.
@@ -38,10 +39,10 @@ class _NixIconButtonState extends State<NixIconButton> {
       message: widget.tooltip ?? '',
       child: AnimatedScale(
         scale: targetScale,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOutQuad,
+        duration: NixDurations.short,
+        curve: NixCurves.springy,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
+          duration: NixDurations.fast,
           width: widget.size,
           height: widget.size,
           decoration: BoxDecoration(

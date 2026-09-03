@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import 'package:nix/core/motion.dart';
 
 enum CDCoverState { closed, halfOpen, fullDisc }
 
@@ -44,8 +45,8 @@ class NixCustomizableCDWidget extends StatelessWidget {
           children: [
             // CD Disc Layer
             AnimatedSlide(
-              duration: const Duration(milliseconds: 700),
-              curve: Curves.easeOutCubic,
+              duration: NixDurations.slow,
+              curve: NixCurves.expressiveEmphasized,
               offset: state == CDCoverState.halfOpen
                   ? (splitWhenHalfOpen
                         ? const Offset(0.28, 0)
@@ -54,8 +55,8 @@ class NixCustomizableCDWidget extends StatelessWidget {
                         ? Offset(-2 / size, -2 / size)
                         : Offset.zero),
               child: AnimatedScale(
-                duration: const Duration(milliseconds: 700),
-                curve: Curves.easeOutCubic,
+                duration: NixDurations.slow,
+                curve: NixCurves.expressiveEmphasized,
                 scale: state == CDCoverState.fullDisc ? 1.0 : 0.94,
                 child: Container(
                   decoration: BoxDecoration(
@@ -90,18 +91,18 @@ class NixCustomizableCDWidget extends StatelessWidget {
 
             // Cover Layer (Jewel Case)
             AnimatedSlide(
-              duration: const Duration(milliseconds: 700),
-              curve: Curves.easeOutCubic,
+              duration: NixDurations.slow,
+              curve: NixCurves.expressiveEmphasized,
               offset: (splitWhenHalfOpen && state == CDCoverState.halfOpen)
                   ? const Offset(-0.28, 0)
                   : Offset.zero,
               child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 500),
-                curve: Curves.easeOutCubic,
+                duration: NixDurations.long,
+                curve: NixCurves.expressiveEmphasized,
                 opacity: state == CDCoverState.fullDisc ? 0.0 : 1.0,
                 child: AnimatedScale(
-                  duration: const Duration(milliseconds: 500),
-                  curve: Curves.easeOutCubic,
+                  duration: NixDurations.long,
+                  curve: NixCurves.expressiveEmphasized,
                   scale: state == CDCoverState.fullDisc ? 0.8 : 1.0,
                   child: RepaintBoundary(
                     child: IgnorePointer(

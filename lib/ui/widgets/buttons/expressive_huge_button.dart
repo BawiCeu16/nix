@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nix/core/motion.dart';
 
 /// A circular Material 3 Expressive button that animates its scale when pressed.
 /// This button is 1:1 and maintains a circular shape regardless of state.
@@ -30,13 +31,13 @@ class _ExpressiveHugeButtonState extends State<ExpressiveHugeButton> {
 
     return AnimatedScale(
       scale: targetScale,
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeOutQuad,
+      duration: NixDurations.short,
+      curve: NixCurves.springy,
       child: AnimatedContainer(
         height: widget.size,
         width: widget.size,
-        duration: const Duration(milliseconds: 150),
-        curve: Curves.easeOutQuad,
+        duration: NixDurations.fast,
+        curve: NixCurves.expressiveDecelerated,
         decoration: BoxDecoration(
           color: enabled
               ? colorScheme.primary

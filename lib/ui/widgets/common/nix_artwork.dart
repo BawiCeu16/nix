@@ -1,9 +1,9 @@
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:on_audio_query_forked/on_audio_query.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
+import 'package:nix/core/motion.dart';
 import 'package:nix/providers/settings_provider.dart';
 import 'package:nix/models/settings/artwork_quality.dart';
 import 'package:nix/providers/artwork_provider.dart';
@@ -107,9 +107,9 @@ class NixArtwork extends StatelessWidget {
         valueListenable: notifier,
         builder: (context, bytes, _) {
           return AnimatedSwitcher(
-            duration: const Duration(milliseconds: 180),
-            switchInCurve: Curves.easeOut,
-            switchOutCurve: Curves.easeIn,
+            duration: NixDurations.fast,
+            switchInCurve: NixCurves.expressiveDecelerated,
+            switchOutCurve: NixCurves.expressiveAccelerated,
             child: bytes != null
                 ? Image.memory(
                     bytes,

@@ -5,6 +5,7 @@ import 'package:nix/core/format.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:nix/core/motion.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:m3e_seekbar/m3e_seekbar.dart';
 import 'package:nix/core/math_utils.dart';
@@ -366,7 +367,7 @@ class _PlayerSliderState extends State<_PlayerSlider> {
                   tween: Tween<double>(begin: targetVal, end: targetVal),
                   duration: _isDragging || !isPlaying
                       ? Duration.zero
-                      : const Duration(milliseconds: 250),
+                      : NixDurations.fast,
                   curve: Curves.linear,
                   builder: (context, animVal, child) {
                     return M3EWavySeekbar(
