@@ -42,14 +42,20 @@ class TrackInfo extends StatelessWidget {
     final artist = track?.artist ?? '';
     final bool isNowPlaying =
         data.clampedProgress > 0.8 && data.queueProgress < 0.2;
+    final bool isMiniplayer = data.clampedProgress < 0.5;
+    final animDuration =
+        isMiniplayer ? const Duration(milliseconds: 300) : Duration.zero;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
+          duration: animDuration,
           transitionBuilder: (child, animation) {
+            if (!isMiniplayer) {
+              return Align(alignment: Alignment.centerLeft, child: child);
+            }
             return FadeTransition(
               opacity: animation,
               child: SlideTransition(
@@ -96,8 +102,11 @@ class TrackInfo extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
+          duration: animDuration,
           transitionBuilder: (child, animation) {
+            if (!isMiniplayer) {
+              return Align(alignment: Alignment.centerLeft, child: child);
+            }
             return FadeTransition(
               opacity: animation,
               child: SlideTransition(

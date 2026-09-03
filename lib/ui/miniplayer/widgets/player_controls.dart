@@ -21,6 +21,8 @@ class PlayerControls extends StatelessWidget {
   final Animation<double> playPauseAnim;
   final PlayerAnimationData data;
   final Animation<double> lyricsAnim;
+  final VoidCallback? onNext;
+  final VoidCallback? onPrevious;
 
   const PlayerControls({
     super.key,
@@ -34,6 +36,8 @@ class PlayerControls extends StatelessWidget {
     required this.playPauseAnim,
     required this.data,
     required this.lyricsAnim,
+    this.onNext,
+    this.onPrevious,
   });
 
   @override
@@ -144,8 +148,9 @@ class PlayerControls extends StatelessWidget {
                                       FlutterRemix.skip_back_fill,
                                       color: onSecondary,
                                     ),
-                                    onPressed: () =>
-                                        currentMusic.playPrevious(),
+                                    onPressed:
+                                        onPrevious ??
+                                        () => currentMusic.playPrevious(),
                                   ),
                                   IconButton(
                                     iconSize: 36.0,
@@ -153,7 +158,9 @@ class PlayerControls extends StatelessWidget {
                                       FlutterRemix.skip_forward_fill,
                                       color: onSecondary,
                                     ),
-                                    onPressed: () => currentMusic.playNext(),
+                                    onPressed:
+                                        onNext ??
+                                        () => currentMusic.playNext(),
                                   ),
                                 ],
                               ),

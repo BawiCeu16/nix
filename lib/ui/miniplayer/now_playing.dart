@@ -459,6 +459,8 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                       playPauseAnim: _controller.playPauseAnim,
                       data: data,
                       lyricsAnim: _controller.lyricsAnim,
+                      onNext: () => _controller.snapToNext(context),
+                      onPrevious: () => _controller.snapToPrev(context),
                     ),
                     //Queue view
                     QueueView(

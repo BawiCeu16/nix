@@ -77,6 +77,11 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       StreamController<Track>.broadcast();
   Stream<Track> get onTrackPlayedStream => _onTrackPlayedController.stream;
 
+  Future<void> Function()? onBeforePlayNext;
+  void Function()? onAfterPlayNext;
+  Future<void> Function()? onBeforePlayPrevious;
+  void Function()? onAfterPlayPrevious;
+
   bool _isTransitioning = false;
 
   AudioLoadingState _audioLoadingState = AudioLoadingState.idle;
@@ -635,6 +640,10 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       return;
     }
 
+    if (onBeforePlayNext != null) {
+      await onBeforePlayNext!();
+    }
+
     _isTransitioning = true; // Set guard
 
     if (_isShuffleEnabled && _currentPlaylist!.tracks.length > 1) {
@@ -676,10 +685,18 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
     } else {
       _isTransitioning = false; // Reset if nothing to play
     }
+
+    if (onAfterPlayNext != null) {
+      onAfterPlayNext!();
+    }
   }
 
   Future<void> playPrevious() async {
     if (_currentPlaylist == null || _currentTrack == null) return;
+
+    if (onBeforePlayPrevious != null) {
+      await onBeforePlayPrevious!();
+    }
 
     final currentIndex = _currentPlaylist!.tracks.indexOf(_currentTrack!);
     if (currentIndex > 0) {
@@ -692,6 +709,10 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
         _currentPlaylist!.tracks.last,
         playlist: _currentPlaylist,
       );
+    }
+
+    if (onAfterPlayPrevious != null) {
+      onAfterPlayPrevious!();
     }
   }
 

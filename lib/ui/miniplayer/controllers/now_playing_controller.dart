@@ -9,6 +9,7 @@ import 'package:nix/core/haptic_utils.dart';
 import 'package:nix/providers/will_pop_provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/providers/settings_provider.dart';
+import 'package:nix/models/music/track.dart';
 import 'package:nix/ui/miniplayer/models/animation_data.dart';
 
 /// Active gesture mode for gesture locking.
@@ -163,6 +164,8 @@ class NowPlayingController with ChangeNotifier {
 
   late AnimationController _sheetAnimation;
   StreamSubscription<bool>? _playingStreamSub;
+  StreamSubscription<Track>? _trackPlayedSub;
+  bool _isSnapping = false;
 
   /// Initializes animation controllers, scroll listeners, and poppers.
   void init({
@@ -232,7 +235,7 @@ class NowPlayingController with ChangeNotifier {
       });
     });
 
-    // Listen to player state
+    // Listen to player state & track changes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final currentMusic = context.read<CurrentMusicProvider>();
       _playingStreamSub = currentMusic.isPlayingStream.listen((playing) {
@@ -242,6 +245,42 @@ class NowPlayingController with ChangeNotifier {
           playPauseAnim.reverse();
         }
       });
+
+      currentMusic.onBeforePlayNext = () async {
+        if (_sheetAnimation.value > 0.4 && !_isSnapping) {
+          _isSnapping = true;
+          sOffset = sMaxOffset;
+          await sAnim.animateTo(
+            1.0,
+            curve: Curves.easeOutQuad,
+            duration: const Duration(milliseconds: 180),
+          );
+        }
+      };
+
+      currentMusic.onAfterPlayNext = () {
+        sOffset = 0;
+        sAnim.value = 0.0;
+        _isSnapping = false;
+      };
+
+      currentMusic.onBeforePlayPrevious = () async {
+        if (_sheetAnimation.value > 0.4 && !_isSnapping) {
+          _isSnapping = true;
+          sOffset = -sMaxOffset;
+          await sAnim.animateTo(
+            -1.0,
+            curve: Curves.easeOutQuad,
+            duration: const Duration(milliseconds: 180),
+          );
+        }
+      };
+
+      currentMusic.onAfterPlayPrevious = () {
+        sOffset = 0;
+        sAnim.value = 0.0;
+        _isSnapping = false;
+      };
     });
   }
 
@@ -401,26 +440,35 @@ class NowPlayingController with ChangeNotifier {
 
   // --- Horizontal Snapping ---
   void snapToPrev(BuildContext context) {
-    sOffset = -sMaxOffset;
+    if (_isSnapping) return;
+    final currentMusic = context.read<CurrentMusicProvider>();
     final settings = context.read<SettingsProvider>();
-    sAnim
-        .animateTo(
-          -1.0,
-          curve: Curves.easeOutQuad,
-          duration: const Duration(milliseconds: 180),
-        )
-        .then((_) {
-          final currentMusic = context.read<CurrentMusicProvider>();
-          final oldTrackId = currentMusic.currentTrack?.id;
 
-          currentMusic.playPrevious();
-          sOffset = 0;
-          sAnim.value = 0.0;
-
-          if (currentMusic.currentTrack?.id != oldTrackId) {
+    if (offset <= maxOffset * 0.4) {
+      _isSnapping = true;
+      sOffset = -sMaxOffset;
+      sAnim
+          .animateTo(
+            -1.0,
+            curve: Curves.easeOutQuad,
+            duration: const Duration(milliseconds: 160),
+          )
+          .then((_) {
+            currentMusic.playPrevious();
+            sOffset = 0;
+            sAnim.value = 0.0;
             HapticUtils.trigger(settings);
-          }
-        });
+            _isSnapping = false;
+          });
+      return;
+    }
+
+    final oldTrackId = currentMusic.currentTrack?.id;
+    currentMusic.playPrevious().then((_) {
+      if (currentMusic.currentTrack?.id != oldTrackId) {
+        HapticUtils.trigger(settings);
+      }
+    });
   }
 
   void snapToCurrent() {
@@ -433,26 +481,35 @@ class NowPlayingController with ChangeNotifier {
   }
 
   void snapToNext(BuildContext context) {
-    sOffset = sMaxOffset;
+    if (_isSnapping) return;
+    final currentMusic = context.read<CurrentMusicProvider>();
     final settings = context.read<SettingsProvider>();
-    sAnim
-        .animateTo(
-          1.0,
-          curve: Curves.easeOutQuad,
-          duration: const Duration(milliseconds: 180),
-        )
-        .then((_) {
-          final currentMusic = context.read<CurrentMusicProvider>();
-          final oldTrackId = currentMusic.currentTrack?.id;
 
-          currentMusic.playNext();
-          sOffset = 0;
-          sAnim.value = 0.0;
-
-          if (currentMusic.currentTrack?.id != oldTrackId) {
+    if (offset <= maxOffset * 0.4) {
+      _isSnapping = true;
+      sOffset = sMaxOffset;
+      sAnim
+          .animateTo(
+            1.0,
+            curve: Curves.easeOutQuad,
+            duration: const Duration(milliseconds: 160),
+          )
+          .then((_) {
+            currentMusic.playNext();
+            sOffset = 0;
+            sAnim.value = 0.0;
             HapticUtils.trigger(settings);
-          }
-        });
+            _isSnapping = false;
+          });
+      return;
+    }
+
+    final oldTrackId = currentMusic.currentTrack?.id;
+    currentMusic.playNext().then((_) {
+      if (currentMusic.currentTrack?.id != oldTrackId) {
+        HapticUtils.trigger(settings);
+      }
+    });
   }
 
   // Pointer & Drag Handlers
@@ -633,7 +690,10 @@ class NowPlayingController with ChangeNotifier {
     if (offset > maxOffset) return;
     activeGesture = ActiveGesture.none;
     final settings = context.read<SettingsProvider>();
-    if (!settings.swipeToChangeTrack) return;
+    if (!settings.swipeToChangeTrack) {
+      snapToCurrent();
+      return;
+    }
 
     final currentMusic = context.read<CurrentMusicProvider>();
     final playlist = currentMusic.currentPlaylist;
@@ -674,6 +734,7 @@ class NowPlayingController with ChangeNotifier {
   @override
   void dispose() {
     _playingStreamSub?.cancel();
+    _trackPlayedSub?.cancel();
     sAnim.dispose();
     queueScrollController.dispose();
     playPauseAnim.dispose();
