@@ -216,6 +216,7 @@ class _NixCardExpansionTileState extends State<NixCardExpansionTile>
     final defaultRadius = BorderRadius.only(
       topLeft: Radius.circular(widget.isFirst ? 16 : 5),
       topRight: Radius.circular(widget.isFirst ? 16 : 5),
+      bottomLeft: Radius.circular(widget.isLast && !_isExpanded ? 16 : 5),
       bottomRight: Radius.circular(widget.isLast && !_isExpanded ? 16 : 5),
     );
 

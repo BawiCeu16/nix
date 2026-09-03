@@ -43,6 +43,7 @@ abstract final class HiveKeys {
   static const String autoScrollQueue = 'autoScrollQueue';
   static const String hapticForce = 'hapticForce';
   static const String saveLyricsOffline = 'saveLyricsOffline';
+  static const String fastSwipeArtwork = 'fastSwipeArtwork';
   static const String trackPositionsBox = 'track_positions';
   static const String resumeFromPlayedDuration = 'resumeFromPlayedDuration';
 

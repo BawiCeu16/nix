@@ -65,16 +65,34 @@ class _GesturesSettingsPageState extends State<GesturesSettingsPage> {
                     settings.setSwipeToDismiss(!settings.swipeToDismiss),
               ),
               const SizedBox(height: 2.5),
-              CardListTile(
+              NixCardExpansionTile(
                 title: 'Swipe to Change Track',
                 subtitle: 'Swipe artwork left/right to skip',
                 icon: FlutterRemix.arrow_left_right_line,
+                showExpansionIcon: settings.swipeToChangeTrack,
+                initiallyExpanded: false,
                 trailing: Switch(
                   value: settings.swipeToChangeTrack,
                   onChanged: (v) => settings.setSwipeToChangeTrack(v),
                 ),
-                onTap: () =>
-                    settings.setSwipeToChangeTrack(!settings.swipeToChangeTrack),
+                children: [
+                  if (settings.swipeToChangeTrack) ...[
+                    const SizedBox(height: 2.5),
+                    CardListTile(
+                      title: 'Fast Swipe Artwork',
+                      subtitle:
+                          'Requires only a small swipe distance to skip tracks',
+                      icon: FlutterRemix.speed_line,
+                      trailing: Switch(
+                        value: settings.fastSwipeArtwork,
+                        onChanged: (v) => settings.setFastSwipeArtwork(v),
+                      ),
+                      onTap: () => settings.setFastSwipeArtwork(
+                        !settings.fastSwipeArtwork,
+                      ),
+                    ),
+                  ],
+                ],
               ),
               const SizedBox(height: 2.5),
               CardListTile(
@@ -141,7 +159,8 @@ class _GesturesSettingsPageState extends State<GesturesSettingsPage> {
                                       horizontal: 4,
                                     ),
                                     child: InkWell(
-                                      onTap: () => settings.setHapticForce(force),
+                                      onTap: () =>
+                                          settings.setHapticForce(force),
                                       borderRadius: BorderRadius.circular(100),
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(
@@ -153,8 +172,9 @@ class _GesturesSettingsPageState extends State<GesturesSettingsPage> {
                                                   context,
                                                 ).colorScheme.primaryContainer
                                               : Colors.transparent,
-                                          borderRadius:
-                                              BorderRadius.circular(100),
+                                          borderRadius: BorderRadius.circular(
+                                            100,
+                                          ),
                                           border: Border.all(
                                             color: isSelected
                                                 ? Theme.of(
@@ -174,16 +194,12 @@ class _GesturesSettingsPageState extends State<GesturesSettingsPage> {
                                                   ? FontWeight.bold
                                                   : FontWeight.normal,
                                               color: isSelected
-                                                  ? Theme.of(
-                                                      context,
-                                                    )
-                                                      .colorScheme
-                                                      .onPrimaryContainer
-                                                  : Theme.of(
-                                                      context,
-                                                    )
-                                                      .colorScheme
-                                                      .onSurfaceVariant,
+                                                  ? Theme.of(context)
+                                                        .colorScheme
+                                                        .onPrimaryContainer
+                                                  : Theme.of(context)
+                                                        .colorScheme
+                                                        .onSurfaceVariant,
                                             ),
                                           ),
                                         ),
@@ -200,7 +216,10 @@ class _GesturesSettingsPageState extends State<GesturesSettingsPage> {
                   ],
                 ],
               ),
-              const NixSectionHeader(title: 'Interface & Alerts', topPadding: 24),
+              const NixSectionHeader(
+                title: 'Interface & Alerts',
+                topPadding: 24,
+              ),
               CardListTile(
                 title: 'Timer Interaction',
                 subtitle: settings.timerGesture == TimerGesture.longPress

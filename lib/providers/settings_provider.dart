@@ -151,6 +151,12 @@ class SettingsProvider with ChangeNotifier {
     _repo.setSwipeToChangeTrack(value).then((_) => notifyListeners());
   }
 
+  // Appearance - Fast Swipe Artwork
+  bool get fastSwipeArtwork => _repo.fastSwipeArtwork;
+  void setFastSwipeArtwork(bool value) {
+    _repo.setFastSwipeArtwork(value).then((_) => notifyListeners());
+  }
+
   // Appearance - Track Swipe Action
   TrackSwipeAction get trackSwipeAction => _repo.trackSwipeAction;
   void setTrackSwipeAction(TrackSwipeAction action) {

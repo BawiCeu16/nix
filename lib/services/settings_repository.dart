@@ -139,6 +139,10 @@ class SettingsRepository {
   bool get swipeToChangeTrack => _box.get(HiveKeys.swipeToChangeTrack, defaultValue: true);
   Future<void> setSwipeToChangeTrack(bool value) => _box.put(HiveKeys.swipeToChangeTrack, value);
 
+  // Appearance - Fast Swipe Artwork
+  bool get fastSwipeArtwork => _box.get(HiveKeys.fastSwipeArtwork, defaultValue: true);
+  Future<void> setFastSwipeArtwork(bool value) => _box.put(HiveKeys.fastSwipeArtwork, value);
+
   // Appearance - Track Swipe Action
   TrackSwipeAction get trackSwipeAction {
     final String action = _box.get(HiveKeys.trackSwipeAction, defaultValue: 'playPlayback');
