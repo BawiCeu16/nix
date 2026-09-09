@@ -45,6 +45,7 @@ void main() async {
       androidNotificationChannelId: 'com.c.nix.channel.audio',
       androidNotificationChannelName: 'nix Audio playback',
       androidNotificationOngoing: true,
+      androidNotificationIcon: 'drawable/ic_notification',
     ),
   );
 
