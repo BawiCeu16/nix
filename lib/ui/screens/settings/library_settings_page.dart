@@ -182,32 +182,26 @@ class _LibrarySettingsPageState extends State<LibrarySettingsPage> {
                 isLast: true,
                 onTap: () => _controller.scanDevice(context, music),
               ),
-              const NixSectionHeader(title: 'Search & History', topPadding: 32),
+
+              const NixSectionHeader(title: 'Danger Zone', topPadding: 32),
               CardListTile(
                 title: 'Clear Search History',
                 subtitle: 'Delete all previous search queries',
                 icon: FlutterRemix.history_line,
                 isFirst: true,
-                isLast: true,
                 onTap: () =>
                     _controller.showClearSearchConfirmation(context, settings),
               ),
-              const NixSectionHeader(title: 'Danger Zone', topPadding: 32),
+              const SizedBox(height: 2.5),
               CardListTile(
                 title: 'Reset Library Database',
                 subtitle: 'Clear all history, favorites, and re-scan',
                 icon: FlutterRemix.delete_bin_line,
-                isFirst: true,
+
                 isLast: true,
                 onTap: () => _controller.showResetConfirmation(context, music),
               ),
-              const Padding(
-                padding: EdgeInsets.only(left: 12, top: 24, right: 12),
-                child: Text(
-                  'Use Filter Short Audio to hide ringtones, voice notes, or app sounds. Higher values ensure only your real tracks appear in your library.',
-                  style: TextStyle(fontSize: 13, height: 1.5),
-                ),
-              ),
+
               const NixBottomSpacer(),
             ],
           ),

@@ -51,7 +51,10 @@ class _PlaybackSettingsPageState extends State<PlaybackSettingsPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             physics: const BouncingScrollPhysics(),
             children: [
-              const NixSectionHeader(title: 'Playback Behavior', topPadding: 12),
+              const NixSectionHeader(
+                title: 'Playback Behavior',
+                topPadding: 12,
+              ),
               CardListTile(
                 title: 'Auto Play',
                 subtitle:
@@ -100,7 +103,10 @@ class _PlaybackSettingsPageState extends State<PlaybackSettingsPage> {
                 onTap: () =>
                     _controller.toggleResumeFromPlayedDuration(settings),
               ),
-              const NixSectionHeader(title: 'Player Experience', topPadding: 32),
+              const NixSectionHeader(
+                title: 'Player Experience',
+                topPadding: 32,
+              ),
               NixCardExpansionTile(
                 title: 'Up Next Indicator',
                 subtitle: 'Show the upcoming track before the current one ends',
@@ -186,13 +192,6 @@ class _PlaybackSettingsPageState extends State<PlaybackSettingsPage> {
                 ),
                 isLast: true,
                 onTap: () => _controller.toggleSaveLyricsOffline(settings),
-              ),
-              const Padding(
-                padding: EdgeInsets.only(left: 12, top: 24, right: 12),
-                child: Text(
-                  'Gestures allow for a more intuitive control of your music. Auto Play ensures your music experience is seamless and continuous.',
-                  style: TextStyle(fontSize: 13, height: 1.5),
-                ),
               ),
               const NixBottomSpacer(),
             ],

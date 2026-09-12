@@ -1,5 +1,9 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
+import 'package:nix/ui/widgets/snackbar/nix_snackbar.dart';
 import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
 import 'package:nix/ui/widgets/common/nix_section_header.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
@@ -80,7 +84,7 @@ class _SettingsPageState extends State<SettingsPage> {
               const NixSectionHeader(title: 'About', topPadding: 32),
               CardListTile(
                 title: 'About nix',
-                subtitle: 'Info, version and more.',
+                subtitle: 'Update, version etc.',
                 icon: FlutterRemix.information_line,
                 isFirst: true,
                 isLast: true,

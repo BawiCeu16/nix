@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:material_3_expressive/components/buttons/m3e_buttons.dart';
+import 'package:nix/ui/widgets/snackbar/nix_snackbar.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/core/motion.dart';
 import 'package:nix/providers/current_music_provider.dart';
@@ -44,8 +46,7 @@ class TrackInfo extends StatelessWidget {
     final bool isNowPlaying =
         data.clampedProgress > 0.8 && data.queueProgress < 0.2;
     final bool isMiniplayer = data.clampedProgress < 0.5;
-    final animDuration =
-        isMiniplayer ? NixDurations.medium : Duration.zero;
+    final animDuration = isMiniplayer ? NixDurations.medium : Duration.zero;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -81,7 +82,13 @@ class TrackInfo extends StatelessWidget {
                 ? () {
                     Clipboard.setData(ClipboardData(text: track.title));
                     HapticUtils.trigger(context.read<SettingsProvider>());
-                    context.showSnackBar('Title copied to clipboard');
+                    NixSnackbar.show(
+                      context,
+                      width: double.infinity,
+                      position: NixSnackbarPosition.bottom,
+                      leading: const Icon(Icons.check_circle),
+                      title: const Text("Title copied to clipboard"),
+                    );
                   }
                 : null,
             child: Text(

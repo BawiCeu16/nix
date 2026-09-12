@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
+import 'package:material_3_expressive/components/buttons/m3e_buttons.dart';
 import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
 import 'package:nix/ui/widgets/common/nix_section_header.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
@@ -77,10 +78,11 @@ class _AboutPageState extends State<AboutPage> {
                     const SizedBox(height: 16),
                     Text(
                       'nix',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                      ),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
                     ),
                     const SizedBox(height: 0),
                     Text(
@@ -90,6 +92,23 @@ class _AboutPageState extends State<AboutPage> {
                       ),
                     ),
                   ],
+                ),
+              ),
+
+              const SizedBox(height: 10),
+              SizedBox(
+                width: 10,
+                child: M3EButton.filled(
+                  decoration: M3EButtonDecoration(
+                    backgroundColor: MaterialStatePropertyAll(
+                      colorScheme.primary,
+                    ),
+                    foregroundColor: MaterialStatePropertyAll(
+                      colorScheme.onPrimary,
+                    ),
+                  ),
+                  onPressed: () {},
+                  child: Text("Check for update"),
                 ),
               ),
 
@@ -108,7 +127,10 @@ class _AboutPageState extends State<AboutPage> {
                 ),
               ),
 
-              const NixSectionHeader(title: 'Support & Community', topPadding: 32),
+              const NixSectionHeader(
+                title: 'Support & Community',
+                topPadding: 32,
+              ),
               CardListTile(
                 title: 'GitHub',
                 subtitle: 'Source code and contributions',
@@ -124,10 +146,8 @@ class _AboutPageState extends State<AboutPage> {
                 title: 'Telegram',
                 subtitle: 'Join our community',
                 icon: FlutterRemix.telegram_line,
-                onTap: () => _controller.launchURL(
-                  context,
-                  'https://t.me/bawiceuapp',
-                ),
+                onTap: () =>
+                    _controller.launchURL(context, 'https://t.me/bawiceuapp'),
               ),
               const SizedBox(height: 2.5),
               CardListTile(
@@ -153,6 +173,7 @@ class _AboutPageState extends State<AboutPage> {
                   applicationVersion: _controller.version,
                 ),
               ),
+
               const SizedBox(height: 2.5),
               CardListTile(
                 title: 'Reset to Defaults',
@@ -161,6 +182,7 @@ class _AboutPageState extends State<AboutPage> {
                 isLast: true,
                 onTap: () => _controller.showResetDialog(context),
               ),
+
               const NixBottomSpacer(),
             ],
           ),
