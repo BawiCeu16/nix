@@ -56,7 +56,7 @@ class NixUpNextIndicator extends StatelessWidget {
             ),
             child: Row(
               children: [
-                SizedBox(width: 5.0),
+                const SizedBox(width: 5.0),
                 // Mini Artwork
                 ClipRRect(
                   borderRadius: BorderRadius.circular(5),

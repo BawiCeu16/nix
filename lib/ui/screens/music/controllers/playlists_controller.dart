@@ -149,7 +149,7 @@ class PlaylistsPageController extends ChangeNotifier {
   }) {
     if (oldIndex < 1 || oldIndex > totalTracksCount) return;
 
-    int adjustedOld = oldIndex - 1;
+    final int adjustedOld = oldIndex - 1;
     int adjustedNew = newIndex - 1;
 
     if (adjustedNew < 0) adjustedNew = 0;

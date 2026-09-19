@@ -100,15 +100,15 @@ class _AboutPageState extends State<AboutPage> {
                 width: 10,
                 child: M3EButton.filled(
                   decoration: M3EButtonDecoration(
-                    backgroundColor: MaterialStatePropertyAll(
+                    backgroundColor: WidgetStatePropertyAll(
                       colorScheme.primary,
                     ),
-                    foregroundColor: MaterialStatePropertyAll(
+                    foregroundColor: WidgetStatePropertyAll(
                       colorScheme.onPrimary,
                     ),
                   ),
                   onPressed: () {},
-                  child: Text("Check for update"),
+                  child: const Text("Check for update"),
                 ),
               ),
 

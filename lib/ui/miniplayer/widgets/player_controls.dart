@@ -83,55 +83,6 @@ class PlayerControls extends StatelessWidget {
                             child: Padding(
                               padding: EdgeInsets.symmetric(
                                 horizontal:
-                                    24.0 *
-                                    (16 *
-                                            (!bounceDown
-                                                ? data.inverseClampedProgress
-                                                : 0.0) +
-                                        1),
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  // IconButton(
-                                  //   iconSize: 28.0,
-                                  //   icon: Icon(
-                                  //     FlutterRemix.shuffle_line,
-                                  //     color: isShuffleEnabled
-                                  //         ? Theme.of(
-                                  //             context,
-                                  //           ).colorScheme.primary
-                                  //         : onSecondary,
-                                  //   ),
-                                  //   onPressed: () =>
-                                  //       currentMusic.toggleShuffle(),
-                                  // ),
-                                  // IconButton(
-                                  //   iconSize: 28.0,
-                                  //   icon: Icon(
-                                  //     isRepeatEnabled
-                                  //         ? FlutterRemix.repeat_one_line
-                                  //         : FlutterRemix.repeat_2_line,
-                                  //     color: isRepeatEnabled
-                                  //         ? Theme.of(
-                                  //             context,
-                                  //           ).colorScheme.primary
-                                  //         : onSecondary,
-                                  //   ),
-                                  //   onPressed: () =>
-                                  //       currentMusic.toggleRepeat(),
-                                  // ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        if (data.fastOpacity > 0.0)
-                          Opacity(
-                            opacity: data.fastOpacity,
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal:
                                     84.0 *
                                     (2 *
                                             (!bounceDown

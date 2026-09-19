@@ -120,7 +120,6 @@ class NixApp extends StatelessWidget {
             );
 
             return MaterialApp(
-              // showPerformanceOverlay: true,
               title: 'Nix',
               debugShowCheckedModeBanner: false,
               theme: theme,

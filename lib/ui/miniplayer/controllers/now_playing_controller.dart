@@ -677,11 +677,11 @@ class NowPlayingController with ChangeNotifier {
       canPrev = index > 0 || currentMusic.isRepeatEnabled;
     }
 
-    double delta = details.primaryDelta ?? 0.0;
+    final double delta = details.primaryDelta ?? 0.0;
     sOffset -= delta;
 
-    double minClamp = canPrev ? -sMaxOffset : 0.0;
-    double maxClamp = canNext ? sMaxOffset : 0.0;
+    final double minClamp = canPrev ? -sMaxOffset : 0.0;
+    final double maxClamp = canNext ? sMaxOffset : 0.0;
 
     sOffset = sOffset.clamp(minClamp, maxClamp);
     sAnim.animateTo(sOffset / sMaxOffset, duration: Duration.zero);

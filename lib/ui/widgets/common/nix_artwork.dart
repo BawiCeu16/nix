@@ -130,7 +130,7 @@ class NixArtwork extends StatelessWidget {
       );
     }
 
-    Widget artworkWidget = RepaintBoundary(
+    final Widget artworkWidget = RepaintBoundary(
       child: shape == ArtworkShape.circle
           ? ClipOval(child: content)
           : ClipRRect(

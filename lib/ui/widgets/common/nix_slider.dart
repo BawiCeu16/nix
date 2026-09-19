@@ -120,7 +120,7 @@ class _NixThumbShape extends SliderComponentShape {
     textPainter.layout();
 
     final thumbWidth = textPainter.width + 24;
-    final thumbHeight = 22.0;
+    const thumbHeight = 22.0;
 
     // Apply scale transformation based on activation (touch)
     final scale = 1.0 + (scaleAnimation.value * 0.15);

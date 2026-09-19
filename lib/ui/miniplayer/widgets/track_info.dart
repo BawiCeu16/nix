@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:material_3_expressive/components/buttons/m3e_buttons.dart';
-import 'package:nix/ui/widgets/snackbar/nix_snackbar.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/core/motion.dart';
 import 'package:nix/providers/current_music_provider.dart';
@@ -82,13 +80,7 @@ class TrackInfo extends StatelessWidget {
                 ? () {
                     Clipboard.setData(ClipboardData(text: track.title));
                     HapticUtils.trigger(context.read<SettingsProvider>());
-                    NixSnackbar.show(
-                      context,
-                      width: double.infinity,
-                      position: NixSnackbarPosition.bottom,
-                      leading: const Icon(Icons.check_circle),
-                      title: const Text("Title copied to clipboard"),
-                    );
+                    context.showSuccessSnackBar("Title copied to clipboard");
                   }
                 : null,
             child: Text(
@@ -287,61 +279,6 @@ class TrackInfo extends StatelessWidget {
                               ),
                             ),
                           ),
-
-                          // Favorite IconButton
-                          // Consumer<MusicProvider>(
-                          //   builder: (context, musicProvider, _) {
-                          //     final isFav =
-                          //         currentTrack != null &&
-                          //         musicProvider.isFavorite(currentTrack);
-                          //     final favOpacity =
-                          //         ((inverseAboveOne(data.bounceProgress) * 10 -
-                          //                         9)
-                          //                     .clamp(0.0, 1.0) *
-                          //                 (1.0 - lyricsAnim.value))
-                          //             .clamp(0.0, 1.0);
-
-                          //     if (favOpacity == 0.0) {
-                          //       return const SizedBox();
-                          //     }
-
-                          //     return Opacity(
-                          //       opacity: favOpacity,
-                          //       child: Transform.translate(
-                          //         offset: Offset(
-                          //           -100 * (1.0 - data.bounceClampedProgress),
-                          //           0.0,
-                          //         ),
-                          //         child: IconButton(
-                          //           onPressed: currentTrack != null
-                          //               ? () {
-                          //                   musicProvider.toggleFavorite(
-                          //                     currentTrack,
-                          //                   );
-                          //                   HapticUtils.trigger(
-                          //                     context.read<SettingsProvider>(),
-                          //                   );
-                          //                 }
-                          //               : null,
-                          //           icon: Icon(
-                          //             isFav
-                          //                 ? FlutterRemix.heart_3_fill
-                          //                 : FlutterRemix.heart_3_line,
-                          //             size: 26.0,
-                          //             color: isFav
-                          //                 ? Theme.of(
-                          //                     context,
-                          //                   ).colorScheme.primary
-                          //                 : Theme.of(context)
-                          //                       .colorScheme
-                          //                       .onSurface
-                          //                       .withValues(alpha: .7),
-                          //           ),
-                          //         ),
-                          //       ),
-                          //     );
-                          //   },
-                          // ),
                         ],
                       ),
                     ),

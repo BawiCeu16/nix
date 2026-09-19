@@ -96,7 +96,7 @@ void main() {
     );
 
     currentMusicProvider.currentTrack = testTrack;
-    final zeroAnim = AlwaysStoppedAnimation<double>(0.0);
+    const zeroAnim = AlwaysStoppedAnimation<double>(0.0);
 
     String? copiedText;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -170,7 +170,7 @@ void main() {
     );
 
     currentMusicProvider.currentTrack = testTrack;
-    final zeroAnim = AlwaysStoppedAnimation<double>(0.0);
+    const zeroAnim = AlwaysStoppedAnimation<double>(0.0);
 
     String? copiedText;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -240,7 +240,7 @@ void main() {
     );
 
     currentMusicProvider.currentTrack = testTrack;
-    final zeroAnim = AlwaysStoppedAnimation<double>(0.0);
+    const zeroAnim = AlwaysStoppedAnimation<double>(0.0);
 
     String? copiedText;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger

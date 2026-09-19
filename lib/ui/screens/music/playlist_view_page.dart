@@ -158,7 +158,7 @@ class _PlaylistViewPageState extends State<PlaylistViewPage> {
                     final trackIndex = index - 1;
                     final track = tracks[trackIndex];
 
-                    Widget tile = TrackTile(
+                    final Widget tile = TrackTile(
                       track: track,
                       playlistContext: tracks,
                       isFirst: trackIndex == 0,

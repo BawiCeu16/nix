@@ -230,7 +230,7 @@ class _TrackTileState extends State<TrackTile> {
       (s) => s.resumeFromPlayedDuration,
     );
 
-    Widget tileContent = Selector<CurrentMusicProvider, Track?>(
+    final Widget tileContent = Selector<CurrentMusicProvider, Track?>(
       selector: (_, p) => p.currentTrack,
       builder: (context, currentlyPlaying, child) {
         final isNowPlaying =

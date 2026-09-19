@@ -99,9 +99,9 @@ class _SearchPageState extends State<SearchPage> {
                             controller: _controller.searchInputController,
                             hintText: "Search tracks, artists, albums...",
                             textInputAction: TextInputAction.search,
-                            leading: Padding(
-                              padding: const EdgeInsets.only(left: 8.0),
-                              child: const Icon(FlutterRemix.search_line),
+                            leading: const Padding(
+                              padding: EdgeInsets.only(left: 8.0),
+                              child: Icon(FlutterRemix.search_line),
                             ),
                             trailing: [
                               if (_controller

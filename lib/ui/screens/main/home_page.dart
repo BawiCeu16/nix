@@ -119,46 +119,6 @@ class _HomePageState extends State<HomePage> {
 
                     SliverMainAxisGroup(
                       slivers: [
-                        // // ── Quick Actions ──
-                        // SliverToBoxAdapter(
-                        //   child: Padding(
-                        //     padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                        //     child: const NixSectionHeader(
-                        //       title: 'Quick Actions',
-                        //       topPadding: 20,
-                        //     ),
-                        //   ),
-                        // ),
-                        // SliverToBoxAdapter(
-                        //   child: Padding(
-                        //     padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                        //     child: Row(
-                        //       children: [
-                        //         NixButton(
-                        //           customBackgroundColor: Theme.of(
-                        //             context,
-                        //           ).colorScheme.primary.withValues(alpha: 0.7),
-                        //           icon: const Icon(FlutterRemix.music_2_fill),
-                        //           label: const Text("All Songs"),
-                        //           enableAnimations: true,
-                        //           onPressed: () =>
-                        //               _controller.openAllSongs(context),
-                        //         ),
-                        //         const SizedBox(width: 12),
-                        //         NixButton(
-                        //           customBackgroundColor: Theme.of(
-                        //             context,
-                        //           ).colorScheme.primary.withValues(alpha: 0.7),
-                        //           icon: const Icon(FlutterRemix.disc_fill),
-                        //           label: const Text("Albums"),
-                        //           enableAnimations: true,
-                        //           onPressed: () =>
-                        //               _controller.openAlbums(context),
-                        //         ),
-                        //       ],
-                        //     ),
-                        //   ),
-                        // ),
                         // ── Recently Listened ──
                         SliverToBoxAdapter(
                           child: Padding(
