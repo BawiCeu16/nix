@@ -290,11 +290,8 @@ class TrackImage extends StatelessWidget {
                           left: 8,
                           right: 8,
                           child: Opacity(
-                            opacity:
-                                ((1 - lyricsAnim.value) * currentOpacity).clamp(
-                                  0.0,
-                                  1.0,
-                                ),
+                            opacity: ((1 - lyricsAnim.value) * currentOpacity)
+                                .clamp(0.0, 1.0),
                             child: NixUpNextIndicator(data: data),
                           ),
                         ),

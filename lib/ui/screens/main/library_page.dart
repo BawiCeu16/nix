@@ -43,12 +43,6 @@ class _LibraryPageState extends State<LibraryPage> {
             scrolledUnderElevation: 0,
             backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
             elevation: 0,
-            actions: [
-              IconButton(
-                icon: const Icon(FlutterRemix.settings_3_line),
-                onPressed: () => _controller.openSettings(context),
-              ),
-            ],
           ),
           body: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),

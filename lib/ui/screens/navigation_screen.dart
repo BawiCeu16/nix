@@ -7,6 +7,7 @@ import 'package:nix/ui/miniplayer/now_playing.dart';
 import 'package:nix/ui/screens/main/home_page.dart';
 import 'package:nix/ui/screens/main/library_page.dart';
 import 'package:nix/ui/screens/main/search_page.dart';
+import 'package:nix/ui/screens/settings/settings_page.dart';
 import 'package:nix/ui/screens/controllers/navigation_controller.dart';
 
 class NavigationScreen extends StatefulWidget {
@@ -35,6 +36,11 @@ class _NavigationScreenState extends State<NavigationScreen>
       icon: Icon(FlutterRemix.music_2_line),
       selectedIcon: Icon(FlutterRemix.music_2_fill),
       label: "Library",
+    ),
+    NavigationDestination(
+      icon: Icon(FlutterRemix.settings_3_line),
+      selectedIcon: Icon(FlutterRemix.settings_3_fill),
+      label: "Settings",
     ),
   ];
 
@@ -66,10 +72,10 @@ class _NavigationScreenState extends State<NavigationScreen>
               canPop: false,
               onPopInvokedWithResult: (bool didPop, dynamic result) =>
                   _controller.handlePopInvoked(
-                didPop: didPop,
-                context: context,
-                willPop: willPop,
-              ),
+                    didPop: didPop,
+                    context: context,
+                    willPop: willPop,
+                  ),
               child: child!,
             );
           },
@@ -86,16 +92,27 @@ class _NavigationScreenState extends State<NavigationScreen>
                       return SizedBox(
                         height:
                             MediaQuery.of(context).size.height -
-                            (1 - (_controller.animation.value).clamp(0.0, 1.0)) *
+                            (1 -
+                                    (_controller.animation.value).clamp(
+                                      0.0,
+                                      1.0,
+                                    )) *
                                 (80.0 + (bottom ?? 0)),
                         child: Transform.scale(
                           scale:
-                              (1 - _controller.animation.value.clamp(0.0, 1.0)) /
+                              (1 -
+                                      _controller.animation.value.clamp(
+                                        0.0,
+                                        1.0,
+                                      )) /
                                   10 +
                               0.9,
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(
-                              (_controller.animation.value * 150.0).clamp(0.0, 42.0),
+                              (_controller.animation.value * 150.0).clamp(
+                                0.0,
+                                42.0,
+                              ),
                             ),
                             child: child,
                           ),
@@ -120,6 +137,11 @@ class _NavigationScreenState extends State<NavigationScreen>
                           index: 2,
                           page: const LibraryPage(),
                         ),
+                        _controller.buildTabNavigator(
+                          context: context,
+                          index: 3,
+                          page: const SettingsPage(),
+                        ),
                       ],
                     ),
                   ),
@@ -133,7 +155,8 @@ class _NavigationScreenState extends State<NavigationScreen>
                         return Transform.translate(
                           offset: Offset(
                             0,
-                            (_controller.animation.value * (20.0 + (bottom ?? 0)))
+                            (_controller.animation.value *
+                                    (20.0 + (bottom ?? 0)))
                                 .clamp(0, 120),
                           ),
                           child: child,
@@ -144,7 +167,9 @@ class _NavigationScreenState extends State<NavigationScreen>
                           padding: EdgeInsets.only(bottom: bottom ?? 0),
                         ),
                         child: NavigationBar(
-                          backgroundColor: Theme.of(context).colorScheme.surface,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.surface,
                           selectedIndex: _controller.selectedIndex,
                           onDestinationSelected: _controller.setSelectedIndex,
                           destinations: _navDestinations,
@@ -164,10 +189,10 @@ class _NavigationScreenState extends State<NavigationScreen>
                             return const SizedBox();
                           }
 
-                          final opacityValue =
-                              _controller.animation.value.clamp(0.0, 1.0);
-                          final dimValue =
-                              (_controller.animation.value * 1.2).clamp(0.0, 1.0);
+                          final opacityValue = _controller.animation.value
+                              .clamp(0.0, 1.0);
+                          final dimValue = (_controller.animation.value * 1.2)
+                              .clamp(0.0, 1.0);
                           final surfaceColor = Theme.of(
                             context,
                           ).colorScheme.surface;

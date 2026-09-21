@@ -17,6 +17,7 @@ class NavigationScreenController extends ChangeNotifier {
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
   ];
 
   late final VoidCallback _playbackListener;
