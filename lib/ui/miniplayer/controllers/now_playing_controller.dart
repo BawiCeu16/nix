@@ -382,15 +382,10 @@ class NowPlayingController with ChangeNotifier {
   }
 
   void snapToExpanded(BuildContext context, {bool haptic = true}) {
-    final bool isFromQueue = prevOffset > maxOffset + 10.0;
     offset = maxOffset;
     if (prevOffset < maxOffset) bounceUp = true;
     if (prevOffset > maxOffset) bounceDown = true;
-    snap(
-      context,
-      haptic: haptic,
-      curve: isFromQueue ? Curves.easeOutCubic : NowPlayingPhysics.bouncingCurve,
-    );
+    snap(context, haptic: haptic, curve: NowPlayingPhysics.bouncingCurve);
   }
 
   void snapToMini(BuildContext context, {bool haptic = true}) {
@@ -402,7 +397,7 @@ class NowPlayingController with ChangeNotifier {
   void snapToQueue(BuildContext context, {bool haptic = true}) {
     offset = maxOffset * 2;
     bounceUp = false;
-    snap(context, haptic: haptic, curve: Curves.easeOutCubic);
+    snap(context, haptic: haptic, curve: NowPlayingPhysics.bouncingCurve);
   }
 
   void snapToDismissed(BuildContext context, {bool haptic = true}) {
@@ -717,12 +712,12 @@ class NowPlayingController with ChangeNotifier {
 
     final double distanceThreshold = settings.fastSwipeArtwork
         ? 60.0
-        : (NowPlayingPhysics.actuationOffset * NowPlayingPhysics.sActuationMulti);
+        : (NowPlayingPhysics.actuationOffset *
+              NowPlayingPhysics.sActuationMulti);
 
     final double speedThreshold = settings.fastSwipeArtwork ? 400.0 : 1000.0;
 
-    if (canPrev &&
-        (speed > speedThreshold || distance > distanceThreshold)) {
+    if (canPrev && (speed > speedThreshold || distance > distanceThreshold)) {
       snapToPrev(context);
     } else if (canNext &&
         (-speed > speedThreshold || -distance > distanceThreshold)) {

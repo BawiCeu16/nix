@@ -1,3 +1,4 @@
+// Track Duration Formatting Extension
 extension DurationFormat on Duration {
   String format() {
     return "${inHours > 0 ? '$inHours h ' : ''}${inMinutes % 60} mins";
@@ -8,6 +9,7 @@ extension DurationFormat on Duration {
   }
 }
 
+// File Size Formatting Extension
 extension FileSizeFormat on num {
   String formatBytes() {
     if (this <= 0) return "0 B";

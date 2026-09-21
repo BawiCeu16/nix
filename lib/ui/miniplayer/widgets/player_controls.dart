@@ -77,6 +77,7 @@ class PlayerControls extends StatelessWidget {
                     child: Stack(
                       alignment: Alignment.centerRight,
                       children: [
+                        // Next/Previous Buttons
                         if (data.fastOpacity > 0.0)
                           Opacity(
                             opacity: data.fastOpacity,
@@ -111,13 +112,14 @@ class PlayerControls extends StatelessWidget {
                                       color: onSecondary,
                                     ),
                                     onPressed:
-                                        onNext ??
-                                        () => currentMusic.playNext(),
+                                        onNext ?? () => currentMusic.playNext(),
                                   ),
                                 ],
                               ),
                             ),
                           ),
+
+                        // Play/Pause Button
                         Padding(
                           padding:
                               EdgeInsets.all(

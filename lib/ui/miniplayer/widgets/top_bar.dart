@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nix/core/motion/nix_durations.dart';
 import 'package:nix/providers/sleep_timer_provider.dart';
 import 'package:nix/ui/widgets/dialogs/sleep_timer_dialog.dart';
 import 'package:provider/provider.dart';
@@ -64,14 +65,20 @@ class TopBar extends StatelessWidget {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        Text(
-                          playlistName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 20.0,
-                            color: onSecondary.withValues(alpha: .9),
+                        AnimatedSwitcher(
+                          duration: NixDurations.medium,
+                          transitionBuilder: (child, animation) =>
+                              FadeTransition(opacity: animation, child: child),
+                          child: Text(
+                            playlistName,
+                            key: ValueKey(playlistName),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 20.0,
+                              color: onSecondary.withValues(alpha: .9),
+                            ),
                           ),
                         ),
                       ],

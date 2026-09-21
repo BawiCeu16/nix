@@ -50,6 +50,7 @@ class TrackInfo extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Title Text
         AnimatedSwitcher(
           duration: animDuration,
           transitionBuilder: (child, animation) {
@@ -58,19 +59,7 @@ class TrackInfo extends StatelessWidget {
             }
             return FadeTransition(
               opacity: animation,
-              child: SlideTransition(
-                position:
-                    Tween<Offset>(
-                      begin: const Offset(0.0, 0.1),
-                      end: Offset.zero,
-                    ).animate(
-                      CurvedAnimation(
-                        parent: animation,
-                        curve: NixCurves.expressiveDecelerated,
-                      ),
-                    ),
-                child: Align(alignment: Alignment.centerLeft, child: child),
-              ),
+              child: Align(alignment: Alignment.centerLeft, child: child),
             );
           },
           child: GestureDetector(
@@ -101,6 +90,8 @@ class TrackInfo extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
+
+        // Artist Text
         AnimatedSwitcher(
           duration: animDuration,
           transitionBuilder: (child, animation) {
@@ -109,19 +100,7 @@ class TrackInfo extends StatelessWidget {
             }
             return FadeTransition(
               opacity: animation,
-              child: SlideTransition(
-                position:
-                    Tween<Offset>(
-                      begin: const Offset(0.0, 0.1),
-                      end: Offset.zero,
-                    ).animate(
-                      CurvedAnimation(
-                        parent: animation,
-                        curve: NixCurves.expressiveDecelerated,
-                      ),
-                    ),
-                child: Align(alignment: Alignment.centerLeft, child: child),
-              ),
+              child: Align(alignment: Alignment.centerLeft, child: child),
             );
           },
           child: Text(
