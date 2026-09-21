@@ -1,6 +1,10 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:on_audio_query_forked/on_audio_query.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/core/hive_keys.dart';
 import 'package:nix/models/music/track.dart';
@@ -247,6 +251,189 @@ class StatsController extends ChangeNotifier {
     _playbackHistory = historyList;
 
     notifyListeners();
+  }
+
+  final Map<int, Color> _artistColorCache = {};
+  final Set<int> _extractingTrackIds = {};
+
+  List<Color> getDistinctArtistColors(
+    List<ArtistStat> top5Artists,
+    ColorScheme colorScheme,
+  ) {
+    final List<Color?> rawColors = [];
+    for (int i = 0; i < top5Artists.length; i++) {
+      final trackId = getFirstTrackIdForArtist(top5Artists[i].artistName);
+      if (trackId != null && _artistColorCache.containsKey(trackId)) {
+        rawColors.add(_artistColorCache[trackId]);
+      } else if (trackId != null && Hive.isBoxOpen(HiveKeys.colorCacheBox)) {
+        final cachedInt = Hive.box<int>(HiveKeys.colorCacheBox).get(trackId);
+        if (cachedInt != null) {
+          final c = Color(cachedInt);
+          _artistColorCache[trackId] = c;
+          rawColors.add(c);
+        } else {
+          _extractColorForTrack(trackId);
+          rawColors.add(null);
+        }
+      } else {
+        rawColors.add(null);
+      }
+    }
+
+    return generateDistinctColors(rawColors, colorScheme);
+  }
+
+  static List<Color> _buildNixPalette(ColorScheme colorScheme) {
+    final primaryHsv = HSVColor.fromColor(colorScheme.primary);
+    final isDark = colorScheme.brightness == Brightness.dark;
+
+    final baseSat = math.max(primaryHsv.saturation, isDark ? 0.65 : 0.55);
+    final baseVal = math.max(primaryHsv.value, isDark ? 0.85 : 0.70);
+
+    return [
+      colorScheme.primary,
+      if (colorScheme.tertiary != colorScheme.primary &&
+          colorScheme.tertiary != colorScheme.secondary)
+        colorScheme.tertiary
+      else
+        primaryHsv
+            .withHue((primaryHsv.hue + 72.0) % 360.0)
+            .withSaturation(baseSat)
+            .withValue(baseVal)
+            .toColor(),
+      primaryHsv
+          .withHue((primaryHsv.hue + 144.0) % 360.0)
+          .withSaturation(baseSat)
+          .withValue(baseVal)
+          .toColor(),
+      if (colorScheme.secondary != colorScheme.primary)
+        colorScheme.secondary
+      else
+        primaryHsv
+            .withHue((primaryHsv.hue + 216.0) % 360.0)
+            .withSaturation(baseSat)
+            .withValue(baseVal)
+            .toColor(),
+      primaryHsv
+          .withHue((primaryHsv.hue + 288.0) % 360.0)
+          .withSaturation(baseSat)
+          .withValue(baseVal)
+          .toColor(),
+    ];
+  }
+
+  static List<Color> generateDistinctColors(
+    List<Color?> rawColors,
+    ColorScheme colorScheme,
+  ) {
+    final count = rawColors.length;
+    if (count == 0) return [];
+
+    final nixPalette = _buildNixPalette(colorScheme);
+    final List<Color> result = [];
+
+    for (int i = 0; i < count; i++) {
+      final raw = rawColors[i];
+      Color choice;
+
+      if (raw != null && _isVibrantAndDistinct(raw, result)) {
+        choice = raw;
+      } else {
+        choice = nixPalette[i % nixPalette.length];
+        int attempts = 0;
+        while (!_isDistinct(choice, result) && attempts < nixPalette.length) {
+          final hsv = HSVColor.fromColor(choice);
+          choice = hsv.withHue((hsv.hue + 72.0) % 360.0).toColor();
+          attempts++;
+        }
+      }
+      result.add(choice);
+    }
+
+    return result;
+  }
+
+  static bool _isVibrantAndDistinct(Color color, List<Color> existing) {
+    final hsv = HSVColor.fromColor(color);
+    if (hsv.saturation < 0.22 || hsv.value < 0.22) return false;
+    return _isDistinct(color, existing);
+  }
+
+  static bool _isDistinct(Color candidate, List<Color> existing) {
+    final candHsv = HSVColor.fromColor(candidate);
+    for (final c in existing) {
+      final cHsv = HSVColor.fromColor(c);
+      final hueDiff = (candHsv.hue - cHsv.hue).abs();
+      final minHueDiff = (hueDiff > 180.0) ? (360.0 - hueDiff) : hueDiff;
+      if (minHueDiff < 35.0 &&
+          (candHsv.saturation - cHsv.saturation).abs() < 0.35) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  Color getArtistColor(int trackId, int index, ColorScheme colorScheme) {
+    if (_artistColorCache.containsKey(trackId)) {
+      return _artistColorCache[trackId]!;
+    }
+
+    if (Hive.isBoxOpen(HiveKeys.colorCacheBox)) {
+      final cache = Hive.box<int>(HiveKeys.colorCacheBox);
+      final cachedInt = cache.get(trackId);
+      if (cachedInt != null) {
+        final color = Color(cachedInt);
+        _artistColorCache[trackId] = color;
+        return color;
+      }
+    }
+
+    _extractColorForTrack(trackId);
+    return getFallbackPaletteColor(index, colorScheme);
+  }
+
+  Color getFallbackPaletteColor(int index, ColorScheme colorScheme) {
+    final palette = _buildNixPalette(colorScheme);
+    return palette[index % palette.length];
+  }
+
+  Future<void> _extractColorForTrack(int trackId) async {
+    if (_extractingTrackIds.contains(trackId)) return;
+    _extractingTrackIds.add(trackId);
+
+    try {
+      final isTest = Platform.environment.containsKey('FLUTTER_TEST');
+      if (isTest) return;
+
+      final isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+      if (!isMobile) return;
+
+      final audioQuery = OnAudioQuery();
+      final bytes = await audioQuery.queryArtwork(
+        trackId,
+        ArtworkType.AUDIO,
+        size: 100,
+      );
+
+      if (bytes != null && bytes.isNotEmpty) {
+        final scheme = await ColorScheme.fromImageProvider(
+          provider: MemoryImage(bytes),
+        );
+        final extractedColor = scheme.primary;
+        _artistColorCache[trackId] = extractedColor;
+
+        if (Hive.isBoxOpen(HiveKeys.colorCacheBox)) {
+          await Hive.box<int>(
+            HiveKeys.colorCacheBox,
+          ).put(trackId, extractedColor.toARGB32());
+        }
+        notifyListeners();
+      }
+    } catch (_) {
+      // Ignore extraction errors gracefully
+    } finally {
+      _extractingTrackIds.remove(trackId);
+    }
   }
 
   int? getFirstTrackIdForArtist(String artistName) {

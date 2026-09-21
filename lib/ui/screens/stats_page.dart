@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:on_audio_query_forked/on_audio_query.dart';
@@ -79,6 +80,15 @@ class _StatsPageState extends State<StatsPage> {
               children: [
                 // ── Overview Section ──
                 const NixSectionHeader(title: 'Overview', topPadding: 4),
+
+                // ── Top 5 Artist Distribution Card ──
+                if (_controller.topArtists.isNotEmpty) ...[
+                  _ArtistDistributionCard(
+                    top5: _controller.topArtists.take(5).toList(),
+                    controller: _controller,
+                  ),
+                  const SizedBox(height: 10),
+                ],
 
                 // ── Hero Highlight Card (Top Song) ──
                 if (topSongStat != null) ...[
@@ -218,16 +228,20 @@ class _StatsPageState extends State<StatsPage> {
                       height: 68,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    Container(
-                      padding: const EdgeInsets.all(3.5),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFFFD700), // Gold
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        FlutterRemix.vip_crown_fill,
-                        size: 11,
-                        color: Colors.black87,
+                    Positioned(
+                      top: 2.0,
+                      right: 2.0,
+                      child: Container(
+                        padding: const EdgeInsets.all(3.5),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFFFD700), // Gold
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          FlutterRemix.vip_crown_fill,
+                          size: 11,
+                          color: Colors.black87,
+                        ),
                       ),
                     ),
                   ],
@@ -775,6 +789,377 @@ class _StatsPageState extends State<StatsPage> {
       default:
         return colorScheme.primary.withValues(alpha: 0.15);
     }
+  }
+}
+
+class _ArtistDistributionCard extends StatefulWidget {
+  final List<ArtistStat> top5;
+  final StatsController controller;
+
+  const _ArtistDistributionCard({required this.top5, required this.controller});
+
+  @override
+  State<_ArtistDistributionCard> createState() =>
+      _ArtistDistributionCardState();
+}
+
+class _ArtistDistributionCardState extends State<_ArtistDistributionCard> {
+  int? _selectedIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final totalTop5Plays = widget.top5.fold<int>(
+      0,
+      (sum, a) => sum + a.totalPlayCount,
+    );
+
+    if (widget.top5.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final chartColors = widget.controller.getDistinctArtistColors(
+      widget.top5,
+      colorScheme,
+    );
+    final chartValues = widget.top5
+        .map((a) => a.totalPlayCount.toDouble())
+        .toList();
+
+    // Active selection or #1 default
+    final activeIndex =
+        _selectedIndex != null && _selectedIndex! < widget.top5.length
+        ? _selectedIndex!
+        : 0;
+    final activeArtist = widget.top5[activeIndex];
+    final activeTrackId = widget.controller.getFirstTrackIdForArtist(
+      activeArtist.artistName,
+    );
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Artist Distribution',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Top 5 listening breakdown',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(100),
+                ),
+                child: Text(
+                  'TOP 5',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: colorScheme.onPrimaryContainer,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Left Side: Donut Chart with interactive slice highlight & center artwork
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 110,
+                    height: 110,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        CustomPaint(
+                          size: const Size(110, 110),
+                          painter: _DonutChartPainter(
+                            values: chartValues,
+                            colors: chartColors,
+                            selectedIndex: _selectedIndex,
+                            strokeWidth: 13.0,
+                          ),
+                        ),
+                        // Center artwork of selected/top artist
+                        SizedBox(
+                          width: 90,
+                          height: 90,
+                          child: AnimatedSwitcher(
+                            duration: NixDurations.fast,
+                            child: KeyedSubtree(
+                              key: ValueKey(activeArtist.artistName),
+                              child: ClipOval(
+                                child: activeTrackId != null
+                                    ? NixArtwork(
+                                        id: activeTrackId,
+                                        type: ArtworkType.AUDIO,
+                                        width: 75,
+                                        height: 75,
+                                        borderRadius: BorderRadius.circular(
+                                          100,
+                                        ),
+                                      )
+                                    : Container(
+                                        color: colorScheme.secondaryContainer,
+                                        child: Icon(
+                                          FlutterRemix.user_3_fill,
+                                          size: 24,
+                                          color:
+                                              colorScheme.onSecondaryContainer,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    _selectedIndex != null
+                        ? activeArtist.artistName.toUpperCase()
+                        : 'LISTENING COUNT',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w800,
+                      color: colorScheme.onSurfaceVariant,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${activeArtist.totalPlayCount} plays',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: chartColors[activeIndex],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 16),
+              // Right Side: Top 5 Band Names, Rank, Distinct Colors & Percentages
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: List.generate(widget.top5.length, (index) {
+                    final artist = widget.top5[index];
+                    final color = chartColors[index];
+                    final percentage = totalTop5Plays > 0
+                        ? (artist.totalPlayCount / totalTop5Plays * 100)
+                        : 0.0;
+                    final trackId = widget.controller.getFirstTrackIdForArtist(
+                      artist.artistName,
+                    );
+                    final isSelected = _selectedIndex == index;
+
+                    return AnimatedContainer(
+                      duration: NixDurations.fast,
+                      margin: const EdgeInsets.symmetric(vertical: 2),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? color.withValues(alpha: 0.12)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(10),
+                        onTap: () {
+                          setState(() {
+                            if (_selectedIndex == index) {
+                              _selectedIndex = null; // Toggle back to overview
+                            } else {
+                              _selectedIndex = index;
+                            }
+                          });
+                        },
+                        onLongPress: () {
+                          widget.controller.openArtistDetails(
+                            context,
+                            artist.artistName,
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 5,
+                            horizontal: 6,
+                          ),
+                          child: Row(
+                            children: [
+                              // Rank Pill/Dot with distinct color
+                              Container(
+                                width: 16,
+                                height: 16,
+                                decoration: BoxDecoration(
+                                  color: color,
+                                  shape: BoxShape.circle,
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  '${index + 1}',
+                                  style: const TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              if (trackId != null)
+                                NixArtwork(
+                                  id: trackId,
+                                  type: ArtworkType.AUDIO,
+                                  width: 22,
+                                  height: 22,
+                                  borderRadius: BorderRadius.circular(100),
+                                )
+                              else
+                                CircleAvatar(
+                                  radius: 11,
+                                  backgroundColor:
+                                      colorScheme.surfaceContainerHighest,
+                                  child: Icon(
+                                    FlutterRemix.user_fill,
+                                    size: 11,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  artist.artistName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.w600,
+                                    color: isSelected
+                                        ? colorScheme.onSurface
+                                        : colorScheme.onSurface.withValues(
+                                            alpha: 0.9,
+                                          ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${percentage.toStringAsFixed(1)}%',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: color,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DonutChartPainter extends CustomPainter {
+  final List<double> values;
+  final List<Color> colors;
+  final int? selectedIndex;
+  final double strokeWidth;
+
+  _DonutChartPainter({
+    required this.values,
+    required this.colors,
+    this.selectedIndex,
+    this.strokeWidth = 11.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (values.isEmpty) return;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    final total = values.fold<double>(0.0, (sum, v) => sum + v);
+    if (total <= 0) return;
+
+    double startAngle = -math.pi / 2;
+    const gap = 0.06;
+
+    for (int i = 0; i < values.length; i++) {
+      final sweepAngle =
+          (values[i] / total) * 2 * math.pi - (values.length > 1 ? gap : 0);
+      if (sweepAngle <= 0) continue;
+
+      final isSelected = selectedIndex == i;
+      final isAnySelected = selectedIndex != null;
+
+      final currentStrokeWidth = isSelected ? strokeWidth + 4.0 : strokeWidth;
+      final currentRadius =
+          (math.min(size.width, size.height) - currentStrokeWidth) / 2;
+      final rect = Rect.fromCircle(center: center, radius: currentRadius);
+
+      final color = colors[i % colors.length];
+      final arcColor = isAnySelected && !isSelected
+          ? color.withValues(alpha: 0.35)
+          : color;
+
+      final paint = Paint()
+        ..color = arcColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = currentStrokeWidth
+        ..strokeCap = StrokeCap.butt;
+
+      canvas.drawArc(rect, startAngle, sweepAngle, false, paint);
+      startAngle += sweepAngle + (values.length > 1 ? gap : 0);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DonutChartPainter oldDelegate) {
+    return oldDelegate.values != values ||
+        oldDelegate.colors != colors ||
+        oldDelegate.selectedIndex != selectedIndex ||
+        oldDelegate.strokeWidth != strokeWidth;
   }
 }
 

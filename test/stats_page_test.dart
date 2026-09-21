@@ -112,6 +112,29 @@ void main() {
     expect(StatsController.formatDateAdded(specificDateMs), '14/8/2026');
   });
 
+  test('StatsController generateDistinctColors produces unique and distinct colors for collisions', () {
+    const colorScheme = ColorScheme.dark(primary: Color(0xFF6750A4));
+
+    // Test with duplicate / identical raw colors
+    final rawColliding = [
+      const Color(0xFF1E88E5),
+      const Color(0xFF1E88E5), // Identical color
+      const Color(0xFF1E88E5), // Identical color
+      null,
+      const Color(0xFF000000), // Dull low saturation/value
+    ];
+
+    final distinct = StatsController.generateDistinctColors(rawColliding, colorScheme);
+    expect(distinct.length, 5);
+
+    // Verify no two adjacent or overall colors are identical
+    for (int i = 0; i < distinct.length; i++) {
+      for (int j = i + 1; j < distinct.length; j++) {
+        expect(distinct[i] != distinct[j], isTrue);
+      }
+    }
+  });
+
   testWidgets('StatsPage renders empty state when no plays are recorded', (tester) async {
     final fakeMusic = FakeMusicProvider();
     final fakeCurrentMusic = FakeCurrentMusicProvider();
