@@ -162,27 +162,28 @@ class _LyricsSectionState extends State<LyricsSection> {
     final titleController = TextEditingController(text: track.title);
     final artistController = TextEditingController(text: track.artist ?? '');
 
-    showDialog(
+    NixDialog.show(
       context: context,
-      builder: (context) {
-        return NixDialog(
-          title: 'Find Lyrics Manually',
-          children: [
-            TextField(
-              controller: titleController,
-              decoration: const InputDecoration(labelText: 'Title'),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: artistController,
-              decoration: const InputDecoration(labelText: 'Artist'),
-            ),
-            const SizedBox(height: 20),
-            Row(
+      title: 'Find Lyrics Manually',
+      children: [
+        TextField(
+          controller: titleController,
+          decoration: const InputDecoration(labelText: 'Title'),
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: artistController,
+          decoration: const InputDecoration(labelText: 'Artist'),
+        ),
+        const SizedBox(height: 20),
+        Builder(
+          builder: (dialogContext) {
+            return Row(
               children: [
                 Expanded(
                   child: ExpressiveToneButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () =>
+                        Navigator.of(dialogContext, rootNavigator: true).pop(),
                     child: const Text('Cancel'),
                   ),
                 ),
@@ -190,7 +191,7 @@ class _LyricsSectionState extends State<LyricsSection> {
                 Expanded(
                   child: ExpressiveButton(
                     onPressed: () {
-                      Navigator.pop(context);
+                      Navigator.of(dialogContext, rootNavigator: true).pop();
                       _performManualSearch(
                         titleController.text.trim(),
                         artistController.text.trim(),
@@ -201,10 +202,10 @@ class _LyricsSectionState extends State<LyricsSection> {
                   ),
                 ),
               ],
-            ),
-          ],
-        );
-      },
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -230,51 +231,55 @@ class _LyricsSectionState extends State<LyricsSection> {
     List results,
     String cacheKey,
   ) {
-    showDialog(
+    NixDialog.show(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Select Lyrics'),
-          content: SizedBox(
-            width: double.maxFinite,
-            height: 400,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: results.length,
-              itemBuilder: (context, index) {
-                final result = results[index];
-                final trackName = result['trackName'] ?? 'Unknown Track';
-                final artistName = result['artistName'] ?? 'Unknown Artist';
-                final albumName = result['albumName'] ?? 'Unknown Album';
-                final hasSynced =
-                    result['syncedLyrics'] != null &&
-                    result['syncedLyrics'].toString().isNotEmpty;
+      title: 'Select Lyrics',
+      children: [
+        SizedBox(
+          height: 350,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: results.length,
+            itemBuilder: (context, index) {
+              final result = results[index];
+              final trackName = result['trackName'] ?? 'Unknown Track';
+              final artistName = result['artistName'] ?? 'Unknown Artist';
+              final albumName = result['albumName'] ?? 'Unknown Album';
+              final hasSynced =
+                  result['syncedLyrics'] != null &&
+                  result['syncedLyrics'].toString().isNotEmpty;
 
-                return ListTile(
-                  title: Text(trackName),
-                  subtitle: Text('$artistName • $albumName'),
-                  trailing: hasSynced
-                      ? const Icon(FlutterRemix.timer_line, size: 16)
-                      : null,
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.read<LyricsProvider>().selectManualLyrics(
-                      result,
-                      cacheKey,
-                    );
-                  },
-                );
-              },
-            ),
+              return ListTile(
+                title: Text(trackName),
+                subtitle: Text('$artistName • $albumName'),
+                trailing: hasSynced
+                    ? const Icon(FlutterRemix.timer_line, size: 16)
+                    : null,
+                onTap: () {
+                  Navigator.of(context, rootNavigator: true).pop();
+                  context.read<LyricsProvider>().selectManualLyrics(
+                    result,
+                    cacheKey,
+                  );
+                },
+              );
+            },
           ),
-          actions: [
-            ExpressiveButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-          ],
-        );
-      },
+        ),
+        const SizedBox(height: 12),
+        Builder(
+          builder: (dialogContext) {
+            return SizedBox(
+              width: double.infinity,
+              child: ExpressiveToneButton(
+                onPressed: () =>
+                    Navigator.of(dialogContext, rootNavigator: true).pop(),
+                child: const Text('Cancel'),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 

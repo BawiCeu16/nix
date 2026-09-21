@@ -102,23 +102,57 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   LoopMode get loopMode => _loopMode;
   bool get isRepeatOne => _loopMode == LoopMode.one;
 
+  /// Returns whether there is a valid next track to skip/swipe to.
+  bool get hasNextTrack {
+    if (_currentPlaylist == null || _currentTrack == null) return false;
+    final tracks = _currentPlaylist!.tracks;
+    if (tracks.length <= 1) {
+      if (_loopMode == LoopMode.all) return true;
+      if (_settingsProvider?.autoPlay == true && _libraryTracks.length > 1) {
+        return true;
+      }
+      return false;
+    }
+    if (_isShuffleEnabled) return true;
+    final currentIndex = tracks.indexWhere((t) => t.id == _currentTrack!.id);
+    if (currentIndex != -1 && currentIndex < tracks.length - 1) return true;
+    if (_loopMode == LoopMode.all) return true;
+    if (_settingsProvider?.autoPlay == true && _libraryTracks.isNotEmpty) {
+      return true;
+    }
+    return false;
+  }
+
+  /// Returns whether there is a valid previous track to skip/swipe to.
+  bool get hasPreviousTrack {
+    if (_currentPlaylist == null || _currentTrack == null) return false;
+    final tracks = _currentPlaylist!.tracks;
+    if (tracks.length <= 1) {
+      if (_loopMode == LoopMode.all) return true;
+      return false;
+    }
+    if (_isShuffleEnabled) return true;
+    final currentIndex = tracks.indexWhere((t) => t.id == _currentTrack!.id);
+    if (currentIndex > 0) return true;
+    if (_loopMode == LoopMode.all) return true;
+    return false;
+  }
+
   /// Returns the track that is scheduled to play next.
   Track? get nextTrack {
     if (_currentPlaylist == null || _currentTrack == null) return null;
-
-    if (_loopMode == LoopMode.one) {
-      return _currentTrack;
+    final tracks = _currentPlaylist!.tracks;
+    if (tracks.length <= 1) {
+      if (_loopMode == LoopMode.all) return _currentTrack;
+      return null;
     }
 
-    if (_isShuffleEnabled && _currentPlaylist!.tracks.length > 1) {
+    if (_isShuffleEnabled) {
       if (_shuffledNextTrack == null) {
         _updateShuffledNextTrack();
       }
       return _shuffledNextTrack;
     }
-
-    final tracks = _currentPlaylist!.tracks;
-    if (tracks.isEmpty) return null;
 
     final currentIndex = tracks.indexWhere((t) => t.id == _currentTrack!.id);
 
@@ -138,13 +172,18 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   /// Returns the track that played previously.
   Track? get previousTrack {
     if (_currentPlaylist == null || _currentTrack == null) return null;
-
-    if (_loopMode == LoopMode.one) {
-      return _currentTrack;
+    final tracks = _currentPlaylist!.tracks;
+    if (tracks.length <= 1) {
+      if (_loopMode == LoopMode.all) return _currentTrack;
+      return null;
     }
 
-    final tracks = _currentPlaylist!.tracks;
-    if (tracks.isEmpty) return null;
+    if (_isShuffleEnabled) {
+      final currentIndex = tracks.indexWhere((t) => t.id == _currentTrack!.id);
+      if (currentIndex > 0) return tracks[currentIndex - 1];
+      if (_loopMode == LoopMode.all && tracks.isNotEmpty) return tracks.last;
+      return null;
+    }
 
     final currentIndex = tracks.indexWhere((t) => t.id == _currentTrack!.id);
 
@@ -640,6 +679,10 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       return;
     }
 
+    if (!hasNextTrack) {
+      return;
+    }
+
     if (onBeforePlayNext != null) {
       await onBeforePlayNext!();
     }
@@ -693,6 +736,10 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
 
   Future<void> playPrevious() async {
     if (_currentPlaylist == null || _currentTrack == null) return;
+
+    if (!hasPreviousTrack) {
+      return;
+    }
 
     if (onBeforePlayPrevious != null) {
       await onBeforePlayPrevious!();

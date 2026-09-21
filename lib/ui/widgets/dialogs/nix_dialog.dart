@@ -32,13 +32,14 @@ class NixDialog extends StatelessWidget {
     return showGeneralDialog<T>(
       context: context,
       barrierDismissible: true,
-      barrierLabel: '',
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
       useRootNavigator: useRootNavigator,
-      transitionDuration: NixDurations.medium,
+      transitionDuration: NixDurations.short,
       transitionBuilder: (context, anim1, anim2, child) {
         final curve = CurvedAnimation(
           parent: anim1,
           curve: NixCurves.expressiveDecelerated,
+          reverseCurve: NixCurves.expressiveDecelerated.flipped,
         );
         return FadeTransition(
           opacity: curve,
@@ -71,19 +72,17 @@ class NixDialog extends StatelessWidget {
         if (didPop) return;
       },
       child: Center(
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-          constraints: const BoxConstraints(maxWidth: 400),
-          decoration: BoxDecoration(
-            color: colorScheme.surfaceContainer,
-            borderRadius: BorderRadius.circular(28),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Material(
-            color: Colors.transparent,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+        child: RepaintBoundary(
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Material(
+              color: colorScheme.surfaceContainer,
+              borderRadius: BorderRadius.circular(28),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
                 if (title != null) ...[
                   Padding(
                     padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
@@ -157,6 +156,7 @@ class NixDialog extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

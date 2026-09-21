@@ -90,30 +90,37 @@ class PlaylistDialogs {
     String id,
     String name,
   ) {
-    showDialog(
+    NixDialog.show(
       context: context,
-      builder: (context) => SizedBox(
-        width: 200,
-        child: AlertDialog(
-          title: const Text("Delete Playlist?"),
-          content: Text("Are you sure you want to delete \"$name\"?"),
-          actionsAlignment: MainAxisAlignment.center,
-          actions: [
-            ExpressiveToneButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
-            ),
-            const SizedBox(width: 8),
-            ExpressiveButton(
-              onPressed: () {
-                context.read<MusicProvider>().deletePlaylist(id);
-                Navigator.pop(context);
-              },
-              child: const Text("Delete"),
-            ),
-          ],
+      title: "Delete Playlist?",
+      subtitle: "Are you sure you want to delete \"$name\"?",
+      children: [
+        Builder(
+          builder: (dialogContext) {
+            return Row(
+              children: [
+                Expanded(
+                  child: ExpressiveToneButton(
+                    onPressed: () =>
+                        Navigator.of(dialogContext, rootNavigator: true).pop(),
+                    child: const Text("Cancel"),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ExpressiveButton(
+                    onPressed: () {
+                      context.read<MusicProvider>().deletePlaylist(id);
+                      Navigator.of(dialogContext, rootNavigator: true).pop();
+                    },
+                    child: const Text("Delete"),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
-      ),
+      ],
     );
   }
 

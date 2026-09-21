@@ -12,7 +12,7 @@ abstract final class NixCurves {
 
   // --- Signature Nix Curves ---
   /// Signature bouncing curve for Miniplayer sheet snapping, lyrics expansion, and menu pops.
-  static const Cubic bouncing = Cubic(0.20, 1.0, 0.78, 1.0);
+  static const Cubic bouncing = Cubic(0.25, 1.0, 0.78, 1.0);
 
   /// Springy curve for scale gestures, floating toolbar popups, and dynamic button bounces.
   static const Cubic springy = Cubic(0.34, 1.56, 0.64, 1.0);

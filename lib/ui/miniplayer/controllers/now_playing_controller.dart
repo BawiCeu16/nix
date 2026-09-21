@@ -248,7 +248,9 @@ class NowPlayingController with ChangeNotifier {
       });
 
       currentMusic.onBeforePlayNext = () async {
-        if (_sheetAnimation.value > 0.4 && !_isSnapping) {
+        if (_sheetAnimation.value > 0.4 &&
+            !_isSnapping &&
+            currentMusic.hasNextTrack) {
           _isSnapping = true;
           sOffset = sMaxOffset;
           await sAnim.animateTo(
@@ -266,7 +268,9 @@ class NowPlayingController with ChangeNotifier {
       };
 
       currentMusic.onBeforePlayPrevious = () async {
-        if (_sheetAnimation.value > 0.4 && !_isSnapping) {
+        if (_sheetAnimation.value > 0.4 &&
+            !_isSnapping &&
+            currentMusic.hasPreviousTrack) {
           _isSnapping = true;
           sOffset = -sMaxOffset;
           await sAnim.animateTo(
@@ -440,6 +444,8 @@ class NowPlayingController with ChangeNotifier {
     final currentMusic = context.read<CurrentMusicProvider>();
     final settings = context.read<SettingsProvider>();
 
+    if (!currentMusic.hasPreviousTrack) return;
+
     if (offset <= maxOffset * 0.4) {
       _isSnapping = true;
       sOffset = -sMaxOffset;
@@ -480,6 +486,8 @@ class NowPlayingController with ChangeNotifier {
     if (_isSnapping) return;
     final currentMusic = context.read<CurrentMusicProvider>();
     final settings = context.read<SettingsProvider>();
+
+    if (!currentMusic.hasNextTrack) return;
 
     if (offset <= maxOffset * 0.4) {
       _isSnapping = true;
@@ -657,20 +665,8 @@ class NowPlayingController with ChangeNotifier {
     }
 
     final currentMusic = context.read<CurrentMusicProvider>();
-    final playlist = currentMusic.currentPlaylist;
-    final track = currentMusic.currentTrack;
-
-    bool canNext = false;
-    bool canPrev = false;
-
-    if (playlist != null && track != null) {
-      final index = playlist.tracks.indexOf(track);
-      canNext =
-          index < playlist.tracks.length - 1 ||
-          currentMusic.isRepeatEnabled ||
-          settings.autoPlay;
-      canPrev = index > 0 || currentMusic.isRepeatEnabled;
-    }
+    final canNext = currentMusic.hasNextTrack;
+    final canPrev = currentMusic.hasPreviousTrack;
 
     final double delta = details.primaryDelta ?? 0.0;
     sOffset -= delta;
@@ -692,20 +688,8 @@ class NowPlayingController with ChangeNotifier {
     }
 
     final currentMusic = context.read<CurrentMusicProvider>();
-    final playlist = currentMusic.currentPlaylist;
-    final track = currentMusic.currentTrack;
-
-    bool canNext = false;
-    bool canPrev = false;
-
-    if (playlist != null && track != null) {
-      final index = playlist.tracks.indexOf(track);
-      canNext =
-          index < playlist.tracks.length - 1 ||
-          currentMusic.isRepeatEnabled ||
-          settings.autoPlay;
-      canPrev = index > 0 || currentMusic.isRepeatEnabled;
-    }
+    final canNext = currentMusic.hasNextTrack;
+    final canPrev = currentMusic.hasPreviousTrack;
 
     final distance = sPrevOffset - sOffset;
     final speed = velocity.getVelocity().pixelsPerSecond.dx;
