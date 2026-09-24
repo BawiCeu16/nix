@@ -12,7 +12,7 @@ import 'package:nix/providers/sleep_timer_provider.dart';
 import 'package:nix/providers/artwork_provider.dart';
 import 'package:nix/providers/lyrics_provider.dart';
 import 'package:nix/providers/will_pop_provider.dart';
-import 'package:nix/main.dart';
+import 'package:nix/ui/nix_app.dart';
 
 void main() {
   late Directory tempDir;

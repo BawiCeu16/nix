@@ -14,9 +14,10 @@ Nix is a gesture-driven, minimal music player. Its architecture is built around 
 
 ```
 lib/
-├── main.dart                          # Entry point, MultiProvider setup, AudioService init
+├── main.dart                          # Lean entry point, delegates to AppInitializer & AppProviders
 │
 ├── core/
+│   ├── app_initializer.dart           # Bootstrap Hive storage & AudioService initialization
 │   ├── constants.dart                 # Application-wide constants
 │   ├── format.dart                    # Extension methods: duration, bytes formatting
 │   ├── haptic_utils.dart              # Haptic feedback helpers
@@ -35,6 +36,7 @@ lib/
 │       └── timer_gesture.dart         # Sleep timer gesture enum
 │
 ├── providers/
+│   ├── app_providers.dart             # Global MultiProvider dependency tree configuration
 │   ├── artwork_provider.dart          # Artwork extraction & caching
 │   ├── current_music_provider.dart    # BaseAudioHandler: playback, queue, shuffle, seek
 │   ├── lyrics_provider.dart           # Lyrics fetching & sync
@@ -53,6 +55,7 @@ lib/
 │   └── user_repository.dart           # Hive user metadata persistence
 │
 └── ui/
+    ├── nix_app.dart                   # Root widget: Material 3 dynamic color theming & app routing
     ├── theme/
     │   └── nix_theme.dart             # Material 3 dynamic color theme builder
     ├── miniplayer/
@@ -150,20 +153,24 @@ Each child widget (`TrackImage`, `TrackInfo`, `PlayerControls`, `QueueView`) rec
 
 ```
 main.dart
-  └── MultiProvider
-        ├── MusicProvider          → scans MediaStore on launch & pull-to-refresh
-        ├── CurrentMusicProvider   → registered as AudioService handler
-        ├── SettingsProvider       → reads Hive on init
-        ├── SleepTimerProvider
+  ├── AppInitializer.initialize()       → bootstraps Hive & AudioService
+  └── AppProviders (MultiProvider)
+        ├── SettingsProvider            → reads Hive on init
+        ├── CurrentMusicProvider        → registered as AudioService handler
+        ├── LyricsProvider              → syncs with Settings & CurrentMusic
+        ├── MusicProvider               → scans MediaStore on launch & pull-to-refresh
         ├── UserProvider
+        ├── SleepTimerProvider
+        ├── ArtworkProvider
         └── WillPopProvider
-              └── NavigationScreen
-                    ├── Bottom navigation (Home / Library / Search / Profile)
-                    └── NowPlaying (stacked above everything)
-                          ├── registers snapToMini() into WillPopProvider
-                          ├── PlayerControls   (consumes CurrentMusicProvider)
-                          ├── TrackImage       (consumes CurrentMusicProvider)
-                          ├── TrackInfo        (consumes CurrentMusicProvider)
-                          ├── QueueView        (consumes CurrentMusicProvider)
-                          └── TopBar
+              └── NixApp (MaterialApp + DynamicColor)
+                    └── NavigationScreen / OnboardingPage
+                          ├── Bottom navigation (Home / Library / Search / Profile)
+                          └── NowPlaying (stacked above everything)
+                                ├── registers snapToMini() into WillPopProvider
+                                ├── PlayerControls   (consumes CurrentMusicProvider)
+                                ├── TrackImage       (consumes CurrentMusicProvider)
+                                ├── TrackInfo        (consumes CurrentMusicProvider)
+                                ├── QueueView        (consumes CurrentMusicProvider)
+                                └── TopBar
 ```
