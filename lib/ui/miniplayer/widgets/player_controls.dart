@@ -295,7 +295,8 @@ class _PlayerSliderState extends State<_PlayerSlider> {
     return StreamBuilder<PlayerState>(
       stream: widget.currentMusic.playerStateStream,
       builder: (context, stateSnap) {
-        final isPlaying = stateSnap.data?.playing ?? false;
+        final isPlaying = (stateSnap.data?.playing ?? false) &&
+            stateSnap.data?.processingState != ProcessingState.completed;
 
         return StreamBuilder<Duration>(
           stream: widget.currentMusic.positionStream,

@@ -1,5 +1,13 @@
 # Project-level configuration.
 cmake_minimum_required(VERSION 3.13)
+
+if(EXISTS "/usr/lib/gcc/x86_64-linux-gnu/13/libstdc++.so" AND NOT EXISTS "/usr/lib/gcc/x86_64-linux-gnu/14/libstdc++.so")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/13")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/13")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/13")
+  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} --gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/13")
+endif()
+
 project(runner LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change

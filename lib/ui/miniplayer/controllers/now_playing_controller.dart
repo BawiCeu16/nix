@@ -164,6 +164,7 @@ class NowPlayingController with ChangeNotifier {
   double startY = 0.0;
 
   late AnimationController _sheetAnimation;
+  CurrentMusicProvider? _currentMusic;
   StreamSubscription<bool>? _playingStreamSub;
   StreamSubscription<Track>? _trackPlayedSub;
   bool _isSnapping = false;
@@ -239,6 +240,7 @@ class NowPlayingController with ChangeNotifier {
     // Listen to player state & track changes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final currentMusic = context.read<CurrentMusicProvider>();
+      _currentMusic = currentMusic;
       _playingStreamSub = currentMusic.isPlayingStream.listen((playing) {
         if (playing) {
           playPauseAnim.forward();
@@ -248,16 +250,26 @@ class NowPlayingController with ChangeNotifier {
       });
 
       currentMusic.onBeforePlayNext = () async {
-        if (_sheetAnimation.value > 0.4 &&
+        final isAppResumed =
+            WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+        if (isAppResumed &&
+            _sheetAnimation.value > 0.4 &&
             !_isSnapping &&
             currentMusic.hasNextTrack) {
           _isSnapping = true;
           sOffset = sMaxOffset;
-          await sAnim.animateTo(
-            1.0,
-            curve: Curves.easeOutQuad,
-            duration: const Duration(milliseconds: 180),
-          );
+          try {
+            await sAnim
+                .animateTo(
+                  1.0,
+                  curve: Curves.easeOutQuad,
+                  duration: const Duration(milliseconds: 180),
+                )
+                .timeout(
+                  const Duration(milliseconds: 250),
+                  onTimeout: () => 1.0,
+                );
+          } catch (_) {}
         }
       };
 
@@ -268,16 +280,26 @@ class NowPlayingController with ChangeNotifier {
       };
 
       currentMusic.onBeforePlayPrevious = () async {
-        if (_sheetAnimation.value > 0.4 &&
+        final isAppResumed =
+            WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+        if (isAppResumed &&
+            _sheetAnimation.value > 0.4 &&
             !_isSnapping &&
             currentMusic.hasPreviousTrack) {
           _isSnapping = true;
           sOffset = -sMaxOffset;
-          await sAnim.animateTo(
-            -1.0,
-            curve: Curves.easeOutQuad,
-            duration: const Duration(milliseconds: 180),
-          );
+          try {
+            await sAnim
+                .animateTo(
+                  -1.0,
+                  curve: Curves.easeOutQuad,
+                  duration: const Duration(milliseconds: 180),
+                )
+                .timeout(
+                  const Duration(milliseconds: 250),
+                  onTimeout: () => -1.0,
+                );
+          } catch (_) {}
         }
       };
 
@@ -715,6 +737,13 @@ class NowPlayingController with ChangeNotifier {
   void dispose() {
     _playingStreamSub?.cancel();
     _trackPlayedSub?.cancel();
+    if (_currentMusic != null) {
+      _currentMusic!.onBeforePlayNext = null;
+      _currentMusic!.onAfterPlayNext = null;
+      _currentMusic!.onBeforePlayPrevious = null;
+      _currentMusic!.onAfterPlayPrevious = null;
+      _currentMusic = null;
+    }
     sAnim.dispose();
     queueScrollController.dispose();
     playPauseAnim.dispose();

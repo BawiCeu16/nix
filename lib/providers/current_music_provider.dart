@@ -200,14 +200,19 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
 
   // Legacy API compatibility
   Track? get playing => _currentTrack;
-  bool get isPlaying => _audioPlayer.playing;
+  bool get isPlaying =>
+      _audioPlayer.playing &&
+      _audioPlayer.processingState != ProcessingState.completed;
   Duration get position => _audioPlayer.position;
   Duration? get duration => _audioPlayer.duration;
   double get progress => duration != null && duration!.inMilliseconds > 0
-      ? position.inMilliseconds / duration!.inMilliseconds
+      ? (position.inMilliseconds / duration!.inMilliseconds).clamp(0.0, 1.0)
       : 0.0;
 
-  Stream<bool> get isPlayingStream => _audioPlayer.playingStream;
+  Stream<bool> get isPlayingStream => _audioPlayer.playerStateStream
+      .map((state) =>
+          state.playing && state.processingState != ProcessingState.completed)
+      .distinct();
   Stream<Duration> get positionStream => _audioPlayer.positionStream;
   Stream<Duration?> get durationStream => _audioPlayer.durationStream;
   Stream<PlayerState> get playerStateStream => _audioPlayer.playerStateStream;
@@ -242,11 +247,33 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
         ? AudioServiceShuffleMode.all
         : AudioServiceShuffleMode.none;
 
+    final currentTrack = _currentTrack;
+    final currentPlaylist = _currentPlaylist;
+    final queueIndex = (currentTrack != null && currentPlaylist != null)
+        ? currentPlaylist.tracks.indexWhere((t) => t.id == currentTrack.id)
+        : null;
+
+    final isActuallyPlaying =
+        state.playing && state.processingState != ProcessingState.completed;
+
+    const processingStateMap = {
+      ProcessingState.idle: AudioProcessingState.idle,
+      ProcessingState.loading: AudioProcessingState.loading,
+      ProcessingState.buffering: AudioProcessingState.buffering,
+      ProcessingState.ready: AudioProcessingState.ready,
+      ProcessingState.completed: AudioProcessingState.completed,
+    };
+
+    final audioProcessingState = currentTrack == null
+        ? AudioProcessingState.idle
+        : (processingStateMap[state.processingState] ??
+            AudioProcessingState.idle);
+
     playbackState.add(
       PlaybackState(
         controls: [
           MediaControl.skipToPrevious,
-          if (state.playing) MediaControl.pause else MediaControl.play,
+          if (isActuallyPlaying) MediaControl.pause else MediaControl.play,
           MediaControl.skipToNext,
           _getFavoriteControl(),
         ],
@@ -258,20 +285,14 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
           MediaAction.setShuffleMode,
         },
         androidCompactActionIndices: const [0, 1, 2],
-        processingState: const {
-          ProcessingState.idle: AudioProcessingState.idle,
-          ProcessingState.loading: AudioProcessingState.loading,
-          ProcessingState.buffering: AudioProcessingState.buffering,
-          ProcessingState.ready: AudioProcessingState.ready,
-          ProcessingState.completed: AudioProcessingState.completed,
-        }[state.processingState]!,
-        playing: state.playing,
+        processingState: audioProcessingState,
+        playing: isActuallyPlaying,
         repeatMode: repeatMode,
         shuffleMode: shuffleMode,
         updatePosition: _audioPlayer.position,
         bufferedPosition: _audioPlayer.bufferedPosition,
         speed: _audioPlayer.speed,
-        queueIndex: _currentPlaylist?.tracks.indexOf(_currentTrack!),
+        queueIndex: queueIndex != null && queueIndex >= 0 ? queueIndex : null,
       ),
     );
   }
@@ -343,6 +364,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       if (settings?.skipSilence == true &&
           duration != null &&
           isPlaying &&
+          hasNextTrack &&
           !_isTransitioning &&
           _audioPlayer.processingState == ProcessingState.ready) {
         final remaining = duration.inMilliseconds - pos.inMilliseconds;
@@ -390,6 +412,17 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       _updateShuffledNextTrack();
       _updatePlaybackState();
       notifyListeners();
+
+      // Immediately publish basic MediaItem so notification / lockscreen reflects track change
+      mediaItem.add(
+        MediaItem(
+          id: track.uri,
+          album: track.album,
+          title: track.title,
+          artist: track.artist,
+          duration: Duration(milliseconds: track.duration),
+        ),
+      );
 
       // 2. PHASE 2: Parallel Execution Branches
       // We don't await the background tasks to ensure the audio starts ASAP.
@@ -461,7 +494,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
           }
 
           if (currentToken == _playbackSelectionToken) {
-            final mediaItem = MediaItem(
+            final updatedMediaItem = MediaItem(
               id: track.uri,
               album: track.album,
               title: track.title,
@@ -469,7 +502,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
               duration: Duration(milliseconds: track.duration),
               artUri: artPath != null ? Uri.file(artPath) : null,
             );
-            this.mediaItem.add(mediaItem);
+            mediaItem.add(updatedMediaItem);
           }
         } catch (e) {
           debugPrint('Metadata branch error: $e');
@@ -576,6 +609,11 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
   @override
   Future<void> play() async {
     if (_currentTrack != null) {
+      if (_audioPlayer.processingState == ProcessingState.completed ||
+          (_audioPlayer.duration != null &&
+              _audioPlayer.position >= _audioPlayer.duration!)) {
+        await _audioPlayer.seek(Duration.zero);
+      }
       await _audioPlayer.play();
     }
   }
@@ -680,86 +718,145 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
     }
 
     if (!hasNextTrack) {
+      _isTransitioning = true;
+      try {
+        await _audioPlayer.pause();
+        await _audioPlayer.seek(Duration.zero);
+        _lastPlaybackPosition = null;
+        _updatePlaybackState();
+        notifyListeners();
+      } catch (e) {
+        debugPrint('Error stopping at end of queue: $e');
+      } finally {
+        _isTransitioning = false;
+      }
       return;
     }
 
-    if (onBeforePlayNext != null) {
-      await onBeforePlayNext!();
-    }
+    _isTransitioning = true; // Set guard immediately
 
-    _isTransitioning = true; // Set guard
-
-    if (_isShuffleEnabled && _currentPlaylist!.tracks.length > 1) {
-      if (_shuffledNextTrack == null) {
-        _updateShuffledNextTrack();
-      }
-      final nextToPlay = _shuffledNextTrack;
-      if (nextToPlay != null) {
-        await playTrack(nextToPlay, playlist: _currentPlaylist);
-        return;
-      }
-    }
-
-    final currentIndex = _currentPlaylist!.tracks.indexOf(_currentTrack!);
-    if (currentIndex < _currentPlaylist!.tracks.length - 1) {
-      await playTrack(
-        _currentPlaylist!.tracks[currentIndex + 1],
-        playlist: _currentPlaylist,
-      );
-    } else if (_loopMode == LoopMode.all) {
-      await playTrack(_currentPlaylist!.tracks[0], playlist: _currentPlaylist);
-    } else if (_settingsProvider?.autoPlay == true) {
-      // Auto-play: pick a random track from the ENTIRE library that isn't the current one
-      if (_libraryTracks.isNotEmpty) {
-        Track nextTrack;
-        if (_libraryTracks.length > 1) {
-          do {
-            nextTrack =
-                _libraryTracks[math.Random().nextInt(_libraryTracks.length)];
-          } while (nextTrack.id == _currentTrack?.id);
-        } else {
-          nextTrack = _libraryTracks[0];
+    try {
+      if (onBeforePlayNext != null) {
+        try {
+          await onBeforePlayNext!().timeout(
+            const Duration(milliseconds: 300),
+            onTimeout: () {},
+          );
+        } catch (e) {
+          debugPrint('Error in onBeforePlayNext: $e');
         }
-
-        await playTrack(nextTrack);
-      } else {
-        _isTransitioning = false;
       }
-    } else {
-      _isTransitioning = false; // Reset if nothing to play
-    }
 
-    if (onAfterPlayNext != null) {
-      onAfterPlayNext!();
+      if (_isShuffleEnabled && _currentPlaylist!.tracks.length > 1) {
+        if (_shuffledNextTrack == null) {
+          _updateShuffledNextTrack();
+        }
+        final nextToPlay = _shuffledNextTrack;
+        if (nextToPlay != null) {
+          await playTrack(nextToPlay, playlist: _currentPlaylist);
+          if (onAfterPlayNext != null) {
+            onAfterPlayNext!();
+          }
+          return;
+        }
+      }
+
+      final currentIndex = _currentPlaylist!.tracks.indexWhere(
+        (t) => t.id == _currentTrack!.id,
+      );
+      if (currentIndex != -1 &&
+          currentIndex < _currentPlaylist!.tracks.length - 1) {
+        await playTrack(
+          _currentPlaylist!.tracks[currentIndex + 1],
+          playlist: _currentPlaylist,
+        );
+      } else if (_loopMode == LoopMode.all) {
+        if (_currentPlaylist!.tracks.isNotEmpty) {
+          await playTrack(
+            _currentPlaylist!.tracks[0],
+            playlist: _currentPlaylist,
+          );
+        } else {
+          _isTransitioning = false;
+        }
+      } else if (_settingsProvider?.autoPlay == true) {
+        // Auto-play: pick a random track from the ENTIRE library that isn't the current one
+        if (_libraryTracks.isNotEmpty) {
+          Track nextTrack;
+          if (_libraryTracks.length > 1) {
+            do {
+              nextTrack =
+                  _libraryTracks[math.Random().nextInt(_libraryTracks.length)];
+            } while (nextTrack.id == _currentTrack?.id);
+          } else {
+            nextTrack = _libraryTracks[0];
+          }
+
+          await playTrack(nextTrack);
+        } else {
+          _isTransitioning = false;
+        }
+      } else {
+        _isTransitioning = false; // Reset if nothing to play
+      }
+
+      if (onAfterPlayNext != null) {
+        onAfterPlayNext!();
+      }
+    } catch (e) {
+      debugPrint('Error in playNext: $e');
+      _isTransitioning = false;
     }
   }
 
   Future<void> playPrevious() async {
-    if (_currentPlaylist == null || _currentTrack == null) return;
-
-    if (!hasPreviousTrack) {
+    if (_currentPlaylist == null || _currentTrack == null || _isTransitioning) {
       return;
     }
 
-    if (onBeforePlayPrevious != null) {
-      await onBeforePlayPrevious!();
+    if (!hasPreviousTrack) {
+      await _audioPlayer.seek(Duration.zero);
+      return;
     }
 
-    final currentIndex = _currentPlaylist!.tracks.indexOf(_currentTrack!);
-    if (currentIndex > 0) {
-      await playTrack(
-        _currentPlaylist!.tracks[currentIndex - 1],
-        playlist: _currentPlaylist,
-      );
-    } else if (_loopMode == LoopMode.all) {
-      await playTrack(
-        _currentPlaylist!.tracks.last,
-        playlist: _currentPlaylist,
-      );
-    }
+    _isTransitioning = true; // Set guard immediately
 
-    if (onAfterPlayPrevious != null) {
-      onAfterPlayPrevious!();
+    try {
+      if (onBeforePlayPrevious != null) {
+        try {
+          await onBeforePlayPrevious!().timeout(
+            const Duration(milliseconds: 300),
+            onTimeout: () {},
+          );
+        } catch (e) {
+          debugPrint('Error in onBeforePlayPrevious: $e');
+        }
+      }
+
+      final currentIndex = _currentPlaylist!.tracks.indexWhere(
+        (t) => t.id == _currentTrack!.id,
+      );
+      if (currentIndex > 0) {
+        await playTrack(
+          _currentPlaylist!.tracks[currentIndex - 1],
+          playlist: _currentPlaylist,
+        );
+      } else if (_loopMode == LoopMode.all &&
+          _currentPlaylist!.tracks.isNotEmpty) {
+        await playTrack(
+          _currentPlaylist!.tracks.last,
+          playlist: _currentPlaylist,
+        );
+      } else {
+        _isTransitioning = false;
+      }
+
+      if (onAfterPlayPrevious != null) {
+        onAfterPlayPrevious!();
+      }
+    } catch (e) {
+      debugPrint('Error in playPrevious: $e');
+      _isTransitioning = false;
     }
   }
 
@@ -777,7 +874,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       }
 
       final currentIndex = _currentTrack != null
-          ? _currentPlaylist!.tracks.indexOf(_currentTrack!)
+          ? _currentPlaylist!.tracks.indexWhere((t) => t.id == _currentTrack!.id)
           : -1;
       final nextIndex = currentIndex + 1;
 
@@ -820,7 +917,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
     if (index != -1) {
       final t = _currentPlaylist!.tracks.removeAt(index);
       final currentIndex = _currentTrack != null
-          ? _currentPlaylist!.tracks.indexOf(_currentTrack!)
+          ? _currentPlaylist!.tracks.indexWhere((t) => t.id == _currentTrack!.id)
           : -1;
       _currentPlaylist!.tracks.insert(currentIndex + 1, t);
       notifyListeners();
