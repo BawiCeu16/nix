@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:on_audio_query_forked/on_audio_query.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
-import 'package:nix/ui/widgets/tiles/track_tile.dart';
+import 'package:nix/ui/widgets/tiles/m3e_track_tile.dart';
 import 'package:nix/ui/widgets/common/nix_empty_state.dart';
 import 'package:nix/ui/widgets/common/nix_action_row.dart';
 import 'package:nix/ui/widgets/common/nix_page_header.dart';
@@ -240,11 +240,13 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> {
                     }
 
                     final track = tracks[index - 1];
-                    return TrackTile(
+                    return M3ETrackTile(
                       track: track,
                       playlistContext: tracks,
                       isFirst: index == 1,
                       isLast: index == tracks.length,
+                      index: index - 1,
+                      totalCount: tracks.length,
                     );
                   },
                 ),

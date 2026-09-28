@@ -878,7 +878,9 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
           : -1;
       final nextIndex = currentIndex + 1;
 
-      _currentPlaylist!.tracks.insert(nextIndex, track);
+      final tracks = List<Track>.from(_currentPlaylist!.tracks);
+      tracks.insert(nextIndex, track);
+      _currentPlaylist = _currentPlaylist!.copyWith(tracks: tracks);
       notifyListeners();
       return QueueResult.success;
     } catch (e) {
@@ -900,7 +902,8 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
         return QueueResult.duplicate;
       }
 
-      _currentPlaylist!.tracks.add(track);
+      final tracks = List<Track>.from(_currentPlaylist!.tracks)..add(track);
+      _currentPlaylist = _currentPlaylist!.copyWith(tracks: tracks);
       notifyListeners();
       return QueueResult.success;
     } catch (e) {
@@ -915,11 +918,13 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
 
     final index = _currentPlaylist!.tracks.indexWhere((t) => t.id == track.id);
     if (index != -1) {
-      final t = _currentPlaylist!.tracks.removeAt(index);
+      final tracks = List<Track>.from(_currentPlaylist!.tracks);
+      final t = tracks.removeAt(index);
       final currentIndex = _currentTrack != null
-          ? _currentPlaylist!.tracks.indexWhere((t) => t.id == _currentTrack!.id)
+          ? tracks.indexWhere((s) => s.id == _currentTrack!.id)
           : -1;
-      _currentPlaylist!.tracks.insert(currentIndex + 1, t);
+      tracks.insert(currentIndex + 1, t);
+      _currentPlaylist = _currentPlaylist!.copyWith(tracks: tracks);
       notifyListeners();
     }
   }
@@ -928,7 +933,9 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
     if (_currentPlaylist != null &&
         index >= 0 &&
         index < _currentPlaylist!.tracks.length) {
-      final removedTrack = _currentPlaylist!.tracks.removeAt(index);
+      final tracks = List<Track>.from(_currentPlaylist!.tracks);
+      final removedTrack = tracks.removeAt(index);
+      _currentPlaylist = _currentPlaylist!.copyWith(tracks: tracks);
       if (removedTrack == _currentTrack) {
         if (_currentPlaylist!.tracks.isNotEmpty) {
           playNext();
@@ -942,24 +949,26 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
 
   void reorderQueue(int oldIndex, int newIndex) {
     if (_currentPlaylist == null) return;
-    final tracks = _currentPlaylist!.tracks;
+    final tracks = List<Track>.from(_currentPlaylist!.tracks);
     if (oldIndex < 0 || oldIndex >= tracks.length) return;
     if (newIndex < 0 || newIndex >= tracks.length) return;
     final track = tracks.removeAt(oldIndex);
     tracks.insert(newIndex, track);
+    _currentPlaylist = _currentPlaylist!.copyWith(tracks: tracks);
     notifyListeners();
   }
 
   void shuffleQueue() {
     if (_currentPlaylist != null && _currentPlaylist!.tracks.isNotEmpty) {
-      _currentPlaylist!.tracks.shuffle();
+      final tracks = List<Track>.from(_currentPlaylist!.tracks)..shuffle();
+      _currentPlaylist = _currentPlaylist!.copyWith(tracks: tracks);
       notifyListeners();
     }
   }
 
   void clearQueue() {
     if (_currentPlaylist != null) {
-      _currentPlaylist!.tracks.clear();
+      _currentPlaylist = _currentPlaylist!.copyWith(tracks: []);
       stop();
     }
   }

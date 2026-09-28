@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
+import 'package:m3e_segmented_list/m3e_segmented_list.dart';
 import 'package:nix/providers/music_provider.dart';
-import 'package:nix/ui/widgets/tiles/track_tile.dart';
+import 'package:nix/ui/widgets/tiles/m3e_track_tile.dart';
 import 'package:nix/models/music/playlist.dart';
 import 'package:nix/models/music/track.dart';
 import 'package:nix/ui/widgets/common/nix_empty_state.dart';
@@ -157,12 +158,16 @@ class _PlaylistViewPageState extends State<PlaylistViewPage> {
 
                     final trackIndex = index - 1;
                     final track = tracks[trackIndex];
+                    final isFirst = trackIndex == 0;
+                    final isLast = trackIndex == tracks.length - 1;
 
-                    final Widget tile = TrackTile(
+                    final Widget tile = M3ETrackTile(
                       track: track,
                       playlistContext: tracks,
-                      isFirst: trackIndex == 0,
-                      isLast: trackIndex == tracks.length - 1,
+                      isFirst: isFirst,
+                      isLast: isLast,
+                      index: trackIndex,
+                      totalCount: tracks.length,
                     );
 
                     if (!isSystemPlaylist) {
@@ -170,12 +175,19 @@ class _PlaylistViewPageState extends State<PlaylistViewPage> {
                         key: ValueKey('${pl!.id}_${track.id}'),
                         direction: DismissDirection.endToStart,
                         background: Container(
-                          margin: const EdgeInsets.symmetric(vertical: 2),
+                          margin: EdgeInsets.only(bottom: isLast ? 0.0 : 2.5),
                           padding: const EdgeInsets.only(right: 24),
                           alignment: Alignment.centerRight,
                           decoration: BoxDecoration(
                             color: colorScheme.errorContainer,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: calculateSegmentedItemRadius(
+                              position: calculateSegmentedItemPosition(
+                                trackIndex,
+                                tracks.length,
+                              ),
+                              outerRadius: 16.0,
+                              innerRadius: 5.0,
+                            ),
                           ),
                           child: Icon(
                             FlutterRemix.delete_bin_line,

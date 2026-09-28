@@ -17,12 +17,15 @@ class NixUpNextIndicator extends StatelessWidget {
     if (!settings.upNextIndicator) return const SizedBox();
 
     final musicProvider = context.watch<CurrentMusicProvider>();
+    if (musicProvider.isRepeatOne) return const SizedBox();
+
     final nextTrack = musicProvider.nextTrack;
     if (nextTrack == null) return const SizedBox();
 
     return StreamBuilder<Duration>(
       stream: musicProvider.positionStream,
       builder: (context, snapshot) {
+        if (musicProvider.isRepeatOne) return const SizedBox();
         final position = snapshot.data ?? Duration.zero;
         final duration = musicProvider.duration ?? Duration.zero;
 

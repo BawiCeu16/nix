@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
-import 'package:nix/ui/widgets/tiles/track_tile.dart';
+import 'package:nix/ui/widgets/common/m3e_track_list.dart';
 import 'package:nix/models/music/track.dart';
 import 'package:nix/ui/widgets/common/nix_empty_state.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/ui/widgets/common/nix_refreshable_list.dart';
-import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
 import 'package:nix/ui/widgets/common/nix_scrollbar.dart';
 import 'package:nix/ui/screens/music/controllers/tracks_controller.dart';
 import 'package:nix/ui/widgets/common/nix_sort_widget.dart';
@@ -27,6 +26,7 @@ class TracksPage extends StatefulWidget {
 
 class _TracksPageState extends State<TracksPage> {
   late final TracksPageController _controller;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -36,6 +36,7 @@ class _TracksPageState extends State<TracksPage> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -74,37 +75,20 @@ class _TracksPageState extends State<TracksPage> {
               ),
             ],
           ),
-          body: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0),
-            child: NixRefreshableList(
-              isEmpty: sortedTracks.isEmpty,
-              onRefresh: () async =>
-                  await context.read<MusicProvider>().scanDevice(),
-              emptyState: const NixEmptyState(
-                icon: FlutterRemix.music_2_line,
-                title: "No tracks available",
-              ),
-              child: NixScrollbar(
-                child: ListView.builder(
-                  scrollCacheExtent: const .pixels(600.0),
-                  physics: const AlwaysScrollableScrollPhysics(
-                    parent: BouncingScrollPhysics(),
-                  ),
-                  padding: const EdgeInsets.only(top: 8),
-                  itemCount: sortedTracks.length + 1,
-                  itemBuilder: (context, index) {
-                    if (index == sortedTracks.length) {
-                      return const NixBottomSpacer();
-                    }
-                    final track = sortedTracks[index];
-                    return TrackTile(
-                      track: track,
-                      playlistContext: sortedTracks,
-                      isFirst: index == 0,
-                      isLast: index == sortedTracks.length - 1,
-                    );
-                  },
-                ),
+          body: NixRefreshableList(
+            isEmpty: sortedTracks.isEmpty,
+            onRefresh: () async =>
+                await context.read<MusicProvider>().scanDevice(),
+            emptyState: const NixEmptyState(
+              icon: FlutterRemix.music_2_line,
+              title: "No tracks available",
+            ),
+            child: NixScrollbar(
+              controller: _scrollController,
+              child: M3ETrackList(
+                controller: _scrollController,
+                tracks: sortedTracks,
+                playlistContext: sortedTracks,
               ),
             ),
           ),

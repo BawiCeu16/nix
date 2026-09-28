@@ -87,6 +87,9 @@ class TrackImage extends StatelessWidget {
     final previousSong = context.select<CurrentMusicProvider, Track?>(
       (p) => p.previousTrack,
     );
+    final isRepeatOne = context.select<CurrentMusicProvider, bool>(
+      (p) => p.isRepeatOne,
+    );
 
     final double maxStandardSize = screenSize.width - 46.0;
     final double availableHeight =
@@ -285,16 +288,17 @@ class TrackImage extends StatelessWidget {
                           },
                         ),
                         // Up Next Indicator
-                        Positioned(
-                          bottom: 8,
-                          left: 8,
-                          right: 8,
-                          child: Opacity(
-                            opacity: ((1 - lyricsAnim.value) * currentOpacity)
-                                .clamp(0.0, 1.0),
-                            child: NixUpNextIndicator(data: data),
+                        if (!isRepeatOne)
+                          Positioned(
+                            bottom: 8,
+                            left: 8,
+                            right: 8,
+                            child: Opacity(
+                              opacity: ((1 - lyricsAnim.value) * currentOpacity)
+                                  .clamp(0.0, 1.0),
+                              child: NixUpNextIndicator(data: data),
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),

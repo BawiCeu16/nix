@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
+import 'package:m3e_segmented_list/m3e_segmented_list.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/providers/settings_provider.dart';
-import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
 import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
 import 'package:nix/ui/widgets/common/nix_empty_state.dart';
 import 'package:nix/ui/widgets/common/nix_refreshable_list.dart';
@@ -90,45 +90,72 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
                         return const NixBottomSpacer();
                       }
                       final playlist = playlists[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 2),
-                        child: Dismissible(
-                          key: ValueKey(playlist.id),
-                          direction: DismissDirection.endToStart,
-                          background: Container(
-                            padding: const EdgeInsets.only(right: 24),
-                            alignment: Alignment.centerRight,
-                            decoration: BoxDecoration(
-                              color: colorScheme.errorContainer,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              FlutterRemix.delete_bin_line,
-                              color: colorScheme.onErrorContainer,
+                      final isLast = index == playlists.length - 1;
+                      final position = calculateSegmentedItemPosition(
+                        index,
+                        playlists.length,
+                      );
+
+                      return Dismissible(
+                        key: ValueKey(playlist.id),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          margin: EdgeInsets.only(bottom: isLast ? 0.0 : 2.5),
+                          padding: const EdgeInsets.only(right: 24),
+                          alignment: Alignment.centerRight,
+                          decoration: BoxDecoration(
+                            color: colorScheme.errorContainer,
+                            borderRadius: calculateSegmentedItemRadius(
+                              position: position,
+                              outerRadius: 16.0,
+                              innerRadius: 5.0,
                             ),
                           ),
-                          confirmDismiss: (direction) async {
-                            _controller.deletePlaylist(context, playlist);
-                            return false;
+                          child: Icon(
+                            FlutterRemix.delete_bin_line,
+                            color: colorScheme.onErrorContainer,
+                          ),
+                        ),
+                        confirmDismiss: (direction) async {
+                          _controller.deletePlaylist(context, playlist);
+                          return false;
+                        },
+                        child: M3ESegmentedItem(
+                          index: index,
+                          position: position,
+                          outerRadius: 16.0,
+                          innerRadius: 5.0,
+                          pressedRadius: 100.0,
+                          selectedRadius: 100.0,
+                          hoveredRadius: 16.0,
+                          gap: 2.5,
+                          isLast: isLast,
+                          color: colorScheme.surface,
+                          selectedColor: colorScheme.primaryContainer,
+                          padding: EdgeInsets.zero,
+                          pressedScale: 0.98,
+                          onTap: (_) =>
+                              _controller.openPlaylistView(context, playlist),
+                          onLongPress: (_) {
+                            if (context
+                                .read<SettingsProvider>()
+                                .enableHaptics) {
+                              HapticFeedback.mediumImpact();
+                            }
+                            _controller.showPlaylistMenu(context, playlist);
                           },
-                          child: CardListTile(
-                            onTap: () =>
-                                _controller.openPlaylistView(context, playlist),
-                            onLongPress: () {
-                              if (context
-                                  .read<SettingsProvider>()
-                                  .enableHaptics) {
-                                HapticFeedback.mediumImpact();
-                              }
-                              _controller.showPlaylistMenu(context, playlist);
-                            },
-                            isFirst: index == 0,
-                            isLast: index == playlists.length - 1,
-                            title: playlist.name,
-                            subtitle: '${playlist.tracks.length} tracks',
+                          child: M3EListItem(
                             leading: NixPlaylistCover(
                               playlist: playlist,
                               size: 48,
+                            ),
+                            headline: Text(
+                              playlist.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            supportingText: Text(
+                              '${playlist.tracks.length} tracks',
                             ),
                             trailing: Icon(
                               FlutterRemix.arrow_right_s_line,

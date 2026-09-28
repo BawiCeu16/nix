@@ -9,7 +9,7 @@ import 'package:nix/ui/widgets/tiles/track_card_tile.dart';
 import 'package:nix/ui/widgets/tiles/album_card_tile.dart';
 import 'package:nix/models/music/track.dart';
 import 'package:nix/models/music/album.dart';
-import 'package:nix/ui/widgets/tiles/track_tile.dart';
+import 'package:nix/ui/widgets/tiles/m3e_track_tile.dart';
 import 'package:nix/ui/widgets/common/nix_section_header.dart';
 import 'package:expressive_refresh/expressive_refresh.dart';
 import 'package:nix/ui/widgets/common/nix_bottom_spacer.dart';
@@ -294,22 +294,24 @@ class _HomePageState extends State<HomePage> {
                               );
                             }
                             final previewTracks = tracks.take(6).toList();
-                            return SliverList.builder(
-                              itemCount: previewTracks.length,
-                              itemBuilder: (context, index) {
-                                final track = previewTracks[index];
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12.0,
-                                  ),
-                                  child: TrackTile(
+                            return SliverPadding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12.0,
+                              ),
+                              sliver: SliverList.builder(
+                                itemCount: previewTracks.length,
+                                itemBuilder: (context, index) {
+                                  final track = previewTracks[index];
+                                  return M3ETrackTile(
                                     track: track,
                                     playlistContext: tracks,
+                                    index: index,
+                                    totalCount: previewTracks.length,
                                     isFirst: index == 0,
                                     isLast: index == previewTracks.length - 1,
-                                  ),
-                                );
-                              },
+                                  );
+                                },
+                              ),
                             );
                           },
                         ),

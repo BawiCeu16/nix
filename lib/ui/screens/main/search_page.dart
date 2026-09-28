@@ -4,8 +4,8 @@ import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/providers/settings_provider.dart';
-import 'package:nix/ui/widgets/tiles/track_tile.dart';
-import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
+import 'package:m3e_segmented_list/m3e_segmented_list.dart';
+import 'package:nix/ui/widgets/tiles/m3e_track_tile.dart';
 import 'package:nix/ui/widgets/dialogs/nix_dialog.dart';
 import 'package:nix/ui/widgets/buttons/expressive_button.dart';
 import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
@@ -73,7 +73,7 @@ class _SearchPageState extends State<SearchPage> {
                   ),
                   slivers: [
                     SliverAppBar(
-            centerTitle: true,
+                      centerTitle: true,
                       systemOverlayStyle: brightness == Brightness.dark
                           ? SystemUiOverlayStyle.light.copyWith(
                               statusBarColor: Colors.transparent,
@@ -264,17 +264,98 @@ class _SearchPageState extends State<SearchPage> {
                                   ) {
                                     final index = entry.key;
                                     final query = entry.value;
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 1.5,
+                                    final isLast =
+                                        index ==
+                                        settings.searchHistory.length - 1;
+                                    final position =
+                                        calculateSegmentedItemPosition(
+                                          index,
+                                          settings.searchHistory.length,
+                                        );
+
+                                    return M3ESegmentedItem(
+                                      index: index,
+                                      position: position,
+                                      outerRadius: 16.0,
+                                      innerRadius: 5.0,
+                                      pressedRadius: 100.0,
+                                      selectedRadius: 100.0,
+                                      gap: 2.5,
+                                      isLast: isLast,
+                                      color: colorScheme.surface,
+                                      selectedColor:
+                                          colorScheme.primaryContainer,
+                                      padding: EdgeInsets.zero,
+                                      pressedScale: 0.98,
+                                      onTap: (_) => _controller.setQuery(
+                                        query,
+                                        music,
+                                        settings,
                                       ),
-                                      child: CardListTile(
-                                        title: query,
-                                        icon: FlutterRemix.history_line,
-                                        isFirst: index == 0,
-                                        isLast:
-                                            index ==
-                                            settings.searchHistory.length - 1,
+                                      onLongPress: (_) {
+                                        NixDialog.show(
+                                          context: context,
+                                          title: "Delete Search?",
+                                          subtitle:
+                                              "Remove '$query' from history?",
+                                          children: [
+                                            Builder(
+                                              builder: (dialogContext) {
+                                                return Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child:
+                                                          ExpressiveToneButton(
+                                                            onPressed: () =>
+                                                                Navigator.of(
+                                                                  dialogContext,
+                                                                  rootNavigator:
+                                                                      true,
+                                                                ).pop(),
+                                                            child: const Text(
+                                                              "Cancel",
+                                                            ),
+                                                          ),
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    Expanded(
+                                                      child: ExpressiveButton(
+                                                        onPressed: () {
+                                                          settings
+                                                              .removeSearchQuery(
+                                                                query,
+                                                              );
+                                                          Navigator.of(
+                                                            dialogContext,
+                                                            rootNavigator: true,
+                                                          ).pop();
+                                                        },
+                                                        child: const Text(
+                                                          "Delete",
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                      child: M3EListItem(
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                            ),
+                                        leading: Icon(
+                                          FlutterRemix.history_line,
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
+                                        headline: Text(
+                                          query,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                         trailing: IconButton(
                                           icon: const Icon(
                                             FlutterRemix.arrow_left_up_line,
@@ -286,61 +367,6 @@ class _SearchPageState extends State<SearchPage> {
                                             settings,
                                           ),
                                         ),
-                                        onTap: () => _controller.setQuery(
-                                          query,
-                                          music,
-                                          settings,
-                                        ),
-                                        onLongPress: () {
-                                          NixDialog.show(
-                                            context: context,
-                                            title: "Delete Search?",
-                                            subtitle:
-                                                "Remove '$query' from history?",
-                                            children: [
-                                              Builder(
-                                                builder: (dialogContext) {
-                                                  return Row(
-                                                    children: [
-                                                      Expanded(
-                                                        child: ExpressiveToneButton(
-                                                          onPressed: () =>
-                                                              Navigator.of(
-                                                                dialogContext,
-                                                                rootNavigator:
-                                                                    true,
-                                                              ).pop(),
-                                                          child: const Text(
-                                                            "Cancel",
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      const SizedBox(width: 8),
-                                                      Expanded(
-                                                        child: ExpressiveButton(
-                                                          onPressed: () {
-                                                            settings
-                                                                .removeSearchQuery(
-                                                                  query,
-                                                                );
-                                                            Navigator.of(
-                                                              dialogContext,
-                                                              rootNavigator:
-                                                                  true,
-                                                            ).pop();
-                                                          },
-                                                          child: const Text(
-                                                            "Delete",
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  );
-                                                },
-                                              ),
-                                            ],
-                                          );
-                                        },
                                       ),
                                     );
                                   }),
@@ -370,9 +396,11 @@ class _SearchPageState extends State<SearchPage> {
                               return const NixBottomSpacer();
                             }
                             final track = _controller.searchResults[index];
-                            return TrackTile(
+                            return M3ETrackTile(
                               track: track,
                               playlistContext: _controller.searchResults,
+                              index: index,
+                              totalCount: _controller.searchResults.length,
                               isFirst: index == 0,
                               isLast:
                                   index == _controller.searchResults.length - 1,
@@ -396,12 +424,36 @@ class _SearchPageState extends State<SearchPage> {
                             final firstTrackId = artistTracks.isNotEmpty
                                 ? artistTracks.first.id
                                 : 0;
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 2),
-                              child: CardListTile(
-                                title: artist.name,
-                                subtitle:
-                                    '${artist.numberOfTracks} tracks • ${artist.numberOfAlbums} albums',
+                            final isLast =
+                                index == _controller.searchArtists.length - 1;
+                            final position = calculateSegmentedItemPosition(
+                              index,
+                              _controller.searchArtists.length,
+                            );
+
+                            return M3ESegmentedItem(
+                              index: index,
+                              position: position,
+                              outerRadius: 16.0,
+                              innerRadius: 5.0,
+                              pressedRadius: 100.0,
+                              selectedRadius: 100.0,
+                              gap: 2.5,
+                              isLast: isLast,
+                              color: colorScheme.surface,
+                              selectedColor: colorScheme.primaryContainer,
+                              padding: EdgeInsets.zero,
+                              pressedScale: 0.98,
+                              onTap: (_) {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => ArtistTracksPage(
+                                      artistName: artist.name,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: M3EListItem(
                                 leading: NixArtwork(
                                   id: firstTrackId,
                                   type: ArtworkType.AUDIO,
@@ -409,19 +461,20 @@ class _SearchPageState extends State<SearchPage> {
                                   height: 48,
                                   borderRadius: BorderRadius.circular(100),
                                 ),
-                                isFirst: index == 0,
-                                isLast:
-                                    index ==
-                                    _controller.searchArtists.length - 1,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => ArtistTracksPage(
-                                        artistName: artist.name,
-                                      ),
-                                    ),
-                                  );
-                                },
+                                headline: Text(
+                                  artist.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                supportingText: Text(
+                                  '${artist.numberOfTracks} tracks • ${artist.numberOfAlbums} albums',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                trailing: Icon(
+                                  FlutterRemix.arrow_right_s_line,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
                               ),
                             );
                           },
@@ -438,29 +491,55 @@ class _SearchPageState extends State<SearchPage> {
                               return const NixBottomSpacer();
                             }
                             final playlist = _controller.searchPlaylists[index];
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 2),
-                              child: CardListTile(
-                                title: playlist.name,
-                                subtitle: '${playlist.tracks.length} tracks',
+                            final isLast =
+                                index == _controller.searchPlaylists.length - 1;
+                            final position = calculateSegmentedItemPosition(
+                              index,
+                              _controller.searchPlaylists.length,
+                            );
+
+                            return M3ESegmentedItem(
+                              index: index,
+                              position: position,
+                              outerRadius: 16.0,
+                              innerRadius: 5.0,
+                              pressedRadius: 100.0,
+                              selectedRadius: 100.0,
+                              gap: 2.5,
+                              isLast: isLast,
+                              color: colorScheme.surface,
+                              selectedColor: colorScheme.primaryContainer,
+                              padding: EdgeInsets.zero,
+                              pressedScale: 0.98,
+                              onTap: (_) {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => PlaylistViewPage(
+                                      playlistName: playlist.name,
+                                      playlistId: playlist.id,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: M3EListItem(
                                 leading: NixPlaylistCover(
                                   playlist: playlist,
                                   size: 48,
                                 ),
-                                isFirst: index == 0,
-                                isLast:
-                                    index ==
-                                    _controller.searchPlaylists.length - 1,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => PlaylistViewPage(
-                                        playlistName: playlist.name,
-                                        playlistId: playlist.id,
-                                      ),
-                                    ),
-                                  );
-                                },
+                                headline: Text(
+                                  playlist.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                supportingText: Text(
+                                  '${playlist.tracks.length} tracks',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                trailing: Icon(
+                                  FlutterRemix.arrow_right_s_line,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
                               ),
                             );
                           },
@@ -482,12 +561,37 @@ class _SearchPageState extends State<SearchPage> {
                             final firstTrackId = albumTracks.isNotEmpty
                                 ? albumTracks.first.id
                                 : 0;
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 2),
-                              child: CardListTile(
-                                title: album.title,
-                                subtitle:
-                                    '${album.artist} • ${album.numOfSongs} songs',
+                            final isLast =
+                                index == _controller.searchAlbums.length - 1;
+                            final position = calculateSegmentedItemPosition(
+                              index,
+                              _controller.searchAlbums.length,
+                            );
+
+                            return M3ESegmentedItem(
+                              index: index,
+                              position: position,
+                              outerRadius: 16.0,
+                              innerRadius: 5.0,
+                              pressedRadius: 100.0,
+                              selectedRadius: 100.0,
+                              gap: 2.5,
+                              isLast: isLast,
+                              color: colorScheme.surface,
+                              selectedColor: colorScheme.primaryContainer,
+                              padding: EdgeInsets.zero,
+                              pressedScale: 0.98,
+                              onTap: (_) {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => AlbumTracksPage(
+                                      albumTitle: album.title,
+                                      albumArtist: album.artist,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: M3EListItem(
                                 leading: NixArtwork(
                                   id: firstTrackId,
                                   type: ArtworkType.AUDIO,
@@ -495,20 +599,20 @@ class _SearchPageState extends State<SearchPage> {
                                   height: 48,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                isFirst: index == 0,
-                                isLast:
-                                    index ==
-                                    _controller.searchAlbums.length - 1,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => AlbumTracksPage(
-                                        albumTitle: album.title,
-                                        albumArtist: album.artist,
-                                      ),
-                                    ),
-                                  );
-                                },
+                                headline: Text(
+                                  album.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                supportingText: Text(
+                                  '${album.artist} • ${album.numOfSongs} songs',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                trailing: Icon(
+                                  FlutterRemix.arrow_right_s_line,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
                               ),
                             );
                           },

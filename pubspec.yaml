@@ -59,6 +59,7 @@ dependencies:
   m3e_seekbar: ^1.0.0
   m3e_dropdown_menu: ^1.0.1
   motor: ^1.1.0
+  m3e_segmented_list: ^0.0.3
 
 dev_dependencies:
   flutter_test:
