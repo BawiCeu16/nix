@@ -10,6 +10,7 @@ import 'package:nix/providers/current_music_provider.dart';
 import 'package:m3e_seekbar/m3e_seekbar.dart';
 import 'package:nix/core/math_utils.dart';
 import 'package:nix/ui/miniplayer/models/animation_data.dart';
+import 'package:nix/ui/miniplayer/widgets/bouncing_skip_button.dart';
 
 class PlayerControls extends StatelessWidget {
   final double maxOffset;
@@ -95,22 +96,18 @@ class PlayerControls extends StatelessWidget {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  IconButton(
+                                  BouncingSkipButton.previous(
                                     iconSize: 36.0,
-                                    icon: Icon(
-                                      FlutterRemix.skip_back_fill,
-                                      color: onSecondary,
-                                    ),
+                                    icon: FlutterRemix.skip_back_fill,
+                                    color: onSecondary,
                                     onPressed:
                                         onPrevious ??
                                         () => currentMusic.playPrevious(),
                                   ),
-                                  IconButton(
+                                  BouncingSkipButton.next(
                                     iconSize: 36.0,
-                                    icon: Icon(
-                                      FlutterRemix.skip_forward_fill,
-                                      color: onSecondary,
-                                    ),
+                                    icon: FlutterRemix.skip_forward_fill,
+                                    color: onSecondary,
                                     onPressed:
                                         onNext ?? () => currentMusic.playNext(),
                                   ),
@@ -295,7 +292,8 @@ class _PlayerSliderState extends State<_PlayerSlider> {
     return StreamBuilder<PlayerState>(
       stream: widget.currentMusic.playerStateStream,
       builder: (context, stateSnap) {
-        final isPlaying = (stateSnap.data?.playing ?? false) &&
+        final isPlaying =
+            (stateSnap.data?.playing ?? false) &&
             stateSnap.data?.processingState != ProcessingState.completed;
 
         return StreamBuilder<Duration>(

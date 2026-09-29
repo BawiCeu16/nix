@@ -547,6 +547,8 @@ class _QueueViewState extends State<QueueView> {
                                   expanded: _isToolbarExpanded,
                                   tooltip: 'Queue Options',
                                   decoration: M3EFloatingToolbarDecoration(
+                                    expandedShadowElevation: 0,
+                                    collapsedShadowElevation: 0,
                                     colors: M3EFloatingToolbarColors(
                                       toolbarContainerColor: Theme.of(
                                         context,
