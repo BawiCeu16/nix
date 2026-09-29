@@ -113,7 +113,11 @@ class M3ETrackTile extends StatelessWidget {
     }
   }
 
-  static void showTrackMenu(BuildContext context, Track track) {
+  static void showTrackMenu(
+    BuildContext context,
+    Track track, {
+    bool showGoToOptions = true,
+  }) {
     final music = context.read<MusicProvider>();
     final currentMusic = context.read<CurrentMusicProvider>();
     final isFav = music.isFavorite(track);
@@ -124,6 +128,8 @@ class M3ETrackTile extends StatelessWidget {
       title: track.title,
       subtitle: track.artist,
       trackId: track.id,
+
+      titleAlignment: CrossAxisAlignment.start,
       children: [
         CardListTile(
           title: isFav ? "Remove from Favorites" : "Add to Favorites",
@@ -170,35 +176,37 @@ class M3ETrackTile extends StatelessWidget {
             PlaylistDialogs.showPlaylistPicker(context, track);
           },
         ),
-        const SizedBox(height: 2.5),
-        CardListTile(
-          title: "Go to Artist",
-          icon: FlutterRemix.user_4_line,
-          onTap: () {
-            Navigator.of(context, rootNavigator: true).pop();
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => ArtistTracksPage(artistName: track.artist),
-              ),
-            );
-          },
-        ),
-        const SizedBox(height: 2.5),
-        CardListTile(
-          title: "Go to Album",
-          icon: FlutterRemix.disc_line,
-          onTap: () {
-            Navigator.of(context, rootNavigator: true).pop();
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => AlbumTracksPage(
-                  albumTitle: track.album,
-                  albumArtist: track.artist,
+        if (showGoToOptions) ...[
+          const SizedBox(height: 2.5),
+          CardListTile(
+            title: "Go to Artist",
+            icon: FlutterRemix.user_4_line,
+            onTap: () {
+              Navigator.of(context, rootNavigator: true).pop();
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => ArtistTracksPage(artistName: track.artist),
                 ),
-              ),
-            );
-          },
-        ),
+              );
+            },
+          ),
+          const SizedBox(height: 2.5),
+          CardListTile(
+            title: "Go to Album",
+            icon: FlutterRemix.disc_line,
+            onTap: () {
+              Navigator.of(context, rootNavigator: true).pop();
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => AlbumTracksPage(
+                    albumTitle: track.album,
+                    albumArtist: track.artist,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
         const SizedBox(height: 2.5),
         CardListTile(
           title: "Track Info",

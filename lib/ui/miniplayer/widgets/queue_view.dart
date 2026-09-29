@@ -507,6 +507,8 @@ class _QueueViewState extends State<QueueView> {
                                                             M3ETrackTile.showTrackMenu(
                                                               context,
                                                               track,
+                                                              showGoToOptions:
+                                                                  false,
                                                             ),
                                                       ),
                                                     )
