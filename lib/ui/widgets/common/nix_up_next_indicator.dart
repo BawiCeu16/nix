@@ -85,7 +85,7 @@ class NixUpNextIndicator extends StatelessWidget {
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.2,
-                          color: Theme.of(context).colorScheme.primary,
+                          color: Theme.of(context).colorScheme.secondaryFixed,
                         ),
                       ),
                       Text(
