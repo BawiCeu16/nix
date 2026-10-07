@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
+import 'package:m3e_buttons/m3e_buttons.dart';
+import 'package:material_3_expressive/material_3_expressive.dart'
+    hide M3EButtonDecoration, M3EMotion;
 import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/music_provider.dart';
@@ -58,36 +61,107 @@ class _LibraryPageState extends State<LibraryPage> {
                     children: [
                       const NixSectionHeader(title: 'Personal', topPadding: 0),
 
-                      // Dynamic stats
-                      CardListTile(
-                        title: 'Listening Stats',
-                        icon: FlutterRemix.bar_chart_fill,
-                        subtitle: 'Overview, top tracks, artists & history',
-                        isFirst: true,
-                        onTap: () => _controller.openListeningStats(context),
-                      ),
-                      const SizedBox(height: 2.5),
-                      // CardListTile(
-                      //   title: 'Top Listened',
-                      //   icon: FlutterRemix.fire_fill,
-                      //   subtitle: '${music.topPlayed.tracks.length} tracks',
-                      //   onTap: () => _controller.openTopListened(context),
-                      // ),
-                      // const SizedBox(height: 2.5),
-                      CardListTile(
-                        title: 'Recently Listened',
-                        icon: FlutterRemix.time_line,
-                        subtitle:
-                            '${music.recentlyPlayed.tracks.length} tracks',
-                        onTap: () => _controller.openRecentlyListened(context),
-                      ),
-                      const SizedBox(height: 2.5),
-                      CardListTile(
-                        title: 'Favorites',
-                        icon: FlutterRemix.heart_3_fill,
-                        subtitle: '${music.favorites.tracks.length} tracks',
-                        isLast: true,
-                        onTap: () => _controller.openFavorites(context),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              children: [
+                                M3EIconButton(
+                                  variant: M3EIconButtonVariant.filled,
+                                  size: M3EIconButtonSize.md,
+                                  width: M3EIconButtonWidth.wide,
+                                  icon: const Icon(FlutterRemix.bar_chart_fill),
+                                  semanticLabel: "Stats",
+                                  decoration: M3EIconButtonDecoration(
+                                    backgroundColor: WidgetStatePropertyAll(
+                                      Theme.of(
+                                        context,
+                                      ).colorScheme.primaryContainer,
+                                    ),
+                                    foregroundColor: WidgetStatePropertyAll(
+                                      Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  onPressed: () =>
+                                      _controller.openListeningStats(context),
+                                ),
+                                const SizedBox(height: 5),
+                                Text(
+                                  'Stats',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Expanded(
+                            child: Column(
+                              children: [
+                                M3EIconButton(
+                                  variant: M3EIconButtonVariant.filled,
+                                  size: M3EIconButtonSize.md,
+                                  width: M3EIconButtonWidth.wide,
+                                  icon: const Icon(FlutterRemix.time_line),
+                                  semanticLabel: "Recent",
+                                  decoration: M3EIconButtonDecoration(
+                                    backgroundColor: WidgetStatePropertyAll(
+                                      Theme.of(
+                                        context,
+                                      ).colorScheme.primaryContainer,
+                                    ),
+                                    foregroundColor: WidgetStatePropertyAll(
+                                      Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  onPressed: () =>
+                                      _controller.openRecentlyListened(context),
+                                ),
+                                const SizedBox(height: 5),
+                                Text(
+                                  'Recent',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Expanded(
+                            child: Column(
+                              children: [
+                                M3EIconButton(
+                                  variant: M3EIconButtonVariant.filled,
+                                  size: M3EIconButtonSize.md,
+                                  width: M3EIconButtonWidth.wide,
+                                  icon: const Icon(FlutterRemix.heart_3_fill),
+                                  semanticLabel: "Favorites",
+                                  decoration: M3EIconButtonDecoration(
+                                    backgroundColor: WidgetStatePropertyAll(
+                                      Theme.of(
+                                        context,
+                                      ).colorScheme.primaryContainer,
+                                    ),
+                                    foregroundColor: WidgetStatePropertyAll(
+                                      Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  onPressed: () =>
+                                      _controller.openFavorites(context),
+                                ),
+                                const SizedBox(height: 5),
+                                Text(
+                                  'Favorites',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 24),
                       const NixSectionHeader(title: 'Library', topPadding: 0),

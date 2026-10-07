@@ -355,6 +355,9 @@ class _SearchPageState extends State<SearchPage> {
                                           query,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            color: colorScheme.onSurface,
+                                          ),
                                         ),
                                         trailing: IconButton(
                                           icon: const Icon(
@@ -465,11 +468,17 @@ class _SearchPageState extends State<SearchPage> {
                                   artist.name,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: colorScheme.onSurface,
+                                  ),
                                 ),
                                 supportingText: Text(
                                   '${artist.numberOfTracks} tracks • ${artist.numberOfAlbums} albums',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
                                 ),
                                 trailing: Icon(
                                   FlutterRemix.arrow_right_s_line,
@@ -530,11 +539,17 @@ class _SearchPageState extends State<SearchPage> {
                                   playlist.name,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: colorScheme.onSurface,
+                                  ),
                                 ),
                                 supportingText: Text(
                                   '${playlist.tracks.length} tracks',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
                                 ),
                                 trailing: Icon(
                                   FlutterRemix.arrow_right_s_line,
@@ -603,11 +618,17 @@ class _SearchPageState extends State<SearchPage> {
                                   album.title,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: colorScheme.onSurface,
+                                  ),
                                 ),
                                 supportingText: Text(
                                   '${album.artist} • ${album.numOfSongs} songs',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
                                 ),
                                 trailing: Icon(
                                   FlutterRemix.arrow_right_s_line,

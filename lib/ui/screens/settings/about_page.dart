@@ -100,12 +100,17 @@ class _AboutPageState extends State<AboutPage> {
                 width: 10,
                 child: M3EButton.filled(
                   decoration: M3EButtonDecoration(
+                    padding: const EdgeInsets.all(15),
                     backgroundColor: WidgetStatePropertyAll(
                       colorScheme.primary,
                     ),
                     foregroundColor: WidgetStatePropertyAll(
                       colorScheme.onPrimary,
                     ),
+                    borderRadius: 50,
+                    hoveredRadius: 18,
+                    pressedRadius: 12,
+                    textStyle: const TextStyle(fontSize: 13),
                   ),
                   onPressed: () {},
                   child: const Text("Check for update"),
@@ -132,9 +137,9 @@ class _AboutPageState extends State<AboutPage> {
                 topPadding: 32,
               ),
               CardListTile(
-                title: 'GitHub',
+                title: 'Source Code',
                 subtitle: 'Source code and contributions',
-                icon: FlutterRemix.github_line,
+                icon: FlutterRemix.code_line,
                 isFirst: true,
                 onTap: () => _controller.launchURL(
                   context,
