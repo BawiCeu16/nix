@@ -69,6 +69,14 @@ class _ArtistsPageState extends State<ArtistsPage> {
           body: Consumer<MusicProvider>(
             builder: (context, music, child) {
               final sortedArtists = _controller.getSortedArtists(music.artists);
+              final crossAxisCount = context
+                  .watch<SettingsProvider>()
+                  .artistGridCrossAxisCount;
+              final isDense = crossAxisCount > 2;
+              final isVeryDense = crossAxisCount > 3;
+              final double gridSpacing = isVeryDense
+                  ? 8.0
+                  : (isDense ? 12.0 : 16.0);
 
               return NixRefreshableList(
                 isEmpty: sortedArtists.isEmpty,
@@ -89,11 +97,9 @@ class _ArtistsPageState extends State<ArtistsPage> {
                         sliver: SliverGrid(
                           gridDelegate:
                               SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: context
-                                    .watch<SettingsProvider>()
-                                    .artistGridCrossAxisCount,
-                                mainAxisSpacing: 16,
-                                crossAxisSpacing: 16,
+                                crossAxisCount: crossAxisCount,
+                                mainAxisSpacing: gridSpacing,
+                                crossAxisSpacing: gridSpacing,
                                 childAspectRatio: 0.8,
                               ),
                           delegate: SliverChildBuilderDelegate((
