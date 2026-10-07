@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
+import 'package:nix/providers/settings_provider.dart';
 import 'package:nix/providers/will_pop_provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/ui/miniplayer/now_playing.dart';
@@ -162,21 +163,57 @@ class _NavigationScreenState extends State<NavigationScreen>
                           child: child,
                         );
                       },
-                      child: MediaQuery(
-                        data: MediaQueryData(
-                          padding: EdgeInsets.only(bottom: bottom ?? 0),
-                        ),
-                        child: NavigationBar(
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.surface,
-                          selectedIndex: _controller.selectedIndex,
-                          onDestinationSelected: _controller.setSelectedIndex,
-                          destinations: _navDestinations,
-                        ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (context.watch<SettingsProvider>().showMiniplayerShadow &&
+                              context.watch<SettingsProvider>().miniplayerShadowStyle ==
+                                  MiniplayerShadowStyle.expressive)
+                            IgnorePointer(
+                              child: AnimatedBuilder(
+                                animation: _controller.animation,
+                                builder: (context, child) {
+                                  return Opacity(
+                                    opacity: (1 - _controller.animation.value).clamp(0.0, 1.0),
+                                    child: child,
+                                  );
+                                },
+                                child: Container(
+                                  height: 120.0,
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.bottomCenter,
+                                      end: Alignment.topCenter,
+                                      colors: [
+                                        Theme.of(context).colorScheme.surface.withValues(
+                                              alpha: context.watch<SettingsProvider>().miniplayerShadowOpacity,
+                                            ),
+                                        Theme.of(context).colorScheme.surface.withValues(alpha: 0.0),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          MediaQuery(
+                            data: MediaQueryData(
+                              padding: EdgeInsets.only(bottom: bottom ?? 0),
+                            ),
+                            child: NavigationBar(
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.surface,
+                              selectedIndex: _controller.selectedIndex,
+                              onDestinationSelected: _controller.setSelectedIndex,
+                              destinations: _navDestinations,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
+
 
                   // Player Overlay: Opacity (Black + onSecondary Dimming) & Wallpaper
                   Positioned.fill(

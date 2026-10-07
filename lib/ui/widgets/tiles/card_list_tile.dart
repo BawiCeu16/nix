@@ -180,10 +180,12 @@ class _NixCardExpansionTileState extends State<NixCardExpansionTile>
       duration: NixDurations.short,
       vsync: this,
     );
-    _iconTurns = Tween<double>(
-      begin: 0.0,
-      end: 0.5,
-    ).animate(CurvedAnimation(parent: _controller, curve: NixCurves.expressiveEmphasized));
+    _iconTurns = Tween<double>(begin: 0.0, end: 0.5).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: NixCurves.expressiveEmphasized,
+      ),
+    );
 
     _isExpanded = widget.initiallyExpanded;
     if (_isExpanded) _controller.value = 1.0;
@@ -195,6 +197,16 @@ class _NixCardExpansionTileState extends State<NixCardExpansionTile>
     super.dispose();
   }
 
+  @override
+  void didUpdateWidget(NixCardExpansionTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // If expansion becomes disabled, force close.
+    if (!widget.showExpansionIcon && _isExpanded) {
+      _isExpanded = false;
+      _controller.reverse();
+    }
+  }
+
   void _setPressed(bool pressed) {
     if (_isPressed != pressed && mounted) {
       setState(() => _isPressed = pressed);
@@ -202,6 +214,8 @@ class _NixCardExpansionTileState extends State<NixCardExpansionTile>
   }
 
   void _toggleExpansion() {
+    if (!widget.showExpansionIcon) return;
+
     setState(() {
       _isExpanded = !_isExpanded;
       if (_isExpanded) {
@@ -388,7 +402,8 @@ class _CardListTileWithChildState extends State<CardListTileWithChild> {
           child: Material(
             color: Colors.transparent,
             child: Padding(
-              padding: widget.contentPadding ??
+              padding:
+                  widget.contentPadding ??
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -431,7 +446,9 @@ class _CardListTileWithChildState extends State<CardListTileWithChild> {
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: widget.isSelected
-                                      ? onPrimaryContainer.withValues(alpha: 0.8)
+                                      ? onPrimaryContainer.withValues(
+                                          alpha: 0.8,
+                                        )
                                       : onSurfaceVariant,
                                 ),
                                 maxLines: 2,

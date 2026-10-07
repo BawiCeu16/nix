@@ -15,6 +15,8 @@ enum TrackSwipeAction { none, playPlayback }
 
 enum HapticForce { light, medium, heavy }
 
+enum MiniplayerShadowStyle { classic, expressive }
+
 /// Manages app-wide settings state and delegates persistence to [SettingsRepository].
 class SettingsProvider with ChangeNotifier {
   final SettingsRepository _repo = SettingsRepository();
@@ -173,6 +175,24 @@ class SettingsProvider with ChangeNotifier {
   bool get showMiniplayerShadow => _repo.showMiniplayerShadow;
   void setShowMiniplayerShadow(bool value) {
     _repo.setShowMiniplayerShadow(value).then((_) => notifyListeners());
+  }
+
+  // Appearance - Miniplayer Shadow Style
+  MiniplayerShadowStyle get miniplayerShadowStyle {
+    return MiniplayerShadowStyle.values.firstWhere(
+      (e) => e.name == _repo.miniplayerShadowStyle,
+      orElse: () => MiniplayerShadowStyle.expressive,
+    );
+  }
+
+  void setMiniplayerShadowStyle(MiniplayerShadowStyle style) {
+    _repo.setMiniplayerShadowStyle(style.name).then((_) => notifyListeners());
+  }
+
+  // Appearance - Miniplayer Shadow Opacity
+  double get miniplayerShadowOpacity => _repo.miniplayerShadowOpacity;
+  void setMiniplayerShadowOpacity(double value) {
+    _repo.setMiniplayerShadowOpacity(value).then((_) => notifyListeners());
   }
 
   // Appearance - Auto Scroll Queue

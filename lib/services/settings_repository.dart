@@ -161,6 +161,14 @@ class SettingsRepository {
   bool get showMiniplayerShadow => _box.get(HiveKeys.showMiniplayerShadow, defaultValue: true);
   Future<void> setShowMiniplayerShadow(bool value) => _box.put(HiveKeys.showMiniplayerShadow, value);
 
+  // Appearance - Miniplayer Shadow Style
+  String get miniplayerShadowStyle => _box.get(HiveKeys.miniplayerShadowStyle, defaultValue: 'expressive');
+  Future<void> setMiniplayerShadowStyle(String style) => _box.put(HiveKeys.miniplayerShadowStyle, style);
+
+  // Appearance - Miniplayer Shadow Opacity
+  double get miniplayerShadowOpacity => _box.get(HiveKeys.miniplayerShadowOpacity, defaultValue: 1.0);
+  Future<void> setMiniplayerShadowOpacity(double value) => _box.put(HiveKeys.miniplayerShadowOpacity, value);
+
   // Appearance - Auto Scroll Queue
   bool get autoScrollQueue => _box.get(HiveKeys.autoScrollQueue, defaultValue: true);
   Future<void> setAutoScrollQueue(bool value) => _box.put(HiveKeys.autoScrollQueue, value);

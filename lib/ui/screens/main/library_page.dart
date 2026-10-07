@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
-import 'package:m3e_buttons/m3e_buttons.dart';
 import 'package:material_3_expressive/material_3_expressive.dart'
     hide M3EButtonDecoration, M3EMotion;
 import 'package:nix/ui/widgets/tiles/card_list_tile.dart';

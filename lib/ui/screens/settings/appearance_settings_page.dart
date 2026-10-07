@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:m3e_buttons/m3e_buttons.dart';
+import 'package:m3e_dropdown_menu/m3e_dropdown_menu.dart' as dd;
 import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/settings_provider.dart';
@@ -67,11 +68,13 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                    vertical: 10,
+                    vertical: 15,
                     horizontal: 15,
                   ),
                   child: Center(
                     child: M3EToggleButtonGroup(
+                      size: M3EButtonSize.sm,
+
                       type: M3EButtonGroupType.connected,
                       style: M3EButtonStyle.tonal,
                       decoration: M3EToggleButtonDecoration.styleFrom(
@@ -260,18 +263,214 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                     _controller.showQualityDialog(context, settingsParams),
               ),
               const SizedBox(height: 2.5),
-              CardListTile(
+              NixCardExpansionTile(
                 title: 'Miniplayer Shadow',
                 subtitle: 'Dynamic depth effect for player',
                 icon: FlutterRemix.magic_line,
+                isLast: true,
+                showExpansionIcon: settingsParams.showMiniplayerShadow,
+                initiallyExpanded: false,
                 trailing: Switch(
                   value: settingsParams.showMiniplayerShadow,
                   onChanged: (v) => settingsParams.setShowMiniplayerShadow(v),
                 ),
-                isLast: true,
-                onTap: () => settingsParams.setShowMiniplayerShadow(
-                  !settingsParams.showMiniplayerShadow,
-                ),
+                children: [
+                  if (settingsParams.showMiniplayerShadow) ...[
+                    const SizedBox(height: 2.5),
+                    Card(
+                      elevation: 0,
+                      margin: EdgeInsets.zero,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(5),
+                          topRight: Radius.circular(5),
+                          bottomLeft: Radius.circular(16),
+                          bottomRight: Radius.circular(16),
+                        ),
+                      ),
+                      color: Theme.of(context).colorScheme.surface,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 16.0,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Shadow Style',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 13,
+                                  ),
+                            ),
+                            const SizedBox(height: 8.0),
+                            dd.M3EDropdownMenu<String>(
+                              items: [
+                                dd.M3EDropdownItem<String>(
+                                  label: 'Classic Drop Shadow',
+                                  value: MiniplayerShadowStyle.classic.name,
+                                  selected:
+                                      settingsParams.miniplayerShadowStyle ==
+                                      MiniplayerShadowStyle.classic,
+                                ),
+                                dd.M3EDropdownItem<String>(
+                                  label: 'Expressive',
+                                  value: MiniplayerShadowStyle.expressive.name,
+                                  selected:
+                                      settingsParams.miniplayerShadowStyle ==
+                                      MiniplayerShadowStyle.expressive,
+                                ),
+                              ],
+                              singleSelect: true,
+                              searchEnabled: false,
+                              showChipAnimation: true,
+                              maxSelections: 1,
+                              enabled: true,
+                              containerRadius: 16.0,
+                              haptic: dd.M3EHapticFeedback.medium,
+                              openMotion: dd.M3EMotion.custom(
+                                stiffness: 500.0,
+                                damping: 0.6,
+                              ),
+                              closeMotion: dd.M3EMotion.custom(
+                                stiffness: 500.0,
+                                damping: 0.6,
+                              ),
+                              fieldStyle: dd.M3EDropdownFieldStyle(
+                                hintText: 'Select Style',
+                                hintStyle: TextStyle(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                                selectedTextStyle: TextStyle(
+                                  color: colorScheme.onSurface,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                showClearIcon: false,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14.0,
+                                  vertical: 10.0,
+                                ),
+                                backgroundColor:
+                                    colorScheme.surfaceContainerHigh,
+                                foregroundColor: colorScheme.onSurface,
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                              dropdownStyle: dd.M3EDropdownStyle(
+                                elevation: 0.0,
+                                maxHeight: 350.0,
+                                marginTop: 6.0,
+                                containerRadius: 16.0,
+                                expandDirection: dd.ExpandDirection.auto,
+                                contentPadding: const EdgeInsets.all(6.0),
+                                backgroundColor:
+                                    colorScheme.surfaceContainerHigh,
+                              ),
+                              chipStyle: dd.M3EChipStyle(
+                                backgroundColor: colorScheme.primaryContainer,
+                                labelStyle: TextStyle(
+                                  color: colorScheme.onPrimaryContainer,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                deleteIcon: Icon(
+                                  Icons.close,
+                                  size: 16,
+                                  color: colorScheme.onPrimaryContainer,
+                                ),
+                                borderRadius: BorderRadius.circular(20.0),
+                                spacing: 6.0,
+                                runSpacing: 6.0,
+                                wrap: true,
+                                maxDisplayCount: 1,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8.0,
+                                  vertical: 4.0,
+                                ),
+                                openMotion: dd.M3EMotion.custom(
+                                  stiffness: 500.0,
+                                  damping: 0.6,
+                                ),
+                                closeMotion: dd.M3EMotion.custom(
+                                  stiffness: 500.0,
+                                  damping: 0.6,
+                                ),
+                              ),
+                              itemStyle: dd.M3EDropdownItemStyle(
+                                backgroundColor: colorScheme.surfaceContainer,
+                                selectedBackgroundColor:
+                                    colorScheme.primaryContainer,
+                                textColor: colorScheme.onSurface,
+                                selectedTextColor:
+                                    colorScheme.onPrimaryContainer,
+                                selectedTextStyle: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.onPrimaryContainer,
+                                ),
+                                outerRadius: 14.0,
+                                innerRadius: 6.0,
+                                itemGap: 3.0,
+                                itemPadding: const EdgeInsets.symmetric(
+                                  horizontal: 14.0,
+                                  vertical: 12.0,
+                                ),
+                                selectedIcon: Icon(
+                                  Icons.check_rounded,
+                                  color: colorScheme.onPrimaryContainer,
+                                  size: 20,
+                                ),
+                              ),
+                              closeOnBackButton: false,
+                              onSelectionChanged: (selectedItems) {
+                                if (selectedItems.isNotEmpty) {
+                                  final styleName = selectedItems.first.value;
+                                  final style = MiniplayerShadowStyle.values
+                                      .firstWhere(
+                                        (e) => e.name == styleName,
+                                        orElse: () =>
+                                            MiniplayerShadowStyle.expressive,
+                                      );
+                                  settingsParams.setMiniplayerShadowStyle(
+                                    style,
+                                  );
+                                }
+                              },
+                            ),
+                            const SizedBox(height: 16.0),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Shadow Opacity',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                                Text(
+                                  '${(settingsParams.miniplayerShadowOpacity * 100).toInt()}%',
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                      ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4.0),
+                            NixSlider(
+                              value: settingsParams.miniplayerShadowOpacity,
+                              min: 0.0,
+                              max: 1.0,
+                              label:
+                                  '${(settingsParams.miniplayerShadowOpacity * 100).toInt()}%',
+                              onChanged: (v) =>
+                                  settingsParams.setMiniplayerShadowOpacity(v),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
               const NixBottomSpacer(),
             ],

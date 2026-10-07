@@ -59,9 +59,10 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
     // final track = context.select<CurrentMusicProvider, Track?>(
     //   (p) => p.currentTrack,
     // );
-    final showMiniplayerShadow = context.select<SettingsProvider, bool>(
-      (s) => s.showMiniplayerShadow,
-    );
+    final settings = context.watch<SettingsProvider>();
+    final showMiniplayerShadow = settings.showMiniplayerShadow;
+    final miniplayerShadowStyle = settings.miniplayerShadowStyle;
+    final miniplayerShadowOpacity = settings.miniplayerShadowOpacity;
     final Color onSecondary = Theme.of(
       context,
     ).colorScheme.onSecondaryContainer;
@@ -120,29 +121,31 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                               color: Theme.of(context).colorScheme.surface,
                               boxShadow: showMiniplayerShadow
                                   ? [
-                                      BoxShadow(
-                                        color:
-                                            (Theme.of(context).brightness ==
-                                                        Brightness.dark
-                                                    ? Colors.black.withValues(
-                                                        alpha: 0.2,
-                                                      )
-                                                    : Colors.black.withValues(
-                                                        alpha: 0.08,
-                                                      ))
-                                                .withValues(
-                                                  alpha:
+                                      if (miniplayerShadowStyle != MiniplayerShadowStyle.expressive)
+                                        BoxShadow(
+                                          color:
+                                              (Theme.of(context).brightness ==
+                                                          Brightness.dark
+                                                      ? Colors.black.withValues(
+                                                          alpha: 0.2,
+                                                        )
+                                                      : Colors.black.withValues(
+                                                          alpha: 0.08,
+                                                        ))
+                                                  .withValues(
+                                                    alpha:
                                                       (Theme.of(
                                                                 context,
                                                               ).brightness ==
                                                               Brightness.dark
                                                           ? 0.2
                                                           : 0.08) *
-                                                      data.inverseClampedProgress,
+                                                      data.inverseClampedProgress *
+                                                      miniplayerShadowOpacity,
                                                 ),
-                                        blurRadius: 15,
-                                        offset: const Offset(0, 4),
-                                      ),
+                                          blurRadius: 15,
+                                          offset: const Offset(0, 4),
+                                        ),
                                     ]
                                   : null,
                             ),

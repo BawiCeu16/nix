@@ -39,6 +39,8 @@ abstract final class HiveKeys {
   static const String upNextIndicator = 'upNextIndicator';
   static const String upNextIndicatorTime = 'upNextIndicatorTime';
   static const String showMiniplayerShadow = 'showMiniplayerShadow';
+  static const String miniplayerShadowStyle = 'miniplayerShadowStyle';
+  static const String miniplayerShadowOpacity = 'miniplayerShadowOpacity';
   static const String onboarding = 'hasCompletedOnboarding';
   static const String autoScrollQueue = 'autoScrollQueue';
   static const String hapticForce = 'hapticForce';
