@@ -15,6 +15,8 @@ class ArtistsPageController extends ChangeNotifier {
   bool _isAscending = true;
   bool get isAscending => _isAscending;
 
+
+
   void setSort(ArtistSort newSort) {
     if (_sort != newSort) {
       _sort = newSort;

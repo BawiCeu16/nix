@@ -3,7 +3,8 @@ import 'package:flutter_remix/flutter_remix.dart';
 import 'package:provider/provider.dart';
 import 'package:on_audio_query_forked/on_audio_query.dart';
 import 'package:nix/providers/music_provider.dart';
-import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
+import 'package:nix/providers/settings_provider.dart';
+
 import 'package:nix/ui/widgets/tiles/m3e_track_tile.dart';
 import 'package:nix/ui/widgets/common/nix_empty_state.dart';
 import 'package:nix/ui/widgets/common/nix_action_row.dart';
@@ -77,58 +78,140 @@ class _ArtistsPageState extends State<ArtistsPage> {
                   title: "No artists found",
                 ),
                 child: NixScrollbar(
-                  child: ListView.builder(
+                  child: CustomScrollView(
                     scrollCacheExtent: const .pixels(600.0),
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                     physics: const AlwaysScrollableScrollPhysics(
                       parent: BouncingScrollPhysics(),
                     ),
-                    itemCount: sortedArtists.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index == sortedArtists.length) {
-                        return const NixBottomSpacer();
-                      }
-
-                      final artist = sortedArtists[index];
-                      final tracks = music.tracks
-                          .where((t) => t.artist == artist.name)
-                          .toList();
-                      final firstTrackId = tracks.isNotEmpty
-                          ? tracks.first.id
-                          : null;
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 2.5),
-                        child: CardListTile(
-                          onTap: () => _controller.openArtistDetails(
+                    slivers: [
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                        sliver: SliverGrid(
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: context
+                                    .watch<SettingsProvider>()
+                                    .artistGridCrossAxisCount,
+                                mainAxisSpacing: 16,
+                                crossAxisSpacing: 16,
+                                childAspectRatio: 0.8,
+                              ),
+                          delegate: SliverChildBuilderDelegate((
                             context,
-                            artist.name,
-                          ),
-                          isFirst: index == 0,
-                          isLast: index == sortedArtists.length - 1,
-                          title: artist.name,
-                          subtitle: '${artist.numberOfTracks} tracks',
-                          leading: firstTrackId != null
-                              ? NixArtwork(
-                                  id: firstTrackId,
-                                  type: ArtworkType.AUDIO,
-                                  width: 48,
-                                  height: 48,
-                                  borderRadius: BorderRadius.circular(100),
-                                )
-                              : const CircleAvatar(
-                                  radius: 24,
-                                  child: Icon(FlutterRemix.user_4_line),
+                            index,
+                          ) {
+                            final crossAxisCount = context
+                                .watch<SettingsProvider>()
+                                .artistGridCrossAxisCount;
+                            final isDense = crossAxisCount > 2;
+                            final isVeryDense = crossAxisCount > 3;
+
+                            final double titleSize = isVeryDense
+                                ? 12
+                                : (isDense ? 14 : 16);
+                            final double subtitleSize = isVeryDense
+                                ? 10
+                                : (isDense ? 12 : 13);
+                            final double iconSize = isVeryDense
+                                ? 24
+                                : (isDense ? 36 : 48);
+                            final double spacerHeight = isDense ? 8 : 12;
+                            final double cardPadding = isVeryDense
+                                ? 4.0
+                                : (isDense ? 8.0 : 12.0);
+
+                            final artist = sortedArtists[index];
+                            final tracks = music.tracks
+                                .where((t) => t.artist == artist.name)
+                                .toList();
+                            final firstTrackId = tracks.isNotEmpty
+                                ? tracks.first.id
+                                : null;
+
+                            return Card(
+                              elevation: 0,
+                              margin: EdgeInsets.zero,
+                              clipBehavior: Clip.antiAlias,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: InkWell(
+                                onTap: () => _controller.openArtistDetails(
+                                  context,
+                                  artist.name,
                                 ),
-                          trailing: Icon(
-                            FlutterRemix.arrow_right_s_line,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
-                          ),
+                                child: Padding(
+                                  padding: EdgeInsets.all(cardPadding),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Expanded(
+                                        child: AspectRatio(
+                                          aspectRatio: 1,
+                                          child: Hero(
+                                            tag:
+                                                'artist_artwork_${artist.name}',
+                                            child: firstTrackId != null
+                                                ? NixArtwork(
+                                                    id: firstTrackId,
+                                                    type: ArtworkType.AUDIO,
+                                                    width: double.infinity,
+                                                    height: double.infinity,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          1000,
+                                                        ),
+                                                  )
+                                                : Container(
+                                                    decoration: BoxDecoration(
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .primaryContainer,
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                    child: Icon(
+                                                      FlutterRemix.user_4_line,
+                                                      size: iconSize,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onPrimaryContainer,
+                                                    ),
+                                                  ),
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(height: spacerHeight),
+                                      Text(
+                                        artist.name,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: titleSize,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        '${artist.numberOfTracks} tracks',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: subtitleSize,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          }, childCount: sortedArtists.length),
                         ),
-                      );
-                    },
+                      ),
+                      const SliverToBoxAdapter(child: NixBottomSpacer()),
+                    ],
                   ),
                 ),
               );
@@ -195,26 +278,31 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> {
                       return NixPageHeader(
                         title: widget.artistName,
                         subtitle: '${tracks.length} Tracks',
-                        customArtwork: firstTrackId != null
-                            ? NixArtwork(
-                                id: firstTrackId,
-                                type: ArtworkType.AUDIO,
-                                width: 300,
-                                height: 300,
-                                borderRadius: BorderRadius.circular(24),
-                              )
-                            : Container(
-                                width: 300,
-                                height: 300,
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.surface,
-                                  borderRadius: BorderRadius.circular(24),
+                        customArtwork: Hero(
+                          tag: 'artist_artwork_${widget.artistName}',
+                          child: firstTrackId != null
+                              ? NixArtwork(
+                                  id: firstTrackId,
+                                  type: ArtworkType.AUDIO,
+                                  width: 300,
+                                  height: 300,
+                                  borderRadius: BorderRadius.circular(1000),
+                                )
+                              : Container(
+                                  width: 300,
+                                  height: 300,
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.surface,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    FlutterRemix.user_4_line,
+                                    size: 100,
+                                  ),
                                 ),
-                                child: const Icon(
-                                  FlutterRemix.user_4_line,
-                                  size: 100,
-                                ),
-                              ),
+                        ),
                         actionRow: NixActionRow(
                           onShuffle: () => _controller.shuffleArtist(
                             context,

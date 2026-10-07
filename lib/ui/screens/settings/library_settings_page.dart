@@ -123,6 +123,11 @@ class _LibrarySettingsPageState extends State<LibrarySettingsPage> {
                       color: colorScheme.onPrimaryContainer,
                       fontWeight: FontWeight.w600,
                     ),
+                    deleteIcon: Icon(
+                      Icons.close,
+                      size: 16,
+                      color: colorScheme.onPrimaryContainer,
+                    ),
                     borderRadius: BorderRadius.circular(20.0),
                     spacing: 6.0,
                     runSpacing: 6.0,
@@ -170,6 +175,124 @@ class _LibrarySettingsPageState extends State<LibrarySettingsPage> {
                           int.tryParse(selectedItems.first.value) ?? 60;
                       settings.setMinDuration(selectedValue);
                       await music.scanDevice();
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(height: 2.5),
+              CardListTileWithChild(
+                title: 'Artist Grid Columns',
+                subtitle: '${settings.artistGridCrossAxisCount} Columns',
+                icon: FlutterRemix.grid_fill,
+                child: M3EDropdownMenu<String>(
+                  items: [
+                    M3EDropdownItem<String>(
+                      label: '2 Columns (Default)',
+                      value: '2',
+                      selected: settings.artistGridCrossAxisCount == 2,
+                    ),
+                    M3EDropdownItem<String>(
+                      label: '3 Columns',
+                      value: '3',
+                      selected: settings.artistGridCrossAxisCount == 3,
+                    ),
+                    M3EDropdownItem<String>(
+                      label: '4 Columns',
+                      value: '4',
+                      selected: settings.artistGridCrossAxisCount == 4,
+                    ),
+                  ],
+                  singleSelect: true,
+                  searchEnabled: false,
+                  showChipAnimation: true,
+                  maxSelections: 1,
+                  enabled: true,
+                  containerRadius: 16.0,
+                  haptic: M3EHapticFeedback.light,
+                  openMotion: M3EMotion.custom(stiffness: 500.0, damping: 0.6),
+                  closeMotion: M3EMotion.custom(stiffness: 500.0, damping: 0.6),
+                  fieldStyle: M3EDropdownFieldStyle(
+                    hintText: 'Select Columns',
+                    hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+                    selectedTextStyle: TextStyle(
+                      color: colorScheme.onSurface,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    showClearIcon: false,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14.0,
+                      vertical: 10.0,
+                    ),
+                    backgroundColor: colorScheme.surfaceContainerHigh,
+                    foregroundColor: colorScheme.onSurface,
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  dropdownStyle: M3EDropdownStyle(
+                    elevation: 0.0,
+                    maxHeight: 350.0,
+                    marginTop: 6.0,
+                    containerRadius: 16.0,
+                    expandDirection: ExpandDirection.auto,
+                    contentPadding: const EdgeInsets.all(6.0),
+                    backgroundColor: colorScheme.surfaceContainerHigh,
+                  ),
+                  chipStyle: M3EChipStyle(
+                    backgroundColor: colorScheme.primaryContainer,
+                    labelStyle: TextStyle(
+                      color: colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    deleteIcon: Icon(
+                      Icons.close,
+                      size: 16,
+                      color: colorScheme.onPrimaryContainer,
+                    ),
+                    borderRadius: BorderRadius.circular(20.0),
+                    spacing: 6.0,
+                    runSpacing: 6.0,
+                    wrap: true,
+                    maxDisplayCount: 1,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8.0,
+                      vertical: 4.0,
+                    ),
+                    openMotion: M3EMotion.custom(
+                      stiffness: 500.0,
+                      damping: 0.6,
+                    ),
+                    closeMotion: M3EMotion.custom(
+                      stiffness: 500.0,
+                      damping: 0.6,
+                    ),
+                  ),
+                  itemStyle: M3EDropdownItemStyle(
+                    backgroundColor: colorScheme.surfaceContainer,
+                    selectedBackgroundColor: colorScheme.primaryContainer,
+                    textColor: colorScheme.onSurface,
+                    selectedTextColor: colorScheme.onPrimaryContainer,
+                    selectedTextStyle: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onPrimaryContainer,
+                    ),
+                    outerRadius: 14.0,
+                    innerRadius: 6.0,
+                    itemGap: 3.0,
+                    itemPadding: const EdgeInsets.symmetric(
+                      horizontal: 14.0,
+                      vertical: 12.0,
+                    ),
+                    selectedIcon: Icon(
+                      Icons.check_rounded,
+                      color: colorScheme.onPrimaryContainer,
+                      size: 20,
+                    ),
+                  ),
+                  closeOnBackButton: false,
+                  onSelectionChanged: (selectedItems) {
+                    if (selectedItems.isNotEmpty) {
+                      final selectedValue =
+                          int.tryParse(selectedItems.first.value) ?? 2;
+                      settings.setArtistGridCrossAxisCount(selectedValue);
                     }
                   },
                 ),

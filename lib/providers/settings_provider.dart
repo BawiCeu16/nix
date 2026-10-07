@@ -55,6 +55,12 @@ class SettingsProvider with ChangeNotifier {
     _repo.setMinDuration(seconds).then((_) => notifyListeners());
   }
 
+  // Artist Grid Columns
+  int get artistGridCrossAxisCount => _repo.artistGridCrossAxisCount;
+  void setArtistGridCrossAxisCount(int count) {
+    _repo.setArtistGridCrossAxisCount(count).then((_) => notifyListeners());
+  }
+
   // Haptic Feedback
   bool get enableHaptics => _repo.enableHaptics;
   void setEnableHaptics(bool value) {

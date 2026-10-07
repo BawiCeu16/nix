@@ -46,6 +46,7 @@ abstract final class HiveKeys {
   static const String fastSwipeArtwork = 'fastSwipeArtwork';
   static const String trackPositionsBox = 'track_positions';
   static const String resumeFromPlayedDuration = 'resumeFromPlayedDuration';
+  static const String artistGridCrossAxisCount = 'artistGridCrossAxisCount';
 
   // ── User keys ──────────────────────────────────────────────────────────────
   static const String username = 'username';

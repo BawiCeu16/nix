@@ -51,6 +51,10 @@ class SettingsRepository {
   int get minDuration => _box.get(HiveKeys.minDuration, defaultValue: 60);
   Future<void> setMinDuration(int seconds) => _box.put(HiveKeys.minDuration, seconds);
 
+  // Artist Grid Columns
+  int get artistGridCrossAxisCount => _box.get(HiveKeys.artistGridCrossAxisCount, defaultValue: 2);
+  Future<void> setArtistGridCrossAxisCount(int count) => _box.put(HiveKeys.artistGridCrossAxisCount, count);
+
   // Haptic Feedback
   bool get enableHaptics => _box.get(HiveKeys.enableHaptics, defaultValue: true);
   Future<void> setEnableHaptics(bool value) => _box.put(HiveKeys.enableHaptics, value);
