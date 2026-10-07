@@ -6,10 +6,7 @@ import 'nix_springs.dart';
 /// Custom physics-based scroll physics powered by Nix spring tokens.
 class NixSpringScrollPhysics extends BouncingScrollPhysics {
   /// Creates scroll physics powered by [spring].
-  const NixSpringScrollPhysics({
-    super.parent,
-    this.springMotion,
-  });
+  const NixSpringScrollPhysics({super.parent, this.springMotion});
 
   /// Optional custom spring motion for overscroll settling.
   final SpringMotion? springMotion;
@@ -42,11 +39,7 @@ extension NixAnimationControllerExtensions on AnimationController {
     double initialVelocity = 0.0,
   }) {
     if (motion is CurvedMotion) {
-      return animateTo(
-        target,
-        duration: motion.duration,
-        curve: motion.curve,
-      );
+      return animateTo(target, duration: motion.duration, curve: motion.curve);
     } else if (motion is SpringMotion) {
       final Simulation simulation = motion.createSimulation(
         start: value,
@@ -83,11 +76,7 @@ extension NixAnimationControllerExtensions on AnimationController {
     CurvedMotion motion, {
     double target = 1.0,
   }) {
-    return animateTo(
-      target,
-      duration: motion.duration,
-      curve: motion.curve,
-    );
+    return animateTo(target, duration: motion.duration, curve: motion.curve);
   }
 }
 

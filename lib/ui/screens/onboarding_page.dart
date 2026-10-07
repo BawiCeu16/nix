@@ -247,10 +247,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
             onPressed: allGranted
                 ? _controller.nextPage
                 : !_controller.isAudioGranted
-                    ? _controller.requestAudioPermission
-                    : !_controller.isNotificationGranted
-                        ? _controller.requestNotificationPermission
-                        : _controller.requestBluetoothPermission,
+                ? _controller.requestAudioPermission
+                : !_controller.isNotificationGranted
+                ? _controller.requestNotificationPermission
+                : _controller.requestBluetoothPermission,
             child: Text(allGranted ? 'Next' : 'Grant all permissions'),
           ),
         ],

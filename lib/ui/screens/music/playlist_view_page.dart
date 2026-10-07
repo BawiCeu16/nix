@@ -138,14 +138,10 @@ class _PlaylistViewPageState extends State<PlaylistViewPage> {
                               radius: 24,
                             ),
                             actionRow: NixActionRow(
-                              onShuffle: () => _controller.shufflePlaylist(
-                                context,
-                                pl!,
-                              ),
-                              onPlay: () => _controller.playPlaylist(
-                                context,
-                                pl!,
-                              ),
+                              onShuffle: () =>
+                                  _controller.shufflePlaylist(context, pl!),
+                              onPlay: () =>
+                                  _controller.playPlaylist(context, pl!),
                             ),
                           ),
                         ],

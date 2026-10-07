@@ -67,7 +67,7 @@ class _GesturesSettingsPageState extends State<GesturesSettingsPage> {
               const SizedBox(height: 2.5),
               NixCardExpansionTile(
                 title: 'Swipe to Change Track',
-                subtitle: 'Swipe artwork left/right to skip',
+                subtitle: 'Swipe artwork left or right to skip tracks',
                 icon: FlutterRemix.arrow_left_right_line,
                 showExpansionIcon: settings.swipeToChangeTrack,
                 initiallyExpanded: false,
@@ -98,8 +98,8 @@ class _GesturesSettingsPageState extends State<GesturesSettingsPage> {
               CardListTile(
                 title: 'Track Swipe Action',
                 subtitle: settings.trackSwipeAction == TrackSwipeAction.none
-                    ? 'OFF'
-                    : 'PLAY / PLAY NEXT',
+                    ? 'Disabled'
+                    : 'Play / Play Next',
                 icon: FlutterRemix.swap_line,
                 onTap: () =>
                     _controller.showTrackSwipeActionDialog(context, settings),
@@ -223,9 +223,9 @@ class _GesturesSettingsPageState extends State<GesturesSettingsPage> {
               CardListTile(
                 title: 'Timer Interaction',
                 subtitle: settings.timerGesture == TimerGesture.longPress
-                    ? 'LONG PRESS'
-                    : 'TAP',
-                icon: FlutterRemix.fingerprint_line,
+                    ? 'Long Press'
+                    : 'Single Tap',
+                icon: FlutterRemix.timer_line,
                 isFirst: true,
                 onTap: () =>
                     _controller.showTimerGestureDialog(context, settings),
@@ -233,7 +233,9 @@ class _GesturesSettingsPageState extends State<GesturesSettingsPage> {
               const SizedBox(height: 2.5),
               CardListTile(
                 title: 'SnackBar Position',
-                subtitle: settings.snackbarPosition.name.toUpperCase(),
+                subtitle: settings.snackbarPosition == SnackBarPosition.top
+                    ? 'Top'
+                    : 'Bottom',
                 icon: FlutterRemix.notification_badge_line,
                 onTap: () =>
                     _controller.showSnackBarPositionDialog(context, settings),
@@ -242,7 +244,7 @@ class _GesturesSettingsPageState extends State<GesturesSettingsPage> {
               CardListTile(
                 title: 'Swipe to Dismiss SnackBar',
                 subtitle: 'Gesture dismissal for alerts',
-                icon: FlutterRemix.hand_coin_line,
+                icon: FlutterRemix.drag_move_2_line,
                 trailing: Switch(
                   value: settings.snackbarSwipeToDismiss,
                   onChanged: (v) => settings.setSnackbarSwipeToDismiss(v),

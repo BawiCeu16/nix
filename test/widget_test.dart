@@ -40,8 +40,9 @@ void main() {
           ChangeNotifierProvider(create: (_) => SettingsProvider()),
           ChangeNotifierProvider(create: (_) => CurrentMusicProvider()),
           ChangeNotifierProvider(
-            create: (context) => MusicProvider()
-              ..init(currentMusic: context.read<CurrentMusicProvider>()),
+            create: (context) =>
+                MusicProvider()
+                  ..init(currentMusic: context.read<CurrentMusicProvider>()),
           ),
           ChangeNotifierProvider(create: (_) => UserProvider()),
           ChangeNotifierProvider(create: (_) => SleepTimerProvider()),

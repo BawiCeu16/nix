@@ -202,16 +202,10 @@ void main() {
       // Initial scale is 1.0
       final initialScaleTransform = tester
           .widgetList<Transform>(
-            find.descendant(
-              of: buttonFinder,
-              matching: find.byType(Transform),
-            ),
+            find.descendant(of: buttonFinder, matching: find.byType(Transform)),
           )
           .elementAt(1);
-      expect(
-        initialScaleTransform.transform.storage[0],
-        closeTo(1.0, 0.001),
-      );
+      expect(initialScaleTransform.transform.storage[0], closeTo(1.0, 0.001));
 
       // Tap Next button
       await tester.tap(buttonFinder);
@@ -220,10 +214,7 @@ void main() {
 
       final transforms = tester
           .widgetList<Transform>(
-            find.descendant(
-              of: buttonFinder,
-              matching: find.byType(Transform),
-            ),
+            find.descendant(of: buttonFinder, matching: find.byType(Transform)),
           )
           .toList();
       final scaleAtBounce = transforms[1].transform.storage[0];
@@ -234,10 +225,7 @@ void main() {
       await tester.pumpAndSettle();
       final settledTransforms = tester
           .widgetList<Transform>(
-            find.descendant(
-              of: buttonFinder,
-              matching: find.byType(Transform),
-            ),
+            find.descendant(of: buttonFinder, matching: find.byType(Transform)),
           )
           .toList();
       final settledScale = settledTransforms[1].transform.storage[0];

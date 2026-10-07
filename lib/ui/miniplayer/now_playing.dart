@@ -121,7 +121,8 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                               color: Theme.of(context).colorScheme.surface,
                               boxShadow: showMiniplayerShadow
                                   ? [
-                                      if (miniplayerShadowStyle != MiniplayerShadowStyle.expressive)
+                                      if (miniplayerShadowStyle !=
+                                          MiniplayerShadowStyle.expressive)
                                         BoxShadow(
                                           color:
                                               (Theme.of(context).brightness ==
@@ -134,15 +135,15 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                                                         ))
                                                   .withValues(
                                                     alpha:
-                                                      (Theme.of(
-                                                                context,
-                                                              ).brightness ==
-                                                              Brightness.dark
-                                                          ? 0.2
-                                                          : 0.08) *
-                                                      data.inverseClampedProgress *
-                                                      miniplayerShadowOpacity,
-                                                ),
+                                                        (Theme.of(
+                                                                  context,
+                                                                ).brightness ==
+                                                                Brightness.dark
+                                                            ? 0.2
+                                                            : 0.08) *
+                                                        data.inverseClampedProgress *
+                                                        miniplayerShadowOpacity,
+                                                  ),
                                           blurRadius: 15,
                                           offset: const Offset(0, 4),
                                         ),

@@ -66,7 +66,9 @@ class _ExpressiveButtonState extends State<ExpressiveButton> {
                   style: Theme.of(context).textTheme.labelLarge!.copyWith(
                     color: enabled
                         ? colorScheme.onPrimary
-                        : colorScheme.onPrimaryContainer.withValues(alpha: 0.38),
+                        : colorScheme.onPrimaryContainer.withValues(
+                            alpha: 0.38,
+                          ),
                     fontWeight: FontWeight.w600,
                   ),
                   child: Center(

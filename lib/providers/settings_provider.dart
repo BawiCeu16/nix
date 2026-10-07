@@ -63,6 +63,18 @@ class SettingsProvider with ChangeNotifier {
     _repo.setArtistGridCrossAxisCount(count).then((_) => notifyListeners());
   }
 
+  // Library - Save Filter
+  bool get saveFilter => _repo.saveFilter;
+  void setSaveFilter(bool value) {
+    _repo.setSaveFilter(value).then((_) => notifyListeners());
+  }
+
+  // Library - Save Sort
+  bool get saveSort => _repo.saveSort;
+  void setSaveSort(bool value) {
+    _repo.setSaveSort(value).then((_) => notifyListeners());
+  }
+
   // Haptic Feedback
   bool get enableHaptics => _repo.enableHaptics;
   void setEnableHaptics(bool value) {
@@ -199,6 +211,12 @@ class SettingsProvider with ChangeNotifier {
   bool get autoScrollQueue => _repo.autoScrollQueue;
   void setAutoScrollQueue(bool value) {
     _repo.setAutoScrollQueue(value).then((_) => notifyListeners());
+  }
+
+  // Playback - Queue Lock
+  bool get isQueueLocked => _repo.isQueueLocked;
+  void setIsQueueLocked(bool value) {
+    _repo.setIsQueueLocked(value).then((_) => notifyListeners());
   }
 
   // Lyrics - Save Offline

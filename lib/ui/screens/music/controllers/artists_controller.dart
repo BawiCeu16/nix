@@ -15,8 +15,6 @@ class ArtistsPageController extends ChangeNotifier {
   bool _isAscending = true;
   bool get isAscending => _isAscending;
 
-
-
   void setSort(ArtistSort newSort) {
     if (_sort != newSort) {
       _sort = newSort;
@@ -39,11 +37,11 @@ class ArtistsPageController extends ChangeNotifier {
         list.sort((a, b) => b.numberOfTracks.compareTo(a.numberOfTracks));
         break;
     }
-    
+
     if (!_isAscending) {
       return list.reversed.toList();
     }
-    
+
     return list;
   }
 

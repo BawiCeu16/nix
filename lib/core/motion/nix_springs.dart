@@ -129,11 +129,7 @@ abstract final class NixSprings {
     bool snapToEnd = false,
   }) {
     return SpringMotion(
-      SpringDescription(
-        mass: mass,
-        stiffness: stiffness,
-        damping: damping,
-      ),
+      SpringDescription(mass: mass, stiffness: stiffness, damping: damping),
       snapToEnd: snapToEnd,
     );
   }

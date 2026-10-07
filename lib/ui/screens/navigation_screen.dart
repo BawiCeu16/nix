@@ -166,15 +166,24 @@ class _NavigationScreenState extends State<NavigationScreen>
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (context.watch<SettingsProvider>().showMiniplayerShadow &&
-                              context.watch<SettingsProvider>().miniplayerShadowStyle ==
-                                  MiniplayerShadowStyle.expressive)
+                          if (context
+                                  .watch<SettingsProvider>()
+                                  .showMiniplayerShadow &&
+                              context
+                                      .watch<SettingsProvider>()
+                                      .miniplayerShadowStyle ==
+                                  MiniplayerShadowStyle.expressive &&
+                              context
+                                      .watch<CurrentMusicProvider>()
+                                      .currentTrack !=
+                                  null)
                             IgnorePointer(
                               child: AnimatedBuilder(
                                 animation: _controller.animation,
                                 builder: (context, child) {
                                   return Opacity(
-                                    opacity: (1 - _controller.animation.value).clamp(0.0, 1.0),
+                                    opacity: (1 - _controller.animation.value)
+                                        .clamp(0.0, 1.0),
                                     child: child,
                                   );
                                 },
@@ -186,10 +195,15 @@ class _NavigationScreenState extends State<NavigationScreen>
                                       begin: Alignment.bottomCenter,
                                       end: Alignment.topCenter,
                                       colors: [
-                                        Theme.of(context).colorScheme.surface.withValues(
-                                              alpha: context.watch<SettingsProvider>().miniplayerShadowOpacity,
-                                            ),
-                                        Theme.of(context).colorScheme.surface.withValues(alpha: 0.0),
+                                        Theme.of(
+                                          context,
+                                        ).colorScheme.surface.withValues(
+                                          alpha: context
+                                              .watch<SettingsProvider>()
+                                              .miniplayerShadowOpacity,
+                                        ),
+                                        Theme.of(context).colorScheme.surface
+                                            .withValues(alpha: 0.0),
                                       ],
                                     ),
                                   ),
@@ -205,7 +219,8 @@ class _NavigationScreenState extends State<NavigationScreen>
                                 context,
                               ).colorScheme.surface,
                               selectedIndex: _controller.selectedIndex,
-                              onDestinationSelected: _controller.setSelectedIndex,
+                              onDestinationSelected:
+                                  _controller.setSelectedIndex,
                               destinations: _navDestinations,
                             ),
                           ),
@@ -213,7 +228,6 @@ class _NavigationScreenState extends State<NavigationScreen>
                       ),
                     ),
                   ),
-
 
                   // Player Overlay: Opacity (Black + onSecondary Dimming) & Wallpaper
                   Positioned.fill(

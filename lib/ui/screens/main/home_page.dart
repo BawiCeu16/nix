@@ -69,7 +69,7 @@ class _HomePageState extends State<HomePage> {
                   slivers: [
                     // ── SliverAppBar with greeting ──
                     SliverAppBar(
-            centerTitle: true,
+                      centerTitle: true,
                       systemOverlayStyle: brightness == Brightness.dark
                           ? SystemUiOverlayStyle.light.copyWith(
                               statusBarColor: Colors.transparent,

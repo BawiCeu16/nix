@@ -43,12 +43,15 @@ abstract final class HiveKeys {
   static const String miniplayerShadowOpacity = 'miniplayerShadowOpacity';
   static const String onboarding = 'hasCompletedOnboarding';
   static const String autoScrollQueue = 'autoScrollQueue';
+  static const String isQueueLocked = 'isQueueLocked';
   static const String hapticForce = 'hapticForce';
   static const String saveLyricsOffline = 'saveLyricsOffline';
   static const String fastSwipeArtwork = 'fastSwipeArtwork';
   static const String trackPositionsBox = 'track_positions';
   static const String resumeFromPlayedDuration = 'resumeFromPlayedDuration';
   static const String artistGridCrossAxisCount = 'artistGridCrossAxisCount';
+  static const String saveFilter = 'saveFilter';
+  static const String saveSort = 'saveSort';
 
   // ── User keys ──────────────────────────────────────────────────────────────
   static const String username = 'username';

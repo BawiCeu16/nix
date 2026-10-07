@@ -117,9 +117,9 @@ class _AboutPageState extends State<AboutPage> {
                 ),
               ),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 24),
 
-              const NixSectionHeader(title: 'Developer', topPadding: 40),
+              const NixSectionHeader(title: 'Developer', topPadding: 24),
               CardListTile(
                 title: 'Bawiceu',
                 subtitle: 'Developer & Designer',
@@ -134,7 +134,7 @@ class _AboutPageState extends State<AboutPage> {
 
               const NixSectionHeader(
                 title: 'Support & Community',
-                topPadding: 32,
+                topPadding: 24,
               ),
               CardListTile(
                 title: 'Source Code',
@@ -157,7 +157,7 @@ class _AboutPageState extends State<AboutPage> {
               const SizedBox(height: 2.5),
               CardListTile(
                 title: 'Report a Bug',
-                subtitle: 'Help us improve Nix',
+                subtitle: 'Help us improve nix',
                 icon: FlutterRemix.bug_2_line,
                 isLast: true,
                 onTap: () => _controller.launchURL(
@@ -166,10 +166,10 @@ class _AboutPageState extends State<AboutPage> {
                 ),
               ),
 
-              const NixSectionHeader(title: 'Legal & Tools', topPadding: 32),
+              const NixSectionHeader(title: 'Legal & Tools', topPadding: 24),
               CardListTile(
                 title: 'Licenses',
-                subtitle: 'Open source libraries used',
+                subtitle: 'Open source licenses and libraries',
                 icon: FlutterRemix.scales_3_line,
                 isFirst: true,
                 onTap: () => showLicensePage(

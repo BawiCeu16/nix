@@ -121,10 +121,7 @@ class GesturesSettingsController extends ChangeNotifier {
     );
   }
 
-  void showTimerGestureDialog(
-    BuildContext context,
-    SettingsProvider settings,
-  ) {
+  void showTimerGestureDialog(BuildContext context, SettingsProvider settings) {
     NixDialog.show(
       context: context,
       title: 'Timer Interaction',
@@ -153,9 +150,7 @@ class GesturesSettingsController extends ChangeNotifier {
 
               return Padding(
                 padding: EdgeInsets.only(
-                  bottom: index == TimerGesture.values.length - 1
-                      ? 0.0
-                      : 2.5,
+                  bottom: index == TimerGesture.values.length - 1 ? 0.0 : 2.5,
                 ),
                 child: CardListTile(
                   title: gesture.name.toUpperCase(),

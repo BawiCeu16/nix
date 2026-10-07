@@ -113,7 +113,7 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
               const SizedBox(height: 2.5),
               CardListTile(
                 title: 'AMOLED Mode',
-                subtitle: 'Pure black for OLED screens',
+                subtitle: 'Pure black background for OLED screens',
                 icon: FlutterRemix.moon_clear_line,
                 trailing: Switch(
                   value: settingsParams.useAmoledMode,
@@ -126,7 +126,9 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
               const SizedBox(height: 2.5),
               CardListTile(
                 title: 'Accent Color Mode',
-                subtitle: settingsParams.accentColorMode.name.toUpperCase(),
+                subtitle:
+                    settingsParams.accentColorMode.name[0].toUpperCase() +
+                    settingsParams.accentColorMode.name.substring(1),
                 icon: FlutterRemix.palette_line,
                 isLast:
                     settingsParams.accentColorMode != AccentColorMode.custom,
@@ -142,7 +144,8 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                 topPadding: 24,
               ),
               NixCardExpansionTile(
-                title: 'Y2k(cd) style album art',
+                title: 'Y2K CD Artwork Style',
+                subtitle: 'Vintage spinning CD style player artwork',
                 icon: FlutterRemix.album_line,
                 isFirst: true,
                 showExpansionIcon: settingsParams.useCdArtworkStyle,
@@ -156,6 +159,7 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                     const SizedBox(height: 2.5),
                     CardListTile(
                       title: 'Split CD Horizontally',
+                      subtitle: 'Split CD disc when player is partially open',
                       icon: FlutterRemix.split_cells_horizontal,
                       trailing: Switch(
                         value: settingsParams.splitCdWhenHalfOpen,
@@ -169,6 +173,7 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                     const SizedBox(height: 2.5),
                     CardListTile(
                       title: 'Revolving CD Disc',
+                      subtitle: 'Spinning CD disc animation during playback',
                       icon: FlutterRemix.disc_line,
                       trailing: Switch(
                         value: settingsParams.rotateCdWhenPlaying,
@@ -248,8 +253,10 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
               ),
               const SizedBox(height: 2.5),
               CardListTile(
-                title: 'Artwork Shape(Default)',
-                subtitle: settingsParams.artworkShape.name.toUpperCase(),
+                title: 'Artwork Shape',
+                subtitle:
+                    settingsParams.artworkShape.name[0].toUpperCase() +
+                    settingsParams.artworkShape.name.substring(1),
                 icon: FlutterRemix.shape_2_line,
                 onTap: () =>
                     _controller.showShapeDialog(context, settingsParams),
@@ -257,7 +264,9 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
               const SizedBox(height: 2.5),
               CardListTile(
                 title: 'Artwork Quality',
-                subtitle: settingsParams.artworkQuality.name.toUpperCase(),
+                subtitle:
+                    settingsParams.artworkQuality.name[0].toUpperCase() +
+                    settingsParams.artworkQuality.name.substring(1),
                 icon: FlutterRemix.image_line,
                 onTap: () =>
                     _controller.showQualityDialog(context, settingsParams),
@@ -265,7 +274,7 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
               const SizedBox(height: 2.5),
               NixCardExpansionTile(
                 title: 'Miniplayer Shadow',
-                subtitle: 'Dynamic depth effect for player',
+                subtitle: 'Dynamic depth effect for miniplayer',
                 icon: FlutterRemix.magic_line,
                 isLast: true,
                 showExpansionIcon: settingsParams.showMiniplayerShadow,

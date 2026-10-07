@@ -33,7 +33,9 @@ class PlaylistDialogs {
               decoration: InputDecoration(
                 hintText: "Playlist Name",
                 filled: true,
-                fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                fillColor: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -59,15 +61,9 @@ class PlaylistDialogs {
                         final name = controller.text.trim();
                         if (name.isNotEmpty) {
                           if (isEditing) {
-                            music.renamePlaylist(
-                              playlistId,
-                              name,
-                            );
+                            music.renamePlaylist(playlistId, name);
                           } else {
-                            music.createPlaylist(
-                              name,
-                              tracks,
-                            );
+                            music.createPlaylist(name, tracks);
                           }
                         }
                         Navigator.of(context, rootNavigator: true).pop();

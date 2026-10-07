@@ -37,11 +37,7 @@ class PlaylistsPageController extends ChangeNotifier {
   }
 
   void deletePlaylist(BuildContext context, Playlist playlist) {
-    PlaylistDialogs.showDeleteConfirmation(
-      context,
-      playlist.id,
-      playlist.name,
-    );
+    PlaylistDialogs.showDeleteConfirmation(context, playlist.id, playlist.name);
   }
 
   void shufflePlaylist(BuildContext context, Playlist playlist) {
@@ -156,10 +152,10 @@ class PlaylistsPageController extends ChangeNotifier {
     if (adjustedNew >= totalTracksCount) adjustedNew = totalTracksCount - 1;
 
     context.read<MusicProvider>().reorderPlaylistTracks(
-          playlistId,
-          adjustedOld,
-          adjustedNew,
-        );
+      playlistId,
+      adjustedOld,
+      adjustedNew,
+    );
   }
 
   void removeTrackFromPlaylist({

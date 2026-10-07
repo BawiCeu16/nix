@@ -210,8 +210,10 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       : 0.0;
 
   Stream<bool> get isPlayingStream => _audioPlayer.playerStateStream
-      .map((state) =>
-          state.playing && state.processingState != ProcessingState.completed)
+      .map(
+        (state) =>
+            state.playing && state.processingState != ProcessingState.completed,
+      )
       .distinct();
   Stream<Duration> get positionStream => _audioPlayer.positionStream;
   Stream<Duration?> get durationStream => _audioPlayer.durationStream;
@@ -267,7 +269,7 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
     final audioProcessingState = currentTrack == null
         ? AudioProcessingState.idle
         : (processingStateMap[state.processingState] ??
-            AudioProcessingState.idle);
+              AudioProcessingState.idle);
 
     playbackState.add(
       PlaybackState(
@@ -874,7 +876,9 @@ class CurrentMusicProvider extends BaseAudioHandler with ChangeNotifier {
       }
 
       final currentIndex = _currentTrack != null
-          ? _currentPlaylist!.tracks.indexWhere((t) => t.id == _currentTrack!.id)
+          ? _currentPlaylist!.tracks.indexWhere(
+              (t) => t.id == _currentTrack!.id,
+            )
           : -1;
       final nextIndex = currentIndex + 1;
 

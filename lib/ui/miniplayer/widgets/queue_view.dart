@@ -42,7 +42,6 @@ class _QueueViewState extends State<QueueView> {
   bool _showScrollButton = false;
   bool _isPlayerAbove = true;
   int? _lastScrolledTrackId;
-  bool _isQueueLocked = false;
   bool _isToolbarExpanded = false;
 
   @override
@@ -205,6 +204,9 @@ class _QueueViewState extends State<QueueView> {
     );
     final selectedIndices = playingIndex != -1 ? {playingIndex} : <int>{};
 
+    final settingsProvider = context.watch<SettingsProvider>();
+    final isQueueLocked = settingsProvider.isQueueLocked;
+
     final double clampedProgress = widget.queueProgressValue.clamp(0.0, 1.0);
     final bool isOffstage = clampedProgress <= 0.0;
 
@@ -340,7 +342,7 @@ class _QueueViewState extends State<QueueView> {
                                     );
                                   },
                                   onReorder: (oldIndex, newIndex) {
-                                    if (_isQueueLocked) return;
+                                    if (isQueueLocked) return;
                                     widget.onReorderEnd?.call();
                                     _reorderItemCallback(oldIndex, newIndex);
                                   },
@@ -487,7 +489,7 @@ class _QueueViewState extends State<QueueView> {
                                                 ),
                                               ),
                                               const SizedBox(width: 12.0),
-                                              _isQueueLocked
+                                              isQueueLocked
                                                   ? _ItemDragInterceptor(
                                                       child: IconButton(
                                                         key: const ValueKey(
@@ -569,16 +571,16 @@ class _QueueViewState extends State<QueueView> {
                                     children: [
                                       IconButton(
                                         onPressed: () {
-                                          setState(() {
-                                            _isQueueLocked = !_isQueueLocked;
-                                          });
+                                          settingsProvider.setIsQueueLocked(
+                                            !isQueueLocked,
+                                          );
                                         },
                                         icon: Icon(
-                                          _isQueueLocked
+                                          isQueueLocked
                                               ? FlutterRemix.lock_line
                                               : FlutterRemix.lock_unlock_line,
                                         ),
-                                        tooltip: _isQueueLocked
+                                        tooltip: isQueueLocked
                                             ? 'Unlock Queue'
                                             : 'Lock Queue',
                                       ),

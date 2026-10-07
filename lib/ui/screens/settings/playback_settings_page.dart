@@ -53,12 +53,11 @@ class _PlaybackSettingsPageState extends State<PlaybackSettingsPage> {
             children: [
               const NixSectionHeader(
                 title: 'Playback Behavior',
-                topPadding: 12,
+                topPadding: 16,
               ),
               CardListTile(
                 title: 'Auto Play',
-                subtitle:
-                    'Keep playing similar tracks when your current track ends',
+                subtitle: 'Keep playing similar tracks when current track ends',
                 icon: FlutterRemix.play_circle_line,
                 trailing: Switch(
                   value: settings.autoPlay,
@@ -80,9 +79,9 @@ class _PlaybackSettingsPageState extends State<PlaybackSettingsPage> {
               ),
               const SizedBox(height: 2.5),
               CardListTile(
-                title: 'Reset on New Track',
+                title: 'Reset Speed on New Track',
                 subtitle: 'Always return to 1.0x when starting a new track',
-                icon: FlutterRemix.refresh_line,
+                icon: FlutterRemix.speed_line,
                 trailing: Switch(
                   value: settings.resetSpeedOnNewTrack,
                   onChanged: (value) => settings.setResetSpeedOnNewTrack(value),
@@ -105,11 +104,11 @@ class _PlaybackSettingsPageState extends State<PlaybackSettingsPage> {
               ),
               const NixSectionHeader(
                 title: 'Player Experience',
-                topPadding: 32,
+                topPadding: 24,
               ),
               NixCardExpansionTile(
                 title: 'Up Next Indicator',
-                subtitle: 'Show the upcoming track before the current one ends',
+                subtitle: 'Show upcoming track before current track ends',
                 icon: FlutterRemix.skip_forward_mini_line,
                 isFirst: true,
                 initiallyExpanded: false,
@@ -145,7 +144,7 @@ class _PlaybackSettingsPageState extends State<PlaybackSettingsPage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 const Text(
-                                  'UPNext Show Time',
+                                  'Up Next Display Time',
                                   style: TextStyle(
                                     fontWeight: FontWeight.w500,
                                     fontSize: 13,

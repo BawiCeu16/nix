@@ -40,21 +40,23 @@ class AlbumsPageController extends ChangeNotifier {
         list.sort((a, b) => b.numOfSongs.compareTo(a.numOfSongs));
         break;
     }
-    
+
     if (!_isAscending) {
       return list.reversed.toList();
     }
-    
+
     return list;
   }
 
-  void openAlbumDetails(BuildContext context, String albumTitle, String albumArtist) {
+  void openAlbumDetails(
+    BuildContext context,
+    String albumTitle,
+    String albumArtist,
+  ) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => AlbumTracksPage(
-          albumTitle: albumTitle,
-          albumArtist: albumArtist,
-        ),
+        builder: (_) =>
+            AlbumTracksPage(albumTitle: albumTitle, albumArtist: albumArtist),
       ),
     );
   }

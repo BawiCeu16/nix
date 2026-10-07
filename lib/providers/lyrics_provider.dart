@@ -32,7 +32,8 @@ class LyricsProvider with ChangeNotifier {
   void update(SettingsProvider settings, CurrentMusicProvider currentMusic) {
     _settingsProvider = settings;
     final bool trackChanged =
-        currentMusic.currentTrack?.id != _currentMusicProvider?.currentTrack?.id;
+        currentMusic.currentTrack?.id !=
+        _currentMusicProvider?.currentTrack?.id;
     _currentMusicProvider = currentMusic;
 
     if (trackChanged) {

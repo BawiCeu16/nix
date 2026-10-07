@@ -41,11 +41,11 @@ class TracksPageController extends ChangeNotifier {
         list.sort((a, b) => a.album.compareTo(b.album));
         break;
     }
-    
+
     if (!_isAscending) {
       return list.reversed.toList();
     }
-    
+
     return list;
   }
 }

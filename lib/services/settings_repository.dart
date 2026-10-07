@@ -21,17 +21,24 @@ class SettingsRepository {
       orElse: () => ThemeMode.system,
     );
   }
-  Future<void> setThemeMode(ThemeMode mode) => _box.put(HiveKeys.themeMode, mode.name);
+
+  Future<void> setThemeMode(ThemeMode mode) =>
+      _box.put(HiveKeys.themeMode, mode.name);
 
   // Accent Color Mode
   AccentColorMode get accentColorMode {
-    final String mode = _box.get(HiveKeys.accentColorMode, defaultValue: 'dynamic');
+    final String mode = _box.get(
+      HiveKeys.accentColorMode,
+      defaultValue: 'dynamic',
+    );
     return AccentColorMode.values.firstWhere(
       (e) => e.name == mode,
       orElse: () => AccentColorMode.dynamic,
     );
   }
-  Future<void> setAccentColorMode(AccentColorMode mode) => _box.put(HiveKeys.accentColorMode, mode.name);
+
+  Future<void> setAccentColorMode(AccentColorMode mode) =>
+      _box.put(HiveKeys.accentColorMode, mode.name);
 
   // Custom Accent Color
   Color get customAccentColor {
@@ -41,23 +48,41 @@ class SettingsRepository {
     );
     return Color(colorValue);
   }
-  Future<void> setCustomAccentColor(Color color) => _box.put(HiveKeys.customAccentColor, color.toARGB32());
+
+  Future<void> setCustomAccentColor(Color color) =>
+      _box.put(HiveKeys.customAccentColor, color.toARGB32());
 
   // Swipe to Dismiss
-  bool get swipeToDismiss => _box.get(HiveKeys.swipeToDismiss, defaultValue: true);
-  Future<void> setSwipeToDismiss(bool value) => _box.put(HiveKeys.swipeToDismiss, value);
+  bool get swipeToDismiss =>
+      _box.get(HiveKeys.swipeToDismiss, defaultValue: true);
+  Future<void> setSwipeToDismiss(bool value) =>
+      _box.put(HiveKeys.swipeToDismiss, value);
 
   // Minimum Duration
   int get minDuration => _box.get(HiveKeys.minDuration, defaultValue: 60);
-  Future<void> setMinDuration(int seconds) => _box.put(HiveKeys.minDuration, seconds);
+  Future<void> setMinDuration(int seconds) =>
+      _box.put(HiveKeys.minDuration, seconds);
 
   // Artist Grid Columns
-  int get artistGridCrossAxisCount => _box.get(HiveKeys.artistGridCrossAxisCount, defaultValue: 2);
-  Future<void> setArtistGridCrossAxisCount(int count) => _box.put(HiveKeys.artistGridCrossAxisCount, count);
+  int get artistGridCrossAxisCount =>
+      _box.get(HiveKeys.artistGridCrossAxisCount, defaultValue: 2);
+  Future<void> setArtistGridCrossAxisCount(int count) =>
+      _box.put(HiveKeys.artistGridCrossAxisCount, count);
+
+  // Library - Save Filter
+  bool get saveFilter => _box.get(HiveKeys.saveFilter, defaultValue: false);
+  Future<void> setSaveFilter(bool value) =>
+      _box.put(HiveKeys.saveFilter, value);
+
+  // Library - Save Sort
+  bool get saveSort => _box.get(HiveKeys.saveSort, defaultValue: false);
+  Future<void> setSaveSort(bool value) => _box.put(HiveKeys.saveSort, value);
 
   // Haptic Feedback
-  bool get enableHaptics => _box.get(HiveKeys.enableHaptics, defaultValue: true);
-  Future<void> setEnableHaptics(bool value) => _box.put(HiveKeys.enableHaptics, value);
+  bool get enableHaptics =>
+      _box.get(HiveKeys.enableHaptics, defaultValue: true);
+  Future<void> setEnableHaptics(bool value) =>
+      _box.put(HiveKeys.enableHaptics, value);
 
   // Haptic Force
   HapticForce get hapticForce {
@@ -67,133 +92,204 @@ class SettingsRepository {
       orElse: () => HapticForce.medium,
     );
   }
-  Future<void> setHapticForce(HapticForce force) => _box.put(HiveKeys.hapticForce, force.name);
+
+  Future<void> setHapticForce(HapticForce force) =>
+      _box.put(HiveKeys.hapticForce, force.name);
 
   // Playback Speed
-  double get playbackSpeed => _box.get(HiveKeys.playbackSpeed, defaultValue: 1.0);
-  Future<void> setPlaybackSpeed(double value) => _box.put(HiveKeys.playbackSpeed, value);
+  double get playbackSpeed =>
+      _box.get(HiveKeys.playbackSpeed, defaultValue: 1.0);
+  Future<void> setPlaybackSpeed(double value) =>
+      _box.put(HiveKeys.playbackSpeed, value);
 
   // Reset Speed on New Track
-  bool get resetSpeedOnNewTrack => _box.get(HiveKeys.resetSpeedOnNewTrack, defaultValue: true);
-  Future<void> setResetSpeedOnNewTrack(bool value) => _box.put(HiveKeys.resetSpeedOnNewTrack, value);
+  bool get resetSpeedOnNewTrack =>
+      _box.get(HiveKeys.resetSpeedOnNewTrack, defaultValue: true);
+  Future<void> setResetSpeedOnNewTrack(bool value) =>
+      _box.put(HiveKeys.resetSpeedOnNewTrack, value);
 
   // Skip Silence
   bool get skipSilence => _box.get(HiveKeys.skipSilence, defaultValue: false);
-  Future<void> setSkipSilence(bool value) => _box.put(HiveKeys.skipSilence, value);
+  Future<void> setSkipSilence(bool value) =>
+      _box.put(HiveKeys.skipSilence, value);
 
   // Up Next Indicator
-  bool get upNextIndicator => _box.get(HiveKeys.upNextIndicator, defaultValue: true);
-  Future<void> setUpNextIndicator(bool value) => _box.put(HiveKeys.upNextIndicator, value);
+  bool get upNextIndicator =>
+      _box.get(HiveKeys.upNextIndicator, defaultValue: true);
+  Future<void> setUpNextIndicator(bool value) =>
+      _box.put(HiveKeys.upNextIndicator, value);
 
   // Up Next Indicator Time
-  int get upNextIndicatorTime => _box.get(HiveKeys.upNextIndicatorTime, defaultValue: 20);
-  Future<void> setUpNextIndicatorTime(int seconds) => _box.put(HiveKeys.upNextIndicatorTime, seconds);
+  int get upNextIndicatorTime =>
+      _box.get(HiveKeys.upNextIndicatorTime, defaultValue: 20);
+  Future<void> setUpNextIndicatorTime(int seconds) =>
+      _box.put(HiveKeys.upNextIndicatorTime, seconds);
 
   // Appearance - AMOLED Mode
-  bool get useAmoledMode => _box.get(HiveKeys.useAmoledMode, defaultValue: false);
-  Future<void> setUseAmoledMode(bool value) => _box.put(HiveKeys.useAmoledMode, value);
+  bool get useAmoledMode =>
+      _box.get(HiveKeys.useAmoledMode, defaultValue: false);
+  Future<void> setUseAmoledMode(bool value) =>
+      _box.put(HiveKeys.useAmoledMode, value);
 
   // Appearance - Artwork Shape
   ArtworkShape get artworkShape {
-    final String shape = _box.get(HiveKeys.artworkShape, defaultValue: 'rounded');
+    final String shape = _box.get(
+      HiveKeys.artworkShape,
+      defaultValue: 'rounded',
+    );
     return ArtworkShape.values.firstWhere(
       (e) => e.name == shape,
       orElse: () => ArtworkShape.rounded,
     );
   }
-  Future<void> setArtworkShape(ArtworkShape shape) => _box.put(HiveKeys.artworkShape, shape.name);
+
+  Future<void> setArtworkShape(ArtworkShape shape) =>
+      _box.put(HiveKeys.artworkShape, shape.name);
 
   // Appearance - Artwork Quality
   NixArtworkQuality get artworkQuality {
-    final String quality = _box.get(HiveKeys.artworkQuality, defaultValue: 'high');
+    final String quality = _box.get(
+      HiveKeys.artworkQuality,
+      defaultValue: 'high',
+    );
     return NixArtworkQuality.values.firstWhere(
       (e) => e.name == quality,
       orElse: () => NixArtworkQuality.high,
     );
   }
-  Future<void> setArtworkQuality(NixArtworkQuality quality) => _box.put(HiveKeys.artworkQuality, quality.name);
+
+  Future<void> setArtworkQuality(NixArtworkQuality quality) =>
+      _box.put(HiveKeys.artworkQuality, quality.name);
 
   // Appearance - CD Artwork Style
-  bool get useCdArtworkStyle => _box.get(HiveKeys.useCdArtworkStyle, defaultValue: true);
-  Future<void> setUseCdArtworkStyle(bool value) => _box.put(HiveKeys.useCdArtworkStyle, value);
+  bool get useCdArtworkStyle =>
+      _box.get(HiveKeys.useCdArtworkStyle, defaultValue: true);
+  Future<void> setUseCdArtworkStyle(bool value) =>
+      _box.put(HiveKeys.useCdArtworkStyle, value);
 
   // Appearance - Split CD
-  bool get splitCdWhenHalfOpen => _box.get(HiveKeys.splitCdWhenHalfOpen, defaultValue: true);
-  Future<void> setSplitCdWhenHalfOpen(bool value) => _box.put(HiveKeys.splitCdWhenHalfOpen, value);
+  bool get splitCdWhenHalfOpen =>
+      _box.get(HiveKeys.splitCdWhenHalfOpen, defaultValue: true);
+  Future<void> setSplitCdWhenHalfOpen(bool value) =>
+      _box.put(HiveKeys.splitCdWhenHalfOpen, value);
 
   // Appearance - Rotate CD
-  bool get rotateCdWhenPlaying => _box.get(HiveKeys.rotateCdWhenPlaying, defaultValue: true);
-  Future<void> setRotateCdWhenPlaying(bool value) => _box.put(HiveKeys.rotateCdWhenPlaying, value);
+  bool get rotateCdWhenPlaying =>
+      _box.get(HiveKeys.rotateCdWhenPlaying, defaultValue: true);
+  Future<void> setRotateCdWhenPlaying(bool value) =>
+      _box.put(HiveKeys.rotateCdWhenPlaying, value);
 
   // Appearance - CD Rotation Speed
-  double get cdRotationSpeed => (_box.get(HiveKeys.cdRotationSpeed) as num?)?.toDouble() ?? 20.0;
-  Future<void> setCdRotationSpeed(double speed) => _box.put(HiveKeys.cdRotationSpeed, speed);
+  double get cdRotationSpeed =>
+      (_box.get(HiveKeys.cdRotationSpeed) as num?)?.toDouble() ?? 20.0;
+  Future<void> setCdRotationSpeed(double speed) =>
+      _box.put(HiveKeys.cdRotationSpeed, speed);
 
   // Appearance - Timer Gesture
   TimerGesture get timerGesture {
-    final String gesture = _box.get(HiveKeys.timerGesture, defaultValue: 'longPress');
+    final String gesture = _box.get(
+      HiveKeys.timerGesture,
+      defaultValue: 'longPress',
+    );
     return TimerGesture.values.firstWhere(
       (e) => e.name == gesture,
       orElse: () => TimerGesture.longPress,
     );
   }
-  Future<void> setTimerGesture(TimerGesture gesture) => _box.put(HiveKeys.timerGesture, gesture.name);
+
+  Future<void> setTimerGesture(TimerGesture gesture) =>
+      _box.put(HiveKeys.timerGesture, gesture.name);
 
   // Appearance - Swipe to Change Track
-  bool get swipeToChangeTrack => _box.get(HiveKeys.swipeToChangeTrack, defaultValue: true);
-  Future<void> setSwipeToChangeTrack(bool value) => _box.put(HiveKeys.swipeToChangeTrack, value);
+  bool get swipeToChangeTrack =>
+      _box.get(HiveKeys.swipeToChangeTrack, defaultValue: true);
+  Future<void> setSwipeToChangeTrack(bool value) =>
+      _box.put(HiveKeys.swipeToChangeTrack, value);
 
   // Appearance - Fast Swipe Artwork
-  bool get fastSwipeArtwork => _box.get(HiveKeys.fastSwipeArtwork, defaultValue: true);
-  Future<void> setFastSwipeArtwork(bool value) => _box.put(HiveKeys.fastSwipeArtwork, value);
+  bool get fastSwipeArtwork =>
+      _box.get(HiveKeys.fastSwipeArtwork, defaultValue: true);
+  Future<void> setFastSwipeArtwork(bool value) =>
+      _box.put(HiveKeys.fastSwipeArtwork, value);
 
   // Appearance - Track Swipe Action
   TrackSwipeAction get trackSwipeAction {
-    final String action = _box.get(HiveKeys.trackSwipeAction, defaultValue: 'playPlayback');
+    final String action = _box.get(
+      HiveKeys.trackSwipeAction,
+      defaultValue: 'playPlayback',
+    );
     return TrackSwipeAction.values.firstWhere(
       (e) => e.name == action,
       orElse: () => TrackSwipeAction.playPlayback,
     );
   }
-  Future<void> setTrackSwipeAction(TrackSwipeAction action) => _box.put(HiveKeys.trackSwipeAction, action.name);
+
+  Future<void> setTrackSwipeAction(TrackSwipeAction action) =>
+      _box.put(HiveKeys.trackSwipeAction, action.name);
 
   // Appearance - Miniplayer Shadow
-  bool get showMiniplayerShadow => _box.get(HiveKeys.showMiniplayerShadow, defaultValue: true);
-  Future<void> setShowMiniplayerShadow(bool value) => _box.put(HiveKeys.showMiniplayerShadow, value);
+  bool get showMiniplayerShadow =>
+      _box.get(HiveKeys.showMiniplayerShadow, defaultValue: true);
+  Future<void> setShowMiniplayerShadow(bool value) =>
+      _box.put(HiveKeys.showMiniplayerShadow, value);
 
   // Appearance - Miniplayer Shadow Style
-  String get miniplayerShadowStyle => _box.get(HiveKeys.miniplayerShadowStyle, defaultValue: 'expressive');
-  Future<void> setMiniplayerShadowStyle(String style) => _box.put(HiveKeys.miniplayerShadowStyle, style);
+  String get miniplayerShadowStyle =>
+      _box.get(HiveKeys.miniplayerShadowStyle, defaultValue: 'expressive');
+  Future<void> setMiniplayerShadowStyle(String style) =>
+      _box.put(HiveKeys.miniplayerShadowStyle, style);
 
   // Appearance - Miniplayer Shadow Opacity
-  double get miniplayerShadowOpacity => _box.get(HiveKeys.miniplayerShadowOpacity, defaultValue: 1.0);
-  Future<void> setMiniplayerShadowOpacity(double value) => _box.put(HiveKeys.miniplayerShadowOpacity, value);
+  double get miniplayerShadowOpacity =>
+      _box.get(HiveKeys.miniplayerShadowOpacity, defaultValue: 1.0);
+  Future<void> setMiniplayerShadowOpacity(double value) =>
+      _box.put(HiveKeys.miniplayerShadowOpacity, value);
 
   // Appearance - Auto Scroll Queue
-  bool get autoScrollQueue => _box.get(HiveKeys.autoScrollQueue, defaultValue: true);
-  Future<void> setAutoScrollQueue(bool value) => _box.put(HiveKeys.autoScrollQueue, value);
+  bool get autoScrollQueue =>
+      _box.get(HiveKeys.autoScrollQueue, defaultValue: true);
+  Future<void> setAutoScrollQueue(bool value) =>
+      _box.put(HiveKeys.autoScrollQueue, value);
+
+  // Playback - Queue Lock
+  bool get isQueueLocked =>
+      _box.get(HiveKeys.isQueueLocked, defaultValue: false);
+  Future<void> setIsQueueLocked(bool value) =>
+      _box.put(HiveKeys.isQueueLocked, value);
 
   // Lyrics - Save Offline
-  bool get saveLyricsOffline => _box.get(HiveKeys.saveLyricsOffline, defaultValue: true);
-  Future<void> setSaveLyricsOffline(bool value) => _box.put(HiveKeys.saveLyricsOffline, value);
+  bool get saveLyricsOffline =>
+      _box.get(HiveKeys.saveLyricsOffline, defaultValue: true);
+  Future<void> setSaveLyricsOffline(bool value) =>
+      _box.put(HiveKeys.saveLyricsOffline, value);
 
   // Appearance - SnackBar Position
   SnackBarPosition get snackbarPosition {
-    final String position = _box.get(HiveKeys.snackbarPosition, defaultValue: 'bottom');
+    final String position = _box.get(
+      HiveKeys.snackbarPosition,
+      defaultValue: 'bottom',
+    );
     return SnackBarPosition.values.firstWhere(
       (e) => e.name == position,
       orElse: () => SnackBarPosition.bottom,
     );
   }
-  Future<void> setSnackbarPosition(SnackBarPosition position) => _box.put(HiveKeys.snackbarPosition, position.name);
+
+  Future<void> setSnackbarPosition(SnackBarPosition position) =>
+      _box.put(HiveKeys.snackbarPosition, position.name);
 
   // Appearance - SnackBar Dismissible
-  bool get snackbarSwipeToDismiss => _box.get(HiveKeys.snackbarSwipeToDismiss, defaultValue: true);
-  Future<void> setSnackbarSwipeToDismiss(bool value) => _box.put(HiveKeys.snackbarSwipeToDismiss, value);
+  bool get snackbarSwipeToDismiss =>
+      _box.get(HiveKeys.snackbarSwipeToDismiss, defaultValue: true);
+  Future<void> setSnackbarSwipeToDismiss(bool value) =>
+      _box.put(HiveKeys.snackbarSwipeToDismiss, value);
 
   // Search History
   List<String> get searchHistory {
-    final List<dynamic> history = _box.get(HiveKeys.searchHistory, defaultValue: []);
+    final List<dynamic> history = _box.get(
+      HiveKeys.searchHistory,
+      defaultValue: [],
+    );
     return history.cast<String>();
   }
 
@@ -217,8 +313,10 @@ class SettingsRepository {
   }
 
   // Playback - Resume from Played Duration
-  bool get resumeFromPlayedDuration => _box.get(HiveKeys.resumeFromPlayedDuration, defaultValue: true);
-  Future<void> setResumeFromPlayedDuration(bool value) => _box.put(HiveKeys.resumeFromPlayedDuration, value);
+  bool get resumeFromPlayedDuration =>
+      _box.get(HiveKeys.resumeFromPlayedDuration, defaultValue: true);
+  Future<void> setResumeFromPlayedDuration(bool value) =>
+      _box.put(HiveKeys.resumeFromPlayedDuration, value);
 
   /// Clears the Hive settings box.
   Future<void> resetToDefaults() async {

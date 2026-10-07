@@ -54,12 +54,166 @@ class _LibrarySettingsPageState extends State<LibrarySettingsPage> {
             physics: const BouncingScrollPhysics(),
             children: [
               const NixSectionHeader(title: 'Organization', topPadding: 16),
+              NixCardExpansionTile(
+                title: 'Save Filter & Sort',
+                isFirst: true,
+                subtitle: 'Remember choices across sessions',
+                icon: FlutterRemix.filter_3_line,
+                showExpansionIcon: settings.saveFilter || settings.saveSort,
+                initiallyExpanded: false,
+                trailing: Switch(
+                  value: settings.saveFilter || settings.saveSort,
+                  onChanged: (value) {
+                    settings.setSaveFilter(value);
+                    settings.setSaveSort(value);
+                  },
+                ),
+                children: [
+                  if (settings.saveFilter || settings.saveSort) ...[
+                    const SizedBox(height: 2.5),
+                    CardListTileWithChild(
+                      title: 'Preferences to Save',
+                      subtitle: 'Choose what to remember',
+                      icon: FlutterRemix.list_check,
+                      child: M3EDropdownMenu<String>(
+                        items: [
+                          M3EDropdownItem<String>(
+                            label: 'Filter and Sort',
+                            value: 'both',
+                            selected: settings.saveFilter && settings.saveSort,
+                          ),
+                          M3EDropdownItem<String>(
+                            label: 'Filter',
+                            value: 'filter',
+                            selected: settings.saveFilter && !settings.saveSort,
+                          ),
+                          M3EDropdownItem<String>(
+                            label: 'Sort',
+                            value: 'sort',
+                            selected: !settings.saveFilter && settings.saveSort,
+                          ),
+                        ],
+                        singleSelect: true,
+                        searchEnabled: false,
+                        showChipAnimation: true,
+                        maxSelections: 1,
+                        enabled: true,
+                        containerRadius: 16.0,
+                        haptic: M3EHapticFeedback.light,
+                        openMotion: M3EMotion.custom(
+                          stiffness: 500.0,
+                          damping: 0.6,
+                        ),
+                        closeMotion: M3EMotion.custom(
+                          stiffness: 500.0,
+                          damping: 0.6,
+                        ),
+                        fieldStyle: M3EDropdownFieldStyle(
+                          hintText: 'Select Option',
+                          hintStyle: TextStyle(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          selectedTextStyle: TextStyle(
+                            color: colorScheme.onSurface,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          showClearIcon: false,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14.0,
+                            vertical: 10.0,
+                          ),
+                          backgroundColor: colorScheme.surfaceContainerHigh,
+                          foregroundColor: colorScheme.onSurface,
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                        dropdownStyle: M3EDropdownStyle(
+                          elevation: 0.0,
+                          maxHeight: 350.0,
+                          marginTop: 6.0,
+                          containerRadius: 16.0,
+                          expandDirection: ExpandDirection.auto,
+                          contentPadding: const EdgeInsets.all(6.0),
+                          backgroundColor: colorScheme.surfaceContainerHigh,
+                        ),
+                        chipStyle: M3EChipStyle(
+                          backgroundColor: colorScheme.primaryContainer,
+                          labelStyle: TextStyle(
+                            color: colorScheme.onPrimaryContainer,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          deleteIcon: Icon(
+                            Icons.close,
+                            size: 16,
+                            color: colorScheme.onPrimaryContainer,
+                          ),
+                          borderRadius: BorderRadius.circular(20.0),
+                          spacing: 6.0,
+                          runSpacing: 6.0,
+                          wrap: true,
+                          maxDisplayCount: 1,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8.0,
+                            vertical: 4.0,
+                          ),
+                          openMotion: M3EMotion.custom(
+                            stiffness: 500.0,
+                            damping: 0.6,
+                          ),
+                          closeMotion: M3EMotion.custom(
+                            stiffness: 500.0,
+                            damping: 0.6,
+                          ),
+                        ),
+                        itemStyle: M3EDropdownItemStyle(
+                          backgroundColor: colorScheme.surfaceContainer,
+                          selectedBackgroundColor: colorScheme.primaryContainer,
+                          textColor: colorScheme.onSurface,
+                          selectedTextColor: colorScheme.onPrimaryContainer,
+                          selectedTextStyle: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onPrimaryContainer,
+                          ),
+                          outerRadius: 14.0,
+                          innerRadius: 6.0,
+                          itemGap: 3.0,
+                          itemPadding: const EdgeInsets.symmetric(
+                            horizontal: 14.0,
+                            vertical: 12.0,
+                          ),
+                          selectedIcon: Icon(
+                            Icons.check_rounded,
+                            color: colorScheme.onPrimaryContainer,
+                            size: 20,
+                          ),
+                        ),
+                        closeOnBackButton: false,
+                        onSelectionChanged: (selectedItems) {
+                          if (selectedItems.isNotEmpty) {
+                            final selectedValue = selectedItems.first.value;
+                            if (selectedValue == 'both') {
+                              settings.setSaveFilter(true);
+                              settings.setSaveSort(true);
+                            } else if (selectedValue == 'filter') {
+                              settings.setSaveFilter(true);
+                              settings.setSaveSort(false);
+                            } else if (selectedValue == 'sort') {
+                              settings.setSaveFilter(false);
+                              settings.setSaveSort(true);
+                            }
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 2.5),
               CardListTileWithChild(
                 title: 'Filter Short Audio',
                 subtitle:
                     'Minimum length: ${_controller.getDurationLabel(settings.minDuration)}',
-                icon: FlutterRemix.filter_line,
-                isFirst: true,
+                icon: FlutterRemix.timer_line,
+                isLast: true,
                 child: M3EDropdownMenu<String>(
                   items: [
                     M3EDropdownItem<String>(
@@ -86,7 +240,7 @@ class _LibrarySettingsPageState extends State<LibrarySettingsPage> {
                   singleSelect: true,
                   searchEnabled: false,
                   showChipAnimation: true,
-                  maxSelections: 3,
+                  maxSelections: 1,
                   enabled: true,
                   containerRadius: 16.0,
                   haptic: M3EHapticFeedback.light,
@@ -132,7 +286,7 @@ class _LibrarySettingsPageState extends State<LibrarySettingsPage> {
                     spacing: 6.0,
                     runSpacing: 6.0,
                     wrap: true,
-                    maxDisplayCount: 3,
+                    maxDisplayCount: 1,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8.0,
                       vertical: 4.0,
@@ -179,11 +333,14 @@ class _LibrarySettingsPageState extends State<LibrarySettingsPage> {
                   },
                 ),
               ),
-              const SizedBox(height: 2.5),
+
+              const NixSectionHeader(title: 'Display & Layout', topPadding: 24),
               CardListTileWithChild(
                 title: 'Artist Grid Columns',
                 subtitle: '${settings.artistGridCrossAxisCount} Columns',
-                icon: FlutterRemix.grid_fill,
+                icon: FlutterRemix.layout_grid_line,
+                isFirst: true,
+                isLast: true,
                 child: M3EDropdownMenu<String>(
                   items: [
                     M3EDropdownItem<String>(
@@ -297,11 +454,16 @@ class _LibrarySettingsPageState extends State<LibrarySettingsPage> {
                   },
                 ),
               ),
-              const SizedBox(height: 2.5),
+
+              const NixSectionHeader(
+                title: 'Library Management',
+                topPadding: 24,
+              ),
               CardListTile(
                 title: 'Scan Media',
                 subtitle: 'Manually refresh your music library',
                 icon: FlutterRemix.refresh_line,
+                isFirst: true,
                 isLast: true,
                 onTap: () => _controller.scanDevice(context, music),
               ),
@@ -320,7 +482,6 @@ class _LibrarySettingsPageState extends State<LibrarySettingsPage> {
                 title: 'Reset Library Database',
                 subtitle: 'Clear all history, favorites, and re-scan',
                 icon: FlutterRemix.delete_bin_line,
-
                 isLast: true,
                 onTap: () => _controller.showResetConfirmation(context, music),
               ),

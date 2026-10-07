@@ -83,80 +83,81 @@ class NixDialog extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                if (title != null) ...[
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                    child: Row(
-                      children: [
-                        if (trackId != null) ...[
-                          SizedBox(
-                            width: 68,
-                            height: 68,
-                            child: NixArtwork(
-                              id: trackId!,
-                              type: ArtworkType.AUDIO,
-                              borderRadius: BorderRadius.circular(16),
+                  if (title != null) ...[
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+                      child: Row(
+                        children: [
+                          if (trackId != null) ...[
+                            SizedBox(
                               width: 68,
                               height: 68,
-                              quality: NixArtworkQuality
-                                  .medium, // Dialog headers need crisp art
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                        ],
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: titleAlignment,
-                            children: [
-                              Text(
-                                title!,
-                                textAlign:
-                                    titleAlignment == CrossAxisAlignment.center
-                                    ? TextAlign.center
-                                    : TextAlign.start,
-                                style: textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w500,
-                                  color: colorScheme.onSurface,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                              child: NixArtwork(
+                                id: trackId!,
+                                type: ArtworkType.AUDIO,
+                                borderRadius: BorderRadius.circular(16),
+                                width: 68,
+                                height: 68,
+                                quality: NixArtworkQuality
+                                    .medium, // Dialog headers need crisp art
                               ),
-                              if (subtitle != null)
+                            ),
+                            const SizedBox(width: 16),
+                          ],
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: titleAlignment,
+                              children: [
                                 Text(
-                                  subtitle!,
+                                  title!,
                                   textAlign:
                                       titleAlignment ==
                                           CrossAxisAlignment.center
                                       ? TextAlign.center
                                       : TextAlign.start,
-                                  style: textTheme.bodyMedium?.copyWith(
-                                    color: colorScheme.onSurfaceVariant,
+                                  style: textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                    color: colorScheme.onSurface,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                            ],
+                                if (subtitle != null)
+                                  Text(
+                                    subtitle!,
+                                    textAlign:
+                                        titleAlignment ==
+                                            CrossAxisAlignment.center
+                                        ? TextAlign.center
+                                        : TextAlign.start,
+                                    style: textTheme.bodyMedium?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
+                    ),
+                  ],
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: children,
+                      ),
                     ),
                   ),
                 ],
-                Flexible(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: children,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }
