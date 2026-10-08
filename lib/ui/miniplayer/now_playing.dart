@@ -1,4 +1,6 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_remix/flutter_remix.dart';
 import 'package:m3e_buttons/m3e_buttons.dart';
 import 'package:provider/provider.dart';
@@ -14,6 +16,7 @@ import 'package:nix/ui/miniplayer/widgets/track_info.dart';
 import 'package:nix/ui/miniplayer/widgets/player_controls.dart';
 import 'package:nix/ui/miniplayer/widgets/queue_view.dart';
 import 'package:nix/ui/miniplayer/controllers/now_playing_controller.dart';
+import 'package:nix/ui/miniplayer/models/animation_data.dart';
 
 class NowPlaying extends StatefulWidget {
   final AnimationController animation;
@@ -89,7 +92,10 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
             onHorizontalDragEnd: (details) =>
                 _controller.onHorizontalDragEnd(details, context),
             child: AnimatedBuilder(
-              animation: widget.animation,
+              animation: Listenable.merge([
+                widget.animation,
+                _controller.swipeFadeAnim,
+              ]),
               builder: (context, child) {
                 final data = _controller.calculateAnimationData(
                   widget.animation.value,
@@ -424,32 +430,64 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                     //     );
                     //   },
                     // ),
-                    //Track info
-                    TrackInfo(
-                      sAnim: _controller.sAnim,
-                      sMaxOffset: _controller.sMaxOffset,
-                      stParallax: _controller.stParallax,
-                      maxOffset: _controller.maxOffset,
-                      topInset: _controller.topInset,
-                      bounceUp: _controller.bounceUp,
-                      bounceDown: _controller.bounceDown,
-                      screenSize: _controller.screenSize,
-                      data: data,
-                      lyricsAnim: _controller.lyricsAnim,
-                      onToggleLyrics: _controller.toggleLyrics,
-                    ),
-                    //Track image
-                    TrackImage(
-                      sAnim: _controller.sAnim,
-                      sMaxOffset: _controller.sMaxOffset,
-                      siParallax: _controller.siParallax,
-                      bounceUp: _controller.bounceUp,
-                      maxOffset: _controller.maxOffset,
-                      topInset: _controller.topInset,
-                      bounceDown: _controller.bounceDown,
-                      screenSize: _controller.screenSize,
-                      data: data,
-                      lyricsAnim: _controller.lyricsAnim,
+                    //Track info and image:
+                    //Cutoff and dynamic linear edge fading (with fade in/out animation) are active when swipe to skip next and previous is triggered in the Miniplayer section only
+                    ClipRRect(
+                      clipBehavior:
+                          (data.clampedProgress <= 0.4 &&
+                                  _controller.isSwipingTrack)
+                              ? Clip.antiAlias
+                              : Clip.none,
+                      clipper: MiniplayerContainerClipper(
+                        data: data,
+                        screenSize: _controller.screenSize,
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 6.0,
+                          vertical: 4.0,
+                        ),
+                      ),
+                      child: SwipeFadeMask(
+                        enabled: data.clampedProgress <= 0.4 &&
+                            _controller.isSwipingTrack,
+                        fadeProgress: math.max(
+                          _controller.swipeFadeAnim.value,
+                          (_controller.sAnim.value.abs() * 3.0).clamp(0.0, 1.0),
+                        ),
+                        hPadding: 12.0 *
+                            (1 - data.clampedProgress * 10 + 9).clamp(
+                              0.0,
+                              1.0,
+                            ),
+                        child: Stack(
+                          children: [
+                            TrackInfo(
+                              sAnim: _controller.sAnim,
+                              sMaxOffset: _controller.sMaxOffset,
+                              stParallax: _controller.stParallax,
+                              maxOffset: _controller.maxOffset,
+                              topInset: _controller.topInset,
+                              bounceUp: _controller.bounceUp,
+                              bounceDown: _controller.bounceDown,
+                              screenSize: _controller.screenSize,
+                              data: data,
+                              lyricsAnim: _controller.lyricsAnim,
+                              onToggleLyrics: _controller.toggleLyrics,
+                            ),
+                            TrackImage(
+                              sAnim: _controller.sAnim,
+                              sMaxOffset: _controller.sMaxOffset,
+                              siParallax: _controller.siParallax,
+                              bounceUp: _controller.bounceUp,
+                              maxOffset: _controller.maxOffset,
+                              topInset: _controller.topInset,
+                              bounceDown: _controller.bounceDown,
+                              screenSize: _controller.screenSize,
+                              data: data,
+                              lyricsAnim: _controller.lyricsAnim,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                     // Player controls
                     PlayerControls(
@@ -491,6 +529,219 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
           ),
         );
       },
+    );
+  }
+}
+
+/// Clips track information and artwork to the bounds and border radius
+/// of the Miniplayer container with a margin so horizontal swipe animations do not bleed outside.
+class MiniplayerContainerClipper extends CustomClipper<RRect> {
+  final PlayerAnimationData data;
+  final Size screenSize;
+  final EdgeInsets margin;
+
+  MiniplayerContainerClipper({
+    required this.data,
+    required this.screenSize,
+    this.margin = const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
+  });
+
+  @override
+  RRect getClip(Size size) {
+    final double hPadding =
+        12.0 * (1 - data.clampedProgress * 10 + 9).clamp(0.0, 1.0);
+    final double vPadding = 12.0 * data.inverseClampedProgress;
+    final double height = rangeProgress(
+      a: 82.0,
+      b: data.panelHeight,
+      c: data.progress.clamp(0.0, 3.0),
+    );
+    final double bottom =
+        size.height + data.bottomOffset - vPadding - margin.bottom;
+    final double top = bottom - (height - margin.top - margin.bottom);
+    final double left = hPadding + margin.left;
+    final double right = size.width - hPadding - margin.right;
+
+    final double radius =
+        (20.0 - (margin.left + margin.top) / 2).clamp(8.0, 20.0);
+
+    return RRect.fromRectAndRadius(
+      Rect.fromLTRB(left, top, right, bottom),
+      Radius.circular(radius),
+    );
+  }
+
+  @override
+  bool shouldReclip(covariant MiniplayerContainerClipper oldClipper) {
+    return oldClipper.data.progress != data.progress ||
+        oldClipper.data.bottomOffset != data.bottomOffset ||
+        oldClipper.screenSize != screenSize ||
+        oldClipper.margin != margin;
+  }
+}
+
+/// An ultra-optimized shader mask that applies a dynamic linear fade to the
+/// left and right edges of the Miniplayer container with smooth fade in/out animation.
+///
+/// When disabled (resting or expanded), zero compositing layers or shaders are created.
+class SwipeFadeMask extends SingleChildRenderObjectWidget {
+  final bool enabled;
+  final double fadeProgress;
+  final double hPadding;
+  final double marginH;
+  final double fadeWidth;
+
+  const SwipeFadeMask({
+    super.key,
+    required this.enabled,
+    required this.fadeProgress,
+    required this.hPadding,
+    this.marginH = 6.0,
+    this.fadeWidth = 28.0,
+    required Widget super.child,
+  });
+
+  @override
+  RenderSwipeFadeMask createRenderObject(BuildContext context) {
+    return RenderSwipeFadeMask(
+      enabled: enabled,
+      fadeProgress: fadeProgress,
+      hPadding: hPadding,
+      marginH: marginH,
+      fadeWidth: fadeWidth,
+    );
+  }
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    RenderSwipeFadeMask renderObject,
+  ) {
+    renderObject
+      ..enabled = enabled
+      ..fadeProgress = fadeProgress
+      ..hPadding = hPadding
+      ..marginH = marginH
+      ..fadeWidth = fadeWidth;
+  }
+}
+
+class RenderSwipeFadeMask extends RenderProxyBox {
+  RenderSwipeFadeMask({
+    required bool enabled,
+    required double fadeProgress,
+    required double hPadding,
+    required double marginH,
+    required double fadeWidth,
+    RenderBox? child,
+  })  : _enabled = enabled,
+        _fadeProgress = fadeProgress,
+        _hPadding = hPadding,
+        _marginH = marginH,
+        _fadeWidth = fadeWidth,
+        super(child);
+
+  bool _enabled;
+  bool get enabled => _enabled;
+  set enabled(bool value) {
+    if (_enabled == value) return;
+    _enabled = value;
+    markNeedsPaint();
+  }
+
+  double _fadeProgress;
+  double get fadeProgress => _fadeProgress;
+  set fadeProgress(double value) {
+    if (_fadeProgress == value) return;
+    _fadeProgress = value;
+    if (_enabled) markNeedsPaint();
+  }
+
+  double _hPadding;
+  double get hPadding => _hPadding;
+  set hPadding(double value) {
+    if (_hPadding == value) return;
+    _hPadding = value;
+    if (_enabled) markNeedsPaint();
+  }
+
+  double _marginH;
+  double get marginH => _marginH;
+  set marginH(double value) {
+    if (_marginH == value) return;
+    _marginH = value;
+    if (_enabled) markNeedsPaint();
+  }
+
+  double _fadeWidth;
+  double get fadeWidth => _fadeWidth;
+  set fadeWidth(double value) {
+    if (_fadeWidth == value) return;
+    _fadeWidth = value;
+    if (_enabled) markNeedsPaint();
+  }
+
+  @override
+  bool get alwaysNeedsCompositing => _enabled;
+
+  Shader _createShader(Rect bounds) {
+    final double w = bounds.width;
+    if (w <= 0) {
+      return const LinearGradient(
+        colors: [Colors.white, Colors.white],
+      ).createShader(bounds);
+    }
+
+    final double left = _hPadding + _marginH;
+    final double right = w - _hPadding - _marginH;
+    final double rightFadeWidth = _fadeWidth * _fadeProgress;
+    final double leftFadeWidth = _fadeWidth * _fadeProgress;
+
+    const double stop0 = 0.0;
+    final double stop1 = (left / w).clamp(0.0, 1.0);
+    final double stop2 = ((left + leftFadeWidth) / w).clamp(stop1, 1.0);
+    final double stop4 = (right / w).clamp(stop2, 1.0);
+    final double stop3 = ((right - rightFadeWidth) / w).clamp(stop2, stop4);
+    const double stop5 = 1.0;
+
+    final Color edgeColor = Color.lerp(
+      Colors.black,
+      Colors.transparent,
+      _fadeProgress,
+    )!;
+
+    return LinearGradient(
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
+      colors: [
+        edgeColor,
+        edgeColor,
+        Colors.black,
+        Colors.black,
+        edgeColor,
+        edgeColor,
+      ],
+      stops: [stop0, stop1, stop2, stop3, stop4, stop5],
+    ).createShader(bounds);
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    if (child == null) return;
+    if (!_enabled) {
+      super.paint(context, offset);
+      return;
+    }
+
+    final Rect rect = offset & size;
+    context.pushLayer(
+      ShaderMaskLayer(
+        shader: _createShader(rect),
+        maskRect: rect,
+        blendMode: BlendMode.dstIn,
+      ),
+      super.paint,
+      offset,
     );
   }
 }

@@ -169,6 +169,48 @@ class NowPlayingController with ChangeNotifier {
   StreamSubscription<Track>? _trackPlayedSub;
   bool _isSnapping = false;
 
+  /// Returns whether [globalPosition] is inside the collapsed Miniplayer container bounds.
+  /// If the player is already expanded beyond miniplayer threshold, returns true.
+  bool isInsideMiniplayer(Offset globalPosition) {
+    if (offset > maxOffset * 0.4) return true;
+    try {
+      final data = calculateAnimationData(_sheetAnimation.value);
+      final double hPadding =
+          12.0 * (1 - data.clampedProgress * 10 + 9).clamp(0.0, 1.0);
+      final double vPadding = 12.0 * data.inverseClampedProgress;
+      final double containerHeight = rangeProgress(
+        a: 82.0,
+        b: data.panelHeight,
+        c: data.progress.clamp(0.0, 3.0),
+      );
+      final double bottom = screenSize.height + data.bottomOffset - vPadding;
+      final double top = bottom - containerHeight;
+      final double left = hPadding;
+      final double right = screenSize.width - hPadding;
+
+      final rect = Rect.fromLTRB(left, top, right, bottom);
+      return rect.contains(globalPosition);
+    } catch (_) {
+      return true;
+    }
+  }
+
+  AnimationController? _swipeFadeAnim;
+  AnimationController get swipeFadeAnim => _swipeFadeAnim ?? sAnim;
+  set swipeFadeAnim(AnimationController value) => _swipeFadeAnim = value;
+
+  /// Returns whether a track swipe (next/previous) is currently active or animating.
+  bool get isSwipingTrack =>
+      activeGesture == ActiveGesture.horizontal ||
+      _isSnapping ||
+      (_swipeFadeAnim != null && _swipeFadeAnim!.value > 0.001) ||
+      sAnim.value.abs() > 0.001;
+
+  @visibleForTesting
+  void setSheetAnimationForTesting(AnimationController controller) {
+    _sheetAnimation = controller;
+  }
+
   /// Initializes animation controllers, scroll listeners, and poppers.
   void init({
     required TickerProvider vsync,
@@ -181,6 +223,12 @@ class NowPlayingController with ChangeNotifier {
       vsync: vsync,
       lowerBound: -1,
       upperBound: 1,
+      value: 0.0,
+    );
+
+    _swipeFadeAnim = AnimationController(
+      vsync: vsync,
+      duration: const Duration(milliseconds: 180),
       value: 0.0,
     );
 
@@ -221,6 +269,7 @@ class NowPlayingController with ChangeNotifier {
 
     // Register back-button handler once mounted
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!context.mounted) return;
       context.read<WillPopProvider>().registerPopper(() {
         debugPrint(
           "NowPlaying Popper: Invoked. offset: $offset, maxOffset: $maxOffset",
@@ -239,6 +288,7 @@ class NowPlayingController with ChangeNotifier {
 
     // Listen to player state & track changes
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!context.mounted) return;
       final currentMusic = context.read<CurrentMusicProvider>();
       _currentMusic = currentMusic;
       _playingStreamSub = currentMusic.isPlayingStream.listen((playing) {
@@ -470,6 +520,7 @@ class NowPlayingController with ChangeNotifier {
 
     if (offset <= maxOffset * 0.4) {
       _isSnapping = true;
+      notifyListeners();
       sOffset = -sMaxOffset;
       sAnim
           .animateTo(
@@ -477,12 +528,20 @@ class NowPlayingController with ChangeNotifier {
             curve: Curves.easeOutQuad,
             duration: const Duration(milliseconds: 160),
           )
-          .then((_) {
+          .then((_) async {
             currentMusic.playPrevious();
             sOffset = 0;
             sAnim.value = 0.0;
             HapticUtils.trigger(settings);
             _isSnapping = false;
+            if (_swipeFadeAnim != null) {
+              await _swipeFadeAnim!.animateTo(
+                0.0,
+                curve: Curves.easeInQuad,
+                duration: const Duration(milliseconds: 200),
+              );
+            }
+            notifyListeners();
           });
       return;
     }
@@ -497,11 +556,23 @@ class NowPlayingController with ChangeNotifier {
 
   void snapToCurrent() {
     sOffset = 0;
-    sAnim.animateTo(
-      0.0,
-      curve: NowPlayingPhysics.bouncingCurve,
-      duration: const Duration(milliseconds: 180),
-    );
+    notifyListeners();
+    sAnim
+        .animateTo(
+          0.0,
+          curve: NowPlayingPhysics.bouncingCurve,
+          duration: const Duration(milliseconds: 180),
+        )
+        .then((_) async {
+          if (_swipeFadeAnim != null) {
+            await _swipeFadeAnim!.animateTo(
+              0.0,
+              curve: Curves.easeInQuad,
+              duration: const Duration(milliseconds: 180),
+            );
+          }
+          notifyListeners();
+        });
   }
 
   void snapToNext(BuildContext context) {
@@ -513,6 +584,7 @@ class NowPlayingController with ChangeNotifier {
 
     if (offset <= maxOffset * 0.4) {
       _isSnapping = true;
+      notifyListeners();
       sOffset = sMaxOffset;
       sAnim
           .animateTo(
@@ -520,12 +592,20 @@ class NowPlayingController with ChangeNotifier {
             curve: Curves.easeOutQuad,
             duration: const Duration(milliseconds: 160),
           )
-          .then((_) {
+          .then((_) async {
             currentMusic.playNext();
             sOffset = 0;
             sAnim.value = 0.0;
             HapticUtils.trigger(settings);
             _isSnapping = false;
+            if (_swipeFadeAnim != null) {
+              await _swipeFadeAnim!.animateTo(
+                0.0,
+                curve: Curves.easeInQuad,
+                duration: const Duration(milliseconds: 200),
+              );
+            }
+            notifyListeners();
           });
       return;
     }
@@ -554,6 +634,7 @@ class NowPlayingController with ChangeNotifier {
   }
 
   void onPointerMove(PointerMoveEvent event, BuildContext context) {
+    if (!isFingerDown) return;
     if (event.position.dy > screenSize.height - NowPlayingPhysics.deadSpace) {
       return;
     }
@@ -574,6 +655,11 @@ class NowPlayingController with ChangeNotifier {
         activeGesture = ActiveGesture.vertical;
       } else if (dx > dy && dx > 2) {
         activeGesture = ActiveGesture.horizontal;
+        _swipeFadeAnim?.animateTo(
+          1.0,
+          curve: Curves.easeOutQuad,
+          duration: const Duration(milliseconds: 160),
+        );
         return;
       } else {
         return;
@@ -611,8 +697,8 @@ class NowPlayingController with ChangeNotifier {
     if (isReordering) return;
     if (activeGesture == ActiveGesture.vertical) {
       verticalSnapping(context);
+      activeGesture = ActiveGesture.none;
     }
-    activeGesture = ActiveGesture.none;
   }
 
   void onPointerCancel(PointerCancelEvent event, BuildContext context) {
@@ -620,8 +706,11 @@ class NowPlayingController with ChangeNotifier {
     if (isReordering) return;
     if (activeGesture == ActiveGesture.vertical) {
       verticalSnapping(context);
+      activeGesture = ActiveGesture.none;
+    } else if (activeGesture == ActiveGesture.horizontal) {
+      activeGesture = ActiveGesture.none;
+      snapToCurrent();
     }
-    activeGesture = ActiveGesture.none;
   }
 
   void onTap(BuildContext context) {
@@ -674,6 +763,12 @@ class NowPlayingController with ChangeNotifier {
     if (!context.read<SettingsProvider>().swipeToChangeTrack) return;
     activeGesture = ActiveGesture.horizontal;
     sPrevOffset = sOffset;
+    _swipeFadeAnim?.animateTo(
+      1.0,
+      curve: Curves.easeOutQuad,
+      duration: const Duration(milliseconds: 160),
+    );
+    notifyListeners();
   }
 
   void onHorizontalDragUpdate(DragUpdateDetails details, BuildContext context) {
@@ -745,6 +840,7 @@ class NowPlayingController with ChangeNotifier {
       _currentMusic = null;
     }
     sAnim.dispose();
+    _swipeFadeAnim?.dispose();
     queueScrollController.dispose();
     playPauseAnim.dispose();
     lyricsAnim.dispose();
