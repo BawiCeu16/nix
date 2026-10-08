@@ -6,6 +6,7 @@ import 'package:m3e_buttons/m3e_buttons.dart';
 import 'package:provider/provider.dart';
 
 import 'package:nix/core/math_utils.dart';
+import 'package:nix/core/motion.dart';
 import 'package:nix/providers/settings_provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -115,47 +116,53 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                                 (1 - data.clampedProgress * 10 + 9).clamp(0, 1),
                             vertical: 12 * data.inverseClampedProgress,
                           ),
-                          child: Container(
-                            height: rangeProgress(
-                              a: 82.0,
-                              b: data.panelHeight,
-                              c: data.progress.clamp(0, 3),
-                            ),
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              borderRadius: data.borderRadius,
-                              color: Theme.of(context).colorScheme.surface,
-                              boxShadow: showMiniplayerShadow
-                                  ? [
-                                      if (miniplayerShadowStyle !=
+                          child: TweenAnimationBuilder<double>(
+                            tween: Tween<double>(
+                              end: (showMiniplayerShadow &&
+                                      miniplayerShadowStyle !=
                                           MiniplayerShadowStyle.expressive)
-                                        BoxShadow(
-                                          color:
-                                              (Theme.of(context).brightness ==
-                                                          Brightness.dark
-                                                      ? Colors.black.withValues(
-                                                          alpha: 0.2,
-                                                        )
-                                                      : Colors.black.withValues(
-                                                          alpha: 0.08,
-                                                        ))
-                                                  .withValues(
-                                                    alpha:
-                                                        (Theme.of(
-                                                                  context,
-                                                                ).brightness ==
-                                                                Brightness.dark
-                                                            ? 0.2
-                                                            : 0.08) *
-                                                        data.inverseClampedProgress *
-                                                        miniplayerShadowOpacity,
-                                                  ),
-                                          blurRadius: 15,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                    ]
-                                  : null,
+                                  ? miniplayerShadowOpacity
+                                  : 0.0,
                             ),
+                            duration: NixDurations.short,
+                            curve: NixCurves.expressiveDecelerated,
+                            builder: (context, shadowAnim, _) {
+                              final double effectiveShadowFactor =
+                                  shadowAnim * data.inverseClampedProgress;
+                              final bool hasShadow =
+                                  effectiveShadowFactor > 0.001;
+                              final bool isDark =
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark;
+                              final double baseAlpha = isDark ? 0.2 : 0.08;
+                              final double finalShadowAlpha =
+                                  (baseAlpha * effectiveShadowFactor)
+                                      .clamp(0.0, 1.0);
+
+                              return Container(
+                                height: rangeProgress(
+                                  a: 82.0,
+                                  b: data.panelHeight,
+                                  c: data.progress.clamp(0, 3),
+                                ),
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  borderRadius: data.borderRadius,
+                                  color: Theme.of(context).colorScheme.surface,
+                                  boxShadow: hasShadow
+                                      ? [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: finalShadowAlpha,
+                                            ),
+                                            blurRadius: 15,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ),

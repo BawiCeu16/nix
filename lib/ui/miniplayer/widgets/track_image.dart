@@ -14,7 +14,7 @@ import 'package:nix/core/format.dart';
 import 'package:nix/core/math_utils.dart';
 import 'package:nix/ui/miniplayer/models/animation_data.dart';
 
-class TrackImage extends StatelessWidget {
+class TrackImage extends StatefulWidget {
   final AnimationController sAnim;
   final double sMaxOffset;
   final double siParallax;
@@ -39,6 +39,13 @@ class TrackImage extends StatelessWidget {
     required this.data,
     required this.lyricsAnim,
   });
+
+  @override
+  State<TrackImage> createState() => _TrackImageState();
+}
+
+class _TrackImageState extends State<TrackImage> {
+  Track? _lastNonNullSong;
 
   Widget _buildSingleArtwork(
     BuildContext context,
@@ -81,6 +88,11 @@ class TrackImage extends StatelessWidget {
     final currentSong = context.select<CurrentMusicProvider, Track?>(
       (p) => p.currentTrack,
     );
+    if (currentSong != null) {
+      _lastNonNullSong = currentSong;
+    }
+    final effectiveSong = currentSong ?? _lastNonNullSong;
+
     final nextSong = context.select<CurrentMusicProvider, Track?>(
       (p) => p.nextTrack,
     );
@@ -91,63 +103,76 @@ class TrackImage extends StatelessWidget {
       (p) => p.isRepeatOne,
     );
 
-    final double maxStandardSize = screenSize.width - 46.0;
+    final double maxStandardSize = widget.screenSize.width - 46.0;
     final double availableHeight =
-        screenSize.height - (maxOffset / 2.30) - (topInset + 80.0) - 24.0;
+        widget.screenSize.height -
+        (widget.maxOffset / 2.30) -
+        (widget.topInset + 80.0) -
+        24.0;
     final double expandedSize = availableHeight < maxStandardSize
         ? availableHeight.clamp(120.0, maxStandardSize)
         : maxStandardSize;
 
     return AnimatedBuilder(
-      animation: Listenable.merge([sAnim, lyricsAnim]),
+      animation: Listenable.merge([widget.sAnim, widget.lyricsAnim]),
       builder: (context, child) {
-        final double sVal = sAnim.value;
+        final double sVal = widget.sAnim.value;
         final double absSVal = sVal.abs().clamp(0.0, 1.0);
         final double currentOpacity = (1.0 - absSVal).clamp(0.0, 1.0);
         final double incomingOpacity = absSVal;
 
         final borderRadius = BorderRadius.circular(
-          rangeProgress(a: 100.0, b: 15.0, c: data.bounceClampedProgress),
+          rangeProgress(a: 100.0, b: 15.0, c: widget.data.bounceClampedProgress),
         );
 
         return Transform.translate(
           offset: Offset(
-            -sVal * sMaxOffset / siParallax,
-            !bounceUp
-                ? (-maxOffset + topInset + 108.0) *
-                      (!bounceDown
-                          ? data.queueProgress
-                          : (1 - data.bounceProgress))
+            -sVal * widget.sMaxOffset / widget.siParallax,
+            !widget.bounceUp
+                ? (-widget.maxOffset + widget.topInset + 108.0) *
+                      (!widget.bounceDown
+                          ? widget.data.queueProgress
+                          : (1 - widget.data.bounceProgress))
                 : 0.0,
           ),
           child: Transform.translate(
             offset: Offset(
               0,
-              data.bottomOffset +
+              widget.data.bottomOffset +
                   rangeProgress(
-                    a: -maxOffset / 2.30 * data.bounceProgress.clamp(0, 2),
-                    b: -maxOffset / 3.6 * data.bounceProgress.clamp(0, 2),
-                    c: lyricsAnim.value,
+                    a: -widget.maxOffset /
+                        2.30 *
+                        widget.data.bounceProgress.clamp(0, 2),
+                    b: -widget.maxOffset /
+                        3.6 *
+                        widget.data.bounceProgress.clamp(0, 2),
+                    c: widget.lyricsAnim.value,
                   ) +
-                  (90.0 * lyricsAnim.value * data.bounceClampedProgress),
+                  (90.0 *
+                      widget.lyricsAnim.value *
+                      widget.data.bounceClampedProgress),
             ),
             child: Padding(
-              padding: EdgeInsets.all(12.0 * (1 - data.bounceClampedProgress))
-                  .add(
-                    EdgeInsets.only(
-                      left: rangeProgress(
-                        a: 22.0 * data.bounceClampedProgress * lyricsAnim.value,
-                        b: 20.0 * data.bounceClampedProgress,
-                        c: lyricsAnim.value,
-                      ),
-                    ),
+              padding: EdgeInsets.all(
+                12.0 * (1 - widget.data.bounceClampedProgress),
+              ).add(
+                EdgeInsets.only(
+                  left: rangeProgress(
+                    a: 22.0 *
+                        widget.data.bounceClampedProgress *
+                        widget.lyricsAnim.value,
+                    b: 20.0 * widget.data.bounceClampedProgress,
+                    c: widget.lyricsAnim.value,
                   ),
+                ),
+              ),
               child: Align(
                 alignment:
                     Alignment.lerp(
                       Alignment.bottomLeft,
                       Alignment.bottomCenter,
-                      data.bounceClampedProgress * (1 - lyricsAnim.value),
+                      widget.data.bounceClampedProgress *
+                          (1 - widget.lyricsAnim.value),
                     ) ??
                     Alignment.bottomLeft,
                 child: SizedBox(
@@ -156,22 +181,22 @@ class TrackImage extends StatelessWidget {
                     b: rangeProgress(
                       a: expandedSize,
                       b: 60.0,
-                      c: lyricsAnim.value,
+                      c: widget.lyricsAnim.value,
                     ),
-                    c: data.bounceClampedProgress,
+                    c: widget.data.bounceClampedProgress,
                   ),
                   width: rangeProgress(
                     a: 82.0,
                     b: rangeProgress(
                       a: expandedSize,
                       b: 60.0,
-                      c: lyricsAnim.value,
+                      c: widget.lyricsAnim.value,
                     ),
-                    c: data.bounceClampedProgress,
+                    c: widget.data.bounceClampedProgress,
                   ),
                   child: Padding(
                     padding: EdgeInsets.all(
-                      12.0 * (1 - data.bounceClampedProgress),
+                      12.0 * (1 - widget.data.bounceClampedProgress),
                     ),
                     child: Stack(
                       clipBehavior: Clip.none,
@@ -180,7 +205,7 @@ class TrackImage extends StatelessWidget {
                         if (sVal > 0.001)
                           Positioned.fill(
                             child: Transform.translate(
-                              offset: Offset(sMaxOffset, 0),
+                              offset: Offset(widget.sMaxOffset, 0),
                               child: Opacity(
                                 opacity: incomingOpacity,
                                 child: _buildSingleArtwork(
@@ -196,7 +221,7 @@ class TrackImage extends StatelessWidget {
                         if (sVal < -0.001)
                           Positioned.fill(
                             child: Transform.translate(
-                              offset: Offset(-sMaxOffset, 0),
+                              offset: Offset(-widget.sMaxOffset, 0),
                               child: Opacity(
                                 opacity: incomingOpacity,
                                 child: _buildSingleArtwork(
@@ -214,7 +239,7 @@ class TrackImage extends StatelessWidget {
                             opacity: currentOpacity,
                             child: _buildSingleArtwork(
                               context,
-                              currentSong,
+                              effectiveSong,
                               borderRadius,
                             ),
                           ),
@@ -225,8 +250,9 @@ class TrackImage extends StatelessWidget {
                           builder: (context, timer, _) {
                             if (!timer.isActive) return const SizedBox();
                             final opacity =
-                                ((data.opacity - data.queueClampedProgress) *
-                                        (1 - lyricsAnim.value))
+                                ((widget.data.opacity -
+                                            widget.data.queueClampedProgress) *
+                                        (1 - widget.lyricsAnim.value))
                                     .clamp(0.0, 1.0);
                             if (opacity == 0) return const SizedBox();
 
@@ -238,18 +264,18 @@ class TrackImage extends StatelessWidget {
                                 child: GestureDetector(
                                   onTap:
                                       context
-                                              .read<SettingsProvider>()
-                                              .timerGesture ==
-                                          TimerGesture.tap
-                                      ? () => SleepTimerDialog.show(context)
-                                      : null,
+                                                  .read<SettingsProvider>()
+                                                  .timerGesture ==
+                                              TimerGesture.tap
+                                          ? () => SleepTimerDialog.show(context)
+                                          : null,
                                   onLongPress:
                                       context
-                                              .read<SettingsProvider>()
-                                              .timerGesture ==
-                                          TimerGesture.longPress
-                                      ? () => SleepTimerDialog.show(context)
-                                      : null,
+                                                  .read<SettingsProvider>()
+                                                  .timerGesture ==
+                                              TimerGesture.longPress
+                                          ? () => SleepTimerDialog.show(context)
+                                          : null,
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 10,
@@ -294,9 +320,11 @@ class TrackImage extends StatelessWidget {
                             left: 8,
                             right: 8,
                             child: Opacity(
-                              opacity: ((1 - lyricsAnim.value) * currentOpacity)
-                                  .clamp(0.0, 1.0),
-                              child: NixUpNextIndicator(data: data),
+                              opacity:
+                                  ((1 - widget.lyricsAnim.value) *
+                                          currentOpacity)
+                                      .clamp(0.0, 1.0),
+                              child: NixUpNextIndicator(data: widget.data),
                             ),
                           ),
                       ],

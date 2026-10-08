@@ -5,6 +5,8 @@ import 'package:nix/providers/settings_provider.dart';
 import 'package:nix/providers/will_pop_provider.dart';
 import 'package:nix/providers/current_music_provider.dart';
 import 'package:nix/ui/miniplayer/now_playing.dart';
+import 'package:nix/ui/miniplayer/widgets/expressive_miniplayer_shadow.dart';
+import 'package:nix/ui/miniplayer/widgets/miniplayer_presence_transition.dart';
 import 'package:nix/ui/screens/main/home_page.dart';
 import 'package:nix/ui/screens/main/library_page.dart';
 import 'package:nix/ui/screens/main/search_page.dart';
@@ -166,50 +168,21 @@ class _NavigationScreenState extends State<NavigationScreen>
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (context
-                                  .watch<SettingsProvider>()
-                                  .showMiniplayerShadow &&
-                              context
-                                      .watch<SettingsProvider>()
-                                      .miniplayerShadowStyle ==
-                                  MiniplayerShadowStyle.expressive &&
-                              context
-                                      .watch<CurrentMusicProvider>()
-                                      .currentTrack !=
-                                  null)
-                            IgnorePointer(
-                              child: AnimatedBuilder(
-                                animation: _controller.animation,
-                                builder: (context, child) {
-                                  return Opacity(
-                                    opacity: (1 - _controller.animation.value)
-                                        .clamp(0.0, 1.0),
-                                    child: child,
-                                  );
-                                },
-                                child: Container(
-                                  height: 120.0,
-                                  width: double.infinity,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.bottomCenter,
-                                      end: Alignment.topCenter,
-                                      colors: [
-                                        Theme.of(
-                                          context,
-                                        ).colorScheme.surface.withValues(
-                                          alpha: context
-                                              .watch<SettingsProvider>()
-                                              .miniplayerShadowOpacity,
-                                        ),
-                                        Theme.of(context).colorScheme.surface
-                                            .withValues(alpha: 0.0),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
+                          Consumer2<SettingsProvider, CurrentMusicProvider>(
+                            builder: (context, settings, music, _) {
+                              final bool isVisible =
+                                  settings.showMiniplayerShadow &&
+                                  settings.miniplayerShadowStyle ==
+                                      MiniplayerShadowStyle.expressive &&
+                                  music.currentTrack != null;
+
+                              return ExpressiveMiniplayerShadow(
+                                sheetAnimation: _controller.animation,
+                                isVisible: isVisible,
+                                shadowOpacity: settings.miniplayerShadowOpacity,
+                              );
+                            },
+                          ),
                           MediaQuery(
                             data: MediaQueryData(
                               padding: EdgeInsets.only(bottom: bottom ?? 0),
@@ -264,17 +237,18 @@ class _NavigationScreenState extends State<NavigationScreen>
                     ),
                   ),
 
-                  // The Morphing Player Layer — hidden when no track selected
+                  // The Morphing Player Layer — smooth presence fade animation
                   Selector<CurrentMusicProvider, bool>(
                     selector: (_, p) => p.currentTrack != null,
-                    builder: (context, hasTrack, child) {
-                      if (!hasTrack) return const SizedBox.shrink();
-                      return child!;
+                    builder: (context, hasTrack, _) {
+                      return MiniplayerPresenceTransition(
+                        hasTrack: hasTrack,
+                        child: NowPlaying(
+                          animation: _controller.animation,
+                          bottomInset: bottom ?? 0.0,
+                        ),
+                      );
                     },
-                    child: NowPlaying(
-                      animation: _controller.animation,
-                      bottomInset: bottom ?? 0.0,
-                    ),
                   ),
                 ],
               ),

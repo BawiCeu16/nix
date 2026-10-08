@@ -10,7 +10,7 @@ import 'package:nix/models/music/track.dart';
 import 'package:nix/core/math_utils.dart';
 import 'package:nix/ui/miniplayer/models/animation_data.dart';
 
-class TrackInfo extends StatelessWidget {
+class TrackInfo extends StatefulWidget {
   final Animation<double> sAnim;
   final double sMaxOffset;
   final double stParallax;
@@ -38,12 +38,19 @@ class TrackInfo extends StatelessWidget {
     required this.onToggleLyrics,
   });
 
+  @override
+  State<TrackInfo> createState() => _TrackInfoState();
+}
+
+class _TrackInfoState extends State<TrackInfo> {
+  Track? _lastNonNullTrack;
+
   Widget _buildSingleTrackInfo(BuildContext context, Track? track) {
     final title = track?.title ?? 'No track';
     final artist = track?.artist ?? '';
     final bool isNowPlaying =
-        data.clampedProgress > 0.8 && data.queueProgress < 0.2;
-    final bool isMiniplayer = data.clampedProgress < 0.5;
+        widget.data.clampedProgress > 0.8 && widget.data.queueProgress < 0.2;
+    final bool isMiniplayer = widget.data.clampedProgress < 0.5;
     final animDuration = isMiniplayer ? NixDurations.medium : Duration.zero;
 
     return Column(
@@ -79,8 +86,8 @@ class TrackInfo extends StatelessWidget {
               style: TextStyle(
                 fontSize: rangeProgress(
                   a: 18.0,
-                  b: 24.0 - (5.0 * lyricsAnim.value),
-                  c: data.bounceProgress,
+                  b: 24.0 - (5.0 * widget.lyricsAnim.value),
+                  c: widget.data.bounceProgress,
                 ),
                 fontWeight: FontWeight.w600,
                 height: 1,
@@ -111,8 +118,8 @@ class TrackInfo extends StatelessWidget {
             style: TextStyle(
               fontSize: rangeProgress(
                 a: 15.0,
-                b: 17.0 - (3.0 * lyricsAnim.value),
-                c: data.bounceProgress,
+                b: 17.0 - (3.0 * widget.lyricsAnim.value),
+                c: widget.data.bounceProgress,
               ),
               color: Theme.of(
                 context,
@@ -129,6 +136,11 @@ class TrackInfo extends StatelessWidget {
     final currentTrack = context.select<CurrentMusicProvider, Track?>(
       (p) => p.currentTrack,
     );
+    if (currentTrack != null) {
+      _lastNonNullTrack = currentTrack;
+    }
+    final effectiveTrack = currentTrack ?? _lastNonNullTrack;
+
     final nextTrack = context.select<CurrentMusicProvider, Track?>(
       (p) => p.nextTrack,
     );
@@ -139,42 +151,48 @@ class TrackInfo extends StatelessWidget {
     return Material(
       type: MaterialType.transparency,
       child: AnimatedBuilder(
-        animation: Listenable.merge([sAnim, lyricsAnim]),
+        animation: Listenable.merge([widget.sAnim, widget.lyricsAnim]),
         builder: (context, child) {
-          final double sVal = sAnim.value;
+          final double sVal = widget.sAnim.value;
           final double absSVal = sVal.abs().clamp(0.0, 1.0);
           final double currentOpacity = (1.0 - absSVal).clamp(0.0, 1.0);
           final double incomingOpacity = absSVal;
 
           return Transform.translate(
             offset: Offset(
-              -sVal * sMaxOffset / stParallax + (12.0 * data.queueProgress),
-              (-maxOffset + topInset + 102.0) *
-                  (!bounceUp
-                      ? !bounceDown
-                            ? data.queueProgress
-                            : (1 - data.bounceProgress)
+              -sVal * widget.sMaxOffset / widget.stParallax +
+                  (12.0 * widget.data.queueProgress),
+              (-widget.maxOffset + widget.topInset + 102.0) *
+                  (!widget.bounceUp
+                      ? !widget.bounceDown
+                            ? widget.data.queueProgress
+                            : (1 - widget.data.bounceProgress)
                       : 0.0),
             ),
             child: Transform.translate(
               offset: Offset(
                 0,
-                data.bottomOffset +
-                    (-maxOffset / 3.6 * data.bounceProgress.clamp(0, 2)) +
-                    (140.0 * lyricsAnim.value * data.bounceClampedProgress),
+                widget.data.bottomOffset +
+                    (-widget.maxOffset /
+                        3.6 *
+                        widget.data.bounceProgress.clamp(0, 2)) +
+                    (140.0 *
+                        widget.lyricsAnim.value *
+                        widget.data.bounceClampedProgress),
               ),
               child: Padding(
-                padding: EdgeInsets.all(12.0 * (1 - data.bounceClampedProgress))
-                    .add(
-                      EdgeInsets.only(
-                        left:
-                            20.0 * data.bounceClampedProgress +
-                            (72.0 *
-                                lyricsAnim.value *
-                                data.bounceClampedProgress),
-                        right: 20.0 * data.bounceClampedProgress,
-                      ),
-                    ),
+                padding: EdgeInsets.all(
+                  12.0 * (1 - widget.data.bounceClampedProgress),
+                ).add(
+                  EdgeInsets.only(
+                    left:
+                        20.0 * widget.data.bounceClampedProgress +
+                        (72.0 *
+                            widget.lyricsAnim.value *
+                            widget.data.bounceClampedProgress),
+                    right: 20.0 * widget.data.bounceClampedProgress,
+                  ),
+                ),
                 child: Align(
                   alignment: Alignment.bottomLeft,
                   child: Padding(
@@ -182,8 +200,8 @@ class TrackInfo extends StatelessWidget {
                       EdgeInsets.only(
                         bottom: rangeProgress(
                           a: 0,
-                          b: screenSize.width / 16,
-                          c: data.bounceClampedProgress,
+                          b: widget.screenSize.width / 16,
+                          c: widget.data.bounceClampedProgress,
                         ),
                       ),
                     ),
@@ -191,7 +209,7 @@ class TrackInfo extends StatelessWidget {
                       height: rangeProgress(
                         a: 58.0,
                         b: 82.0,
-                        c: data.bounceClampedProgress,
+                        c: widget.data.bounceClampedProgress,
                       ),
                       child: Row(
                         children: [
@@ -199,7 +217,7 @@ class TrackInfo extends StatelessWidget {
                             width: rangeProgress(
                               a: 82.0,
                               b: 8.0,
-                              c: data.bounceClampedProgress,
+                              c: widget.data.bounceClampedProgress,
                             ),
                           ),
                           Expanded(
@@ -208,7 +226,7 @@ class TrackInfo extends StatelessWidget {
                                 right: rangeProgress(
                                   a: 88.0,
                                   b: 8.0,
-                                  c: data.bounceClampedProgress,
+                                  c: widget.data.bounceClampedProgress,
                                 ),
                               ),
                               child: Stack(
@@ -218,7 +236,7 @@ class TrackInfo extends StatelessWidget {
                                   if (sVal > 0.001)
                                     Positioned.fill(
                                       child: Transform.translate(
-                                        offset: Offset(sMaxOffset, 0),
+                                        offset: Offset(widget.sMaxOffset, 0),
                                         child: Opacity(
                                           opacity: incomingOpacity,
                                           child: _buildSingleTrackInfo(
@@ -233,7 +251,7 @@ class TrackInfo extends StatelessWidget {
                                   if (sVal < -0.001)
                                     Positioned.fill(
                                       child: Transform.translate(
-                                        offset: Offset(-sMaxOffset, 0),
+                                        offset: Offset(-widget.sMaxOffset, 0),
                                         child: Opacity(
                                           opacity: incomingOpacity,
                                           child: _buildSingleTrackInfo(
@@ -250,7 +268,7 @@ class TrackInfo extends StatelessWidget {
                                       opacity: currentOpacity,
                                       child: _buildSingleTrackInfo(
                                         context,
-                                        currentTrack,
+                                        effectiveTrack,
                                       ),
                                     ),
                                   ),
