@@ -4,7 +4,6 @@ import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/music_provider.dart';
 import 'package:nix/providers/user_provider.dart';
-import 'package:nix/ui/theme/nix_typography.dart';
 import 'package:nix/ui/widgets/tiles/track_card_tile.dart';
 import 'package:nix/ui/widgets/tiles/album_card_tile.dart';
 import 'package:nix/models/music/track.dart';
@@ -96,18 +95,23 @@ class _HomePageState extends State<HomePage> {
                               children: [
                                 Text(
                                   _controller.getGreeting(),
-                                  style: NixTypography.specialGothicLabelMedium(
-                                    context,
-                                    colorScheme.onSurfaceVariant,
-                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelMedium
+                                      ?.copyWith(
+                                        color: colorScheme.onSurfaceVariant,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                 ),
                                 const SizedBox(height: 0),
                                 Text(
                                   userName,
-                                  style:
-                                      NixTypography.specialGothicHeadlineSmall(
-                                        context,
-                                        colorScheme.onSurface,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineSmall
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: colorScheme.onSurface,
                                       ),
                                 ),
                               ],

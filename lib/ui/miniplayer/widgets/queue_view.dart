@@ -309,6 +309,10 @@ class _QueueViewState extends State<QueueView> {
                                     }
                                   },
                                   showSelectionCheckmark: false,
+                                  dragPlaceholderColor: Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceContainerLow,
+
                                   decoration: M3ESegmentedListDecoration(
                                     color: Theme.of(
                                       context,
@@ -341,6 +345,7 @@ class _QueueViewState extends State<QueueView> {
                                       context.read<SettingsProvider>(),
                                     );
                                   },
+
                                   onReorder: (oldIndex, newIndex) {
                                     if (isQueueLocked) return;
                                     widget.onReorderEnd?.call();

@@ -55,21 +55,22 @@ class _LibrarySettingsPageState extends State<LibrarySettingsPage> {
             children: [
               const NixSectionHeader(title: 'Organization', topPadding: 16),
               NixCardExpansionTile(
-                title: 'Save Filter & Sort',
+                title: 'Save Ascending & Sort',
                 isFirst: true,
                 subtitle: 'Remember choices across sessions',
                 icon: FlutterRemix.filter_3_line,
-                showExpansionIcon: settings.saveFilter || settings.saveSort,
+                showExpansionIcon:
+                    settings.saveAscending || settings.saveSort,
                 initiallyExpanded: false,
                 trailing: Switch(
-                  value: settings.saveFilter || settings.saveSort,
+                  value: settings.saveAscending || settings.saveSort,
                   onChanged: (value) {
-                    settings.setSaveFilter(value);
+                    settings.setSaveAscending(value);
                     settings.setSaveSort(value);
                   },
                 ),
                 children: [
-                  if (settings.saveFilter || settings.saveSort) ...[
+                  if (settings.saveAscending || settings.saveSort) ...[
                     const SizedBox(height: 2.5),
                     CardListTileWithChild(
                       title: 'Preferences to Save',
@@ -78,19 +79,22 @@ class _LibrarySettingsPageState extends State<LibrarySettingsPage> {
                       child: M3EDropdownMenu<String>(
                         items: [
                           M3EDropdownItem<String>(
-                            label: 'Filter and Sort',
+                            label: 'Ascending and Sort',
                             value: 'both',
-                            selected: settings.saveFilter && settings.saveSort,
+                            selected:
+                                settings.saveAscending && settings.saveSort,
                           ),
                           M3EDropdownItem<String>(
-                            label: 'Filter',
-                            value: 'filter',
-                            selected: settings.saveFilter && !settings.saveSort,
+                            label: 'Ascending',
+                            value: 'ascending',
+                            selected:
+                                settings.saveAscending && !settings.saveSort,
                           ),
                           M3EDropdownItem<String>(
                             label: 'Sort',
                             value: 'sort',
-                            selected: !settings.saveFilter && settings.saveSort,
+                            selected:
+                                !settings.saveAscending && settings.saveSort,
                           ),
                         ],
                         singleSelect: true,
@@ -191,13 +195,13 @@ class _LibrarySettingsPageState extends State<LibrarySettingsPage> {
                           if (selectedItems.isNotEmpty) {
                             final selectedValue = selectedItems.first.value;
                             if (selectedValue == 'both') {
-                              settings.setSaveFilter(true);
+                              settings.setSaveAscending(true);
                               settings.setSaveSort(true);
-                            } else if (selectedValue == 'filter') {
-                              settings.setSaveFilter(true);
+                            } else if (selectedValue == 'ascending') {
+                              settings.setSaveAscending(true);
                               settings.setSaveSort(false);
                             } else if (selectedValue == 'sort') {
-                              settings.setSaveFilter(false);
+                              settings.setSaveAscending(false);
                               settings.setSaveSort(true);
                             }
                           }

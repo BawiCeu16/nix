@@ -110,7 +110,7 @@ class _AboutPageState extends State<AboutPage> {
                     borderRadius: 50,
                     hoveredRadius: 18,
                     pressedRadius: 12,
-                    textStyle: const TextStyle(fontSize: 13),
+                    textStyle: Theme.of(context).textTheme.labelMedium,
                   ),
                   onPressed: () {},
                   child: const Text("Check for update"),

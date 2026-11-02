@@ -69,10 +69,11 @@ class SettingsRepository {
   Future<void> setArtistGridCrossAxisCount(int count) =>
       _box.put(HiveKeys.artistGridCrossAxisCount, count);
 
-  // Library - Save Filter
-  bool get saveFilter => _box.get(HiveKeys.saveFilter, defaultValue: false);
-  Future<void> setSaveFilter(bool value) =>
-      _box.put(HiveKeys.saveFilter, value);
+  // Library - Save Ascending
+  bool get saveAscending =>
+      _box.get(HiveKeys.saveAscending, defaultValue: false);
+  Future<void> setSaveAscending(bool value) =>
+      _box.put(HiveKeys.saveAscending, value);
 
   // Library - Save Sort
   bool get saveSort => _box.get(HiveKeys.saveSort, defaultValue: false);

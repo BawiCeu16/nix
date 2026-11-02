@@ -63,10 +63,10 @@ class SettingsProvider with ChangeNotifier {
     _repo.setArtistGridCrossAxisCount(count).then((_) => notifyListeners());
   }
 
-  // Library - Save Filter
-  bool get saveFilter => _repo.saveFilter;
-  void setSaveFilter(bool value) {
-    _repo.setSaveFilter(value).then((_) => notifyListeners());
+  // Library - Save Ascending
+  bool get saveAscending => _repo.saveAscending;
+  void setSaveAscending(bool value) {
+    _repo.setSaveAscending(value).then((_) => notifyListeners());
   }
 
   // Library - Save Sort

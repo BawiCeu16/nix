@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_remix/flutter_remix.dart';
-import 'package:nix/ui/widgets/buttons/expressive_tone_button.dart';
+import 'package:m3e_buttons/m3e_buttons.dart';
 import 'package:nix/ui/widgets/buttons/expressive_huge_button.dart';
 import 'package:nix/ui/widgets/tiles/card_list_tile.dart';
 import 'package:nix/ui/screens/controllers/onboarding_controller.dart';
@@ -93,14 +93,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
         const SizedBox(height: 32),
         Text(
           'Welcome to Nix',
-          style: theme.textTheme.headlineLarge?.copyWith(
+          style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 2),
         Text(
           'A fast, minimal music player',
-          style: theme.textTheme.titleMedium?.copyWith(
+          style: theme.textTheme.titleSmall?.copyWith(
             color: colorScheme.onSurfaceVariant,
           ),
         ),
@@ -129,20 +129,36 @@ class _OnboardingPageState extends State<OnboardingPage> {
         const SizedBox(height: 32),
         Text(
           'Your Privacy Matters',
-          style: theme.textTheme.headlineMedium?.copyWith(
+          style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 2),
         Text(
           'We respect your privacy and will not collect any personal information',
-          style: theme.textTheme.titleMedium?.copyWith(
+          style: theme.textTheme.titleSmall?.copyWith(
             color: colorScheme.onSurfaceVariant,
           ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 48),
-        ExpressiveToneButton(
+        M3EButton(
+          style: M3EButtonStyle.filled,
+          shape: M3EButtonShape.round,
+          size: M3EButtonSize.custom(
+            height: 48,
+            hPadding: 22,
+            iconSize: 20,
+            iconGap: 8,
+          ),
+          decoration: M3EButtonDecoration(
+            textStyle: theme.textTheme.labelLarge,
+            backgroundColor: WidgetStatePropertyAll(colorScheme.primary),
+            foregroundColor: WidgetStatePropertyAll(colorScheme.onPrimary),
+            surfaceTintColor: WidgetStatePropertyAll(
+              Theme.of(context).colorScheme.primary,
+            ),
+          ),
           onPressed: _controller.nextPage,
           child: const Text('Next'),
         ),
@@ -169,7 +185,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
           const SizedBox(height: 32),
           Text(
             'Permissions',
-            style: theme.textTheme.headlineMedium?.copyWith(
+            style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -197,7 +213,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                             FlutterRemix.checkbox_circle_fill,
                             color: colorScheme.primary,
                           )
-                        : const Icon(FlutterRemix.close_circle_line),
+                        : null,
                     onTap: _controller.requestAudioPermission,
                   ),
                   const SizedBox(height: 2.5),
@@ -215,7 +231,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                             FlutterRemix.checkbox_circle_fill,
                             color: colorScheme.primary,
                           )
-                        : const Icon(FlutterRemix.close_circle_line),
+                        : null,
                     isLast: false,
                     onTap: _controller.requestNotificationPermission,
                   ),
@@ -234,7 +250,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                             FlutterRemix.checkbox_circle_fill,
                             color: colorScheme.primary,
                           )
-                        : const Icon(FlutterRemix.close_circle_line),
+                        : null,
                     isLast: true,
                     onTap: _controller.requestBluetoothPermission,
                   ),
@@ -243,7 +259,23 @@ class _OnboardingPageState extends State<OnboardingPage> {
             ),
           ),
           const SizedBox(height: 32),
-          ExpressiveToneButton(
+          M3EButton(
+            style: M3EButtonStyle.filled,
+            shape: M3EButtonShape.round,
+            size: M3EButtonSize.custom(
+              height: 48,
+              hPadding: 22,
+              iconSize: 20,
+              iconGap: 8,
+            ),
+            decoration: M3EButtonDecoration(
+              textStyle: theme.textTheme.labelLarge,
+              backgroundColor: WidgetStatePropertyAll(colorScheme.primary),
+              foregroundColor: WidgetStatePropertyAll(colorScheme.onPrimary),
+              surfaceTintColor: WidgetStatePropertyAll(
+                Theme.of(context).colorScheme.primary,
+              ),
+            ),
             onPressed: allGranted
                 ? _controller.nextPage
                 : !_controller.isAudioGranted
@@ -268,7 +300,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
         children: [
           Text(
             'What should we call you?',
-            style: theme.textTheme.headlineMedium?.copyWith(
+            style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -286,8 +318,24 @@ class _OnboardingPageState extends State<OnboardingPage> {
             onChanged: _controller.onNameChanged,
           ),
           const SizedBox(height: 32),
-          ExpressiveToneButton(
-            onPressed: isValid
+          M3EButton(
+            style: M3EButtonStyle.filled,
+            shape: M3EButtonShape.round,
+            size: M3EButtonSize.custom(
+              height: 48,
+              hPadding: 22,
+              iconSize: 20,
+              iconGap: 8,
+            ),
+            decoration: M3EButtonDecoration(
+              textStyle: theme.textTheme.labelLarge,
+              backgroundColor: WidgetStatePropertyAll(colorScheme.primary),
+              foregroundColor: WidgetStatePropertyAll(colorScheme.onPrimary),
+              surfaceTintColor: WidgetStatePropertyAll(
+                Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            onPressed: isValid && _controller.nameController.text.length >= 4
                 ? () => _controller.finishOnboarding(context)
                 : null,
             child: const Text('Get Started'),
