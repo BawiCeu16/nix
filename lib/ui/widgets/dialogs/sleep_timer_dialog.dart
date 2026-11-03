@@ -16,7 +16,6 @@ class SleepTimerDialog extends StatefulWidget {
     NixDialog.show(
       context: context,
       title: "Sleep Timer",
-      subtitle: "Stop playback after a set time",
       children: [const SleepTimerDialog()],
     );
   }

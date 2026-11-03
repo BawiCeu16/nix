@@ -379,165 +379,117 @@ class _QueueViewState extends State<QueueView> {
                                       onDismissed: (direction) {
                                         currentMusic.removeFromQueue(index);
                                       },
-                                      child: ConstrainedBox(
-                                        constraints: const BoxConstraints(
-                                          minHeight: 72.0,
+                                      child: M3EListItem(
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                          horizontal: 8.0,
+                                          vertical: 8.0,
                                         ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 16.0,
-                                            vertical: 10.0,
+                                        minHeight: 64.0,
+                                        leading: _ItemDragInterceptor(
+                                          child: M3EArtworkLeading(
+                                            trackId: track.id,
+                                            isPlaying: isNowPlaying,
                                           ),
-                                          child: Row(
-                                            children: [
-                                              Expanded(
-                                                child: _ItemDragInterceptor(
-                                                  child: Row(
-                                                    children: [
-                                                      M3EArtworkLeading(
-                                                        trackId: track.id,
-                                                        isPlaying: isNowPlaying,
-                                                      ),
-                                                      const SizedBox(
-                                                        width: 12.0,
-                                                      ),
-                                                      Expanded(
-                                                        child: Column(
-                                                          mainAxisSize:
-                                                              MainAxisSize.min,
-                                                          crossAxisAlignment:
-                                                              CrossAxisAlignment
-                                                                  .start,
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .center,
-                                                          children: [
-                                                            Text(
-                                                              track.title,
-                                                              maxLines: 1,
-                                                              overflow:
-                                                                  TextOverflow
-                                                                      .ellipsis,
-                                                              style: TextStyle(
-                                                                fontSize: 16,
-                                                                fontWeight:
-                                                                    isNowPlaying
-                                                                    ? FontWeight
-                                                                          .bold
-                                                                    : FontWeight
-                                                                          .w500,
-                                                                color:
-                                                                    isNowPlaying
-                                                                    ? colorScheme
-                                                                          .onPrimaryContainer
-                                                                    : colorScheme
-                                                                          .onSurface,
-                                                              ),
-                                                            ),
-                                                            ValueListenableBuilder<
-                                                              Box<int>
-                                                            >(
-                                                              valueListenable:
-                                                                  Hive.box<int>(
-                                                                    HiveKeys
-                                                                        .trackPositionsBox,
-                                                                  ).listenable(
-                                                                    keys: [
-                                                                      track.id,
-                                                                    ],
-                                                                  ),
-                                                              builder: (context, box, _) {
-                                                                final savedMs =
-                                                                    showResume
-                                                                    ? box.get(
-                                                                        track
-                                                                            .id,
-                                                                      )
-                                                                    : null;
-                                                                final totalDurationStr = Duration(
-                                                                  milliseconds:
-                                                                      track
-                                                                          .duration,
-                                                                ).shortFormat();
-                                                                final durationStr =
-                                                                    savedMs !=
-                                                                        null
-                                                                    ? '${Duration(milliseconds: savedMs).shortFormat()} / $totalDurationStr'
-                                                                    : totalDurationStr;
+                                        ),
+                                        headline: _ItemDragInterceptor(
+                                          child: Text(
+                                            track.title,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        headlineStyle: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: isNowPlaying
+                                              ? FontWeight.bold
+                                              : FontWeight.w500,
+                                          color: isNowPlaying
+                                              ? colorScheme.onPrimaryContainer
+                                              : colorScheme.onSurface,
+                                        ),
+                                        supportingText: _ItemDragInterceptor(
+                                          child: ValueListenableBuilder<
+                                            Box<int>
+                                          >(
+                                            valueListenable:
+                                                Hive.box<int>(
+                                                  HiveKeys
+                                                      .trackPositionsBox,
+                                                ).listenable(
+                                                  keys: [track.id],
+                                                ),
+                                            builder: (context, box, _) {
+                                              final savedMs = showResume
+                                                  ? box.get(track.id)
+                                                  : null;
+                                              final totalDurationStr = Duration(
+                                                milliseconds:
+                                                    track.duration,
+                                              ).shortFormat();
+                                              final durationStr =
+                                                  savedMs != null
+                                                      ? '${Duration(milliseconds: savedMs).shortFormat()} / $totalDurationStr'
+                                                      : totalDurationStr;
 
-                                                                return Text(
-                                                                  '${track.artist} · $durationStr',
-                                                                  maxLines: 1,
-                                                                  overflow:
-                                                                      TextOverflow
-                                                                          .ellipsis,
-                                                                  style: TextStyle(
-                                                                    fontSize:
-                                                                        14,
-                                                                    color:
-                                                                        isNowPlaying
-                                                                        ? colorScheme.onPrimaryContainer.withValues(
-                                                                            alpha:
-                                                                                0.8,
-                                                                          )
-                                                                        : colorScheme
-                                                                              .onSurfaceVariant,
-                                                                  ),
-                                                                );
-                                                              },
-                                                            ),
-                                                          ],
-                                                        ),
+                                              return Text(
+                                                '${track.artist} · $durationStr',
+                                                maxLines: 1,
+                                                overflow:
+                                                    TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: isNowPlaying
+                                                      ? colorScheme
+                                                          .onPrimaryContainer
+                                                          .withValues(
+                                                            alpha: 0.8,
+                                                          )
+                                                      : colorScheme
+                                                          .onSurfaceVariant,
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                        trailing: isQueueLocked
+                                            ? _ItemDragInterceptor(
+                                                child: IconButton(
+                                                  key: const ValueKey(
+                                                    'locked_more',
+                                                  ),
+                                                  icon: Icon(
+                                                    FlutterRemix.more_2_fill,
+                                                    color: isNowPlaying
+                                                        ? colorScheme
+                                                            .onPrimaryContainer
+                                                        : colorScheme
+                                                            .onSurfaceVariant,
+                                                    size: 20,
+                                                  ),
+                                                  onPressed: () =>
+                                                      M3ETrackTile.showTrackMenu(
+                                                        context,
+                                                        track,
+                                                        showGoToOptions: false,
                                                       ),
-                                                    ],
+                                                ),
+                                              )
+                                            : SizedBox(
+                                                key: const ValueKey(
+                                                  'unlocked_handle',
+                                                ),
+                                                width: 48,
+                                                height: 48,
+                                                child: Center(
+                                                  child: Icon(
+                                                    FlutterRemix.menu_line,
+                                                    color: colorScheme
+                                                        .onSurfaceVariant,
+                                                    size: 20,
                                                   ),
                                                 ),
                                               ),
-                                              const SizedBox(width: 12.0),
-                                              isQueueLocked
-                                                  ? _ItemDragInterceptor(
-                                                      child: IconButton(
-                                                        key: const ValueKey(
-                                                          'locked_more',
-                                                        ),
-                                                        icon: Icon(
-                                                          FlutterRemix
-                                                              .more_2_fill,
-                                                          color: isNowPlaying
-                                                              ? colorScheme
-                                                                    .onPrimaryContainer
-                                                              : colorScheme
-                                                                    .onSurfaceVariant,
-                                                          size: 20,
-                                                        ),
-                                                        onPressed: () =>
-                                                            M3ETrackTile.showTrackMenu(
-                                                              context,
-                                                              track,
-                                                              showGoToOptions:
-                                                                  false,
-                                                            ),
-                                                      ),
-                                                    )
-                                                  : SizedBox(
-                                                      key: const ValueKey(
-                                                        'unlocked_handle',
-                                                      ),
-                                                      width: 48,
-                                                      height: 48,
-                                                      child: Center(
-                                                        child: Icon(
-                                                          FlutterRemix
-                                                              .menu_line,
-                                                          color: colorScheme
-                                                              .onSurfaceVariant,
-                                                          size: 20,
-                                                        ),
-                                                      ),
-                                                    ),
-                                            ],
-                                          ),
-                                        ),
                                       ),
                                     );
                                   },

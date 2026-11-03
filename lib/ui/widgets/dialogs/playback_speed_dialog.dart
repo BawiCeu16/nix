@@ -15,7 +15,6 @@ class PlaybackSpeedDialog extends StatelessWidget {
     NixDialog.show(
       context: context,
       title: "Playback Speed",
-      subtitle: "Fine-tune your listening tempo",
       children: [const PlaybackSpeedDialog()],
     );
   }
@@ -60,7 +59,6 @@ class PlaybackSpeedDialog extends StatelessWidget {
         // Settings Toggles
         CardListTile(
           title: "Reset on New Track",
-          subtitle: "Always return to 1.0x for next song",
           icon: FlutterRemix.refresh_line,
           trailing: Switch(
             value: settings.resetSpeedOnNewTrack,

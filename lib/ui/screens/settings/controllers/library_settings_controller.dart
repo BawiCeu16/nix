@@ -81,7 +81,6 @@ class LibrarySettingsController extends ChangeNotifier {
     NixDialog.show(
       context: context,
       title: 'Clear Search History?',
-      subtitle: 'Remove all search history?',
       children: [
         Builder(
           builder: (dialogContext) {

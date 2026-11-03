@@ -25,15 +25,9 @@ class GesturesSettingsController extends ChangeNotifier {
             mainAxisSize: MainAxisSize.min,
             children: TrackSwipeAction.values.map((action) {
               final index = TrackSwipeAction.values.indexOf(action);
-              String description = '';
-              switch (action) {
-                case TrackSwipeAction.none:
-                  description = 'Disable swipe actions on library tracks';
-                  break;
-                case TrackSwipeAction.playPlayback:
-                  description = 'Swipe to Play (Idle) or Play Next (Playing)';
-                  break;
-              }
+              final label = action == TrackSwipeAction.none
+                  ? 'None'
+                  : 'Play / Play Next';
 
               return Padding(
                 padding: EdgeInsets.only(
@@ -42,10 +36,7 @@ class GesturesSettingsController extends ChangeNotifier {
                       : 2.5,
                 ),
                 child: CardListTile(
-                  title: action == TrackSwipeAction.none
-                      ? 'NONE'
-                      : 'PLAY / PLAY NEXT',
-                  subtitle: description,
+                  title: label,
                   onTap: () {
                     settings.setTrackSwipeAction(action);
                     Navigator.of(context, rootNavigator: true).pop();
@@ -84,15 +75,7 @@ class GesturesSettingsController extends ChangeNotifier {
             mainAxisSize: MainAxisSize.min,
             children: SnackBarPosition.values.map((position) {
               final index = SnackBarPosition.values.indexOf(position);
-              String description = '';
-              switch (position) {
-                case SnackBarPosition.top:
-                  description = 'Show alerts at the top of the screen';
-                  break;
-                case SnackBarPosition.bottom:
-                  description = 'Show alerts at the bottom of the screen';
-                  break;
-              }
+              final label = position == SnackBarPosition.top ? 'Top' : 'Bottom';
 
               return Padding(
                 padding: EdgeInsets.only(
@@ -101,8 +84,7 @@ class GesturesSettingsController extends ChangeNotifier {
                       : 2.5,
                 ),
                 child: CardListTile(
-                  title: position.name.toUpperCase(),
-                  subtitle: description,
+                  title: label,
                   onTap: () {
                     settings.setSnackbarPosition(position);
                     Navigator.of(context, rootNavigator: true).pop();
@@ -138,23 +120,14 @@ class GesturesSettingsController extends ChangeNotifier {
             mainAxisSize: MainAxisSize.min,
             children: TimerGesture.values.map((gesture) {
               final index = TimerGesture.values.indexOf(gesture);
-              String description = '';
-              switch (gesture) {
-                case TimerGesture.tap:
-                  description = 'Single tap to open timer';
-                  break;
-                case TimerGesture.longPress:
-                  description = 'Long press to avoid accidental touches';
-                  break;
-              }
+              final label = gesture == TimerGesture.tap ? 'Tap' : 'Long Press';
 
               return Padding(
                 padding: EdgeInsets.only(
                   bottom: index == TimerGesture.values.length - 1 ? 0.0 : 2.5,
                 ),
                 child: CardListTile(
-                  title: gesture.name.toUpperCase(),
-                  subtitle: description,
+                  title: label,
                   onTap: () {
                     settings.setTimerGesture(gesture);
                     Navigator.of(context, rootNavigator: true).pop();

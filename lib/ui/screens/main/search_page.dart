@@ -97,7 +97,7 @@ class _SearchPageState extends State<SearchPage> {
                             ),
                             elevation: const WidgetStatePropertyAll(0),
                             controller: _controller.searchInputController,
-                            hintText: "Search tracks, artists, albums...",
+                            hintText: "Search",
                             textInputAction: TextInputAction.search,
                             leading: const Padding(
                               padding: EdgeInsets.only(left: 8.0),
@@ -176,16 +176,9 @@ class _SearchPageState extends State<SearchPage> {
                     // Results or placeholder
                     if (_controller.searchInputController.text.isEmpty)
                       settings.searchHistory.isEmpty
-                          ? SliverFillRemaining(
+                          ? const SliverFillRemaining(
                               hasScrollBody: false,
-                              child: Center(
-                                child: Text(
-                                  "Type something to search...",
-                                  style: TextStyle(
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ),
+                              child: SizedBox.shrink(),
                             )
                           : SliverPadding(
                               padding: const EdgeInsets.symmetric(
@@ -211,8 +204,6 @@ class _SearchPageState extends State<SearchPage> {
                                       TextButton(
                                         onPressed: () => NixDialog.show(
                                           title: "Clear Search History?",
-                                          subtitle:
-                                              "Remove all search history?",
                                           children: [
                                             Builder(
                                               builder: (dialogContext) {

@@ -88,8 +88,7 @@ class PlaylistDialogs {
   ) {
     NixDialog.show(
       context: context,
-      title: "Delete Playlist?",
-      subtitle: "Are you sure you want to delete \"$name\"?",
+      title: "Delete \"$name\"?",
       children: [
         Builder(
           builder: (dialogContext) {
@@ -144,7 +143,6 @@ class PlaylistDialogs {
               children: [
                 CardListTile(
                   title: playlist.name,
-                  subtitle: '${playlist.tracks.length} tracks',
                   icon: FlutterRemix.play_list_add_line,
                   isFirst: isFirst,
                   isLast: isLast,

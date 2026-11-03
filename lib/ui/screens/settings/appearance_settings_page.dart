@@ -113,7 +113,6 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
               const SizedBox(height: 2.5),
               CardListTile(
                 title: 'AMOLED Mode',
-                subtitle: 'Pure black background for OLED screens',
                 icon: FlutterRemix.moon_clear_line,
                 trailing: Switch(
                   value: settingsParams.useAmoledMode,
@@ -145,7 +144,6 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
               ),
               NixCardExpansionTile(
                 title: 'Y2K CD Artwork Style',
-                subtitle: 'Vintage spinning CD style player artwork',
                 icon: FlutterRemix.album_line,
                 isFirst: true,
                 showExpansionIcon: settingsParams.useCdArtworkStyle,
@@ -159,7 +157,6 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                     const SizedBox(height: 2.5),
                     CardListTile(
                       title: 'Split CD Horizontally',
-                      subtitle: 'Split CD disc when player is partially open',
                       icon: FlutterRemix.split_cells_horizontal,
                       trailing: Switch(
                         value: settingsParams.splitCdWhenHalfOpen,
@@ -173,7 +170,6 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                     const SizedBox(height: 2.5),
                     CardListTile(
                       title: 'Revolving CD Disc',
-                      subtitle: 'Spinning CD disc animation during playback',
                       icon: FlutterRemix.disc_line,
                       trailing: Switch(
                         value: settingsParams.rotateCdWhenPlaying,
@@ -274,7 +270,6 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
               const SizedBox(height: 2.5),
               NixCardExpansionTile(
                 title: 'Miniplayer Shadow',
-                subtitle: 'Dynamic depth effect for miniplayer',
                 icon: FlutterRemix.magic_line,
                 isLast: true,
                 showExpansionIcon: settingsParams.showMiniplayerShadow,
@@ -439,9 +434,15 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                                         orElse: () =>
                                             MiniplayerShadowStyle.expressive,
                                       );
-                                  settingsParams.setMiniplayerShadowStyle(
-                                    style,
-                                  );
+                                  if (style !=
+                                      settingsParams.miniplayerShadowStyle) {
+                                    WidgetsBinding.instance.addPostFrameCallback(
+                                      (_) {
+                                        settingsParams
+                                            .setMiniplayerShadowStyle(style);
+                                      },
+                                    );
+                                  }
                                 }
                               },
                             ),

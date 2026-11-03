@@ -383,16 +383,16 @@ class M3EArtworkLeading extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       curve: Curves.fastOutSlowIn,
-      width: 48,
-      height: 48,
+      width: 52,
+      height: 52,
       decoration: BoxDecoration(borderRadius: targetRadius),
       clipBehavior: Clip.antiAlias,
       child: NixArtwork(
         id: trackId,
         type: ArtworkType.AUDIO,
         borderRadius: targetRadius,
-        width: 48,
-        height: 48,
+        width: 52,
+        height: 52,
       ),
     );
   }
@@ -420,6 +420,11 @@ class M3ETrackContent extends StatelessWidget {
     final durationStr = Duration(milliseconds: track.duration).shortFormat();
 
     return M3EListItem(
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 8.0,
+        vertical: 8.0,
+      ),
+      minHeight: 64.0,
       leading: M3EArtworkLeading(trackId: track.id, isPlaying: isNowPlaying),
       headline: Text(track.title, maxLines: 1, overflow: TextOverflow.ellipsis),
       headlineStyle: TextStyle(

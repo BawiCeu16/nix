@@ -54,7 +54,6 @@ class _GesturesSettingsPageState extends State<GesturesSettingsPage> {
               const NixSectionHeader(title: 'Gestures', topPadding: 16),
               CardListTile(
                 title: 'Swipe Down to Dismiss',
-                subtitle: 'Allow closing the player by swiping down fully',
                 icon: FlutterRemix.arrow_down_circle_line,
                 trailing: Switch(
                   value: settings.swipeToDismiss,
@@ -67,7 +66,6 @@ class _GesturesSettingsPageState extends State<GesturesSettingsPage> {
               const SizedBox(height: 2.5),
               NixCardExpansionTile(
                 title: 'Swipe to Change Track',
-                subtitle: 'Swipe artwork left or right to skip tracks',
                 icon: FlutterRemix.arrow_left_right_line,
                 showExpansionIcon: settings.swipeToChangeTrack,
                 initiallyExpanded: false,
@@ -80,8 +78,6 @@ class _GesturesSettingsPageState extends State<GesturesSettingsPage> {
                     const SizedBox(height: 2.5),
                     CardListTile(
                       title: 'Fast Swipe Artwork',
-                      subtitle:
-                          'Requires only a small swipe distance to skip tracks',
                       icon: FlutterRemix.speed_line,
                       trailing: Switch(
                         value: settings.fastSwipeArtwork,
@@ -108,7 +104,6 @@ class _GesturesSettingsPageState extends State<GesturesSettingsPage> {
               const NixSectionHeader(title: 'Haptic Feedback', topPadding: 24),
               NixCardExpansionTile(
                 title: 'Haptic Feedback',
-                subtitle: 'Vibrate during navigation and playback control',
                 icon: FlutterRemix.smartphone_line,
                 isFirst: true,
                 isLast: true,
@@ -243,7 +238,6 @@ class _GesturesSettingsPageState extends State<GesturesSettingsPage> {
               const SizedBox(height: 2.5),
               CardListTile(
                 title: 'Swipe to Dismiss SnackBar',
-                subtitle: 'Gesture dismissal for alerts',
                 icon: FlutterRemix.drag_move_2_line,
                 trailing: Switch(
                   value: settings.snackbarSwipeToDismiss,
@@ -256,8 +250,6 @@ class _GesturesSettingsPageState extends State<GesturesSettingsPage> {
               const SizedBox(height: 2.5),
               CardListTile(
                 title: 'Auto Scroll Queue',
-                subtitle:
-                    'Automatically scroll to now playing when queue is opened',
                 icon: FlutterRemix.play_list_2_line,
                 trailing: Switch(
                   value: settings.autoScrollQueue,

@@ -57,7 +57,6 @@ class _PlaybackSettingsPageState extends State<PlaybackSettingsPage> {
               ),
               CardListTile(
                 title: 'Auto Play',
-                subtitle: 'Keep playing similar tracks when current track ends',
                 icon: FlutterRemix.play_circle_line,
                 trailing: Switch(
                   value: settings.autoPlay,
@@ -69,7 +68,6 @@ class _PlaybackSettingsPageState extends State<PlaybackSettingsPage> {
               const SizedBox(height: 2.5),
               CardListTile(
                 title: 'Skip Ending Silence',
-                subtitle: 'Automatically trim silent gaps at track ending',
                 icon: FlutterRemix.scissors_line,
                 trailing: Switch(
                   value: settings.skipSilence,
@@ -80,7 +78,6 @@ class _PlaybackSettingsPageState extends State<PlaybackSettingsPage> {
               const SizedBox(height: 2.5),
               CardListTile(
                 title: 'Reset Speed on New Track',
-                subtitle: 'Always return to 1.0x when starting a new track',
                 icon: FlutterRemix.speed_line,
                 trailing: Switch(
                   value: settings.resetSpeedOnNewTrack,
@@ -91,7 +88,6 @@ class _PlaybackSettingsPageState extends State<PlaybackSettingsPage> {
               const SizedBox(height: 2.5),
               CardListTile(
                 title: 'Remember Playback Position',
-                subtitle: 'Resume tracks from where you last left off',
                 icon: FlutterRemix.time_line,
                 trailing: Switch(
                   value: settings.resumeFromPlayedDuration,
@@ -108,7 +104,6 @@ class _PlaybackSettingsPageState extends State<PlaybackSettingsPage> {
               ),
               NixCardExpansionTile(
                 title: 'Up Next Indicator',
-                subtitle: 'Show upcoming track before current track ends',
                 icon: FlutterRemix.skip_forward_mini_line,
                 isFirst: true,
                 initiallyExpanded: false,
@@ -183,7 +178,6 @@ class _PlaybackSettingsPageState extends State<PlaybackSettingsPage> {
               const SizedBox(height: 2.5),
               CardListTile(
                 title: 'Save Lyrics Offline',
-                subtitle: 'Store fetched lyrics locally for offline playback',
                 icon: FlutterRemix.download_cloud_2_line,
                 trailing: Switch(
                   value: settings.saveLyricsOffline,

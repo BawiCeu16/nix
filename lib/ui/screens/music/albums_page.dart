@@ -47,75 +47,95 @@ class _AlbumsPageState extends State<AlbumsPage> {
       builder: (context, _) {
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
-          appBar: AppBar(
-            title: const Text('Albums'),
-            centerTitle: true,
-            backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
-            scrolledUnderElevation: 0,
-            actions: [
-              NixSortWidget<AlbumSort>(
-                currentSort: _controller.sort,
-                isAscending: _controller.isAscending,
-                onSortSelected: _controller.setSort,
-                onToggleOrder: _controller.toggleOrder,
-                items: const [
-                  NixSortMenuItem(value: AlbumSort.name, label: 'Album Name'),
-                  NixSortMenuItem(
-                    value: AlbumSort.artist,
-                    label: 'Artist Name',
-                  ),
-                  NixSortMenuItem(
-                    value: AlbumSort.trackCount,
-                    label: 'Track Count',
-                  ),
-                ],
-              ),
-            ],
-          ),
-          body: Consumer<MusicProvider>(
-            builder: (context, music, child) {
-              final sortedAlbums = _controller.getSortedAlbums(music.albums);
-
-              return NixRefreshableList(
-                isEmpty: sortedAlbums.isEmpty,
-                onRefresh: () async => await music.scanDevice(),
-                emptyState: const NixEmptyState(
-                  icon: FlutterRemix.disc_line,
-                  title: "No albums found",
-                ),
-                child: NixScrollbar(
-                  child: GridView.builder(
-                    scrollCacheExtent: const .pixels(600.0),
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
-                    physics: const AlwaysScrollableScrollPhysics(
-                      parent: BouncingScrollPhysics(),
+          body: NestedScrollView(
+            floatHeaderSlivers: true,
+            headerSliverBuilder: (context, innerBoxIsScrolled) {
+              return [
+                SliverAppBar(
+                  title: const Text('Albums'),
+                  centerTitle: true,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainer,
+                  scrolledUnderElevation: 0,
+                  // 1. Allow the app bar to hide completely off-screen
+                  pinned: false,
+                  // 2. Make it reappear immediately when scrolling back up
+                  floating: true,
+                  // 3. (Optional) Snaps the bar fully open/closed without stuttering
+                  snap: true,
+                  forceElevated: innerBoxIsScrolled,
+                  actions: [
+                    NixSortWidget<AlbumSort>(
+                      currentSort: _controller.sort,
+                      isAscending: _controller.isAscending,
+                      onSortSelected: _controller.setSort,
+                      onToggleOrder: _controller.toggleOrder,
+                      items: const [
+                        NixSortMenuItem(
+                          value: AlbumSort.name,
+                          label: 'Album Name',
+                        ),
+                        NixSortMenuItem(
+                          value: AlbumSort.artist,
+                          label: 'Artist Name',
+                        ),
+                        NixSortMenuItem(
+                          value: AlbumSort.trackCount,
+                          label: 'Track Count',
+                        ),
+                      ],
                     ),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.75,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                        ),
-                    itemCount: sortedAlbums.length,
-                    itemBuilder: (context, index) {
-                      final album = sortedAlbums[index];
-                      final firstTrackId = music.albumFirstTrackId[album.title];
-                      return AlbumCardTile(
-                        title: album.title,
-                        subtitle: album.artist,
-                        firstTrackId: firstTrackId,
-                        onTap: () => _controller.openAlbumDetails(
-                          context,
-                          album.title,
-                          album.artist,
-                        ),
-                      );
-                    },
-                  ),
+                  ],
                 ),
-              );
+              ];
             },
+            body: Consumer<MusicProvider>(
+              builder: (context, music, child) {
+                final sortedAlbums = _controller.getSortedAlbums(music.albums);
+
+                return NixRefreshableList(
+                  isEmpty: sortedAlbums.isEmpty,
+                  onRefresh: () async => await music.scanDevice(),
+                  emptyState: const NixEmptyState(
+                    icon: FlutterRemix.disc_line,
+                    title: "No albums found",
+                  ),
+                  child: NixScrollbar(
+                    child: GridView.builder(
+                      scrollCacheExtent: const .pixels(600.0),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: BouncingScrollPhysics(),
+                      ),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 0.75,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                          ),
+                      itemCount: sortedAlbums.length,
+                      itemBuilder: (context, index) {
+                        final album = sortedAlbums[index];
+                        final firstTrackId =
+                            music.albumFirstTrackId[album.title];
+                        return AlbumCardTile(
+                          title: album.title,
+                          subtitle: album.artist,
+                          firstTrackId: firstTrackId,
+                          onTap: () => _controller.openAlbumDetails(
+                            context,
+                            album.title,
+                            album.artist,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         );
       },
@@ -184,127 +204,143 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> {
       builder: (context, _) {
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
-          appBar: AppBar(
-            title: Text(widget.albumTitle),
-            backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
-            scrolledUnderElevation: 0,
-            centerTitle: true,
-          ),
-          body: Consumer<MusicProvider>(
-            builder: (context, music, child) {
-              final tracks = music.tracks
-                  .where((t) => t.album == widget.albumTitle)
-                  .toList();
-              final firstTrackId = tracks.isNotEmpty ? tracks.first.id : null;
+          body: NestedScrollView(
+            floatHeaderSlivers: true,
+            headerSliverBuilder: (context, innerBoxIsScrolled) {
+              return [
+                SliverAppBar(
+                  title: Text(widget.albumTitle),
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainer,
+                  scrolledUnderElevation: 0,
+                  centerTitle: true,
+                  // 1. Allow the app bar to hide completely off-screen
+                  pinned: false,
+                  // 2. Make it reappear immediately when scrolling back up
+                  floating: true,
+                  // 3. (Optional) Snaps the bar fully open/closed without stuttering
+                  snap: true,
+                  forceElevated: innerBoxIsScrolled,
+                ),
+              ];
+            },
+            body: Consumer<MusicProvider>(
+              builder: (context, music, child) {
+                final tracks = music.tracks
+                    .where((t) => t.album == widget.albumTitle)
+                    .toList();
+                final firstTrackId = tracks.isNotEmpty ? tracks.first.id : null;
 
-              final Widget cdWidget = useCdArtworkStyle
-                  ? Hero(
-                      tag: 'album_cd_${widget.albumTitle}',
-                      child: NixCustomizableCDWidget(
-                        size: 220,
-                        state: _cdState,
-                        splitWhenHalfOpen: splitCdWhenHalfOpen,
-                        isSpinning: isPlaying && rotateCdWhenPlaying,
-                        rotateSpeed: cdRotationSpeed,
-                        seedId: widget.albumTitle,
-                        onTap: () {
-                          setState(() {
-                            _cdState = _cdState == CDCoverState.halfOpen
-                                ? CDCoverState.closed
-                                : CDCoverState.halfOpen;
-                          });
-                        },
-                        coverImage: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            NixArtwork(
-                              id: firstTrackId ?? 0,
-                              type: ArtworkType.AUDIO,
-                              fit: BoxFit.cover,
-                            ),
-                            Transform.scale(
-                              scale: 1.15,
-                              child: Image.asset(
-                                'assets/cd_effects/cd_cover.png',
+                final Widget cdWidget = useCdArtworkStyle
+                    ? Hero(
+                        tag: 'album_cd_${widget.albumTitle}',
+                        child: NixCustomizableCDWidget(
+                          size: 220,
+                          state: _cdState,
+                          splitWhenHalfOpen: splitCdWhenHalfOpen,
+                          isSpinning: isPlaying && rotateCdWhenPlaying,
+                          rotateSpeed: cdRotationSpeed,
+                          seedId: widget.albumTitle,
+                          onTap: () {
+                            setState(() {
+                              _cdState = _cdState == CDCoverState.halfOpen
+                                  ? CDCoverState.closed
+                                  : CDCoverState.halfOpen;
+                            });
+                          },
+                          coverImage: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              NixArtwork(
+                                id: firstTrackId ?? 0,
+                                type: ArtworkType.AUDIO,
                                 fit: BoxFit.cover,
                               ),
-                            ),
-                          ],
-                        ),
-                        discImage: NixArtwork(
-                          id: firstTrackId ?? 0,
-                          type: ArtworkType.AUDIO,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    )
-                  : (firstTrackId != null
-                        ? NixArtwork(
-                            id: firstTrackId,
-                            type: ArtworkType.AUDIO,
-                            width: 240,
-                            height: 240,
-                            borderRadius: BorderRadius.circular(16),
-                          )
-                        : Container(
-                            width: 240,
-                            height: 240,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surface,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ));
-
-              return NixScrollbar(
-                child: ListView.builder(
-                  scrollCacheExtent: const .pixels(600.0),
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  physics: const BouncingScrollPhysics(),
-                  itemCount: tracks.length + 2,
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return NixPageHeader(
-                        title: widget.albumTitle,
-                        subtitle:
-                            '${widget.albumArtist} • ${tracks.length} Tracks',
-                        customArtwork: cdWidget,
-                        actionRow: NixActionRow(
-                          onShuffle: () => _controller.shuffleAlbum(
-                            context,
-                            tracks,
-                            widget.albumTitle,
+                              Transform.scale(
+                                scale: 1.15,
+                                child: Image.asset(
+                                  'assets/cd_effects/cd_cover.png',
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ],
                           ),
-                          onPlay: () {
-                            if (tracks.isNotEmpty) {
-                              _controller.playAlbumTrack(
-                                context,
-                                tracks.first,
-                                tracks,
-                                widget.albumTitle,
-                              );
-                            }
-                          },
+                          discImage: NixArtwork(
+                            id: firstTrackId ?? 0,
+                            type: ArtworkType.AUDIO,
+                            fit: BoxFit.cover,
+                          ),
                         ),
+                      )
+                    : (firstTrackId != null
+                          ? NixArtwork(
+                              id: firstTrackId,
+                              type: ArtworkType.AUDIO,
+                              width: 240,
+                              height: 240,
+                              borderRadius: BorderRadius.circular(16),
+                            )
+                          : Container(
+                              width: 240,
+                              height: 240,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.surface,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ));
+
+                return NixScrollbar(
+                  child: ListView.builder(
+                    scrollCacheExtent: const .pixels(600.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: tracks.length + 2,
+                    itemBuilder: (context, index) {
+                      if (index == 0) {
+                        return NixPageHeader(
+                          title: widget.albumTitle,
+                          subtitle:
+                              '${widget.albumArtist} • ${tracks.length} Tracks',
+                          customArtwork: cdWidget,
+                          actionRow: NixActionRow(
+                            onShuffle: () => _controller.shuffleAlbum(
+                              context,
+                              tracks,
+                              widget.albumTitle,
+                            ),
+                            onPlay: () {
+                              if (tracks.isNotEmpty) {
+                                _controller.playAlbumTrack(
+                                  context,
+                                  tracks.first,
+                                  tracks,
+                                  widget.albumTitle,
+                                );
+                              }
+                            },
+                          ),
+                        );
+                      }
+
+                      if (index == tracks.length + 1) {
+                        return const NixBottomSpacer();
+                      }
+
+                      final track = tracks[index - 1];
+                      return M3ETrackTile(
+                        track: track,
+                        playlistContext: tracks,
+                        isFirst: index == 1,
+                        isLast: index == tracks.length,
+                        index: index - 1,
+                        totalCount: tracks.length,
                       );
-                    }
-
-                    if (index == tracks.length + 1) {
-                      return const NixBottomSpacer();
-                    }
-
-                    final track = tracks[index - 1];
-                    return M3ETrackTile(
-                      track: track,
-                      playlistContext: tracks,
-                      isFirst: index == 1,
-                      isLast: index == tracks.length,
-                      index: index - 1,
-                      totalCount: tracks.length,
-                    );
-                  },
-                ),
-              );
-            },
+                    },
+                  ),
+                );
+              },
+            ),
           ),
         );
       },

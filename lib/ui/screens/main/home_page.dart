@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
 import 'package:provider/provider.dart';
 import 'package:nix/providers/music_provider.dart';
-import 'package:nix/providers/user_provider.dart';
 import 'package:nix/ui/widgets/tiles/track_card_tile.dart';
 import 'package:nix/ui/widgets/tiles/album_card_tile.dart';
 import 'package:nix/models/music/track.dart';
@@ -66,9 +65,9 @@ class _HomePageState extends State<HomePage> {
                     parent: BouncingScrollPhysics(),
                   ),
                   slivers: [
-                    // ── SliverAppBar with greeting ──
+                    // ── SliverAppBar with header ──
                     SliverAppBar(
-                      centerTitle: true,
+                      centerTitle: false,
                       systemOverlayStyle: brightness == Brightness.dark
                           ? SystemUiOverlayStyle.light.copyWith(
                               statusBarColor: Colors.transparent,
@@ -83,55 +82,31 @@ class _HomePageState extends State<HomePage> {
                       pinned: false,
                       floating: false,
                       snap: false,
-                      expandedHeight: 200,
+                      expandedHeight: 120,
                       flexibleSpace: FlexibleSpaceBar(
                         titlePadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                        title: Selector<UserProvider, String>(
-                          selector: (_, p) => p.userName,
-                          builder: (context, userName, _) {
-                            return Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _controller.getGreeting(),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelMedium
-                                      ?.copyWith(
-                                        color: colorScheme.onSurfaceVariant,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                ),
-                                const SizedBox(height: 0),
-                                Text(
-                                  userName,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineSmall
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: colorScheme.onSurface,
-                                      ),
-                                ),
-                              ],
-                            );
-                          },
+                        title: Text(
+                          'Home',
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onSurface,
+                              ),
                         ),
                       ),
                     ),
 
                     SliverMainAxisGroup(
                       slivers: [
-                        // ── Recently Listened ──
+                        // ── Recently Played ──
                         SliverToBoxAdapter(
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12.0,
                             ),
                             child: NixSectionHeader(
-                              title: 'Recently Listened',
-                              topPadding: 20,
+                              title: 'Recently Played',
+                              topPadding: 12,
                               onShowAll: () =>
                                   _controller.openRecentlyListened(context),
                             ),
@@ -147,7 +122,7 @@ class _HomePageState extends State<HomePage> {
                                     horizontal: 24.0,
                                     vertical: 12.0,
                                   ),
-                                  child: Text('No recents yet.'),
+                                  child: Text('No recents yet'),
                                 ),
                               );
                             }
@@ -258,14 +233,14 @@ class _HomePageState extends State<HomePage> {
                           },
                         ),
 
-                        // ── All Tracks ──
+                        // ── Songs ──
                         SliverToBoxAdapter(
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12.0,
                             ),
                             child: NixSectionHeader(
-                              title: 'All Tracks',
+                              title: 'Songs',
                               topPadding: 32,
                               onShowAll: () =>
                                   _controller.openAllSongs(context),
@@ -292,7 +267,7 @@ class _HomePageState extends State<HomePage> {
                                 child: Padding(
                                   padding: const EdgeInsets.all(24.0),
                                   child: Center(
-                                    child: Text(error ?? 'No tracks found. :('),
+                                    child: Text(error ?? 'No tracks found'),
                                   ),
                                 ),
                               );

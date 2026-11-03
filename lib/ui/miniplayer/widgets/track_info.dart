@@ -181,18 +181,19 @@ class _TrackInfoState extends State<TrackInfo> {
                         widget.data.bounceClampedProgress),
               ),
               child: Padding(
-                padding: EdgeInsets.all(
-                  12.0 * (1 - widget.data.bounceClampedProgress),
-                ).add(
-                  EdgeInsets.only(
-                    left:
-                        20.0 * widget.data.bounceClampedProgress +
-                        (72.0 *
-                            widget.lyricsAnim.value *
-                            widget.data.bounceClampedProgress),
-                    right: 20.0 * widget.data.bounceClampedProgress,
-                  ),
-                ),
+                padding:
+                    EdgeInsets.all(
+                      12.0 * (1 - widget.data.bounceClampedProgress),
+                    ).add(
+                      EdgeInsets.only(
+                        left:
+                            20.0 * widget.data.bounceClampedProgress +
+                            (72.0 *
+                                widget.lyricsAnim.value *
+                                widget.data.bounceClampedProgress),
+                        right: 20.0 * widget.data.bounceClampedProgress,
+                      ),
+                    ),
                 child: Align(
                   alignment: Alignment.bottomLeft,
                   child: Padding(

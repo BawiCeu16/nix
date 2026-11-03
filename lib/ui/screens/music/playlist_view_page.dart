@@ -54,23 +54,36 @@ class _PlaylistViewPageState extends State<PlaylistViewPage> {
       builder: (context, _) {
         return Scaffold(
           backgroundColor: colorScheme.surfaceContainer,
-          appBar: AppBar(
-            title: Text(widget.playlistName),
-            backgroundColor: colorScheme.surfaceContainer,
-            scrolledUnderElevation: 0,
-            centerTitle: true,
-            actions: [
-              IconButton(
-                icon: const Icon(FlutterRemix.edit_line),
-                onPressed: () => PlaylistDialogs.showPlaylistActionDialog(
-                  context,
-                  initialName: widget.playlistName,
-                  playlistId: widget.playlistId,
+          body: NestedScrollView(
+            floatHeaderSlivers: true,
+            headerSliverBuilder: (context, innerBoxIsScrolled) {
+              return [
+                SliverAppBar(
+                  title: Text(widget.playlistName),
+                  backgroundColor: colorScheme.surfaceContainer,
+                  scrolledUnderElevation: 0,
+                  centerTitle: true,
+                  // 1. Allow the app bar to hide completely off-screen
+                  pinned: false,
+                  // 2. Make it reappear immediately when scrolling back up
+                  floating: true,
+                  // 3. (Optional) Snaps the bar fully open/closed without stuttering
+                  snap: true,
+                  forceElevated: innerBoxIsScrolled,
+                  actions: [
+                    IconButton(
+                      icon: const Icon(FlutterRemix.edit_line),
+                      onPressed: () => PlaylistDialogs.showPlaylistActionDialog(
+                        context,
+                        initialName: widget.playlistName,
+                        playlistId: widget.playlistId,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
-          body: Consumer<MusicProvider>(
+              ];
+            },
+            body: Consumer<MusicProvider>(
             builder: (context, music, child) {
               Playlist? pl;
               bool isSystemPlaylist = false;
@@ -208,7 +221,8 @@ class _PlaylistViewPageState extends State<PlaylistViewPage> {
               );
             },
           ),
-        );
+        ),
+      );
       },
     );
   }

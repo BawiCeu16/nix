@@ -35,12 +35,9 @@ class AboutPageController extends ChangeNotifier {
     NixDialog.show(
       context: context,
       title: 'Reset to Defaults',
-      subtitle: 'This will restore all settings.',
       children: [
         CardListTile(
           title: 'Reset Everything',
-          subtitle:
-              'All appearance, playback, and library settings will return to their defaults.',
           icon: FlutterRemix.restart_line,
           isFirst: true,
           isLast: true,

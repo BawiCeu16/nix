@@ -56,17 +56,30 @@ class _StatsPageState extends State<StatsPage> {
 
         return Scaffold(
           backgroundColor: colorScheme.surfaceContainer,
-          appBar: AppBar(
-            title: const Text(
-              'Listening Stats',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            centerTitle: true,
-            scrolledUnderElevation: 0,
-            backgroundColor: colorScheme.surfaceContainer,
-            elevation: 0,
-          ),
-          body: ExpressiveRefreshIndicator(
+          body: NestedScrollView(
+            floatHeaderSlivers: true,
+            headerSliverBuilder: (context, innerBoxIsScrolled) {
+              return [
+                SliverAppBar(
+                  title: const Text(
+                    'Listening Stats',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  centerTitle: true,
+                  scrolledUnderElevation: 0,
+                  backgroundColor: colorScheme.surfaceContainer,
+                  elevation: 0,
+                  // 1. Allow the app bar to hide completely off-screen
+                  pinned: false,
+                  // 2. Make it reappear immediately when scrolling back up
+                  floating: true,
+                  // 3. (Optional) Snaps the bar fully open/closed without stuttering
+                  snap: true,
+                  forceElevated: innerBoxIsScrolled,
+                ),
+              ];
+            },
+            body: ExpressiveRefreshIndicator(
             onRefresh: () async {
               final music = context.read<MusicProvider>();
               _controller.calculateStats(music);
@@ -189,8 +202,9 @@ class _StatsPageState extends State<StatsPage> {
               ],
             ),
           ),
-        );
-      },
+        ),
+      );
+    },
     );
   }
 

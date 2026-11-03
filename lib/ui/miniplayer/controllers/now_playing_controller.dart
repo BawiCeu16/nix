@@ -458,6 +458,14 @@ class NowPlayingController with ChangeNotifier {
   }
 
   void snapToExpanded(BuildContext context, {bool haptic = true}) {
+    if (activeGesture == ActiveGesture.horizontal ||
+        sAnim.value.abs() > 0.001 ||
+        (_swipeFadeAnim != null && _swipeFadeAnim!.value > 0.0)) {
+      activeGesture = ActiveGesture.none;
+      sOffset = 0;
+      sAnim.animateTo(0.0, duration: Duration.zero);
+      _swipeFadeAnim?.value = 0.0;
+    }
     offset = maxOffset;
     if (prevOffset < maxOffset) bounceUp = true;
     if (prevOffset > maxOffset) bounceDown = true;
@@ -465,6 +473,14 @@ class NowPlayingController with ChangeNotifier {
   }
 
   void snapToMini(BuildContext context, {bool haptic = true}) {
+    if (activeGesture == ActiveGesture.horizontal ||
+        sAnim.value.abs() > 0.001 ||
+        (_swipeFadeAnim != null && _swipeFadeAnim!.value > 0.0)) {
+      activeGesture = ActiveGesture.none;
+      sOffset = 0;
+      sAnim.animateTo(0.0, duration: Duration.zero);
+      _swipeFadeAnim?.value = 0.0;
+    }
     offset = 0;
     bounceDown = false;
     snap(context, haptic: haptic);
@@ -534,6 +550,7 @@ class NowPlayingController with ChangeNotifier {
             sAnim.value = 0.0;
             HapticUtils.trigger(settings);
             _isSnapping = false;
+            activeGesture = ActiveGesture.none;
             if (_swipeFadeAnim != null) {
               await _swipeFadeAnim!.animateTo(
                 0.0,
@@ -555,6 +572,7 @@ class NowPlayingController with ChangeNotifier {
   }
 
   void snapToCurrent() {
+    activeGesture = ActiveGesture.none;
     sOffset = 0;
     notifyListeners();
     sAnim
@@ -571,6 +589,7 @@ class NowPlayingController with ChangeNotifier {
               duration: const Duration(milliseconds: 180),
             );
           }
+          activeGesture = ActiveGesture.none;
           notifyListeners();
         });
   }
@@ -598,6 +617,7 @@ class NowPlayingController with ChangeNotifier {
             sAnim.value = 0.0;
             HapticUtils.trigger(settings);
             _isSnapping = false;
+            activeGesture = ActiveGesture.none;
             if (_swipeFadeAnim != null) {
               await _swipeFadeAnim!.animateTo(
                 0.0,
@@ -627,6 +647,9 @@ class NowPlayingController with ChangeNotifier {
     }
     startY = event.position.dy;
     activeGesture = ActiveGesture.none;
+    if (sAnim.value.abs() <= 0.001 && !_isSnapping) {
+      _swipeFadeAnim?.value = 0.0;
+    }
     velocity.addPosition(event.timeStamp, event.position);
     prevOffset = offset;
     bounceUp = false;
@@ -654,12 +677,12 @@ class NowPlayingController with ChangeNotifier {
         }
         activeGesture = ActiveGesture.vertical;
       } else if (dx > dy && dx > 2) {
+        if (offset <= maxOffset * 0.4 &&
+            (!isInsideMiniplayer(event.position) ||
+                !settings.swipeToChangeTrack)) {
+          return;
+        }
         activeGesture = ActiveGesture.horizontal;
-        _swipeFadeAnim?.animateTo(
-          1.0,
-          curve: Curves.easeOutQuad,
-          duration: const Duration(milliseconds: 160),
-        );
         return;
       } else {
         return;
@@ -698,6 +721,11 @@ class NowPlayingController with ChangeNotifier {
     if (activeGesture == ActiveGesture.vertical) {
       verticalSnapping(context);
       activeGesture = ActiveGesture.none;
+    } else if (activeGesture == ActiveGesture.horizontal) {
+      if (sAnim.value.abs() <= 0.001 && !_isSnapping) {
+        activeGesture = ActiveGesture.none;
+        _swipeFadeAnim?.value = 0.0;
+      }
     }
   }
 
@@ -709,7 +737,11 @@ class NowPlayingController with ChangeNotifier {
       activeGesture = ActiveGesture.none;
     } else if (activeGesture == ActiveGesture.horizontal) {
       activeGesture = ActiveGesture.none;
-      snapToCurrent();
+      if (sAnim.value.abs() > 0.001) {
+        snapToCurrent();
+      } else {
+        _swipeFadeAnim?.value = 0.0;
+      }
     }
   }
 
@@ -761,6 +793,10 @@ class NowPlayingController with ChangeNotifier {
     if (offset > maxOffset) return;
     if (activeGesture == ActiveGesture.vertical) return;
     if (!context.read<SettingsProvider>().swipeToChangeTrack) return;
+    if (offset <= maxOffset * 0.4 &&
+        !isInsideMiniplayer(details.globalPosition)) {
+      return;
+    }
     activeGesture = ActiveGesture.horizontal;
     sPrevOffset = sOffset;
     _swipeFadeAnim?.animateTo(
@@ -825,6 +861,15 @@ class NowPlayingController with ChangeNotifier {
       snapToNext(context);
     } else {
       snapToCurrent();
+    }
+  }
+
+  void onHorizontalDragCancel() {
+    activeGesture = ActiveGesture.none;
+    if (sAnim.value.abs() > 0.001) {
+      snapToCurrent();
+    } else {
+      _swipeFadeAnim?.value = 0.0;
     }
   }
 

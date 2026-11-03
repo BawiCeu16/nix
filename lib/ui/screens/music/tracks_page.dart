@@ -26,7 +26,6 @@ class TracksPage extends StatefulWidget {
 
 class _TracksPageState extends State<TracksPage> {
   late final TracksPageController _controller;
-  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -36,7 +35,6 @@ class _TracksPageState extends State<TracksPage> {
 
   @override
   void dispose() {
-    _scrollController.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -51,44 +49,63 @@ class _TracksPageState extends State<TracksPage> {
 
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
-          appBar: AppBar(
-            title: Text(widget.title),
-            centerTitle: true,
-            backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
-            scrolledUnderElevation: 0,
-            actions: [
-              NixSortWidget<TrackSort>(
-                currentSort: _controller.sort,
-                isAscending: _controller.isAscending,
-                onSortSelected: _controller.setSort,
-                onToggleOrder: _controller.toggleOrder,
-                items: const [
-                  NixSortMenuItem(value: TrackSort.title, label: 'Title'),
-                  NixSortMenuItem(value: TrackSort.artist, label: 'Artist'),
-                  NixSortMenuItem(value: TrackSort.album, label: 'Album'),
-                  NixSortMenuItem(value: TrackSort.duration, label: 'Duration'),
-                  NixSortMenuItem(
-                    value: TrackSort.dateAdded,
-                    label: 'Date Added',
-                  ),
-                ],
+          body: NestedScrollView(
+            floatHeaderSlivers: true,
+            headerSliverBuilder: (context, innerBoxIsScrolled) {
+              return [
+                SliverAppBar(
+                  title: Text(widget.title),
+                  centerTitle: true,
+                  backgroundColor:
+                      Theme.of(context).colorScheme.surfaceContainer,
+                  scrolledUnderElevation: 0,
+                  // 1. Allow the app bar to hide completely off-screen
+                  pinned: false,
+                  // 2. Make it reappear immediately when scrolling back up
+                  floating: true,
+                  // 3. (Optional) Snaps the bar fully open/closed without stuttering
+                  snap: true,
+                  forceElevated: innerBoxIsScrolled,
+                  actions: [
+                    NixSortWidget<TrackSort>(
+                      currentSort: _controller.sort,
+                      isAscending: _controller.isAscending,
+                      onSortSelected: _controller.setSort,
+                      onToggleOrder: _controller.toggleOrder,
+                      items: const [
+                        NixSortMenuItem(value: TrackSort.title, label: 'Title'),
+                        NixSortMenuItem(
+                          value: TrackSort.artist,
+                          label: 'Artist',
+                        ),
+                        NixSortMenuItem(value: TrackSort.album, label: 'Album'),
+                        NixSortMenuItem(
+                          value: TrackSort.duration,
+                          label: 'Duration',
+                        ),
+                        NixSortMenuItem(
+                          value: TrackSort.dateAdded,
+                          label: 'Date Added',
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ];
+            },
+            body: NixRefreshableList(
+              isEmpty: sortedTracks.isEmpty,
+              onRefresh: () async =>
+                  await context.read<MusicProvider>().scanDevice(),
+              emptyState: const NixEmptyState(
+                icon: FlutterRemix.music_2_line,
+                title: "No tracks available",
               ),
-            ],
-          ),
-          body: NixRefreshableList(
-            isEmpty: sortedTracks.isEmpty,
-            onRefresh: () async =>
-                await context.read<MusicProvider>().scanDevice(),
-            emptyState: const NixEmptyState(
-              icon: FlutterRemix.music_2_line,
-              title: "No tracks available",
-            ),
-            child: NixScrollbar(
-              controller: _scrollController,
-              child: M3ETrackList(
-                controller: _scrollController,
-                tracks: sortedTracks,
-                playlistContext: sortedTracks,
+              child: NixScrollbar(
+                child: M3ETrackList(
+                  tracks: sortedTracks,
+                  playlistContext: sortedTracks,
+                ),
               ),
             ),
           ),

@@ -300,7 +300,7 @@ class _TrackTileState extends State<TrackTile> {
               child: Material(
                 color: Colors.transparent,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 5.0),
+                  padding: const EdgeInsets.symmetric(vertical: 3.0),
                   child: ListTile(
                     leading: _ArtworkLeading(
                       trackId: widget.track.id,
@@ -468,16 +468,16 @@ class _ArtworkLeading extends StatelessWidget {
     return AnimatedContainer(
       duration: NixDurations.short,
       curve: NixCurves.expressiveEmphasized,
-      width: 48,
-      height: 48,
+      width: 52,
+      height: 52,
       decoration: BoxDecoration(borderRadius: targetRadius),
       clipBehavior: Clip.antiAlias,
       child: NixArtwork(
         id: trackId,
         type: ArtworkType.AUDIO,
         borderRadius: targetRadius,
-        width: 48,
-        height: 48,
+        width: 52,
+        height: 52,
       ),
     );
   }

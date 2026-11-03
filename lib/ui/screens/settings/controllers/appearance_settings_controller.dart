@@ -65,26 +65,15 @@ class AppearanceSettingsController extends ChangeNotifier {
             mainAxisSize: MainAxisSize.min,
             children: qualities.map((quality) {
               final index = qualities.indexOf(quality);
-              String description = '';
-              switch (quality) {
-                case NixArtworkQuality.high:
-                  description = 'Full-high quality - Best visuals';
-                  break;
-                case NixArtworkQuality.medium:
-                  description = 'Balanced quality';
-                  break;
-                case NixArtworkQuality.low:
-                  description = 'Standard quality - Saves memory';
-                  break;
-              }
+              final label = quality.name[0].toUpperCase() +
+                  quality.name.substring(1);
 
               return Padding(
                 padding: EdgeInsets.only(
                   bottom: index == qualities.length - 1 ? 0.0 : 2.5,
                 ),
                 child: CardListTile(
-                  title: quality.name.toUpperCase(),
-                  subtitle: description,
+                  title: label,
                   onTap: () {
                     settings.setArtworkQuality(quality);
                     Navigator.of(context, rootNavigator: true).pop();
@@ -155,7 +144,6 @@ class AppearanceSettingsController extends ChangeNotifier {
     NixDialog.show(
       context: context,
       title: 'Reset Speed',
-      subtitle: 'Reset CD rotation speed to default 20%?',
       children: [
         CardListTile(
           title: 'Reset',

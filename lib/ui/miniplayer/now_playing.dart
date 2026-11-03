@@ -92,9 +92,11 @@ class _NowPlayingState extends State<NowPlaying> with TickerProviderStateMixin {
                 _controller.onHorizontalDragUpdate(details, context),
             onHorizontalDragEnd: (details) =>
                 _controller.onHorizontalDragEnd(details, context),
+            onHorizontalDragCancel: () => _controller.onHorizontalDragCancel(),
             child: AnimatedBuilder(
               animation: Listenable.merge([
                 widget.animation,
+                _controller.sAnim,
                 _controller.swipeFadeAnim,
               ]),
               builder: (context, child) {

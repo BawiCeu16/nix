@@ -42,20 +42,34 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
       builder: (context, _) {
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
-          appBar: AppBar(
-            title: const Text('Playlists'),
-            centerTitle: true,
-            backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
-            scrolledUnderElevation: 0,
-            actions: [
-              IconButton(
-                icon: const Icon(FlutterRemix.add_line),
-                tooltip: 'New playlist',
-                onPressed: () => _controller.createNewPlaylist(context),
-              ),
-            ],
-          ),
-          body: Consumer<MusicProvider>(
+          body: NestedScrollView(
+            floatHeaderSlivers: true,
+            headerSliverBuilder: (context, innerBoxIsScrolled) {
+              return [
+                SliverAppBar(
+                  title: const Text('Playlists'),
+                  centerTitle: true,
+                  backgroundColor:
+                      Theme.of(context).colorScheme.surfaceContainer,
+                  scrolledUnderElevation: 0,
+                  // 1. Allow the app bar to hide completely off-screen
+                  pinned: false,
+                  // 2. Make it reappear immediately when scrolling back up
+                  floating: true,
+                  // 3. (Optional) Snaps the bar fully open/closed without stuttering
+                  snap: true,
+                  forceElevated: innerBoxIsScrolled,
+                  actions: [
+                    IconButton(
+                      icon: const Icon(FlutterRemix.add_line),
+                      tooltip: 'New playlist',
+                      onPressed: () => _controller.createNewPlaylist(context),
+                    ),
+                  ],
+                ),
+              ];
+            },
+            body: Consumer<MusicProvider>(
             builder: (context, music, child) {
               final playlists = music.playlists;
               final colorScheme = Theme.of(context).colorScheme;
@@ -154,9 +168,6 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            supportingText: Text(
-                              '${playlist.tracks.length} tracks',
-                            ),
                             trailing: Icon(
                               FlutterRemix.arrow_right_s_line,
                               color: colorScheme.onSurfaceVariant,
@@ -170,7 +181,8 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
               );
             },
           ),
-        );
+        ),
+      );
       },
     );
   }

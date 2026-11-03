@@ -47,10 +47,8 @@ class _SettingsPageState extends State<SettingsPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             physics: const BouncingScrollPhysics(),
             children: [
-              const NixSectionHeader(title: 'General Settings', topPadding: 16),
               CardListTile(
                 title: 'Appearance',
-                subtitle: 'Theme, accent colors, and styling',
                 icon: FlutterRemix.palette_line,
                 isFirst: true,
                 onTap: () => _controller.openAppearance(context),
@@ -58,21 +56,18 @@ class _SettingsPageState extends State<SettingsPage> {
               const SizedBox(height: 2.5),
               CardListTile(
                 title: 'Playback',
-                subtitle: 'Auto-play, speed, and player controls',
                 icon: FlutterRemix.play_circle_line,
                 onTap: () => _controller.openPlayback(context),
               ),
               const SizedBox(height: 2.5),
               CardListTile(
-                title: 'Gestures & Interface',
-                subtitle: 'Swipes, haptic feedback, and alerts',
+                title: 'Gestures',
                 icon: FlutterRemix.fingerprint_line,
                 onTap: () => _controller.openGestures(context),
               ),
               const SizedBox(height: 2.5),
               CardListTile(
                 title: 'Library',
-                subtitle: 'Organization, duration filter, and storage',
                 icon: FlutterRemix.folder_music_line,
                 isLast: true,
                 onTap: () => _controller.openLibrary(context),
@@ -80,7 +75,6 @@ class _SettingsPageState extends State<SettingsPage> {
               const NixSectionHeader(title: 'About', topPadding: 24),
               CardListTile(
                 title: 'About nix',
-                subtitle: 'Updates, developer, and licenses',
                 icon: FlutterRemix.information_line,
                 isFirst: true,
                 isLast: true,

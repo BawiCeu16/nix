@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nix/ui/miniplayer/controllers/now_playing_controller.dart';
@@ -312,6 +313,190 @@ void main() {
 
       expect(find.byType(SwipeFadeMask), findsOneWidget);
       expect(find.byType(SizedBox), findsOneWidget);
+    });
+  });
+
+  group('Miniplayer resting vs sliding fade and clip tests', () {
+    testWidgets('resting miniplayer strictly disables SwipeFadeMask and ClipRRect clipBehavior', (tester) async {
+      final sheetController = AnimationController(
+        vsync: tester,
+        duration: const Duration(milliseconds: 300),
+        value: 0.0,
+      );
+
+      final controller = NowPlayingController();
+      controller.setSheetAnimationForTesting(sheetController);
+      controller.sAnim = AnimationController(
+        vsync: tester,
+        lowerBound: -1,
+        upperBound: 1,
+        value: 0.0,
+      );
+      controller.swipeFadeAnim = AnimationController(
+        vsync: tester,
+        duration: const Duration(milliseconds: 180),
+        value: 0.0,
+      );
+
+      final data = NowPlayingPhysics.calculateAnimationData(
+        progressValue: 0.0,
+        maxOffset: 800.0,
+        topInset: 24.0,
+        bottomInset: 20.0,
+        bounceUp: false,
+        bounceDown: false,
+      );
+
+      // In resting miniplayer:
+      expect(controller.isSwipingTrack, isFalse);
+
+      final bool isMaskEnabled =
+          data.clampedProgress <= 0.4 && controller.isSwipingTrack;
+      final double fadeProgress = math.max(
+        controller.swipeFadeAnim.value,
+        (controller.sAnim.value.abs() * 3.0).clamp(0.0, 1.0),
+      );
+      final Clip clipBehavior =
+          (data.clampedProgress <= 0.4 && controller.isSwipingTrack)
+              ? Clip.antiAlias
+              : Clip.none;
+
+      expect(isMaskEnabled, isFalse);
+      expect(fadeProgress, equals(0.0));
+      expect(clipBehavior, equals(Clip.none));
+
+      controller.sAnim.dispose();
+      controller.swipeFadeAnim.dispose();
+      sheetController.dispose();
+    });
+
+    testWidgets('sliding miniplayer activates edge fade and antiAlias clipping with recent formula', (tester) async {
+      final sheetController = AnimationController(
+        vsync: tester,
+        duration: const Duration(milliseconds: 300),
+        value: 0.0,
+      );
+
+      final controller = NowPlayingController();
+      controller.setSheetAnimationForTesting(sheetController);
+      controller.sAnim = AnimationController(
+        vsync: tester,
+        lowerBound: -1,
+        upperBound: 1,
+        value: 0.2, // 20% horizontal displacement
+      );
+      controller.swipeFadeAnim = AnimationController(
+        vsync: tester,
+        duration: const Duration(milliseconds: 180),
+        value: 1.0,
+      );
+      controller.activeGesture = ActiveGesture.horizontal;
+
+      final data = NowPlayingPhysics.calculateAnimationData(
+        progressValue: 0.0,
+        maxOffset: 800.0,
+        topInset: 24.0,
+        bottomInset: 20.0,
+        bounceUp: false,
+        bounceDown: false,
+      );
+
+      expect(controller.isSwipingTrack, isTrue);
+
+      final bool isMaskEnabled =
+          data.clampedProgress <= 0.4 && controller.isSwipingTrack;
+      final double fadeProgress = math.max(
+        controller.swipeFadeAnim.value,
+        (controller.sAnim.value.abs() * 3.0).clamp(0.0, 1.0),
+      );
+      final Clip clipBehavior =
+          (data.clampedProgress <= 0.4 && controller.isSwipingTrack)
+              ? Clip.antiAlias
+              : Clip.none;
+
+      expect(isMaskEnabled, isTrue);
+      expect(fadeProgress, equals(1.0));
+      expect(clipBehavior, equals(Clip.antiAlias));
+
+      controller.sAnim.dispose();
+      controller.swipeFadeAnim.dispose();
+      sheetController.dispose();
+    });
+
+    testWidgets('onPointerUp resets activeGesture and swipeFadeAnim when track is resting', (tester) async {
+      final sheetController = AnimationController(
+        vsync: tester,
+        duration: const Duration(milliseconds: 300),
+        value: 0.0,
+      );
+
+      final controller = NowPlayingController();
+      controller.setSheetAnimationForTesting(sheetController);
+      controller.sAnim = AnimationController(
+        vsync: tester,
+        lowerBound: -1,
+        upperBound: 1,
+        value: 0.0,
+      );
+      controller.swipeFadeAnim = AnimationController(
+        vsync: tester,
+        duration: const Duration(milliseconds: 180),
+        value: 1.0,
+      );
+      controller.activeGesture = ActiveGesture.horizontal;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              controller.onPointerUp(
+                const PointerUpEvent(position: Offset(200, 650)),
+                context,
+              );
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+
+      expect(controller.activeGesture, equals(ActiveGesture.none));
+      expect(controller.swipeFadeAnim.value, equals(0.0));
+
+      controller.sAnim.dispose();
+      controller.swipeFadeAnim.dispose();
+      sheetController.dispose();
+    });
+
+    testWidgets('onHorizontalDragCancel resets activeGesture and swipeFadeAnim', (tester) async {
+      final sheetController = AnimationController(
+        vsync: tester,
+        duration: const Duration(milliseconds: 300),
+        value: 0.0,
+      );
+
+      final controller = NowPlayingController();
+      controller.setSheetAnimationForTesting(sheetController);
+      controller.sAnim = AnimationController(
+        vsync: tester,
+        lowerBound: -1,
+        upperBound: 1,
+        value: 0.0,
+      );
+      controller.swipeFadeAnim = AnimationController(
+        vsync: tester,
+        duration: const Duration(milliseconds: 180),
+        value: 1.0,
+      );
+      controller.activeGesture = ActiveGesture.horizontal;
+
+      controller.onHorizontalDragCancel();
+
+      expect(controller.activeGesture, equals(ActiveGesture.none));
+      expect(controller.swipeFadeAnim.value, equals(0.0));
+
+      controller.sAnim.dispose();
+      controller.swipeFadeAnim.dispose();
+      sheetController.dispose();
     });
   });
 }

@@ -95,9 +95,9 @@ class _AboutPageState extends State<AboutPage> {
                 ),
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 16),
               SizedBox(
-                width: 10,
+                width: double.infinity,
                 child: M3EButton.filled(
                   decoration: M3EButtonDecoration(
                     padding: const EdgeInsets.all(15),
@@ -138,7 +138,6 @@ class _AboutPageState extends State<AboutPage> {
               ),
               CardListTile(
                 title: 'Source Code',
-                subtitle: 'Source code and contributions',
                 icon: FlutterRemix.code_line,
                 isFirst: true,
                 onTap: () => _controller.launchURL(
@@ -149,7 +148,6 @@ class _AboutPageState extends State<AboutPage> {
               const SizedBox(height: 2.5),
               CardListTile(
                 title: 'Telegram',
-                subtitle: 'Join our community',
                 icon: FlutterRemix.telegram_line,
                 onTap: () =>
                     _controller.launchURL(context, 'https://t.me/bawiceuapp'),
@@ -157,7 +155,6 @@ class _AboutPageState extends State<AboutPage> {
               const SizedBox(height: 2.5),
               CardListTile(
                 title: 'Report a Bug',
-                subtitle: 'Help us improve nix',
                 icon: FlutterRemix.bug_2_line,
                 isLast: true,
                 onTap: () => _controller.launchURL(
@@ -169,7 +166,6 @@ class _AboutPageState extends State<AboutPage> {
               const NixSectionHeader(title: 'Legal & Tools', topPadding: 24),
               CardListTile(
                 title: 'Licenses',
-                subtitle: 'Open source licenses and libraries',
                 icon: FlutterRemix.scales_3_line,
                 isFirst: true,
                 onTap: () => showLicensePage(
@@ -182,7 +178,6 @@ class _AboutPageState extends State<AboutPage> {
               const SizedBox(height: 2.5),
               CardListTile(
                 title: 'Reset to Defaults',
-                subtitle: 'Clear all preferences and global settings',
                 icon: FlutterRemix.refresh_line,
                 isLast: true,
                 onTap: () => _controller.showResetDialog(context),

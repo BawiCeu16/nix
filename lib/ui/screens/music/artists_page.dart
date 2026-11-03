@@ -45,28 +45,45 @@ class _ArtistsPageState extends State<ArtistsPage> {
       builder: (context, _) {
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
-          appBar: AppBar(
-            title: const Text('Artists'),
-            centerTitle: true,
-            backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
-            scrolledUnderElevation: 0,
-            actions: [
-              NixSortWidget<ArtistSort>(
-                currentSort: _controller.sort,
-                isAscending: _controller.isAscending,
-                onSortSelected: _controller.setSort,
-                onToggleOrder: _controller.toggleOrder,
-                items: const [
-                  NixSortMenuItem(value: ArtistSort.name, label: 'Artist Name'),
-                  NixSortMenuItem(
-                    value: ArtistSort.trackCount,
-                    label: 'Track Count',
-                  ),
-                ],
-              ),
-            ],
-          ),
-          body: Consumer<MusicProvider>(
+          body: NestedScrollView(
+            floatHeaderSlivers: true,
+            headerSliverBuilder: (context, innerBoxIsScrolled) {
+              return [
+                SliverAppBar(
+                  title: const Text('Artists'),
+                  centerTitle: true,
+                  backgroundColor:
+                      Theme.of(context).colorScheme.surfaceContainer,
+                  scrolledUnderElevation: 0,
+                  // 1. Allow the app bar to hide completely off-screen
+                  pinned: false,
+                  // 2. Make it reappear immediately when scrolling back up
+                  floating: true,
+                  // 3. (Optional) Snaps the bar fully open/closed without stuttering
+                  snap: true,
+                  forceElevated: innerBoxIsScrolled,
+                  actions: [
+                    NixSortWidget<ArtistSort>(
+                      currentSort: _controller.sort,
+                      isAscending: _controller.isAscending,
+                      onSortSelected: _controller.setSort,
+                      onToggleOrder: _controller.toggleOrder,
+                      items: const [
+                        NixSortMenuItem(
+                          value: ArtistSort.name,
+                          label: 'Artist Name',
+                        ),
+                        NixSortMenuItem(
+                          value: ArtistSort.trackCount,
+                          label: 'Track Count',
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ];
+            },
+            body: Consumer<MusicProvider>(
             builder: (context, music, child) {
               final sortedArtists = _controller.getSortedArtists(music.artists);
               final crossAxisCount = context
@@ -115,9 +132,6 @@ class _ArtistsPageState extends State<ArtistsPage> {
                             final double titleSize = isVeryDense
                                 ? 12
                                 : (isDense ? 14 : 16);
-                            final double subtitleSize = isVeryDense
-                                ? 10
-                                : (isDense ? 12 : 13);
                             final double iconSize = isVeryDense
                                 ? 24
                                 : (isDense ? 36 : 48);
@@ -191,21 +205,10 @@ class _ArtistsPageState extends State<ArtistsPage> {
                                         artist.name,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: titleSize,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        '${artist.numberOfTracks} tracks',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontSize: subtitleSize,
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.onSurfaceVariant,
                                         ),
                                       ),
                                     ],
@@ -223,7 +226,8 @@ class _ArtistsPageState extends State<ArtistsPage> {
               );
             },
           ),
-        );
+        ),
+      );
       },
     );
   }
@@ -260,13 +264,27 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> {
       builder: (context, _) {
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
-          appBar: AppBar(
-            title: Text(widget.artistName),
-            backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
-            scrolledUnderElevation: 0,
-            centerTitle: true,
-          ),
-          body: Consumer<MusicProvider>(
+          body: NestedScrollView(
+            floatHeaderSlivers: true,
+            headerSliverBuilder: (context, innerBoxIsScrolled) {
+              return [
+                SliverAppBar(
+                  title: Text(widget.artistName),
+                  backgroundColor:
+                      Theme.of(context).colorScheme.surfaceContainer,
+                  scrolledUnderElevation: 0,
+                  centerTitle: true,
+                  // 1. Allow the app bar to hide completely off-screen
+                  pinned: false,
+                  // 2. Make it reappear immediately when scrolling back up
+                  floating: true,
+                  // 3. (Optional) Snaps the bar fully open/closed without stuttering
+                  snap: true,
+                  forceElevated: innerBoxIsScrolled,
+                ),
+              ];
+            },
+            body: Consumer<MusicProvider>(
             builder: (context, music, child) {
               final tracks = music.tracks
                   .where((t) => t.artist == widget.artistName)
@@ -347,7 +365,8 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> {
               );
             },
           ),
-        );
+        ),
+      );
       },
     );
   }

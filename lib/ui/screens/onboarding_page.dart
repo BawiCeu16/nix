@@ -91,18 +91,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(FlutterRemix.music_2_fill, size: 80, color: colorScheme.primary),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Text(
           'Welcome to nix',
-          style: theme.textTheme.headlineSmall?.copyWith(
+          style: theme.textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          'fast & minimal music player.',
-          style: theme.textTheme.titleSmall?.copyWith(
-            color: colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 48),
@@ -133,17 +126,17 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   size: 80,
                   color: colorScheme.tertiary,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 Text(
-                  'Your Privacy Matters',
-                  style: theme.textTheme.headlineSmall?.copyWith(
+                  'Privacy',
+                  style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 8),
                 Text(
-                  'We respect your privacy and do/will not collect any personal information.',
-                  style: theme.textTheme.titleSmall?.copyWith(
+                  'Your library and listening habits stay strictly on your device.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
                   textAlign: TextAlign.center,
@@ -241,17 +234,16 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   },
                   children: [
                     M3EListItem(
-                      supportingTextStyle: TextStyle(
-                        color: colorScheme.onSurfaceVariant,
+                      headlineStyle: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w500,
                       ),
-                      headlineStyle: TextStyle(color: colorScheme.onSurface),
-                      contentPadding: EdgeInsets.zero,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       isThreeLine: false,
                       headline: const Text('Audio Access'),
-                      supportingText: const Text(
-                        'Allow access to your audio files to play music',
-                      ),
-
                       leading: Icon(
                         FlutterRemix.headphone_line,
                         color: colorScheme.primary,
@@ -264,17 +256,16 @@ class _OnboardingPageState extends State<OnboardingPage> {
                           : null,
                     ),
                     M3EListItem(
-                      supportingTextStyle: TextStyle(
-                        color: colorScheme.onSurfaceVariant,
+                      headlineStyle: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w500,
                       ),
-                      headlineStyle: TextStyle(color: colorScheme.onSurface),
-
-                      contentPadding: EdgeInsets.zero,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       isThreeLine: false,
                       headline: const Text('Notifications'),
-                      supportingText: const Text(
-                        'Allow notifications to receive updates about your music',
-                      ),
                       leading: Icon(
                         FlutterRemix.notification_3_line,
                         color: colorScheme.primary,
@@ -287,16 +278,16 @@ class _OnboardingPageState extends State<OnboardingPage> {
                           : null,
                     ),
                     M3EListItem(
-                      supportingTextStyle: TextStyle(
-                        color: colorScheme.onSurfaceVariant,
+                      headlineStyle: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w500,
                       ),
-                      headlineStyle: TextStyle(color: colorScheme.onSurface),
-                      contentPadding: EdgeInsets.zero,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       isThreeLine: false,
                       headline: const Text('Bluetooth Access'),
-                      supportingText: const Text(
-                        'Allow access to Bluetooth devices for audio routing',
-                      ),
                       leading: Icon(
                         FlutterRemix.bluetooth_line,
                         color: colorScheme.primary,

@@ -57,10 +57,8 @@ class _LibrarySettingsPageState extends State<LibrarySettingsPage> {
               NixCardExpansionTile(
                 title: 'Save Ascending & Sort',
                 isFirst: true,
-                subtitle: 'Remember choices across sessions',
                 icon: FlutterRemix.filter_3_line,
-                showExpansionIcon:
-                    settings.saveAscending || settings.saveSort,
+                showExpansionIcon: settings.saveAscending || settings.saveSort,
                 initiallyExpanded: false,
                 trailing: Switch(
                   value: settings.saveAscending || settings.saveSort,
@@ -74,7 +72,6 @@ class _LibrarySettingsPageState extends State<LibrarySettingsPage> {
                     const SizedBox(height: 2.5),
                     CardListTileWithChild(
                       title: 'Preferences to Save',
-                      subtitle: 'Choose what to remember',
                       icon: FlutterRemix.list_check,
                       child: M3EDropdownMenu<String>(
                         items: [
@@ -194,16 +191,27 @@ class _LibrarySettingsPageState extends State<LibrarySettingsPage> {
                         onSelectionChanged: (selectedItems) {
                           if (selectedItems.isNotEmpty) {
                             final selectedValue = selectedItems.first.value;
-                            if (selectedValue == 'both') {
-                              settings.setSaveAscending(true);
-                              settings.setSaveSort(true);
-                            } else if (selectedValue == 'ascending') {
-                              settings.setSaveAscending(true);
-                              settings.setSaveSort(false);
-                            } else if (selectedValue == 'sort') {
-                              settings.setSaveAscending(false);
-                              settings.setSaveSort(true);
-                            }
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (selectedValue == 'both') {
+                                if (!settings.saveAscending ||
+                                    !settings.saveSort) {
+                                  settings.setSaveAscending(true);
+                                  settings.setSaveSort(true);
+                                }
+                              } else if (selectedValue == 'ascending') {
+                                if (!settings.saveAscending ||
+                                    settings.saveSort) {
+                                  settings.setSaveAscending(true);
+                                  settings.setSaveSort(false);
+                                }
+                              } else if (selectedValue == 'sort') {
+                                if (settings.saveAscending ||
+                                    !settings.saveSort) {
+                                  settings.setSaveAscending(false);
+                                  settings.setSaveSort(true);
+                                }
+                              }
+                            });
                           }
                         },
                       ),
@@ -327,12 +335,16 @@ class _LibrarySettingsPageState extends State<LibrarySettingsPage> {
                     ),
                   ),
                   closeOnBackButton: false,
-                  onSelectionChanged: (selectedItems) async {
+                  onSelectionChanged: (selectedItems) {
                     if (selectedItems.isNotEmpty) {
                       final selectedValue =
                           int.tryParse(selectedItems.first.value) ?? 60;
-                      settings.setMinDuration(selectedValue);
-                      await music.scanDevice();
+                      if (selectedValue != settings.minDuration) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) async {
+                          settings.setMinDuration(selectedValue);
+                          await music.scanDevice();
+                        });
+                      }
                     }
                   },
                 ),
@@ -453,7 +465,11 @@ class _LibrarySettingsPageState extends State<LibrarySettingsPage> {
                     if (selectedItems.isNotEmpty) {
                       final selectedValue =
                           int.tryParse(selectedItems.first.value) ?? 2;
-                      settings.setArtistGridCrossAxisCount(selectedValue);
+                      if (selectedValue != settings.artistGridCrossAxisCount) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          settings.setArtistGridCrossAxisCount(selectedValue);
+                        });
+                      }
                     }
                   },
                 ),
@@ -465,7 +481,6 @@ class _LibrarySettingsPageState extends State<LibrarySettingsPage> {
               ),
               CardListTile(
                 title: 'Scan Media',
-                subtitle: 'Manually refresh your music library',
                 icon: FlutterRemix.refresh_line,
                 isFirst: true,
                 isLast: true,
@@ -475,7 +490,6 @@ class _LibrarySettingsPageState extends State<LibrarySettingsPage> {
               const NixSectionHeader(title: 'Danger Zone', topPadding: 32),
               CardListTile(
                 title: 'Clear Search History',
-                subtitle: 'Delete all previous search queries',
                 icon: FlutterRemix.history_line,
                 isFirst: true,
                 onTap: () =>
@@ -484,7 +498,6 @@ class _LibrarySettingsPageState extends State<LibrarySettingsPage> {
               const SizedBox(height: 2.5),
               CardListTile(
                 title: 'Reset Library Database',
-                subtitle: 'Clear all history, favorites, and re-scan',
                 icon: FlutterRemix.delete_bin_line,
                 isLast: true,
                 onTap: () => _controller.showResetConfirmation(context, music),
